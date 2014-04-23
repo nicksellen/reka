@@ -1,0 +1,104 @@
+* {
+ box-sizing: border-box;   
+}
+
+html,
+input,
+textarea {
+  font-family: monospace;   
+}
+
+#compose {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 20px 0;
+  box-shadow: 0 0 20px -5px rgba(0,0,0,0.25);
+  background-color: #fff;
+  border-left: 10px solid transparent;
+}
+
+#compose input[type=text] {
+  font-size: 18px;  
+  padding: 10px;
+  padding-left: 0;
+  border: none;
+  outline: none;
+  position: absolute;
+  left: 0;
+  padding-left: 125px;
+  width: 100%;
+  background: transparent;
+}
+
+#compose .user {
+  padding: 10px;   
+  padding-right: 0;
+  font-style: italic;  
+}                
+
+#message-list {
+  position: absolute;
+  top: 0;
+  bottom: 96px;
+  left: 0;
+  right: 0;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  padding: 10px 20px;
+  padding-top: 0;
+}
+
+ul#message-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+ul#message-list > li {
+  padding: 8px 10px;
+  font-size: 18px;
+  border-left: 10px solid transparent;
+}
+
+ul#message-list > li .content {
+  margin-left: 0;
+}      
+
+
+#message-list input.content {
+  border: none;
+  position: absolute;
+  left: 0;
+  padding-left: 140px;
+  width: 100%;
+  background: transparent;
+  outline: none;
+}          
+
+ul#message-list > li:after {
+  content: '';
+  clear: both;
+  display: table;
+}  
+
+.user {
+  font-size: 18px;
+  color: #000;
+  float: left;
+  white-space: nowrap;
+  opacity: 0.5;
+}
+
+.me .user {
+  font-style: italic;   
+}
+
+.user:after {
+  content: '>';
+  padding-left: 5px;
+  padding-right: 10px;
+  color: #000;
+  opacity: 0.5;
+}  

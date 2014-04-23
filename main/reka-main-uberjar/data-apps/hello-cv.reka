@@ -1,0 +1,15 @@
+name hello cv
+
+use {
+  http
+}
+
+run main {
+  http/content @include(cv.pdf)
+}
+
+trigger {
+  http localhost:2338 {
+    run main
+  }
+}

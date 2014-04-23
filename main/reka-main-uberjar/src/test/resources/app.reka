@@ -1,0 +1,81 @@
+
+name a little todo app
+
+@include(app/flows.conf)
+
+use {
+  http
+}
+
+use @include(app/services.conf)
+
+flow HTTP router {
+
+  http/router {
+  
+    GET /css/main.css @include(app/css/main.css)
+      
+    GET / { 
+
+      h2 {
+        query select * from todos
+        out todos
+      }
+
+      // then @include(app/render-todos.conf)
+
+      then render layout
+    }
+      
+    POST / {
+        
+      h2 blah <<- sql
+        insert into todos 
+          (name, done) 
+        values 
+          ({request.data.todo}, false)
+      ---
+      
+  	  then redirect to homepage
+      
+    }
+      
+    PUT /{id} {
+
+      h2 <<- sql
+
+        update todos 
+        set 
+          done = {request.data.done} 
+        where 
+          id = {request.params.id}
+
+      ---
+
+      then redirect to homepage
+      
+    }
+      
+    DELETE /{id} {
+        
+      h2 <<- sql 
+
+        delete from todos 
+        where 
+          id = {request.params.id} 
+        limit 1
+
+      ---
+    
+      then redirect to homepage
+
+    }
+    
+  }
+}
+
+run redirect to homepage {
+  http/redirect /
+}
+
+// run render layout @include(app/render-layout.conf)

@@ -1,0 +1,35 @@
+name nashorn app
+
+use {
+  http
+
+  nashorn js <<- javascript
+    load('http://cdnjs.cloudflare.com/ajax/libs/handlebars.js/1.3.0/handlebars.min.js');
+    var template = Handlebars.compile('<h1>{{title}}</h1>');
+  ---
+  
+}
+
+run main {
+
+  js <<- javascript
+    out.result = template({ 
+      title: "oh, heya!" 
+    });
+  ---
+
+  putvars response {
+    status 200
+    content :result
+    headers {
+      Content-Type text/html
+    }
+  }
+
+}
+
+trigger {
+  http localhost:4010 {
+    run main
+  }
+}

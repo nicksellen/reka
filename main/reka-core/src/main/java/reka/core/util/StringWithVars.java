@@ -1,0 +1,33 @@
+package reka.core.util;
+
+import java.util.List;
+import java.util.function.Function;
+
+import reka.api.Path;
+import reka.api.data.Data;
+
+public interface StringWithVars extends Function<Data,String> {
+	
+	static StringWithVars compile(String input) {
+		return StringWithColonVariables.compile(input);
+	}
+	
+	List<Variable> vars();
+	boolean hasVariables();
+	String withPlaceholder(String val);
+	
+	public static interface Variable {
+		
+		Path path();
+		
+		default boolean hasDefaultValue() {
+			return false;
+		}
+		
+		default Object defaultValue() {
+			return null;
+		}
+		
+	}
+	
+}

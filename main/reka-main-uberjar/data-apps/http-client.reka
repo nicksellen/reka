@@ -1,0 +1,108 @@
+name http/client
+
+use {
+  http
+}
+
+run main {
+
+  run/parallel {
+
+    run {
+
+      http/request {
+        url http://www.yahoo.com
+        out resp.one
+      }
+
+      println got response from csg
+
+    }
+
+    run {
+
+      http/request {
+        url http://www.google.co.uk
+        out resp.two
+      }
+
+      println got response from google
+
+    }
+
+    run {
+
+      http/request {
+        url http://www.nicksellen.co.uk
+        out resp.three
+      }
+
+      println got response from nicksellen.co.uk
+
+    }
+
+    run {
+
+      http/request {
+        url http://www.google.co.uk/search?q=four
+        out resp.four
+      }
+
+      println got response from google four
+
+    }
+
+    run {
+
+      http/request {
+        url http://www.google.co.uk/search?q=five
+        out resp.five
+      }
+
+      println got response from google five
+
+    }
+
+    run {
+
+      http/request {
+        url http://www.google.co.uk/search?q=six
+        out resp.six
+      }
+
+      println got response from google six
+
+    }
+
+    run {
+
+      http/request {
+        url http://www.google.co.uk/search?q=seven
+        out resp.seven
+      }
+
+      println got response from google seven
+
+    }
+
+  }
+
+  putvars response {
+    status 200
+    content {
+      one :resp.one.response.status
+      two :resp.two.response.status
+      three :resp.three.response.status
+      four :resp.four.response.status
+      five :resp.five.response.status
+      six :resp.six.response.status
+      seven :resp.seven.response.status
+    }
+  }
+}
+
+trigger {
+  http localhost:7020 {
+    run main
+  }
+}

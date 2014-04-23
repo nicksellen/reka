@@ -1,0 +1,30 @@
+
+if empty(apps)
+  .panel.callout.noapps
+    .row
+      .medium-1.columns
+        i.fa.fa-exclamation
+      .medium-11.columns
+        != no_apps_message
+  
+each app, appid in apps
+  section.app
+    .row
+      .medium-9.columns
+        h1
+          a(href="/apps/#{appid}/edit")= app.name
+        pre= appid
+      .medium-3.columns
+        .actions
+            form.right(action="/apps/#{appid}/deploy", method='POST')
+              button.tiny.success(type='submit')
+                i.fa.fa-play
+                | deploy
+            a.tiny.button.right(href="/apps/#{appid}/edit")
+              i.fa.fa-edit
+              | edit
+            form.right(action="/apps/#{appid}", method='POST')
+              input(type='hidden', name='_method', value='DELETE')
+              button.tiny.alert(type='submit')
+                i.fa.fa-trash-o
+                | delete

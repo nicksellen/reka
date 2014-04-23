@@ -1,0 +1,11 @@
+how {
+  icon fa-question
+  title how does it work?
+  path /how
+}
+
+who {
+  icon fa-male
+  title who made this?
+  path /who 
+}

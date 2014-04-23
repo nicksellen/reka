@@ -1,0 +1,7 @@
+http reka:5099 {
+  run web interface
+}
+
+http api.reka:5099 {
+  run api
+}

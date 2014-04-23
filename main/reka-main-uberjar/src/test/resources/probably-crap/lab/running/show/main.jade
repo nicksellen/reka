@@ -1,0 +1,46 @@
+.app-detail
+
+  h1= app.name
+  pre.appid= id
+
+  section.detail  
+    h2 network
+    
+    ul.ports
+      for port in app.ports
+        li
+          i.green.fa.fa-dot-circle-o
+          
+          span.port= port.port
+          span.protocol= port.protocol
+          
+          unless empty(port.details)
+                
+            ul.details
+              for value, name in port.details
+                li
+                  span.name= name
+                  span.value= value
+            
+            if port.protocol == 'http' && port.details.host != null
+              url = port.protocol + '://' + port.details.host + ':' + port.port
+              a.right(href=url, target='_blank')
+                | visit&nbsp;
+                strong= port.details.host
+                | &nbsp;
+                i.fa.fa-long-arrow-right
+  
+  section.detail
+    h2 flows
+    section.flows.row
+      each flow in app.flows
+        .flow(id="flow-#{flow}")
+          h3= flow
+          a(href="/#{id}/#{flow}")
+            img.vis(src="/#{id}/#{flow}.svg")
+      
+    
+  
+  section.detail
+    h2 data
+    pre!= app

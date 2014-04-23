@@ -1,0 +1,56 @@
+<div id="config-editor-controls" class="actions">
+
+	{{#appid}}
+		<form class="config" action="/apps/{{appid}}" method="POST" role="form">
+			<input type="hidden" name="_method" value="PUT">
+			<label for="appname">name</label>
+			<input id="appname" type="text" name="name" value="{{ app.name }}">
+			<input class="config-content" type="hidden" name="config">
+			<button class="success tiny" type="submit">
+				<i class="fa fa-save"></i>
+				update app
+			</button>
+		</form>		
+	{{/appid}}
+	
+	{{^appid}}
+		<form class="config" action="/apps" method="POST" role="form">
+			<input class="config-content" type="hidden" name="config">
+			<label for="appname">name</label>
+			<input id="appname" type="text" name="name">
+			<button class="success tiny" type="submit">
+				<i class="fa fa-plus"></i>
+				create app
+			</button>
+		</form>		
+	{{/appid}}		
+			
+</div>
+
+<script type="text/javascript">
+	$(function(){
+	
+		var mode = 'ace/mode/flow';
+	
+		var form = $('form.config');
+		var editorElement = document.getElementById('config-editor');
+		editorElement.style.fontSize = '16px';
+		
+		var editor = ace.edit(editorElement);
+		
+		editor.getSession().setMode(mode);
+		console.log('set mode to', mode);
+		
+		editor.setTheme("ace/theme/chrome");
+		editor.getSession().setTabSize(2);
+		editor.getSession().setUseSoftTabs(true);
+		editor.renderer.setShowGutter(false); 
+		
+		var $contentElement = $('.config-content');
+		
+		form.submit(function(event){
+			$contentElement.val(editor.getValue());
+			return true;
+		});
+	});
+</script>
