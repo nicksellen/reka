@@ -70,8 +70,8 @@ public class UseBuiltins extends UseConfigurer {
 	public void setup(UseInit init) {
 		
 		init.operation(asList("set", "put", "+"), () -> new PutConfigurer());
-		init.operation(asList("putvars"), () -> new PutWithVarsConfigurer());
-		init.operation("copy", () -> new CopyConfigurer());
+		init.operation(asList("putvars", "putv"), () -> new PutWithVarsConfigurer());
+		init.operation(asList("copy", "cp"), () -> new CopyConfigurer());
     	init.operation(asList("run", "then"), (provider) -> new RunConfigurer(provider));
     	init.operation("run/parallel", (provider) -> new RunParallelConfigurer(provider));
     	init.operation("log", () -> new LogConfigurer());

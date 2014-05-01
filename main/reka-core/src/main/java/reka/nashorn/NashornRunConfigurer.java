@@ -3,9 +3,8 @@ package reka.nashorn;
 import static reka.api.Path.dots;
 import static reka.core.builder.FlowSegments.sync;
 
+import java.util.List;
 import java.util.function.Supplier;
-
-import javax.script.ScriptEngine;
 
 import reka.api.Path;
 import reka.api.flow.FlowSegment;
@@ -14,13 +13,13 @@ import reka.configurer.annotations.Conf;
 
 public class NashornRunConfigurer implements Supplier<FlowSegment> {
 	
-	private final Path runtimePath;
+	private final List<String> initializationScripts;
 	
 	private String script;
 	private Path out;
 	
-	public NashornRunConfigurer(Path runtimePath, Path defaultWriteTo) {
-		this.runtimePath = runtimePath;
+	public NashornRunConfigurer(List<String> initializationScripts, Path defaultWriteTo) {
+		this.initializationScripts = initializationScripts;
 		this.out = defaultWriteTo;
 	}
 
@@ -40,9 +39,7 @@ public class NashornRunConfigurer implements Supplier<FlowSegment> {
 
 	@Override
 	public FlowSegment get() {
-		
-		return sync("run", (data) -> new NashornRunOperation(
-				data.getContent(runtimePath).get().valueAs(ScriptEngine.class), script, out));
+		return sync("run", (data) -> new NashornRunOperation(initializationScripts, script, out));
 	}
 
 }

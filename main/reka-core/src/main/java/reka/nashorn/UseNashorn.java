@@ -1,14 +1,13 @@
 package reka.nashorn;
 
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static reka.api.Path.root;
-import static reka.api.content.Contents.nonSerializableContent;
-import static reka.util.Util.unchecked;
+import static reka.configurer.Configurer.Preconditions.checkConfig;
 
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
+import java.util.ArrayList;
+import java.util.List;
 
-import reka.api.Path;
 import reka.config.Config;
 import reka.configurer.annotations.Conf;
 import reka.core.bundle.UseConfigurer;
@@ -16,41 +15,32 @@ import reka.core.bundle.UseInit;
 
 public class UseNashorn extends UseConfigurer {
 	
-	String script;
+	List<String> scripts = new ArrayList<>();
 	
 	@Conf.Config
 	public void config(Config config) {
 		if (config.hasDocument()) {
-			script = config.documentContentAsString();
+			scripts.add(config.documentContentAsString());
 		}
+	}
+	
+	@Conf.Each("script")
+	public void script(Config config) {
+		checkConfig(config.hasDocument(), "must have document");
+		scripts.add(config.documentContentAsString());
+	}
+	
+	@Conf.Each("var")
+	public void var(Config config) {
+		checkConfig(config.hasKey() && config.hasValue() && config.hasDocument(), "must have key/value/document");
+		String varname = config.valueAsString().replaceAll(" ", "_");
+		String escaped = config.documentContentAsString().replace("\"", "\\\"").replace("\n", "\\n");
+		scripts.add(0, format("var %s = \"%s\";", varname, escaped));
 	}
 
 	@Override
 	public void setup(UseInit init) {
-		
-		Path runtimePath = init.path().add("runtime");
-		
-		init.run("setup", (data) -> {
-			
-			ScriptEngineManager factory = new ScriptEngineManager();
-	        ScriptEngine engine = factory.getEngineByName("nashorn");
-	        
-	        if (script != null) {
-	        	try {
-	        		//engine.
-					engine.eval(script);
-				} catch (Exception e) {
-					throw unchecked(e);
-				}
-	        }
-	        
-	        data.put(runtimePath, nonSerializableContent(engine));
-			
-			return data;
-		});
-		
-		init.operation(asList("run", ""), () -> new NashornRunConfigurer(runtimePath, root()));
-		
+		init.operation(asList("run", ""), () -> new NashornRunConfigurer(scripts, root()));
 	}
 
 }

@@ -1,26 +1,82 @@
 name nashorn app
 
 use {
-  http
 
-  nashorn js <<- javascript
-    load('http://cdnjs.cloudflare.com/ajax/libs/handlebars.js/1.3.0/handlebars.min.js');
-    var template = Handlebars.compile('<h1>{{title}}</h1>');
-  ---
+  http
+  
+  nashorn js {
+  
+    script @include(handlebars.min.js)
+    
+    // script <<- javascript
+      load('http://cdnjs.cloudflare.com/ajax/libs/handlebars.js/1.3.0/handlebars.min.js');
+    ---
+    
+    var index <<- hbs
+      <!DOCTYPE html>
+      <html>
+        <head></head>
+        <body>
+          <h1>title: {{ title }}</h1>
+          
+          <ul>
+            {{#eachkv request.params}}
+              <li>
+                {{ key }} : {{ value }}
+              </li>
+            {{/eachkv}}
+          </ul>
+          
+          <ul>
+            {{#eachkv things}}
+              <li>
+                {{ key }} : {{ value }}
+              </li>
+            {{/eachkv}}
+          </ul>
+          
+        </body>
+      </html>
+    ---
+    
+    script <<- javascript
+    
+      Handlebars.registerHelper('eachkv', function(map, block) {
+         var prop, out = '';
+         
+         for (prop in map) {
+           out += block.fn({ key: prop, value: map[prop] });
+         }
+         
+         return out;
+      });
+    
+      var template = Handlebars.compile(index);
+      
+      delete index; // don't need this any more
+      
+    ---
+    
+  }
   
 }
 
 run main {
 
-  js <<- javascript
-    out.result = template({ 
-      title: "oh, heya!" 
-    });
-  ---
+  put {
+    title Yay it worked from here too!
+    things {
+      one cat
+      two dogs
+      five horse
+    }
+  }
 
-  putvars response {
+  js out.html = template(data);
+
+  putv response {
     status 200
-    content :result
+    content :html
     headers {
       Content-Type text/html
     }

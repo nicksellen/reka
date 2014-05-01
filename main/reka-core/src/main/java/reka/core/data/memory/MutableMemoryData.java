@@ -328,7 +328,7 @@ public class MutableMemoryData implements MutableDataProvider<Object> {
 		} else if (o instanceof Content) {
 			contentWriteTo((Content) o, json);
 		} else {
-			throw runtime("can't write %s (%s) to json", o, o != null ? o.getClass() : "null");
+			throw runtime("can't write %s (%s) to json [%s]", o, o != null ? o.getClass() : "null", o != null ? o.toString() : "");
 		}
 	}
 	
@@ -617,7 +617,7 @@ public class MutableMemoryData implements MutableDataProvider<Object> {
 	
 	@Override
 	public Object createEmpty() {
-		return new Object();
+		return null; // TODO: this used to be new Object()... is this ok being null?
 	}
 
 	@Override
