@@ -1,0 +1,44 @@
+app {
+  
+  name boo
+
+  use {
+    http
+  }
+
+  flow main {
+    http/content <<- text/html
+      <h1>Hello HTML World!</h1>
+    ---
+  }
+
+  trigger {
+    http localhost:2020 {
+      run main
+    }
+  }
+
+}
+
+app {
+  
+  name another small app
+
+  use {
+    http
+  }
+
+  flow main {
+    http/content <<- text/html
+      <h1>Hello HTML World again!</h1>
+    ---
+  }
+
+  trigger {
+    http localhost:2025 {
+      run main
+    }
+  }
+
+}
+

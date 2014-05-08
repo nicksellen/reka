@@ -1,0 +1,245 @@
+name reka/api
+
+description a nice API for reka
+
+version 10.2
+
+use {
+  http
+  reka
+  filesystem fs {
+    dir data-apps
+  }
+}
+
+run http {
+
+  http/router {
+
+    GET / {
+      put response {
+        status 200
+        content {
+          message hello! there is nothing much to see here, you could try some of these URLs
+          urls {
+            list /apps
+            show /apps/:appid
+          }
+        }
+      }
+    }
+
+    GET /apps {
+      reka/list response.content
+    }
+
+    GET /apps/:appid {
+      reka/get response.content {
+        app :appid
+      }
+    }
+    
+    GET /apps/:appid/flows/:flow*.:format {
+      reka/visualize {
+        app :appid
+        flow :flow
+        format :format
+      }
+    }
+
+    named deploy new app {
+    
+      POST /apps {
+
+        copy {
+          request.data.spec path
+        }
+
+        fs/type :path {
+
+          when dir {
+            put response {
+              status 400
+              content {
+                message cannot deploy directories
+              }
+            }
+          }
+
+          when missing {
+            put response {
+              status 400
+              content {
+                message does not exist
+              }
+            }
+          }
+
+          when file {
+            run deploy from path
+          }
+
+        }
+
+      }
+
+    }
+
+    named redeploy app {
+
+      PUT /apps/:appid/redeploy {
+
+        reka/redeploy :appid
+        
+        putvars response {
+          status 200
+          content {
+            message :appid was redeployed!
+          }
+        }
+
+      }
+
+    }
+
+    named undeploy app {
+  
+      DELETE /apps/:appid {
+        
+        reka/undeploy :appid
+
+        putvars response {
+          status 200
+          content {
+            message :appid was undeployed!
+          }
+        }
+
+      }
+
+    }
+
+    within /files {
+      run file handler
+    }
+
+  }
+}
+
+run file handler {
+
+  http/router {
+
+    GET /files/:path* {
+
+      fs/type :path {
+
+        when file {
+
+          fs/read {
+            filename :path
+            download false
+            out response.content
+          }  
+
+        }
+
+        when dir {
+
+          fs/list {
+            dir :path
+            out response.content
+          }
+
+        }
+
+        when missing {
+
+          put response {
+            status 404
+            content {
+              message not found!
+            }
+          }
+
+        }
+
+      }
+
+    }    
+
+    POST /files/:path* {
+
+      fs/write {
+        filename :path
+        data request.data.file.data
+      }
+
+      putvars response {
+        status 200
+        content {
+          message thanks for the file!
+          filename :path
+          url /files/:path
+        }
+      }
+
+    }
+
+    DELETE /files/:path* {
+      
+      fs/rm {
+        filename :path
+      }
+
+      putvars response {
+        status 200
+        content {
+          status removed
+          filename :path
+        }
+      }
+
+    }
+
+  }
+
+}
+
+flow deploy from path {
+  
+  fs/resolve {
+    in :path
+    out fullpath
+  }
+
+  reka/deploy {
+    filename :fullpath
+  }
+
+  put {
+    host http://reka:5100
+  }
+
+  reka/get response.content.details {
+    app :identity
+  }
+
+  putvars response {
+    status 200
+    content {
+      id :identity
+      url :host/apps/:identity
+      message :identity was deployed!
+    }
+  }
+}
+
+trigger {
+  http reka:5100 {
+    run http
+  }
+  http localhost:5100 {
+    run http
+  }
+}

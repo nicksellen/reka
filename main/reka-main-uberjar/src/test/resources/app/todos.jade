@@ -1,0 +1,22 @@
+ul(class = 'todos')
+  for todo in todos
+  
+    li(class = '#{todo.done ? "done" : ""}')
+      span(class = 'name')= todo.name
+      
+      form(action = '/#{todo.id}', method = 'POST')
+        input(type = 'hidden', name = '_method', value = 'PUT')
+        input(type = 'hidden', name = 'done', value = todo.done ? 'false' : 'true')
+        input(type = 'submit', value = todo.done ? 'undo' : 'done')
+        
+      if todo.done
+        form(action = '/#{todo.id}', method = 'POST')
+          input(type = 'hidden', name = '_method', value = 'DELETE')
+          input(type = 'submit', value = 'remove')
+          
+form(class = 'add', action = '/', method = 'POST')
+  span I need to
+  input(type = 'text', name='todo', id='todo', tabindex=1)
+  input(type = 'submit', value='add')
+
+script(type = 'text/javascript') document.getElementById('todo').focus();
