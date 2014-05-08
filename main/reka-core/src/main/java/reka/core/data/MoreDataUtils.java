@@ -93,7 +93,7 @@ public class MoreDataUtils {
 		try {
 			JsonGenerator json = factory.createJsonGenerator(stream);
 			if (pretty) json.useDefaultPrettyPrinter();
-			store.out(json);
+			store.writeJsonTo(json);
 			json.flush();
 			return stream;
 		} catch (IOException e) {

@@ -1,6 +1,8 @@
 package reka.config;
 
 import static java.lang.String.format;
+import static reka.config.SourceUtils.fromend;
+import static reka.config.SourceUtils.occurances;
 
 import java.io.File;
 
@@ -48,7 +50,7 @@ public class SubsetSource extends AbstractSource {
 	
 	@Override
 	public String toString() {
-		return format("%s(%s[%s-%s])", getClass().getSimpleName(), parent, start, start + length);
+		return format("%s(%s)", getClass().getSimpleName(), location());
 	}
 
 	@Override
@@ -80,10 +82,29 @@ public class SubsetSource extends AbstractSource {
     public File nestedFile(String location) {
     	return parent.nestedFile(location);
     }
-
+    
     @Override
-    public String location() { 
-        return format("%s:%s-%s", origin().location(), start, start + length);
+    public String location() {
+    	return origin().location();
     }
+
+	@Override
+	public SourceLinenumbers linenumbers() {
+		
+		String before = parent.content().substring(0, start);
+		int lineStart = occurances(before, '\n') + 1;
+		int posStart = fromend(before, '\n') + 1;
+
+    	String content = parent.content().substring(start, start + length);
+    	
+    	int lineEnd = lineStart + occurances(content, '\n');
+    	int posEnd = fromend(content, '\n');
+    	
+    	if (lineStart == lineEnd) {
+    		posEnd += posStart;
+    	}
+		
+		return new SourceLinenumbers(lineStart, posStart, lineEnd, posEnd);
+	}
 
 }

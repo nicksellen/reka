@@ -2,7 +2,7 @@ package reka.config.processor;
 
 import reka.config.Config;
 
-public class CommentConverter extends StatelessConverter {
+public class CommentConverter implements ConfigConverter {
 
 	@Override
 	public void convert(Config config, Output out) {

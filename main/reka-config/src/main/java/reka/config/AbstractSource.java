@@ -42,6 +42,11 @@ public abstract class AbstractSource implements Source {
 	public byte[] nestedData(String location) {
 		return null;
 	}
+	
+	@Override
+	public SourceLinenumbers linenumbers() {
+		return SourceUtils.linenumbersFor(content());
+	}
 
 
 }

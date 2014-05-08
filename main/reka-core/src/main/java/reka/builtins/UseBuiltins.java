@@ -86,6 +86,9 @@ public class UseBuiltins extends UseConfigurer {
     	init.operation("throw", () -> new ThrowConfigurer());
     	init.operation("inspect", () -> new InspectConfigurer());
     	init.operation("random/string", () -> new RandomStringConfigurer());
+    	init.operation("coerce", () -> new Coercion.CoerceConfigurer());
+    	init.operation("coerce/int64", () -> new Coercion.CoerceLongConfigurer());
+    	init.operation("coerce/bool", () -> new Coercion.CoerceBooleanConfigurer());
     	
 		init.trigger(Path.path("every"), () -> new TimerExport());
 		

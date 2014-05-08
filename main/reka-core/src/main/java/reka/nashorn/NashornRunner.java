@@ -4,6 +4,7 @@ import static reka.util.Util.runtime;
 import static reka.util.Util.unchecked;
 
 import java.lang.reflect.Field;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -69,15 +70,27 @@ public class NashornRunner {
 	}
 	
 	public Map<String,Object> run(Map<String,Object> data) {
+		
 		ScriptContext context = new SimpleScriptContext();
 		Bindings bindings = context.getBindings(ScriptContext.ENGINE_SCOPE);
-		bindings.putAll(data);
+		
+		data.forEach((k, v) -> {
+			bindings.put(k, v);
+		});
+		
 		try {
 			compiledScript.eval(context);
 		} catch (ScriptException e) {
 			throw unchecked(e);
 		}
-		return bindings;
+		
+		Map<String,Object> result = new HashMap<>();
+		
+		bindings.forEach((k, v) -> {
+			result.put(k, v);
+		});
+		
+		return result;
 	}
 	
 	public class E {

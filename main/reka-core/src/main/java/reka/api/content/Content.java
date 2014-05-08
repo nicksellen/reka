@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import reka.api.Hashable;
+import reka.api.JsonProvider;
 import reka.core.data.ObjBuilder;
 import reka.util.Util;
 
@@ -26,7 +27,7 @@ import com.google.common.hash.Hasher;
 import com.google.common.io.BaseEncoding;
 
 
-public interface Content extends Hashable {
+public interface Content extends Hashable, JsonProvider {
 	
 	public static final String CUSTOM_TYPE = "@type";
 	
@@ -227,7 +228,7 @@ public interface Content extends Hashable {
 		}
 
 		@Override
-		public void out(JsonGenerator json) throws IOException {
+		public void writeJsonTo(JsonGenerator json) throws IOException {
 			json.writeNumber(value);
 		}
 
@@ -272,7 +273,7 @@ public interface Content extends Hashable {
 		}
 
 		@Override
-		public void out(JsonGenerator out) throws IOException {
+		public void writeJsonTo(JsonGenerator out) throws IOException {
 			out.writeNumber(value);
 		}
 
@@ -330,7 +331,7 @@ public interface Content extends Hashable {
 		}
 
 		@Override
-		public void out(JsonGenerator out) throws IOException {
+		public void writeJsonTo(JsonGenerator out) throws IOException {
 			out.writeNumber(value);
 		}
 
@@ -383,7 +384,7 @@ public interface Content extends Hashable {
 		}
 
 		@Override
-		public void out(JsonGenerator json) throws IOException {
+		public void writeJsonTo(JsonGenerator json) throws IOException {
 			json.writeBoolean(true);
 		}
 
@@ -415,7 +416,7 @@ public interface Content extends Hashable {
 		}
 
 		@Override
-		public void out(JsonGenerator json) throws IOException {
+		public void writeJsonTo(JsonGenerator json) throws IOException {
 			json.writeBoolean(false);
 		}
 
@@ -447,7 +448,7 @@ public interface Content extends Hashable {
 		}
 
 		@Override
-		public void out(JsonGenerator json) throws IOException {
+		public void writeJsonTo(JsonGenerator json) throws IOException {
 			json.writeNull();
 		}
 
@@ -481,7 +482,7 @@ public interface Content extends Hashable {
 		}
 
 		@Override
-		public void out(JsonGenerator out) throws IOException {
+		public void writeJsonTo(JsonGenerator out) throws IOException {
 			out.writeString(value);
 		}
 
@@ -727,7 +728,7 @@ public interface Content extends Hashable {
 		}
 
 		@Override
-		public void out(JsonGenerator json) throws IOException {
+		public void writeJsonTo(JsonGenerator json) throws IOException {
 			BINARY_CONVERTER.out(this, json);
 		}
 
@@ -838,7 +839,7 @@ public interface Content extends Hashable {
         }
 
         @Override
-        public void out(JsonGenerator json) throws IOException {
+        public void writeJsonTo(JsonGenerator json) throws IOException {
         	json.writeStartObject();
         	json.writeStringField("class", object.getClass().getName());
         	json.writeStringField("toString", object.toString());
@@ -873,7 +874,6 @@ public interface Content extends Hashable {
 	
 	public Type type();
 	
-	public void out(JsonGenerator json) throws IOException;
 	public void out(DataOutput out) throws IOException;
 	public void writeObj(ObjBuilder builder);
 	

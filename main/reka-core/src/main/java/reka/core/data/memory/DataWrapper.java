@@ -129,7 +129,7 @@ public class DataWrapper<T> implements Data {
 	}
 
 	@Override
-	public void out(JsonGenerator json) throws IOException {
+	public void writeJsonTo(JsonGenerator json) throws IOException {
 		if (root == null) return;
 		provider.out(root, json);
 	}

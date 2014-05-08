@@ -7,6 +7,7 @@ import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
@@ -20,9 +21,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.codehaus.jackson.JsonFactory;
+import org.codehaus.jackson.JsonGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import reka.api.JsonProvider;
 import reka.config.Config;
 import reka.config.NavigableConfig;
 import reka.config.Source;
@@ -110,7 +114,7 @@ public class Configurer {
     	
     }
     
-    private static class ConfigurationError {
+    private static class ConfigurationError implements JsonProvider {
 
     	private final ConfigOrNavigableConfig config;
     	private final String msg;
@@ -134,6 +138,7 @@ public class Configurer {
     		if (content.length() > 20) {
     			content = content.substring(0, 20) + " ...";
     		}
+    		
     		return format("%s (%s) [%s]", msg, source.location(), content);
     	}
     	
@@ -149,10 +154,34 @@ public class Configurer {
     					toString(), 
     					allExceptionMessages(cause), 
     					w.toString());
-    			
-    			//asList(cause.getStackTrace()).stream().map(Object::toString).collect(joining("\n - "))
     		}
     	}
+
+		@Override
+		public void writeJsonTo(JsonGenerator json) throws IOException {
+			json.writeStartObject();
+			
+			json.writeStringField("message", msg);
+			
+			/*
+			if (cause != null) {
+				json.writeFieldName("cause");
+				json.writeStartArray();
+				for (String m : allExceptionMessages(cause)) {
+					json.writeString(m);
+				}
+				json.writeEndArray();
+			}
+			*/
+			
+			Source source = config.source();
+			if (source != null) {
+				json.writeStringField("source", source.location());
+				json.writeStringField("linenumbers", source.linenumbers().toString());
+			}
+			
+			json.writeEndObject();
+		}
     	
     }
     
@@ -175,14 +204,29 @@ public class Configurer {
     	
     	public T get() {
     		if (hasErrors()) {
-    			throw new InvalidConfigurationException(errors);
+    			InvalidConfigurationException e = new InvalidConfigurationException(errors);
+    			
+    			StringWriter writer = new StringWriter();
+    			JsonGenerator json;
+				try {
+					json = new JsonFactory().createJsonGenerator(writer);
+	    			json.useDefaultPrettyPrinter();
+	    			e.writeJsonTo(json);
+	    			json.flush();
+	    			
+	    			System.out.printf("json errors: %s\n", writer.toString());
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+    			throw e;
     		}
     		return value;
     	}
     	
     }
     
-    private static class InvalidConfigurationException extends RuntimeException {
+    private static class InvalidConfigurationException extends RuntimeException implements JsonProvider {
     	
 		private static final long serialVersionUID = 8018639942600973192L;
 
@@ -204,6 +248,15 @@ public class Configurer {
 		@Override
 		public String getMessage() {
 			return toString();
+		}
+
+		@Override
+		public void writeJsonTo(JsonGenerator json) throws IOException {
+			json.writeStartArray();
+			for (ConfigurationError e : errors) {
+				e.writeJsonTo(json);
+			}
+			json.writeEndArray();
 		}
     	
     }
@@ -396,10 +449,12 @@ public class Configurer {
 		
 		Collections.reverse(result);
 		
+		/*
 		if (result.isEmpty()) {
 			original.printStackTrace();
 			result.add("unknown error");
 		}
+		*/
 		
 		return result;
 	}
@@ -689,6 +744,56 @@ public class Configurer {
 		
 	}
 	
+	private static final List<String> trueValues = asList("true", "yes", "on");
+	private static final List<String> falseValues = asList("false", "no", "off");
+	
+	private class BooleanAtOption extends AtOption {
+
+		BooleanAtOption(Method method, String path) {
+			super(method, path);
+		}
+
+		@Override
+		public void apply(ConfigOrNavigableConfig config, Object instance, Status status) {
+			if (config.hasBody()) {
+    		    Optional<Config> at = config.body().at(path);
+    			if (at.isPresent()) {
+    				Config conf = at.get();
+    				
+    				boolean val = true;
+    				if (conf.hasValue()) {
+    					status.addFirstAsMatched(path);
+    					checkDeprecation(method, conf);
+    					String str = conf.valueAsString();
+    					
+    					if (trueValues.contains(str)) {
+    						val = true;
+    					} else if (falseValues.contains(str)) {
+    						val = false;
+    					} else {
+    						throw preconditionError(
+    								"must be empty (true) or one of %s (true) or %s (false)", 
+    								trueValues, falseValues);
+    					}
+    				}
+    				
+    				try {
+    					method.invoke(instance, val);
+	                } catch (Throwable t) {
+						throw asInvalidConfigurationException(conf, t);
+	                }
+    				
+    			}
+		    }
+		}
+
+		@Override
+		public int order() {
+			return 10;
+		}
+		
+	}
+	
 	private class IntegerAtOption extends AtOption {
 		
 		IntegerAtOption(Method method, String path) {
@@ -705,7 +810,7 @@ public class Configurer {
     					status.addFirstAsMatched(path);
 	    				try {
 	    					checkDeprecation(method, conf);
-	    					method.invoke(instance, at.get().valueAsBigDecimal());
+	    					method.invoke(instance, conf.valueAsBigDecimal());
 		                } catch (Throwable t) {
 		                	t.printStackTrace();
 							throw asInvalidConfigurationException(conf, t);
@@ -893,6 +998,8 @@ public class Configurer {
 			
 			if (Number.class.isAssignableFrom(valueClass)) {
 				options.add(new IntegerAtOption(method, annotation.value()));
+			} else if (Boolean.class.isAssignableFrom(valueClass)) {
+				options.add(new BooleanAtOption(method, annotation.value()));
 			} else if (valueClass.equals(String.class)) {
 				options.add(new StringAtOption(method, annotation.value()));
 			} else if (valueClass.equals(Config.class)) {

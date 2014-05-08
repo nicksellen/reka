@@ -19,15 +19,17 @@ class ProcessorOutput implements ConfigConverter.Output {
 	private final Output toplevel;
 	private final List<Config> configs;
 	private final Source source;
+	private final String[] path;
     
-	public ProcessorOutput(Output toplevel, Source source) {
-	    this(toplevel, source, null);
+	public ProcessorOutput(Output toplevel, Source source, String[] path) {
+	    this(toplevel, source, null, path);
 	}
 	
-	private ProcessorOutput(Output toplevel, Source source, List<Config> configs) {
+	private ProcessorOutput(Output toplevel, Source source, List<Config> configs, String[] path) {
 		this.toplevel = toplevel != null ? toplevel : this;
 	    this.source = source;
 	    this.configs = configs != null ? configs : new ArrayList<Config>();
+	    this.path = path;
 	}
 	
 	private int mark;
@@ -132,5 +134,10 @@ class ProcessorOutput implements ConfigConverter.Output {
 	@Override 
 	public boolean isTopLevel() {
 		return this == toplevel;
+	}
+	
+	@Override
+	public String[] path() {
+		return path;
 	}
 }

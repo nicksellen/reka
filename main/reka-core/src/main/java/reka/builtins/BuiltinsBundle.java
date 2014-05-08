@@ -16,7 +16,6 @@ public class BuiltinsBundle implements RekaBundle {
 		setup.converter(new IncludeConverter());
 		setup.converter(new MarkdownConverter());
 		setup.converter(new DocConverter());
-		
 	}
 
 }

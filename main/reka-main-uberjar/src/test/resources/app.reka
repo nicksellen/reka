@@ -1,81 +1,141 @@
 
 name a little todo app
 
-@include(app/flows.conf)
-
 use {
+  jade
   http
+  
+  nashorn ϟ
+  
+  jdbc ▶ {
+  
+    url jdbc:postgresql:todos3
+  
+    //url jdbc:h2:woahyeah
+    
+    //username sa
+    //password sa
+    
+    // run <<- sql
+      create table if not exists todos (
+        id bigint auto_increment, 
+        name varchar(40), 
+        done boolean)
+    ---
+    
+    //run <<- sql
+      alter table todos add column if not exists created_at timestamp default current_timestamp()
+    ---
+    
+    // run drop table if exists todos
+    
+    // run <<- sql
+      create table if not exists todos (
+        id serial, 
+        name varchar(40), 
+        done boolean,
+        created_at timestamp default current_timestamp
+      )
+    ---
+    
+    migration create the todos table <<- sql
+      create table todos (
+        id serial, 
+        name varchar(40), 
+        done boolean)
+    ---
+    
+    migration add a timestamp column <<- sql
+      alter table todos add column created_at timestamp default current_timestamp
+    ---
+    
+    migration add a people table <<- sql
+      create table people (
+        id serial,
+        name varchar(255))
+    ---
+    
+    use {
+       //h2
+       postgres
+    }
+    
+  }
+  
 }
 
-use @include(app/services.conf)
-
-flow HTTP router {
+flow http router {
 
   http/router {
   
     GET /css/main.css @include(app/css/main.css)
       
-    GET / { 
-
-      h2 {
-        query select * from todos
-        out todos
-      }
-
-      // then @include(app/render-todos.conf)
-
+    GET / {
+    
+      ▶ select * from todos order by created_at
+      
+      // ϟ <<- javascript
+        var todos = data.todos;
+        if (!todos) return;
+        
+        for each (var todo in todos) {
+          todo.name = todo.name.replace('bob', 'jim');
+        }
+        
+        out.todos = todos;
+      ---
+      
+      jade html.main @include(app/todos.jade)
       then render layout
     }
-      
-    POST / {
-        
-      h2 blah <<- sql
-        insert into todos 
-          (name, done) 
-        values 
-          ({request.data.todo}, false)
-      ---
-      
-  	  then redirect to homepage
-      
-    }
-      
-    PUT /{id} {
-
-      h2 <<- sql
-
-        update todos 
-        set 
-          done = {request.data.done} 
-        where 
-          id = {request.params.id}
-
-      ---
-
-      then redirect to homepage
-      
-    }
-      
-    DELETE /{id} {
-        
-      h2 <<- sql 
-
-        delete from todos 
-        where 
-          id = {request.params.id} 
-        limit 1
-
-      ---
     
-      then redirect to homepage
+    group {
 
+      POST / {
+        ▶ insert into todos (name, done) values (:request.data.todo, false)
+      }
+      
+      PUT /:id {
+        coerce/int64 id
+        coerce/bool request.data.done
+        ▶ update todos set done = :request.data.done where id = :id
+      }
+        
+      DELETE /:id {
+        coerce/int64 id
+        ▶ delete from todos where id = :id
+      }
+      
+      then redirect to homepage
+    
     }
     
   }
+}
+
+run render layout {
+
+  jade <<- jade
+    !!!
+    html
+      head
+        link(type='text/css', href='/css/main.css', rel='stylesheet')
+          
+      body
+        .container
+          h1 Todo!
+          != html.main
+  ---
 }
 
 run redirect to homepage {
   http/redirect /
 }
 
-// run render layout @include(app/render-layout.conf)
+trigger {
+
+  http localhost:5005 {
+    run http router
+  }
+  
+}

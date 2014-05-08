@@ -191,10 +191,10 @@ public class AtomicMutableMemoryData implements AtomicMutableData {
 	}
 
 	@Override
-	public void out(JsonGenerator json) throws IOException {
+	public void writeJsonTo(JsonGenerator json) throws IOException {
 		long stamp = lock.readLock();
 		try {
-			data.out(json);
+			data.writeJsonTo(json);
 		} finally {
 			lock.unlock(stamp);
 		}

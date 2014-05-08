@@ -26,9 +26,4 @@ public class MarkdownConverter implements ConfigConverter {
 		}
 	}
 
-	@Override
-	public ConfigConverter resetOrClone() {
-		return this;
-	}
-
 }

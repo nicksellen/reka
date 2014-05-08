@@ -12,48 +12,74 @@ use {
       load('http://cdnjs.cloudflare.com/ajax/libs/handlebars.js/1.3.0/handlebars.min.js');
     ---
     
-    var index <<- hbs
+    var layoutContent <<- hbs
       <!DOCTYPE html>
       <html>
         <head></head>
         <body>
-          <h1>title: {{ title }}</h1>
-          
           <ul>
-            {{#eachkv request.params}}
-              <li>
-                {{ key }} : {{ value }}
-              </li>
-            {{/eachkv}}
+            <li><a href="/">main</a></li>           
+            <li><a href="/other">other</a></li>
           </ul>
-          
-          <ul>
-            {{#eachkv things}}
-              <li>
-                {{ key }} : {{ value }}
-              </li>
-            {{/eachkv}}
-          </ul>
-          
+          {{{ body }}}
         </body>
       </html>
+    ---
+    
+    var indexContent <<- hbs
+    
+      <h1>title: {{ title }}</h1>
+      
+      <ul>
+        {{#eachkv request.params}}
+          <li>
+            {{ key }} : {{ value }}
+          </li>
+        {{/eachkv}}
+      </ul>
+      
+      <ul>
+        {{#eachkv things}}
+          <li>
+            {{ key }} : {{ value }}
+          </li>
+        {{/eachkv}}
+      </ul>
+      
+    ---
+    
+    var otherContent <<- hbs
+      
+      <h2>this is another page</h2>
+      
+      <ul>
+        {{#eachkv things}}
+          <li>
+            {{ key }} : {{ value }}
+          </li>
+        {{/eachkv}}
+      </ul>
     ---
     
     script <<- javascript
     
       Handlebars.registerHelper('eachkv', function(map, block) {
          var prop, out = '';
-         
          for (prop in map) {
            out += block.fn({ key: prop, value: map[prop] });
          }
-         
          return out;
       });
     
-      var template = Handlebars.compile(index);
+      var layout = Handlebars.compile(layoutContent);
+      var index = Handlebars.compile(indexContent);
+      var other = Handlebars.compile(otherContent);
       
-      delete index; // don't need this any more
+      
+      // don't need this any more
+      delete layoutContent;
+      delete indexContent; 
+      delete otherContent;
       
     ---
     
@@ -72,9 +98,19 @@ run main {
     }
   }
 
-  js out.html = template(data);
+  http/router {
+  
+    GET / {
+      js out.html = layout({ body: index(data) });
+    }
+    
+    GET /other {
+      js out.html = layout({ body: other(data) });
+    }
+  
+  }
 
-  putv response {
+  putvars response {
     status 200
     content :html
     headers {

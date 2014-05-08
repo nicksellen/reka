@@ -35,7 +35,7 @@ public class AddJsonToDatasetTest {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		JsonGenerator json = factory.createJsonGenerator(baos);
 		json.useDefaultPrettyPrinter();
-		ds.out(json);
+		ds.writeJsonTo(json);
 		json.flush();
 		
 		log.debug("json -> {}\n", new String(baos.toByteArray(), Charsets.UTF_8));

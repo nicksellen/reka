@@ -5,6 +5,11 @@ import static java.util.stream.Collectors.toSet;
 import static java.util.stream.IntStream.range;
 import static reka.api.Path.dots;
 import static reka.api.Path.root;
+import static reka.api.content.Contents.doubleValue;
+import static reka.api.content.Contents.falseValue;
+import static reka.api.content.Contents.integer;
+import static reka.api.content.Contents.longValue;
+import static reka.api.content.Contents.trueValue;
 import static reka.api.content.Contents.utf8;
 import static reka.util.Util.createEntry;
 import static reka.util.Util.runtime;
@@ -92,6 +97,14 @@ public class MutableMemoryData implements MutableDataProvider<Object> {
 	private static Content convertToContent(Object obj) {
 		if (obj instanceof String) {
 			return utf8((String) obj);
+		} else if (obj instanceof Long) {
+			return longValue((Long) obj);
+		} else if (obj instanceof Double) {
+			return doubleValue((Double) obj);
+		} else if (obj instanceof Integer) {
+			return integer((Integer) obj);
+		} else if (obj instanceof Boolean) {
+			return ((Boolean) obj) ? trueValue() : falseValue(); 
 		} else if (obj == null) {
 			return NullContent.INSTANCE;
 		} else {
@@ -350,7 +363,7 @@ public class MutableMemoryData implements MutableDataProvider<Object> {
 	}
 	
 	private void contentWriteTo(Content c, JsonGenerator json) throws IOException {
-		c.out(json);
+		c.writeJsonTo(json);
 	}
 	
 	@Override

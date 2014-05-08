@@ -79,7 +79,7 @@ final class DataUtils {
 			StringWriter writer = new StringWriter();
 			JsonGenerator json = jsonFactory.createJsonGenerator(writer);
 			json.useDefaultPrettyPrinter();
-			data.out(json);
+			data.writeJsonTo(json);
 			json.flush();
 			return writer.toString();
 		} catch (IOException e) {
@@ -91,7 +91,7 @@ final class DataUtils {
 		try {
 			StringWriter writer = new StringWriter();
 			JsonGenerator json = jsonFactory.createJsonGenerator(writer);
-			data.out(json);
+			data.writeJsonTo(json);
 			json.flush();
 			return writer.toString();
 		} catch (IOException e) {

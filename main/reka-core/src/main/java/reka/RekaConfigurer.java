@@ -19,6 +19,8 @@ import java.util.zip.ZipFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import reka.config.Config;
+import reka.config.ConfigBody;
 import reka.configurer.annotations.Conf;
 import reka.core.bundle.RekaBundle;
 
@@ -27,6 +29,7 @@ public class RekaConfigurer {
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
 	private final List<String> appPaths = new ArrayList<>();
+	private final List<ConfigBody> appConfigs = new ArrayList<>();
 	
 	private String datadir = "data";
 
@@ -43,9 +46,9 @@ public class RekaConfigurer {
 		datadir = val;
 	}
 	
-	@Conf.Each("require")
-	public void jarpath(String val) {
-		processJarPath(val);
+	@Conf.Each("bundle")
+	public void bundle(String val) {
+		unpackBundle(val);
 	}
 	
 	@Conf.Each("run")
@@ -53,7 +56,14 @@ public class RekaConfigurer {
 		appPaths.add(val);
 	}
 	
-	private void processJarPath(String jarpath) {
+	@Conf.Each("app")
+	public void appDefinition(Config config) {
+		if (!config.hasBody()) return;
+		ConfigBody body = config.body();
+		appConfigs.add(body);
+	}
+	
+	private void unpackBundle(String jarpath) {
 		log.info("loading bundles from jar {}", jarpath);
 		try {
 			File file = new File(jarpath);
@@ -104,7 +114,7 @@ public class RekaConfigurer {
 		
 		checkState(!classLoadingError, "failed to load all bundles");
 		
-		return new Reka(new File(datadir), bundles, appPaths);
+		return new Reka(new File(datadir), bundles, appPaths, appConfigs);
 	}
 
 }

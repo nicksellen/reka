@@ -17,9 +17,6 @@ public interface Source {
     public boolean supportsNestedData();
     public byte[] nestedData(String location);
     
-    //public boolean supportsNestedSource();
-    //public Source nestedSource(String location);
-    
     public boolean hasParent();
     public Source parent();
     
@@ -28,5 +25,7 @@ public interface Source {
     
     public int originOffsetStart();
     public int originOffsetLength();
+    
+    public SourceLinenumbers linenumbers();
     
 }

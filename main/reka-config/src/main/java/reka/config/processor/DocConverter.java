@@ -64,9 +64,4 @@ public class DocConverter implements ConfigConverter {
 		}
 	}
 
-	@Override
-	public ConfigConverter resetOrClone() {
-		return new DocConverter();
-	}
-
 }

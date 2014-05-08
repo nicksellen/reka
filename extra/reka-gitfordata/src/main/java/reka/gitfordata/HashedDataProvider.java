@@ -128,7 +128,7 @@ public class HashedDataProvider implements DataProvider<Record> {
 	@Override
 	public void out(Record record, JsonGenerator json) throws IOException {
 		if (record instanceof ContentRecord) {
-			((ContentRecord) record).toContent().out(json);
+			((ContentRecord) record).toContent().writeJsonTo(json);
 		} else if (record instanceof CollectionRecord) {
 			CollectionRecord coll = (CollectionRecord) record;
 			switch (coll.collectionType()) {

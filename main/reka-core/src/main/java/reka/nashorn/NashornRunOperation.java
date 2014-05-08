@@ -44,7 +44,9 @@ public class NashornRunOperation implements SyncOperation {
 		Object outval = runner.get().run(m).get("out");
 		if (outval instanceof Map) {
 			Data outdata = MutableMemoryData.createFromMap((Map<String,Object>) outval);
-			data.put(out, outdata);
+			outdata.forEachContent((path, content) -> {
+				data.put(out.add(path), content);
+			});
 		} else if (outval instanceof String) {
 			data.putString(out, (String) outval);
 		} else {

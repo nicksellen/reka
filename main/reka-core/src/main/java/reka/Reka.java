@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import reka.admin.RekaSystemBundle;
+import reka.config.ConfigBody;
 import reka.config.FileSource;
 import reka.config.Source;
 import reka.core.bundle.BundleManager;
@@ -27,11 +28,13 @@ public class Reka {
 	private final File datadir;
 	private final List<RekaBundle> bundles = new ArrayList<>();
 	private final List<String> filenames = new ArrayList<>();
+	private final List<ConfigBody> configs = new ArrayList<>();
 	
-	public Reka(File datadir, List<RekaBundle> bundles, List<String> filenames) {
+	public Reka(File datadir, List<RekaBundle> bundles, List<String> filenames, List<ConfigBody> configs) {
 		this.datadir = datadir;
 		this.bundles.addAll(bundles);
 		this.filenames.addAll(filenames);
+		this.configs.addAll(configs);
 	}
 	
 	public void run() {
@@ -71,27 +74,11 @@ public class Reka {
 			manager.deployTransient(identity, source);
 			
 		}
-	}
-
-	//public static void runWithCommandlineArgumentsAndBundles(String[] args, RekaBundle... bundles) throws CmdLineException {
 		
-		/*
-		CommandlineRunner runner = new CommandlineRunner(bundles);
-		CmdLineParser parser = new CmdLineParser(runner);
-		parser.parseArgument(args);
-		runner.run();
-		*/
-		
-		/*
-		if (runner.command != null) {
-			runner.command.run();
-		} else {
-			parser.setUsageWidth(160);
-			parser.printUsage(System.err);
-			System.exit(0);
+		for (ConfigBody config : configs) {
+			String identity = UUID.randomUUID().toString();
+			manager.deployTransient(identity, config);
 		}
-		*/
-
-	//}
+	}
 	
 }

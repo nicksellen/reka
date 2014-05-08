@@ -21,21 +21,21 @@ public class Processor {
     }
 	
 	public NavigableConfig process(NavigableConfig original) {
-		ProcessorOutput toplevel = new ProcessorOutput(null, original.source());
+		ProcessorOutput toplevel = new ProcessorOutput(null, original.source(), new String[]{});
 	    NavigableConfig from = null, to = original;
 	    for (int i = 0; from != to && i < MAX_ITERATIONS; i++) {
             from = to;
-            to = rebuild(toplevel, from, 0);
+            to = rebuild(toplevel, from, new String[]{});
 	    }
 	    return to;
 	}
     
-	private void processChildren(ProcessorOutput toplevel, Config config, ProcessorOutput out, int depth) {
-	    ProcessorOutput out2 = new ProcessorOutput(toplevel, config.source());
+	private void processChildren(ProcessorOutput toplevel, Config config, ProcessorOutput out, String[] path) {
+	    ProcessorOutput out2 = new ProcessorOutput(toplevel, config.source(), path);
         boolean changed = false;
         for (Config child : config.body()) {
             NavigableConfig originalChild = ConfigBody.of(child.source(), child);
-            NavigableConfig rebuiltChild = rebuild(toplevel, originalChild, depth + 1);
+            NavigableConfig rebuiltChild = rebuild(toplevel, originalChild, append(path, child.key()));
             if (!originalChild.equals(rebuiltChild)) {
                 changed = true;
             }
@@ -48,8 +48,14 @@ public class Processor {
         }
 	}
 	
-	private ConfigBody convert(Output toplevel, ConfigBody body) {
-	    ProcessorOutput out = new ProcessorOutput(toplevel, new ConvertedSource(converter, body.source()));
+	private static String[] append(String[] arr, String v) {
+		String[] out = new String[arr.length + 1];
+		out[out.length - 1] = v;
+		return out;
+	}
+	
+	private ConfigBody convert(Output toplevel, ConfigBody body, String[] path) {
+	    ProcessorOutput out = new ProcessorOutput(toplevel, new ConvertedSource(converter, body.source()), path);
 	    for (Config config : body) {
 	        out.mark();
             converter.convert(config, out);
@@ -57,21 +63,21 @@ public class Processor {
 	    return ConfigBody.of(body.source(), out.configs());
 	}
 	
-    private NavigableConfig rebuild(ProcessorOutput toplevel, NavigableConfig input, int depth) {
+    private NavigableConfig rebuild(ProcessorOutput toplevel, NavigableConfig input, String[] path) {
 
-        ProcessorOutput out = new ProcessorOutput(toplevel, input.source());
+        ProcessorOutput out = new ProcessorOutput(toplevel, input.source(), path);
     	for (Config config : input.each()) {
             if (config.hasBody()) {
-               processChildren(toplevel, config, out, depth);
+               processChildren(toplevel, config, out, path);
             } else {
                 out.add(config);
             } 
     	}
 
     	toplevel.mark();
-    	NavigableConfig result = convert(toplevel, ConfigBody.of(input.source(), out.configs()));
+    	NavigableConfig result = convert(toplevel, ConfigBody.of(input.source(), out.configs()), path);
     	
-    	if (depth == 0) {
+    	if (path.length == 0) {
         	List<Config> finaloutput = new ArrayList<>();
         	Iterables.addAll(finaloutput, result);
         	Iterables.addAll(finaloutput, toplevel.changed());

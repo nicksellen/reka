@@ -20,9 +20,9 @@ public interface ConfigConverter {
 		public Output obj(String key, Object value, Iterable<Config> children);
 		public Output toplevel();
 		public boolean isTopLevel();
+		public String[] path();
     }
 	
 	public void convert(Config config, Output out);
-	public ConfigConverter resetOrClone();
 	
 }

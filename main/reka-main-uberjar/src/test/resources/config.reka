@@ -1,3 +1,80 @@
-require /Users/nick/Work/reka/extra/reka-extra-uberjar/target/reka-extra-uberjar-0.1.0.jar
-run src/test/resources/nashorn.reka
+
+bundle /Users/nick/Work/reka/extra/reka-extra-uberjar/target/reka-extra-uberjar-0.1.0.jar
+
 data /tmp/data
+
+app @include(/Users/nick/Work/flow/apps/reka-ui/main.reka)
+app @include(nashorn.reka)
+app @include(app.reka)
+app @include(api.reka)
+
+app {
+  
+  name a small inline app
+
+  use {
+    http
+  }
+
+  flow main {
+    http/content <<- text/html
+      <h1>Hello HTML World!</h1>
+    ---
+  }
+
+  trigger {
+    http localhost:2020 {
+      run main
+    }
+  }
+
+}
+
+app {
+  name pg app
+
+  use {
+    jdbc ▲ {
+      url jdbc:postgresql:letsmake_development
+      use {
+        postgres
+      }
+    }
+    jade ⬤
+    http ❌
+    nashorn ϟ
+  }
+
+  run ⎲ {
+
+    ϟ out.q = data.request.params.q ? '%' + data.request.params.q + '%' : '%';
+
+    ▲ select email from accounts where email like :q
+
+    ⬤ <<- jade
+
+      !!!
+      html
+        head
+        body
+
+          form(method='GET')
+            input(id='q', type='text', name='q', value=request.params.q)
+            script(type = 'text/javascript') var e = document.getElementById('q'); e.focus(); e.select();
+
+          ul
+            each account in accounts
+              li
+                strong= account.email
+
+    ---
+
+  }
+
+  trigger {
+    ❌ localhost:2030 {
+      run ⎲
+    }
+  }
+
+}

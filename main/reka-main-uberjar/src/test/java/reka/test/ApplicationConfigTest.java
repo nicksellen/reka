@@ -16,14 +16,14 @@ import reka.config.processor.IncludeConverter;
 import reka.config.processor.MultiConverter;
 import reka.config.processor.Processor;
 import reka.core.bundle.BundleManager;
-import reka.h2.H2Bundle;
 import reka.http.HttpBundle;
+import reka.jdbc.JdbcBundle;
 
 public class ApplicationConfigTest {
 
     @Test
     public void test() {
-    	BundleManager bundles = new BundleManager(asList(new BuiltinsBundle(), new HttpBundle(), new H2Bundle()));
+    	BundleManager bundles = new BundleManager(asList(new BuiltinsBundle(), new HttpBundle(), new JdbcBundle()));
         NavigableConfig config = ConfigParser.fromFile(new File(getClass().getResource("/app.reka").getFile()));
         config = new Processor(new MultiConverter(new CommentConverter(), new IncludeConverter())).process(config);
         configure(new ApplicationConfigurer(bundles), config).build("app", 1);

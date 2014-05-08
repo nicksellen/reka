@@ -24,7 +24,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.io.Files;
 
-public final class IncludeConverter extends StatelessConverter {
+public final class IncludeConverter implements ConfigConverter {
 	
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	

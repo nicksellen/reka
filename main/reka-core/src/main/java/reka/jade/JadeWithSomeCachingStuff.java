@@ -282,7 +282,7 @@ public class JadeWithSomeCachingStuff implements SyncOperation, JsonProvider {
 	}
 
 	@Override
-	public void out(JsonGenerator json) throws IOException {
+	public void writeJsonTo(JsonGenerator json) throws IOException {
 
 		json.writeStartObject();
 		

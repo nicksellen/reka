@@ -54,8 +54,8 @@ final class NoData implements Data {
 	}
 
 	@Override
-	public void out(JsonGenerator json) throws IOException {
-		// TODO: write null or just nothing?
+	public void writeJsonTo(JsonGenerator json) throws IOException {
+		json.writeNull();
 	}
 
 	@Override

@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import reka.api.Path;
 import reka.api.run.EverythingSubscriber;
 import reka.api.run.Subscriber;
+import reka.config.ConfigBody;
 import reka.config.FileSource;
 import reka.config.NavigableConfig;
 import reka.config.Source;
@@ -99,7 +100,7 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 			if (app == null) return;
 			app.undeploy();
 			log.info("undeployed [{}]", app.fullName());
-			if (source.isFile()) {
+			if (source != null && source.isFile()) {
 				deployedFilenames.remove(source.file().getAbsolutePath());
 			}
 			saveState();
@@ -115,22 +116,73 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 	public void redeploy(String identity, Subscriber subscriber) {
 		Source source = applicationSource.get(identity);
 		checkNotNull(source, "we don't have the source for %s", identity);
-		deploy(identity, true, source, false, subscriber);
+		deploySource(identity, true, source, false, subscriber);
 	}
 
 	public void deploy(String identity, Source source) {
-		deploy(identity, false, source, false, EverythingSubscriber.DO_NOTHING);
+		deploySource(identity, false, source, false, EverythingSubscriber.DO_NOTHING);
 	}
 
 	public void deployTransient(String identity, Source source) {
-		deploy(identity, false, source, true, EverythingSubscriber.DO_NOTHING);
+		deploySource(identity, false, source, true, EverythingSubscriber.DO_NOTHING);
+	}
+	
+	public void deployTransient(String identity, ConfigBody incomingConfig) {
+		
+		long stamp = lock.writeLock();
+		
+		try {
+			Application previous = applications.remove(identity);
+			
+			
+			executor.execute(() -> {
+				
+				log.info("deploying {}{}", "from config", " (transient)");
+				
+				NavigableConfig config = bundles.processor().process(incomingConfig);
+		
+				versions.putIfAbsent(identity, new AtomicInteger());
+				int version = versions.get(identity).incrementAndGet();
+
+				if (previous != null) {
+					previous.undeploy();
+				}
+			
+				configure(new ApplicationConfigurer(bundles), config)
+					.build(identity, version, previous, EverythingSubscriber.DO_NOTHING)
+					.whenComplete((app, ex) -> {
+					try {
+						if (app != null) {
+							applications.put(identity, app);
+							log.info("deployed [{}] listening on {}", app.fullName(), app.ports().stream().map(Object::toString).collect(joining(", ")));
+						} else if (ex != null) {
+							ex.printStackTrace();
+						}
+						saveState();
+					} finally {
+						lock.unlock(stamp);
+					}
+					
+				});
+				
+			});
+		} catch (Throwable t) {
+			lock.unlock(stamp);
+			throw t;
+		}
+		
 	}
 	
 	public void deploy(String identity, Source source, Subscriber subscriber) {
-		deploy(identity, false, source, false, subscriber);
+		deploySource(identity, false, source, false, subscriber);
 	}
 	
-	public void deploy(String identity, boolean redeploy, Source source, boolean isTransient, Subscriber subscriber) {
+	public void deploySource(
+			String identity, 
+			boolean redeploy, 
+			Source source,
+			boolean isTransient, 
+			Subscriber subscriber) {
 		
 		long stamp = lock.writeLock();
 		

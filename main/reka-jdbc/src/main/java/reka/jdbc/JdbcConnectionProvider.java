@@ -3,6 +3,9 @@ package reka.jdbc;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import javax.sql.DataSource;
+
 public interface JdbcConnectionProvider extends AutoCloseable {
-	public Connection getConnection() throws SQLException;
+	Connection getConnection() throws SQLException;
+	DataSource dataSource();
 }
