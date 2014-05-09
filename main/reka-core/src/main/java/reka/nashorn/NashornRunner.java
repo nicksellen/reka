@@ -33,25 +33,21 @@ public class NashornRunner {
 	private static final NashornScriptEngineFactory factory = (NashornScriptEngineFactory) factoryFor("nashorn");
 
 	private final NashornScriptEngine engine;
-	private final CompiledScript compiledScript;
+	private final Compilable compiler;
 	
 	private final jdk.nashorn.internal.objects.Global global;
 	
-	public NashornRunner(List<String> initializationScripts, String mainScript) {
+	public NashornRunner(List<String> initializationScripts) {
 		String[] options;
 		options = new String[] { "--global-per-engine" };
 		engine = (NashornScriptEngine) factory.getScriptEngine(options);
-		Compilable compiler = (Compilable) engine;
+		compiler = (Compilable) engine;
 		
 		try {
 			
 			for (String initializationScript : initializationScripts) {
 				engine.eval(initializationScript);
 			}
-
-			StringBuilder sb = new StringBuilder();
-			sb.append("(function(){\n").append(mainScript).append("\n})()");
-			compiledScript = compiler.compile(sb.toString());
 			
 		} catch (ScriptException e) {
 			throw unchecked(e);
@@ -69,7 +65,18 @@ public class NashornRunner {
 		}
 	}
 	
-	public Map<String,Object> run(Map<String,Object> data) {
+	public CompiledScript compile(String source) {
+		try {
+			return compiler.compile(new StringBuilder()
+				.append("(function(){\n")
+					.append(source)
+				.append("\n})()").toString());
+		} catch (ScriptException e) {
+			throw unchecked(e);
+		}
+	}
+	
+	public Map<String,Object> run(CompiledScript compiledScript, Map<String,Object> data) {
 		
 		ScriptContext context = new SimpleScriptContext();
 		Bindings bindings = context.getBindings(ScriptContext.ENGINE_SCOPE);
@@ -91,32 +98,6 @@ public class NashornRunner {
 		});
 		
 		return result;
-	}
-	
-	public class E {
-		
-		private final ScriptContext context;
-		private final Bindings bindings;
-		
-		private E() {
-			context = new SimpleScriptContext();
-			bindings = context.getBindings(ScriptContext.ENGINE_SCOPE);
-		}
-		
-		public E put(String key, Object value) {
-			bindings.put(key, value);
-			return this;	
-		}
-		
-		public Map<String,Object> run() {
-			try {
-				compiledScript.eval(context);
-				return bindings;
-			} catch (ScriptException e) {
-				throw unchecked(e);
-			}
-		}
-		
 	}
 	
 }

@@ -13,13 +13,13 @@ import reka.configurer.annotations.Conf;
 
 public class NashornRunConfigurer implements Supplier<FlowSegment> {
 	
-	private final List<String> initializationScripts;
+	private final ThreadLocal<NashornRunner> runner;
 	
 	private String script;
 	private Path out;
 	
-	public NashornRunConfigurer(List<String> initializationScripts, Path defaultWriteTo) {
-		this.initializationScripts = initializationScripts;
+	public NashornRunConfigurer(ThreadLocal<NashornRunner> runner, Path defaultWriteTo) {
+		this.runner = runner;
 		this.out = defaultWriteTo;
 	}
 
@@ -39,7 +39,7 @@ public class NashornRunConfigurer implements Supplier<FlowSegment> {
 
 	@Override
 	public FlowSegment get() {
-		return sync("run", (data) -> new NashornRunOperation(initializationScripts, script, out));
+		return sync("run", (data) -> new NashornRunOperation(runner, script, out));
 	}
 
 }

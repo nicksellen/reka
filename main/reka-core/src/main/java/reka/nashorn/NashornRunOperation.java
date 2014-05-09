@@ -3,8 +3,9 @@ package reka.nashorn;
 import static reka.util.Util.runtime;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+
+import javax.script.CompiledScript;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,16 +21,20 @@ public class NashornRunOperation implements SyncOperation {
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
 	private final ThreadLocal<NashornRunner> runner;
+	private final ThreadLocal<CompiledScript> compiled;
 	private final Path out;
 	
-	public NashornRunOperation(List<String> initializationScripts, String scriptSource, Path out) {
-		runner = new ThreadLocal<NashornRunner>(){
-
+	public NashornRunOperation(ThreadLocal<NashornRunner> runner, String scriptSource, Path out) {
+		
+		this.runner = runner; 
+		
+		compiled = new ThreadLocal<CompiledScript>(){
 			@Override
-			protected NashornRunner initialValue() {
-				return new NashornRunner(initializationScripts, scriptSource);
+			protected CompiledScript initialValue() {
+				return runner.get().compile(scriptSource);
 			}
 		};
+		
 		this.out = out;
 	}
 	
@@ -41,7 +46,7 @@ public class NashornRunOperation implements SyncOperation {
 		m.put("data", data.toMap());
 		m.put("out", new HashMap<>());
 		
-		Object outval = runner.get().run(m).get("out");
+		Object outval = runner.get().run(compiled.get(), m).get("out");
 		if (outval instanceof Map) {
 			Data outdata = MutableMemoryData.createFromMap((Map<String,Object>) outval);
 			outdata.forEachContent((path, content) -> {

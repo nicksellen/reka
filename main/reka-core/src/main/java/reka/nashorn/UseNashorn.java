@@ -40,7 +40,19 @@ public class UseNashorn extends UseConfigurer {
 
 	@Override
 	public void setup(UseInit init) {
-		init.operation(asList("run", ""), () -> new NashornRunConfigurer(scripts, root()));
+		
+
+		ThreadLocal<NashornRunner> runner = new ThreadLocal<NashornRunner>(){
+
+			@Override
+			protected NashornRunner initialValue() {
+				return new NashornRunner(scripts);
+			}
+			
+		};
+		
+		
+		init.operation(asList("run", ""), () -> new NashornRunConfigurer(runner, root()));
 	}
 
 }
