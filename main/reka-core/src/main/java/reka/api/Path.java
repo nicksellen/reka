@@ -1,6 +1,7 @@
 package reka.api;
 
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
 import static reka.util.Util.unchecked;
 
 import java.io.ByteArrayInputStream;
@@ -14,18 +15,19 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.ArrayUtils;
+
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
+import com.google.common.collect.Iterators;
 import com.google.common.hash.Hasher;
 import com.google.common.io.BaseEncoding;
 
@@ -39,7 +41,7 @@ public class Path implements Iterable<Path.PathElement>, Comparable<Path>, Hasha
 	private static final Splitter slashSplitter = Splitter.on("/").omitEmptyStrings();
 	private static final Joiner slashJoiner = Joiner.on("/").skipNulls();
 	
-	private final List<PathElement> elements;
+	private final PathElement[] elements;
 	private final int size;
 	
 	public static Path fromURL(String url) {
@@ -57,11 +59,17 @@ public class Path implements Iterable<Path.PathElement>, Comparable<Path>, Hasha
 	}
 	
 	public Path reverse() {
-		return new Path(Lists.reverse(elements));
+		PathElement[] newElements = new PathElement[elements.length];
+		System.arraycopy(elements, 0, newElements, 0, elements.length);
+		ArrayUtils.reverse(newElements);
+		return new Path(newElements);
 	}
 	
 	public boolean containsNextIndex() {
-		return elements.stream().anyMatch(PathElement::isNextIndex);
+		for (int i = 0; i < elements.length; i++) {
+			if (elements[i].isNextIndex()) return true;
+		}
+		return false;
 	}
 	
 	public Path parent() {
@@ -308,7 +316,7 @@ public class Path implements Iterable<Path.PathElement>, Comparable<Path>, Hasha
 			return this;
 		}
 		public Path build() {
-			return new Path(elements);
+			return new Path(elements.toArray(new PathElement[elements.size()]));
 		}
 	}
 	
@@ -327,7 +335,7 @@ public class Path implements Iterable<Path.PathElement>, Comparable<Path>, Hasha
 		if (other.size != size) return false;
 		
 		for (int i = 0; i < size; i++) {
-			if (!elements.get(i).equals(other.elements.get(i))) {
+			if (!elements[i].equals(other.elements[i])) {
 				return false;
 			}
 		}
@@ -398,7 +406,7 @@ public class Path implements Iterable<Path.PathElement>, Comparable<Path>, Hasha
 			addElementTo(value.substring(pos, value.length()).replaceAll("\\\\", ""), elements);
 		}
 		
-		return new Path(elements);
+		return new Path(elements.toArray(new PathElement[elements.size()]));
 	}
 	
 	private static void addElementTo(String element, Collection<PathElement> elements) {
@@ -432,7 +440,7 @@ public class Path implements Iterable<Path.PathElement>, Comparable<Path>, Hasha
 		}
 	}
 	
-	private static List<PathElement> parse(String[] items) {
+	private static PathElement[] parse(String[] items) {
 		List<PathElement> elements = new ArrayList<>();
 		for (int i = 0; i < items.length; i++) {
 			String item = items[i];
@@ -440,7 +448,8 @@ public class Path implements Iterable<Path.PathElement>, Comparable<Path>, Hasha
 				addElementTo(item, elements);
 			}
 		}
-		return elements;
+		
+		return elements.toArray(new PathElement[elements.size()]);
 	}
 	
 	public static Path empty() {
@@ -459,7 +468,7 @@ public class Path implements Iterable<Path.PathElement>, Comparable<Path>, Hasha
 		if (!iterator.hasNext()) {
 			return EMPTY_PATH;
 		}
-		return new Path(iteratorToList(new ArrayList<PathElement>(), iterator));
+		return new Path(Iterators.toArray(iterator, PathElement.class));
 	}
 	
 	public static Path fromHex(String hex) {
@@ -475,12 +484,12 @@ public class Path implements Iterable<Path.PathElement>, Comparable<Path>, Hasha
 				return EMPTY_PATH;
 			}
 			
-			List<PathElement> elements = new ArrayList<>(size);
+			PathElement[] elements = new PathElement[size];
 			for (int i = 0; i < size; i++) {
 				if (di.readBoolean()) {
-					elements.add(PathElements.name(di.readUTF()));	
+					elements[i] = PathElements.name(di.readUTF());	
 				} else {
-					elements.add(PathElements.index(di.readInt()));
+					elements[i] = PathElements.index(di.readInt());
 				}
 			}
 			return new Path(elements);
@@ -493,37 +502,41 @@ public class Path implements Iterable<Path.PathElement>, Comparable<Path>, Hasha
 		return elements.length == 0 ? EMPTY_PATH : new Path(elements);
 	}
 
-	private Path(List<PathElement> elements) {
+	private Path(PathElement[] elements) {
 		int emptyCount = 0;
 		for (PathElement e : elements) {
 			if (e.isEmpty()) emptyCount++;
 		}
 		if (emptyCount > 0) {
-			this.elements = new ArrayList<>(elements.size() - emptyCount);
+			this.elements = new PathElement[elements.length - emptyCount];
+			int i = 0;
 			for (PathElement e : elements) {
 				if (!e.isEmpty()) {
-					this.elements.add(e);
+					this.elements[i] = e;
+					i++;
 				}
 			}
 		} else {
 			this.elements = elements;
 		}
-		this.size = this.elements.size();
+		this.size = this.elements.length;
 	}
 	
 	private Path() {
-		this(new ArrayList<PathElement>());
+		this(new PathElement[]{});
 	}
 	
+	/*
 	private Path(PathElement... elements) {
-		this(Arrays.asList(elements));
+		this(elements);
 	}
+	*/
 	
 	public String wrapAndJoin(String wrap, String seperator) {
 		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < elements.size(); i++) {
-			sb.append(wrap.replaceAll("\\{\\}", elements.get(i).toString()));
-			if (i < elements.size() - 1) {
+		for (int i = 0; i < elements.length; i++) {
+			sb.append(wrap.replaceAll("\\{\\}", elements[i].toString()));
+			if (i < elements.length - 1) {
 				sb.append(seperator);
 			}
 		}
@@ -532,9 +545,9 @@ public class Path implements Iterable<Path.PathElement>, Comparable<Path>, Hasha
 	
 	public String join(String seperator) {
 		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < elements.size(); i++) {
-			sb.append(elements.get(i));
-			if (i < elements.size() - 1) {
+		for (int i = 0; i < elements.length; i++) {
+			sb.append(elements[i]);
+			if (i < elements.length - 1) {
 				sb.append(seperator);
 			}
 		}
@@ -542,24 +555,23 @@ public class Path implements Iterable<Path.PathElement>, Comparable<Path>, Hasha
 	}
 	
 	public Path add(Path other) {
-		if (other.isEmpty()) return this;
-		List<PathElement> newElements = new ArrayList<>(elements);
-		newElements.addAll(other.elements);
+		PathElement[] newElements = new PathElement[elements.length + other.elements.length];
+		System.arraycopy(elements, 0, newElements, 0, elements.length);
+		System.arraycopy(other.elements, 0, newElements, elements.length, other.elements.length);
 		return new Path(newElements);
 	}
 	
 	public Path add(PathElement element) {
-		if (element.isEmpty()) return this;
-		List<PathElement> newElements = new ArrayList<>(elements);
-		newElements.add(element);
+		PathElement[] newElements = new PathElement[elements.length + 1];
+		System.arraycopy(elements, 0, newElements, 0, elements.length);
+		newElements[newElements.length - 1] = element;
 		return new Path(newElements);
 	}
 	
 	public Path add(PathElement... es) {
-		List<PathElement> newElements = new ArrayList<>(elements);
-		for (PathElement e : es) {
-			newElements.add(e);
-		}
+		PathElement[] newElements = new PathElement[elements.length + es.length];
+		System.arraycopy(elements, 0, newElements, 0, elements.length);
+		System.arraycopy(es, 0, newElements, elements.length, es.length);
 		return new Path(newElements);
 	}
 	
@@ -572,16 +584,23 @@ public class Path implements Iterable<Path.PathElement>, Comparable<Path>, Hasha
 	}
 	
 	public PathElement last() {
-		return isEmpty() ? null : elements.get(elements.size() - 1);
+		return isEmpty() ? null : elements[elements.length - 1];
 	}
 	
 	public Path butlast() {
-		return size > 1 ? new Path(elements.subList(0, elements.size() - 1)) : empty(); 
+		return size > 1 ? new Path(subList(elements, 0, elements.length - 1)) : empty(); 
+	}
+	
+	private static PathElement[] subList(PathElement[] src, int fromIndex, int toIndex) {
+		int len = toIndex - fromIndex;
+		PathElement[] dest = new PathElement[len];
+		System.arraycopy(src, fromIndex, dest, 0, len);
+		return dest;
 	}
 
 	@Override
 	public Iterator<PathElement> iterator() {
-		return Collections.unmodifiableList(elements).iterator();
+		return asList(elements).iterator();
 	}
 
 	public int length() {
@@ -589,7 +608,7 @@ public class Path implements Iterable<Path.PathElement>, Comparable<Path>, Hasha
 	}
 
 	public PathElement get(int i) {
-		return elements.get(i);
+		return elements[i];
 	}
 	
 	public byte[] toByteArray() {
@@ -618,7 +637,7 @@ public class Path implements Iterable<Path.PathElement>, Comparable<Path>, Hasha
 	}
 	
 	public PathElement[] toArray() {
-		return elements.toArray(new PathElement[elements.size()]);
+		return elements;
 	}
 
 	public Path subpath(int fromIndex) {
@@ -626,11 +645,11 @@ public class Path implements Iterable<Path.PathElement>, Comparable<Path>, Hasha
 	}
 	
 	public Path subpath(int fromIndex, int toIndex) {
-		return new Path(elements.subList(fromIndex, toIndex));
+		return new Path(subList(elements, fromIndex, toIndex));
 	}
 
 	public PathElement first() {
-		return elements.isEmpty() ? null : elements.get(0);
+		return elements.length == 0 ? null : elements[0];
 	}
 
 	public boolean startsWith(Path other) {
@@ -638,7 +657,7 @@ public class Path implements Iterable<Path.PathElement>, Comparable<Path>, Hasha
 			return false;
 		}
 		for (int i = 0; i < other.length(); i++) {
-			if (!other.get(i).equals(elements.get(i))) {
+			if (!other.get(i).equals(elements[i])) {
 				return false;
 			}
 		}
@@ -653,7 +672,7 @@ public class Path implements Iterable<Path.PathElement>, Comparable<Path>, Hasha
 		}
 		int min = Math.min(thisLength, otherLength);
 		for (int i = 1; i <= min; i++) {
-			if (!other.get(otherLength - i).equals(elements.get(thisLength - i))) {
+			if (!other.get(otherLength - i).equals(elements[thisLength - i])) {
 				return false;
 			}
 		}
@@ -672,7 +691,7 @@ public class Path implements Iterable<Path.PathElement>, Comparable<Path>, Hasha
 	public String dots() {
 		StringBuilder b = new StringBuilder();
 		for (int i = 0; i < size; i++) {
-			PathElement e = elements.get(i);
+			PathElement e = elements[i];
 			if (e.isKey()) {
 				b.append(e.name().replaceAll("\\.", "\\\\."));
 			} else if (e.isNextIndex()) {
@@ -680,7 +699,7 @@ public class Path implements Iterable<Path.PathElement>, Comparable<Path>, Hasha
 			} else {
 				b.append(e);
 			}
-			if (i < size - 1 && elements.get(i + 1).isKey()) {
+			if (i < size - 1 && elements[i + 1].isKey()) {
 				b.append(".");
 			}
 		}
@@ -695,7 +714,7 @@ public class Path implements Iterable<Path.PathElement>, Comparable<Path>, Hasha
 		try {
 			StringBuilder sb = new StringBuilder();
 			for (int i = 0; i < size; i++) {
-				PathElement element = elements.get(i);
+				PathElement element = elements[i];
 				if (element.isKey()) {
 					sb.append(URLEncoder.encode(element.name(), Charsets.UTF_8.name()));
 				} else {
