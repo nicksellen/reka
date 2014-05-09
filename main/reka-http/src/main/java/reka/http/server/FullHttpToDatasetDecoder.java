@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import reka.api.Path;
+import reka.api.Path.PathElements;
 import reka.api.Path.Request;
 import reka.api.Path.Response;
 import reka.api.data.MutableData;
@@ -78,7 +79,7 @@ public class FullHttpToDatasetDecoder extends MessageToMessageDecoder<FullHttpRe
 			sb.append(':').append(port);
 		}
 		String fullHostname = sb.toString();
-		data.putString(path("something"), fullHostname);
+		data.putString(path(PathElements.name("something")), fullHostname);
 		
 		data.putString(Request.PATH, QueryStringDecoder.decodeComponent(qs.path()))
 			.putString(Request.HOST, host);
@@ -110,7 +111,7 @@ public class FullHttpToDatasetDecoder extends MessageToMessageDecoder<FullHttpRe
 		// request headers
 
 		for (Entry<String, String> header : request.headers()) {
-			headers.put(path(header.getKey()), utf8(header.getValue()));
+			headers.put(path(PathElements.name(header.getKey())), utf8(header.getValue()));
 		}
 		
 		if (request.getMethod().equals(HttpMethod.POST) || request.getMethod().equals(HttpMethod.PUT)) {
