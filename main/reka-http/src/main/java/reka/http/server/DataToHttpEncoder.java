@@ -1,7 +1,6 @@
 package reka.http.server;
 
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
-import static java.lang.String.format;
 import static reka.util.Util.unchecked;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufOutputStream;
@@ -24,6 +23,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -39,6 +39,8 @@ import com.google.common.base.Charsets;
 import com.google.common.net.HttpHeaders;
 
 public class DataToHttpEncoder extends MessageToMessageEncoder<Data> {
+	
+	private static final String DEFAULT_SERVER_NAME = "reka-http"; 
 
 	private final Logger logger = LoggerFactory.getLogger("http-encoder");
 	
@@ -122,8 +124,8 @@ public class DataToHttpEncoder extends MessageToMessageEncoder<Data> {
 				// 404
 				FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.NOT_FOUND);
 				response.headers().set(HttpHeaders.CONTENT_TYPE, "text/plain");
-				response.content().writeBytes(
-					format("no page here!\n\n%s", data.toPrettyJson()).getBytes(Charsets.UTF_8));
+				response.content().writeBytes("no page here!\n\n".getBytes(Charsets.UTF_8));
+				response.content().writeBytes(data.toPrettyJson().getBytes(Charsets.UTF_8));
 				out.add(response);
 				return;
 			}
@@ -134,6 +136,9 @@ public class DataToHttpEncoder extends MessageToMessageEncoder<Data> {
 			} else {
 				response = new DefaultHttpResponse(HTTP_1_1, responseStatus);
 			}
+			
+			response.headers().set(HttpHeaders.SERVER, DEFAULT_SERVER_NAME);
+			io.netty.handler.codec.http.HttpHeaders.setDate(response, new Date());
 			
 			data.at(Response.HEADERS).forEachContent((p, c) -> {
 				response.headers().set(p.last().toString(), c);
