@@ -42,8 +42,6 @@ public class Path implements Iterable<Path.PathElement>, Comparable<Path>, Hasha
 	private final List<PathElement> elements;
 	private final int size;
 	
-	private final int hashCode;
-	
 	public static Path fromURL(String url) {
 		Path.Builder builder = newBuilder();
 		try {
@@ -316,7 +314,7 @@ public class Path implements Iterable<Path.PathElement>, Comparable<Path>, Hasha
 	
 	@Override
 	public int hashCode() {
-		return hashCode;
+		return Arrays.hashCode(toArray());
 	}
 
 	@Override
@@ -511,7 +509,6 @@ public class Path implements Iterable<Path.PathElement>, Comparable<Path>, Hasha
 			this.elements = elements;
 		}
 		this.size = this.elements.size();
-		this.hashCode = Objects.hash((Object[]) toArray());
 	}
 	
 	private Path() {
