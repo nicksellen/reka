@@ -1,6 +1,5 @@
 package reka.http.server;
 
-import static java.lang.String.format;
 import static reka.api.Path.dots;
 import static reka.api.Path.path;
 import static reka.api.content.Contents.binary;
@@ -74,7 +73,11 @@ public class FullHttpToDatasetDecoder extends MessageToMessageDecoder<FullHttpRe
 		InetSocketAddress local = (InetSocketAddress) ctx.channel().localAddress();
 		
 		int port = local.getPort();
-		String fullHostname = format("%s://%s%s", "http", host, port == 80 ? "" : ":" + port);
+		StringBuilder sb = new StringBuilder().append(host);
+		if (port != 80) {
+			sb.append(':').append(port);
+		}
+		String fullHostname = sb.toString();
 		data.putString(path("something"), fullHostname);
 		
 		data.putString(Request.PATH, QueryStringDecoder.decodeComponent(qs.path()))

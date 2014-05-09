@@ -1,6 +1,5 @@
 package reka.api;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 import static reka.util.Util.unchecked;
 
@@ -240,7 +239,7 @@ public class Path implements Iterable<Path.PathElement>, Comparable<Path>, Hasha
 		private final String name;
 		
 		private NamedPathElement(String name) {
-			checkNotNull(name);
+			assert name != null;
 			this.name = name;
 		}
 		
