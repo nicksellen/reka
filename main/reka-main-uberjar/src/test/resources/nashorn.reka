@@ -110,7 +110,7 @@ run main {
   
   }
 
-  putvars response {
+  putv response {
     status 200
     content :html
     headers {
@@ -121,7 +121,7 @@ run main {
 }
 
 trigger {
-  http localhost:4010 {
+  http 192.168.2.3:4010 {
     run main
   }
 }

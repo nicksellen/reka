@@ -5,6 +5,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Spliterator;
+import java.util.function.Consumer;
 
 import reka.config.formatters.ConfigFormatter;
 import reka.config.formatters.Formatter;
@@ -137,5 +139,17 @@ public class BaseConfigBody extends ConfigBody {
     public Source source() {
         return source;
     }
+
+	@Override
+	public void forEach(Consumer<? super Config> action) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public Spliterator<Config> spliterator() {
+		// TODO Auto-generated method stub
+		return null;
+	}
     
 }

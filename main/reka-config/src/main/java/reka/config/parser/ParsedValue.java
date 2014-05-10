@@ -14,4 +14,5 @@ abstract class ParsedValue implements Locatable {
 	public ParsedSourceLocation sourceLocation() {
 		return pos;
 	}
+	
 }
