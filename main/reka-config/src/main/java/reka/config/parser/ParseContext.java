@@ -1,4 +1,4 @@
-package reka.config.parser2;
+package reka.config.parser;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Lists.reverse;
@@ -132,7 +132,7 @@ public final class ParseContext {
 	}
 	
 	public <V> V simpleParse(SimpleParseHandler<V> handler) {
-		return handler.parse(this);
+		return handler.apply(this);
 	}
 	
 	public void eat(EatHandler handler) {

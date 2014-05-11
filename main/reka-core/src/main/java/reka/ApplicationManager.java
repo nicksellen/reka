@@ -28,7 +28,6 @@ import org.slf4j.LoggerFactory;
 import reka.api.Path;
 import reka.api.run.EverythingSubscriber;
 import reka.api.run.Subscriber;
-import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.FileSource;
 import reka.config.NavigableConfig;

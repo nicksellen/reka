@@ -1,21 +1,16 @@
-package reka.config.parser2.states;
+package reka.config.parser.states;
 
 import static java.lang.Character.isWhitespace;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import reka.config.Config;
-import reka.config.parser2.ParseContext;
-import reka.config.parser2.ParseState;
-import reka.config.parser2.Parser2.BodyVal;
+import reka.config.parser.ParseContext;
+import reka.config.parser.ParseState;
+import reka.config.parser.values.BodyVal;
 
 public class BodyState implements ParseState {
-	
-	private final Logger log = LoggerFactory.getLogger(getClass());
 	
 	private final List<Config> configs = new ArrayList<>();
 
@@ -35,7 +30,7 @@ public class BodyState implements ParseState {
 				ctx.emit("body", new BodyVal(configs));
 				break;
 			} else {
-				ctx.parse(new ConfigItemState());
+				ctx.parse(new ItemState());
 			}
 		}
 		

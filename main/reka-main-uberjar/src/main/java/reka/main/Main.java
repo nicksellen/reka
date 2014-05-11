@@ -31,8 +31,6 @@ public class Main {
 	
 	public static void main(String[] args) throws CmdLineException {
 		
-		log.info("starting reka");
-		
 		if (args.length != 1) {
 			log.error("please provide a configuration file as the first argument");
 			return;

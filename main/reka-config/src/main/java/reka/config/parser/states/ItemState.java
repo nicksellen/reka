@@ -1,4 +1,4 @@
-package reka.config.parser2.states;
+package reka.config.parser.states;
 
 import static com.google.common.base.Preconditions.checkState;
 import static reka.config.ConfigUtil.doc;
@@ -6,14 +6,14 @@ import static reka.config.ConfigUtil.k;
 import static reka.config.ConfigUtil.kv;
 import static reka.config.ConfigUtil.obj;
 import reka.config.Source;
-import reka.config.parser2.ParseContext;
-import reka.config.parser2.ParseState;
-import reka.config.parser2.Parser2.BodyVal;
-import reka.config.parser2.Parser2.DocVal;
-import reka.config.parser2.Parser2.KeyVal;
-import reka.config.parser2.Parser2.ValueVal;
+import reka.config.parser.ParseContext;
+import reka.config.parser.ParseState;
+import reka.config.parser.values.BodyVal;
+import reka.config.parser.values.DocVal;
+import reka.config.parser.values.KeyVal;
+import reka.config.parser.values.ValueVal;
 
-public class ConfigItemState implements ParseState {
+public class ItemState implements ParseState {
 
 	private ValueVal value;
 	private DocVal doc;
@@ -34,11 +34,11 @@ public class ConfigItemState implements ParseState {
 	@Override
 	public void accept(ParseContext ctx) {
 		
-		KeyVal key = ctx.simpleParse(State.KEY);
+		KeyVal key = ctx.simpleParse(ParseStates.KEY);
 		
 		checkState(!key.value().isEmpty(), "empty key at char %s in %s", ctx.startPos(), ctx.source().location());
 		
-		ctx.parse(State.VALUE);
+		ctx.parse(ParseStates.VALUE);
 		
 		Source src = ctx.source().subset(ctx.startPos(), ctx.endPos() - ctx.startPos());
 		
@@ -53,7 +53,7 @@ public class ConfigItemState implements ParseState {
 			ctx.emit("k", k(src, key.value()));
 		}
 		
-		ctx.eat(State.WHITESPACE);
+		ctx.eat(ParseStates.WHITESPACE);
 		
 	}
 	

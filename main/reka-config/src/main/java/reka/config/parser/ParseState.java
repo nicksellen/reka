@@ -1,4 +1,4 @@
-package reka.config.parser2;
+package reka.config.parser;
 
 import java.util.function.Consumer;
 

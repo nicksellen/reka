@@ -4,7 +4,7 @@ import java.io.File;
 import java.math.BigDecimal;
 
 import reka.config.formatters.Formattable;
-import reka.config.parser2.Parser2;
+import reka.config.parser.Parser;
 
 public interface Config extends Formattable {
 	
@@ -43,7 +43,7 @@ public interface Config extends Formattable {
 	}
 	
 	public static NavigableConfig fromSource(Source source) {
-		return Parser2.parse(source);
+		return Parser.parse(source);
 	}
     
 }

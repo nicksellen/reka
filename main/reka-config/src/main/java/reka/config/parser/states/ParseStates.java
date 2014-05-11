@@ -1,4 +1,4 @@
-package reka.config.parser2.states;
+package reka.config.parser.states;
 
 import static com.google.common.base.Preconditions.checkState;
 import static java.lang.Character.isWhitespace;
@@ -6,22 +6,17 @@ import static reka.config.formatters.FormattingUtil.removeIndentation;
 
 import java.util.Optional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import reka.config.parser2.EatHandler;
-import reka.config.parser2.ParseContext;
-import reka.config.parser2.ParseState;
-import reka.config.parser2.Parser2.DocVal;
-import reka.config.parser2.Parser2.KeyVal;
-import reka.config.parser2.Parser2.ValueVal;
-import reka.config.parser2.SimpleParseHandler;
+import reka.config.parser.EatHandler;
+import reka.config.parser.ParseContext;
+import reka.config.parser.ParseState;
+import reka.config.parser.SimpleParseHandler;
+import reka.config.parser.values.DocVal;
+import reka.config.parser.values.KeyVal;
+import reka.config.parser.values.ValueVal;
 
 import com.google.common.base.Charsets;
 
-final class State {
-	
-	private static final Logger log = LoggerFactory.getLogger(State.class);
+final class ParseStates {
 	
 	public static final ValueState VALUE = new ValueState();
 	public static final DocState DOC = new DocState();
@@ -34,7 +29,7 @@ final class State {
 	private static class KeyHandler implements SimpleParseHandler<KeyVal> {
 
 		@Override
-		public KeyVal parse(ParseContext ctx) {
+		public KeyVal apply(ParseContext ctx) {
 			StringBuilder sb = new StringBuilder();
 			while (!ctx.isEOF() && !isWhitespace(ctx.peekChar())) {
 				sb.append(ctx.popChar());
@@ -48,7 +43,7 @@ final class State {
 	private static class OptionalWordHandler implements SimpleParseHandler<Optional<String>> {
 
 		@Override
-		public Optional<String> parse(ParseContext ctx) {
+		public Optional<String> apply(ParseContext ctx) {
 			StringBuilder sb = new StringBuilder();
 			while (!ctx.isEOF() && !isWhitespace(ctx.peekChar())) {
 				sb.append(ctx.popChar());
@@ -77,25 +72,6 @@ final class State {
 			while (!ctx.isEOF() && ctx.peekChar() == ' ' || ctx.peekChar() == '\t') {
 				ctx.popChar();
 			}
-		}
-		
-	}
-	
-	private static class KeyState implements ParseState {
-
-		@Override
-		public void accept(ParseContext ctx) {
-
-			StringBuilder sb = new StringBuilder();
-			
-			while (!ctx.isEOF() && !isWhitespace(ctx.peekChar())) {
-				sb.append(ctx.popChar());
-			}
-			
-			ctx.emit("key", new KeyVal(sb.toString()));
-			
-			ctx.eat(State.SPACE);
-			
 		}
 		
 	}
@@ -131,7 +107,7 @@ final class State {
 			}
 			
 			if (doc) {
-				ctx.next(State.DOC);
+				ctx.next(ParseStates.DOC);
 			} else if (body) {
 				ctx.eat(WHITESPACE);
 				ctx.next(new BodyState());

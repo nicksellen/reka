@@ -6,7 +6,6 @@ import reka.config.FileSource;
 import reka.config.NavigableConfig;
 import reka.config.Source;
 import reka.config.StringSource;
-import reka.config.parser2.Parser2;
 
 public class ConfigParser {
 
@@ -19,8 +18,7 @@ public class ConfigParser {
 	}
 	
 	public static NavigableConfig fromSource(Source source) {
-		return Parser2.parse(source);
-	    //return ParsedItem.from(source).toConfig();
+		return Parser.parse(source);
 	}
 	
 }
