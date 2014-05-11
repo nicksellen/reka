@@ -1,13 +1,12 @@
-
 bundle ../../extra/reka-extra-uberjar/target/reka-extra-uberjar-0.1.0.jar
 
 data /tmp/data
 
-//app @include(/Users/nick/Work/flow/apps/reka-ui/main.reka)
+app @include(/Users/nick/Work/flow/apps/reka-ui/main.reka)
 app @include(nashorn.reka)
 app @include(app.reka)
 app @include(api.reka)
-app @include(air.reka)
+//app @include(air.reka)
 
 app {
   
@@ -24,10 +23,7 @@ app {
   }
 
   trigger {
-    http 192.168.2.3:2020 {
-      run main
-    }
-    //http localhost:2020 {
+    http localhost:2020 {
       run main
     }
   }

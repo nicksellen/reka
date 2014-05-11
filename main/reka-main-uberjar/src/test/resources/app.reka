@@ -9,15 +9,15 @@ use {
   
   jdbc ▶ {
   
-    url jdbc:postgresql:todos
+    url jdbc:postgresql:todos5
   
     //url jdbc:h2:woahyeah
     
-    //username sa
-    //password sa
+    username sa
+    password sa
 
-    username zoya
-    password zoya
+    //username zoya
+    //password zoya
     
     // run <<- sql
       create table if not exists todos (

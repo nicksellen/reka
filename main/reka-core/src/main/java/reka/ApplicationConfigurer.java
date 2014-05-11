@@ -37,9 +37,9 @@ import reka.core.builder.Flows;
 import reka.core.builder.FlowsBuilder;
 import reka.core.bundle.BundleManager;
 import reka.core.bundle.DefaultTriggerSetup;
-import reka.core.bundle.TriggerConfigurer;
 import reka.core.bundle.SetupTrigger;
 import reka.core.bundle.SetupTrigger.Contructed;
+import reka.core.bundle.TriggerConfigurer;
 import reka.core.bundle.UseConfigurer;
 import reka.core.bundle.UseConfigurer.UsesInitializer;
 import reka.core.config.MultiConfigurerProvider;
@@ -99,9 +99,7 @@ public class ApplicationConfigurer implements ErrorReporter {
     @Conf.Each("trigger")
     @Conf.Each("export")
     public void trigger(Config config) {
-    	if (config.hasValue()) {
-    		trigger(slashes(config.valueAsString()), config);
-    	} else if (config.hasBody()) {
+    	if (config.hasBody()) {
     		for (Config child : config.body()) {
     			trigger(slashes(child.key()), child);	
     		}

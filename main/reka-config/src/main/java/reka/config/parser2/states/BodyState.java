@@ -1,19 +1,26 @@
 package reka.config.parser2.states;
 
+import static java.lang.Character.isWhitespace;
+
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import reka.config.Config;
 import reka.config.parser2.ParseContext;
 import reka.config.parser2.ParseState;
-import reka.config.parser2.Parser.BodyVal;
-import reka.config.parser2.Parser.KeyAndValueItem;
+import reka.config.parser2.Parser2.BodyVal;
 
 public class BodyState implements ParseState {
 	
-	private final List<KeyAndValueItem> items = new ArrayList<>();
+	private final Logger log = LoggerFactory.getLogger(getClass());
+	
+	private final List<Config> configs = new ArrayList<>();
 
-	public void receive(KeyAndValueItem item) {
-		items.add(item);
+	public void receive(Config config) {
+		configs.add(config);
 	}
 	
 	@Override
@@ -21,16 +28,22 @@ public class BodyState implements ParseState {
 		
 		while (!ctx.isEOF()) {
 			char c = ctx.peekChar();
-			switch (c) {
-			case '}':
+			if (isWhitespace(c)) {
 				ctx.popChar();
+			} else if (c == '}') {
+				ctx.popChar();
+				ctx.emit("body", new BodyVal(configs));
 				break;
-			default:
-				ctx.take(new ItemState());
+			} else {
+				ctx.parse(new ConfigItemState());
 			}
 		}
 		
-		ctx.emit("body", new BodyVal(items));
+		
+	}
+	
+	public List<Config> configs() {
+		return configs;
 	}
 	
 }

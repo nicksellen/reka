@@ -1,8 +1,10 @@
 package reka.config;
 
+import java.io.File;
 import java.math.BigDecimal;
 
 import reka.config.formatters.Formattable;
+import reka.config.parser2.Parser2;
 
 public interface Config extends Formattable {
 	
@@ -31,5 +33,17 @@ public interface Config extends Formattable {
     boolean hasData();
     String dataType();
     byte[] data();
+    
+    public static NavigableConfig fromFile(File file) {
+		return fromSource(FileSource.from(file));
+	}
+	
+	public static NavigableConfig fromString(String content) {
+		return fromSource(StringSource.from(content));
+	}
+	
+	public static NavigableConfig fromSource(Source source) {
+		return Parser2.parse(source);
+	}
     
 }

@@ -2,6 +2,7 @@ package reka.config.parser2;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Lists.reverse;
+import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
@@ -9,9 +10,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.function.Supplier;
 
 import org.slf4j.Logger;
@@ -20,61 +19,81 @@ import org.slf4j.LoggerFactory;
 import reka.config.Source;
 
 public final class ParseContext {
+
+	private static final Logger log = LoggerFactory.getLogger(ParseContext.class);
 	
 	private static class StackItem {
 		
 		final ParseState handler;
 		
 		int pos = -1;
+
+		private StackItem next = null;
 		
 		StackItem(ParseState handler) {
 			this.handler = handler;
 		}
 		
+		public String name() {
+			return format("%s(%s)", handler.getClass().getSimpleName().replaceFirst("State$", ""), System.identityHashCode(handler));
+		}
+		
+		@Override
+		public String toString() {
+			return name();
+		}
+
+		public void next(StackItem val) {
+			if (val == null) {
+				next = null;
+			} else {
+				checkState(next == null, "can only set one next value");
+				next = val;
+			}
+		}
+		
 	}
 	
-	private final Logger log = LoggerFactory.getLogger(getClass());
-	
-	final Map<String,Object> toplevelEmissions = new HashMap<>();
-	
-	private final Deque<StackItem> stack = new ArrayDeque<>();
+	private final Deque<StackItem> stack = new ArrayDeque<StackItem>() {
+
+		private static final long serialVersionUID = 8574738932762696054L;
+		
+		@Override
+		public String toString() {
+			return reverse(stack.stream().collect(toList())).stream()
+					.map(StackItem::name).collect(joining(" >> "));
+		}
+		
+	};
 	
 	private final StackItem root;
+	private final Source source;
 	
 	private final char[] chars;
 	private int nextPos = 0;
 	
 	public ParseContext(Source source, ParseState root) {
+		this.source = source;
 		this.root = new StackItem(root);
 		chars = source.content().toCharArray();
 	}
 	
+	public Source source() {
+		return source;
+	}
+	
 	public void emit(String name, Object emission) {
-		emit(name, emission, -1, -1);
+		emit(name, emission, 0, -1);
 	}
 	
 	public void emit(String name, Object emission, int offset, int length) {
 		
-		if (stack.isEmpty()) {
-			// top level
-			if (toplevelEmissions.containsKey(name)) {
-				log.warn("we alreayd had {}", name);
-			}
-			toplevelEmissions.put(name, emission);
-			return;
-		}
+		if (stack.isEmpty()) return;
 		
 		Iterator<StackItem> it = stack.iterator();
-		it.next(); // discard the top layer
+		it.next(); // ignore the top layer (this is the one doing the emitting)
 		
-		if (!it.hasNext()) {
-			// top level
-			if (toplevelEmissions.containsKey(name)) {
-				log.warn("we alreayd had {}", name);
-			}
-			toplevelEmissions.put(name, emission);
-			return;
-		}
+		if (!it.hasNext()) return;
 		
 		StackItem state = it.next();
 		
@@ -93,19 +112,6 @@ public final class ParseContext {
 			}
 			if (method != null) {
 				method.invoke(state.handler, emission);
-				StackItem topstate = stack.peek();
-				
-				int startPos, endPos;
-				
-				if (offset != -1 && length != -1) {
-					startPos = topstate.pos + offset;
-					endPos = startPos + length;
-				} else {
-					startPos = topstate.pos;
-					endPos = nextPos;
-				}
-				
-				log.info("emitting at {}..{} : {} [{}]", startPos, endPos, emission, new String(chars).substring(startPos, endPos));
 			} else {
 				log.error("{} should define a receive({} val) method then it would have gotton {}", 
 						handlerClass.getName(), emission.getClass().getName(), emission);
@@ -115,19 +121,17 @@ public final class ParseContext {
 		}
 	}
 	
-	public void next(ParseState... next) {
+	public void next(ParseState next) {
 		checkState(!stack.isEmpty(), "you can't call next with an empty stack");
-		stack.pop();
-		for (ParseState state : next) {
-			push(new StackItem(state));
-		}
+		StackItem n = new StackItem(next);
+		stack.peek().next(n);
 	}
 
-	public void start() {
-		push(root);
+	public void run() {
+		process(root);
 	}
 	
-	public <T> T simpleParse(SimpleParseHandler<T> handler) {
+	public <V> V simpleParse(SimpleParseHandler<V> handler) {
 		return handler.parse(this);
 	}
 	
@@ -147,18 +151,25 @@ public final class ParseContext {
 		return supplier.get();
 	}
  
-	public void take(ParseState state) {
-		push(new StackItem(state));
+	public void parse(ParseState state) {
+		process(new StackItem(state));
 	}
 		
-	private void push(StackItem state) {
+	private void process(StackItem state) {
+		
 		stack.push(state);
+		
 		state.pos = nextPos;
 		state.handler.accept(this);
-		if (!stack.isEmpty() && stack.peek().equals(state)) {
-			stack.pop();
+		
+		StackItem top = stack.pop();
+
+		checkState(top.equals(state), "hmpph!");
+		if (state.next != null) {
+			StackItem next = state.next;
+			state.next(null);
+			process(next);
 		}
-		// TODO: the else happens if yuou call next() during it. I should make it so next() just pushes things onto the StackItem...
 	}
 	
 	public boolean isEOF() {
@@ -181,16 +192,23 @@ public final class ParseContext {
 	public char peekChar() {
 		return chars[nextPos];
 	}
-	
-	@SuppressWarnings("unused")
-	private String stackInfo() {
-		return reverse(stack.stream().collect(toList())).stream().map(Object::getClass).map(Class::getSimpleName).collect(joining(" >> "));
-	}
 
 	public int eatUpTo(char c) {
 		int len = 0;
 		while (!isEOF() && popChar() != c) { /* yum yum */ len++; }
 		return len;
+	}
+
+	public void printStack() {
+		log.info("stack: {}", stack);
+	}
+
+	public int startPos() {
+		return stack.peek().pos;
+	}
+	
+	public int endPos() {
+		return nextPos;
 	}
 	
 }

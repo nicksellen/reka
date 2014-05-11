@@ -9,18 +9,18 @@ import java.io.File;
 public class SubsetSource extends AbstractSource {
 	
 	private final Source parent;
-	private final int start;
+	private final int offset;
 	private final int length;
 	
-	public SubsetSource(Source parent, int start, int length) {
+	public SubsetSource(Source parent, int offset, int length) {
 		this.parent = parent;
-		this.start = start;
+		this.offset = offset;
 		this.length = length;
 	}
 
 	@Override
 	public String content() {
-		return parent.content().substring(start, start + length);
+		return parent.content().substring(offset, offset + length);
 	}
 
 	@Override
@@ -55,7 +55,7 @@ public class SubsetSource extends AbstractSource {
 
 	@Override
 	public int originOffsetStart() {
-		return start;
+		return offset;
 	}
 
 	@Override
@@ -91,11 +91,11 @@ public class SubsetSource extends AbstractSource {
 	@Override
 	public SourceLinenumbers linenumbers() {
 		
-		String before = parent.content().substring(0, start);
+		String before = parent.content().substring(0, offset);
 		int lineStart = occurances(before, '\n') + 1;
 		int posStart = fromend(before, '\n') + 1;
 
-    	String content = parent.content().substring(start, start + length);
+    	String content = parent.content().substring(offset, offset + length);
     	
     	int lineEnd = lineStart + occurances(content, '\n');
     	int posEnd = fromend(content, '\n');

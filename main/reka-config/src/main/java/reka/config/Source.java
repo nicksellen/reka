@@ -4,28 +4,32 @@ import java.io.File;
 
 public interface Source {
 
-    public String content();
+    String content();
     
-    public String location();
+    String location();
     
-    public boolean isFile();
-    public File file();
+    boolean isFile();
+    File file();
 
-    public boolean supportsNestedFile();
-    public File nestedFile(String location);
+    boolean supportsNestedFile();
+    File nestedFile(String location);
     
-    public boolean supportsNestedData();
-    public byte[] nestedData(String location);
+    boolean supportsNestedData();
+    byte[] nestedData(String location);
     
-    public boolean hasParent();
-    public Source parent();
+    boolean hasParent();
+    Source parent();
     
-    public Source origin();
-    public Source rootOrigin();
+    Source origin();
+    Source rootOrigin();
     
-    public int originOffsetStart();
-    public int originOffsetLength();
+    int originOffsetStart();
+    int originOffsetLength();
     
-    public SourceLinenumbers linenumbers();
+    SourceLinenumbers linenumbers();
+    
+    default Source subset(int offset, int length) {
+    	return new SubsetSource(this, offset, length);
+    }
     
 }

@@ -20,6 +20,7 @@ import javax.script.SimpleScriptContext;
 import jdk.nashorn.api.scripting.NashornScriptEngine;
 import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
 
+@SuppressWarnings("restriction")
 public class NashornRunner {
 
 	private static final ScriptEngineManager manager = new ScriptEngineManager();

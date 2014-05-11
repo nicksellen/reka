@@ -1,35 +1,20 @@
 package reka.config.parser2;
 
 import static java.lang.String.format;
-import static java.util.stream.Collectors.joining;
 
-import java.io.File;
 import java.util.List;
-import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.config.FileSource;
+import reka.config.Config;
+import reka.config.ConfigBody;
 import reka.config.Source;
-import reka.config.StringSource;
 import reka.config.parser2.states.BodyState;
 
 import com.google.common.collect.ImmutableList;
 
-public class Parser {
-
-	public static void main(String[] args) {
-		Source a = StringSource.from("boo yeah\nanother item for me\n\n\n\noh yeah\nkeyfordoc first val <<-\ndoc content\nI can have this in it ♥\n ---\n");
-		Source b = FileSource.from(new File("src/test/resources/source-test.conf"));
-		log.info("--------------------------- parse a\n\n");
-		parse(a);
-		log.info("\n\n");
-
-		log.info("--------------------------- parse b\n\n");
-		parse(b);
-		log.info("\n\n");
-	}
+public class Parser2 {
 
 	public static class KeyOnlyItem {
 		
@@ -89,21 +74,35 @@ public class Parser {
 		
 	}
 	
-	public static class BodyVal {
+	public static abstract class ByteVal {
 		
-		private final List<KeyAndValueItem> items;
-		
-		public BodyVal(List<KeyAndValueItem> items) {
-			this.items = ImmutableList.copyOf(items);
+		private final byte[] value;
+
+		public ByteVal(byte[] value) {
+			this.value = value;
 		}
 		
-		public List<KeyAndValueItem> items() {
-			return items;
+		public byte[] value() {
+			return value;
 		}
 		
 		@Override
 		public String toString() {
-			return format("%s(%s)", getClass().getSimpleName(), items.stream().map(Object::toString).collect(joining(", ")));
+			return format("%s('%s')", getClass().getSimpleName(), value);
+		}
+		
+	}
+	
+	public static class BodyVal {
+		
+		private final List<Config> configs;
+		
+		public BodyVal(List<Config> configs) {
+			this.configs = ImmutableList.copyOf(configs);
+		}
+		
+		public List<Config> configs() {
+			return configs;
 		}
 		
 	}
@@ -116,10 +115,17 @@ public class Parser {
 
 	}
 
-	public static class DocVal extends StringVal {
+	public static class DocVal extends ByteVal {
+		
+		private final String contentType;
 
-		public DocVal(String value) {
+		public DocVal(String contentType, byte[] value) {
 			super(value);
+			this.contentType = contentType;
+		}
+		
+		public String contentType() {
+			return contentType;
 		}
 
 	}
@@ -132,16 +138,12 @@ public class Parser {
 
 	}
 	
-	static final Logger log = LoggerFactory.getLogger(Parser.class);
+	static final Logger log = LoggerFactory.getLogger(Parser2.class);
 	
-	public static void parse(Source source) {
-		
-		ParseContext ctx = new ParseContext(source, new BodyState());
-		ctx.start();
-		log.info("got {} things:", ctx.toplevelEmissions.size());
-		for (Entry<String, Object> e : ctx.toplevelEmissions.entrySet()) {
-			log.info(" - {} -> {}", e.getKey(), e.getValue());
-		}
+	public static ConfigBody parse(Source source) {
+		BodyState root = new BodyState();
+		new ParseContext(source, root).run();
+		return ConfigBody.of(source, root.configs());
 	}
 
 }

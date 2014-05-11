@@ -2,7 +2,6 @@ package reka.jdbc;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static reka.api.Path.dots;
-import static reka.api.Path.path;
 import static reka.api.Path.root;
 import static reka.core.builder.FlowSegments.sync;
 

@@ -18,8 +18,8 @@ import reka.api.run.EverythingSubscriber;
 import reka.configurer.Configurer.ErrorCollector;
 import reka.configurer.ErrorReporter;
 import reka.configurer.annotations.Conf;
-import reka.core.bundle.TriggerConfigurer;
 import reka.core.bundle.SetupTrigger;
+import reka.core.bundle.TriggerConfigurer;
 
 public class TimerExport implements TriggerConfigurer, ErrorReporter {
 	

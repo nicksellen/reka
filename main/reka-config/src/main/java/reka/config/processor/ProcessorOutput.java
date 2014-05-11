@@ -1,7 +1,7 @@
 package reka.config.processor;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static reka.config.ConfigUtil.keyword;
+import static reka.config.ConfigUtil.k;
 import static reka.config.ConfigUtil.kv;
 
 import java.util.ArrayList;
@@ -72,7 +72,7 @@ class ProcessorOutput implements ConfigConverter.Output {
 
 	@Override
 	public Output key(String keyword) {
-		return add(keyword(source, keyword));
+		return add(k(source, keyword));
 	}
 
 	@Override

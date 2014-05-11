@@ -2,6 +2,9 @@ package reka.config.parser2.states;
 
 import static com.google.common.base.Preconditions.checkState;
 import static java.lang.Character.isWhitespace;
+import static reka.config.formatters.FormattingUtil.removeIndentation;
+
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,21 +12,24 @@ import org.slf4j.LoggerFactory;
 import reka.config.parser2.EatHandler;
 import reka.config.parser2.ParseContext;
 import reka.config.parser2.ParseState;
-import reka.config.parser2.Parser.DocVal;
-import reka.config.parser2.Parser.KeyVal;
-import reka.config.parser2.Parser.ValueVal;
+import reka.config.parser2.Parser2.DocVal;
+import reka.config.parser2.Parser2.KeyVal;
+import reka.config.parser2.Parser2.ValueVal;
 import reka.config.parser2.SimpleParseHandler;
 
-final class Stateless {
+import com.google.common.base.Charsets;
+
+final class State {
 	
-	private static final Logger log = LoggerFactory.getLogger(Stateless.class);
+	private static final Logger log = LoggerFactory.getLogger(State.class);
 	
-	public static final KeyState KEY = new KeyState();
 	public static final ValueState VALUE = new ValueState();
 	public static final DocState DOC = new DocState();
 	public static final WhitespaceEater WHITESPACE = new WhitespaceEater();
+	public static final SpaceEater SPACE = new SpaceEater();
 	
-	public static final SimpleParseHandler<KeyVal> KEY2 = new KeyHandler();
+	public static final SimpleParseHandler<KeyVal> KEY = new KeyHandler();
+	public static final SimpleParseHandler<Optional<String>> OPTIONAL_WORD = new OptionalWordHandler();
 	
 	private static class KeyHandler implements SimpleParseHandler<KeyVal> {
 
@@ -33,7 +39,22 @@ final class Stateless {
 			while (!ctx.isEOF() && !isWhitespace(ctx.peekChar())) {
 				sb.append(ctx.popChar());
 			}
+			ctx.eat(SPACE);
 			return new KeyVal(sb.toString());
+		}
+		
+	}
+	
+	private static class OptionalWordHandler implements SimpleParseHandler<Optional<String>> {
+
+		@Override
+		public Optional<String> parse(ParseContext ctx) {
+			StringBuilder sb = new StringBuilder();
+			while (!ctx.isEOF() && !isWhitespace(ctx.peekChar())) {
+				sb.append(ctx.popChar());
+			}
+			ctx.eat(SPACE);
+			return sb.length() > 0 ? Optional.of(sb.toString()) : Optional.empty();
 		}
 		
 	}
@@ -43,6 +64,17 @@ final class Stateless {
 		@Override
 		public void eat(ParseContext ctx) {
 			while (!ctx.isEOF() && isWhitespace(ctx.peekChar())) {
+				ctx.popChar();
+			}
+		}
+		
+	}
+	
+	private static class SpaceEater implements EatHandler {
+
+		@Override
+		public void eat(ParseContext ctx) {
+			while (!ctx.isEOF() && ctx.peekChar() == ' ' || ctx.peekChar() == '\t') {
 				ctx.popChar();
 			}
 		}
@@ -62,7 +94,7 @@ final class Stateless {
 			
 			ctx.emit("key", new KeyVal(sb.toString()));
 			
-			ctx.eat(Stateless.WHITESPACE);
+			ctx.eat(State.SPACE);
 			
 		}
 		
@@ -86,9 +118,9 @@ final class Stateless {
 					doc = true;
 					break;
 				}
-			}
+			} 
 			
-			if (sb.charAt(sb.length() - 1) == '{') {
+			if (sb.length() > 0 && sb.charAt(sb.length() - 1) == '{') {
 				sb.setLength(sb.length() - 1);
 				body = true;
 			}
@@ -99,7 +131,7 @@ final class Stateless {
 			}
 			
 			if (doc) {
-				ctx.next(Stateless.DOC);
+				ctx.next(State.DOC);
 			} else if (body) {
 				ctx.eat(WHITESPACE);
 				ctx.next(new BodyState());
@@ -117,8 +149,13 @@ final class Stateless {
 			StringBuffer sb = new StringBuffer();
 			StringBuffer linebuffer = new StringBuffer();
 			
+			int current = ctx.endPos();
+			
 			// TODO: get the doc type first
-			int offset = ctx.eatUpTo('\n');
+			ctx.eat(SPACE);
+			String contentType = ctx.simpleParse(OPTIONAL_WORD).orElse("unknown");
+			
+			int offset = ctx.endPos() - current;
 			
 			boolean freshLine = true;
 			int inEnd = 0;
@@ -139,9 +176,8 @@ final class Stateless {
 						inEnd++;
 						if (inEnd == 3) {
 							foundEnd = true;
-							String str = sb.toString();
-							ctx.emit("doc", new DocVal(str), offset + 1, str.length());
-							log.info("finished doc!");
+							String str = removeIndentation(sb.toString());
+							ctx.emit("doc", new DocVal(contentType, str.getBytes(Charsets.UTF_8)), offset + 1, str.length());
 							break;
 						}
 					} else {

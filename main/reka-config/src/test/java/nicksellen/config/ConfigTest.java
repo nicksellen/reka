@@ -34,9 +34,9 @@ public class ConfigTest {
 		NavigableConfig root = ConfigParser.fromFile(new File(filename));
 		
 		Processor processor = new Processor(new IncludeConverter());
-		
-		assertThat(root.elementCount(), equalTo(5));
 
+		assertThat(root.elementCount(), equalTo(5));
+		
 		assertThat(rootSourceContent, equalTo(root.source().content()));
 		
 		Optional<Config> keyword1 = root.at("keyword1");
@@ -49,11 +49,16 @@ public class ConfigTest {
 		assertThat(rootSourceContent, equalTo(keyword1.get().source().origin().content()));
 		
 		Config keyword2 = root.at("keyword2").get();
+		
 		assertThat(keyword2.valueAsString(), equalTo("and value"));
 		assertThat(keyword2.source().content(), equalTo("keyword2 and value"));
 		
+		for (Config c : root) {
+			System.out.printf(" - [%s] [val is null? %s] has value? %s\n", c.key(), c.value() == null, c.hasValue());
+		}
 
 		Config keyword3 = root.at("keyword3").get();
+		
 		assertFalse(keyword3.hasValue());
 		assertTrue(keyword3.hasDocument());
 		assertThat(new String(keyword3.documentContent(), Charsets.UTF_8), equalTo("and heredoc\nwith multiple lines"));

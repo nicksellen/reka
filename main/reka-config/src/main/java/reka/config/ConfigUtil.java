@@ -3,7 +3,7 @@ package reka.config;
 
 public class ConfigUtil {
     
-    public static Config keyword(Source source, String key) {
+    public static Config k(Source source, String key) {
         return new Keyword(source, key);
     }
 

@@ -177,7 +177,7 @@ public class Configurer {
 			Source source = config.source();
 			if (source != null) {
 				json.writeStringField("source", source.location());
-				json.writeStringField("linenumbers", source.linenumbers().toString());
+				//json.writeStringField("linenumbers", source.linenumbers().toString());
 			}
 			
 			json.writeEndObject();

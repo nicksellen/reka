@@ -3,7 +3,6 @@ package reka.nashorn;
 import static reka.api.Path.dots;
 import static reka.core.builder.FlowSegments.sync;
 
-import java.util.List;
 import java.util.function.Supplier;
 
 import reka.api.Path;
