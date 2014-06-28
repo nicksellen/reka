@@ -18,6 +18,7 @@ import reka.core.data.memory.MutableMemoryData;
 
 public class NashornRunOperation implements SyncOperation {
 	
+	@SuppressWarnings("unused")
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
 	private final ThreadLocal<NashornRunner> runner;

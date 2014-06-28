@@ -43,6 +43,7 @@ import com.google.common.io.Files;
 
 public class UseJdbc extends UseConfigurer {
 
+	@SuppressWarnings("unused")
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	
 	private final Map<String,List<Data>> seeds = new HashMap<>();
