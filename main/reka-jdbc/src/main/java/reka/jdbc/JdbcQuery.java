@@ -235,7 +235,9 @@ public class JdbcQuery implements SyncOperation {
 			switch (meta.getColumnTypeName(column)) {
 			case "json":
 				try {
-					item.put(path, MutableMemoryData.createFromMap(json.readValue(result.getString(column), Map.class)));
+					@SuppressWarnings("unchecked")
+					Map<String,Object> m = json.readValue(result.getString(column), Map.class);
+					item.put(path, MutableMemoryData.createFromMap(m));
 				} catch (IOException e) {
 					throw unchecked(e);
 				}

@@ -53,10 +53,6 @@ public class ConfigTest {
 		assertThat(keyword2.valueAsString(), equalTo("and value"));
 		assertThat(keyword2.source().content(), equalTo("keyword2 and value"));
 		
-		for (Config c : root) {
-			System.out.printf(" - [%s] [val is null? %s] has value? %s\n", c.key(), c.value() == null, c.hasValue());
-		}
-
 		Config keyword3 = root.at("keyword3").get();
 		
 		assertFalse(keyword3.hasValue());

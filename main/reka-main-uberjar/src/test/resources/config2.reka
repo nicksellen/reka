@@ -26,9 +26,21 @@ app {
 
   use {
     http
+    nashorn js
+    jade
   }
 
   flow main {
+  
+    //js out.name = 'Nick' + ' ' + 'Sellen';
+  
+    //jade <<- jade
+      !!!
+      html
+        body
+          h1 hello #{name}
+    ---
+  
     http/content <<- text/html
       <h1>Hello HTML World again!</h1>
     ---

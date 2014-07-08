@@ -40,10 +40,11 @@ public class FormattingUtil {
 
     private static final Pattern leadingWS = Pattern.compile("^([\\ \t]+)\\S+");
 
-    private static final String TAB_SPACES = "    ";
+    private static final String SPACE_INDENT = "    ";
 
     public static String removeIndentation(String val) {
-        String[] lines = val.replaceAll("\t", TAB_SPACES).split("\n");
+    	if (val.length() > 0 && val.charAt(0) == '\n') val = val.substring(1);
+        String[] lines = val.replaceAll("\t", SPACE_INDENT).split("\n");
         String indent = null;
         for (String line : lines) {
             Matcher m = leadingWS.matcher(line);

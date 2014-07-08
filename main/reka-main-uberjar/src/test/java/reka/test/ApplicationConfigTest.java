@@ -24,7 +24,7 @@ public class ApplicationConfigTest {
     @Test
     public void test() {
     	BundleManager bundles = new BundleManager(asList(new BuiltinsBundle(), new HttpBundle(), new JdbcBundle()));
-        NavigableConfig config = ConfigParser.fromFile(new File(getClass().getResource("/app.reka").getFile()));
+        NavigableConfig config = ConfigParser.fromFile(new File(getClass().getResource("/test.reka").getFile()));
         config = new Processor(new MultiConverter(new CommentConverter(), new IncludeConverter())).process(config);
         configure(new ApplicationConfigurer(bundles), config).build("app", 1);
     }
