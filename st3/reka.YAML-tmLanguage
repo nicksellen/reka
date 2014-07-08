@@ -1,0 +1,270 @@
+# [PackageDev] target_format: plist, ext: tmLanguage
+
+# useful links:
+#
+#   http://docs.sublimetext.info/en/latest/extensibility/syntaxdefs.html
+#   http://docs.sublimetext.info/en/latest/reference/syntaxdefs.html
+#   
+#   https://manual.macromates.com/en/language_grammars#naming_conventions
+#
+#   https://github.com/int3h/sublime-better-javascript/blob/master/JSON.tmLanguage
+#
+#   http://docs.python.org/2/library/re.html
+
+---
+name: Reka Configuration
+scopeName: source.reka
+fileTypes: ['reka']
+
+uuid: 63136c97-f2b8-45f6-ac13-b54271beb28c
+
+patterns:
+  - include: '#body'
+
+repository:
+
+  body:
+    patterns:
+      - include: '#leadingSpace'
+      - include: '#invalid'
+      - include: '#comment'
+      - include: '#rekaInclude'
+      - include: '#entry'
+
+  leadingSpace:
+    match: "^\\s*"
+
+  invalid:
+    match: "(\\})\\s*"
+    captures:
+      "0":
+        name: invalid.reka
+
+  entry:
+    name: entry.reka
+    # stupid manual way to get a few slashes/like/this with nice punctuation syntax for the slashes
+    begin: "(\\/)?([^\\s\\/]+)(?:(\\/)([^\\s\\/]+))?(?:(\\/)([^\\s\\/]+))?(?:(\\/)([^\\s\\/]+))?\\s?"
+    beginCaptures:
+      "1":
+        name: punctuation
+      "2":
+        name: keyword
+      "3":
+        name: punctuation
+      "4":
+        name: keyword
+      "5":
+        name: punctuation
+      "6":
+        name: keyword
+      "7":
+        name: punctuation
+      "8":
+        name: keyword
+
+    patterns:
+      - include: '#doc'
+      - include: '#nested'
+      - include: '#rekaInclude'
+      - include: '#val'
+
+    end: "$"
+
+  rekaInclude:
+    name: support.constant.reka
+    match: "@include(?:(\\()([^\\)]*)(\\)))?"
+    captures:
+      "1":
+        name: punctuation
+      "2":
+        name: variable.parameter
+      "3":
+        name: punctuation
+
+  doc:
+    patterns:
+      - include: '#docHTML'
+      - include: '#docCSS'
+      - include: '#docJade'
+      - include: '#docXML'
+      - include: '#docJS'
+      - include: '#docSQL'
+      - include: '#docRuby'
+      - include: '#docClojure'
+      - include: '#docOther'
+
+  docCSS:
+    name: punctuation.reka
+    begin: "\\s*<<\\-\\s+(text\\/css|css)\\s*$"
+    beginCaptures:
+      "1":
+        name: support.constant.reka
+
+    patterns:
+      - include: source.css
+
+    end: "^\\s*\\-\\-\\-\\-*\\s*$"
+    contentName: source.css.embedded.reka
+
+
+  docJade:
+    name: punctuation.reka
+    begin: "\\s*<<\\-\\s+(text\\/jade|jade)\\s*$"
+    beginCaptures:
+      "1":
+        name: support.constant.reka
+
+    patterns:
+      - include: source.jade
+
+    end: "^\\s*\\-\\-\\-\\-*\\s*$"
+    contentName: source.jade.embedded.reka
+
+  docXML:
+    name: punctuation.reka
+    begin: "\\s*<<\\-\\s+(text\\/xml|application\\/xml|xml)\\s*$"
+    beginCaptures:
+      "1":
+        name: support.constant.reka
+
+    patterns:
+      - include: text.xml
+
+    end: "^\\s*\\-\\-\\-\\-*\\s*$"
+    contentName: source.xml.embedded.reka
+
+  docHTML:
+    name: punctuation.reka
+    begin: "\\s*<<\\-\\s+(text\\/html|html)\\s*$"
+    beginCaptures:
+      "1":
+        name: support.constant.reka
+
+    patterns:
+      - include: text.html.basic
+
+    end: "^\\s*\\-\\-\\-\\-*\\s*$"
+    contentName: source.html.embedded.reka
+
+  docSQL:
+    name: punctuation.reka
+    begin: "\\s*<<\\-\\s+(sql)\\s*$"
+    beginCaptures:
+      "1":
+        name: support.constant.reka
+
+    patterns:
+      - include: source.sql
+
+    end: "^\\s*\\-\\-\\-\\-*\\s*$"
+    contentName: source.sql.embedded.reka
+
+  docClojure:
+    name: punctuation.reka
+    begin: "\\s*<<\\-\\s+(clojure|clj)\\s*$"
+    beginCaptures:
+      "1":
+        name: support.constant.reka
+
+    patterns:
+      - include: source.clojure
+
+    end: "^\\s*\\-\\-\\-\\-*\\s*$"
+    contentName: source.clojure.embedded.reka
+
+  docJS:
+    name: punctuation.reka
+    begin: "\\s*<<\\-\\s+(text\\/javascript|application\\/javascript|javascript|js)\\s*$"
+    beginCaptures:
+      "1":
+        name: support.constant.reka
+
+    patterns:
+      - include: source.js
+
+    end: "^\\s*\\-\\-\\-\\-*\\s*$"
+    contentName: source.js.embedded.reka
+
+  docRuby:
+    name: punctuation.reka
+    begin: "\\s*<<\\-\\s+(text\\/ruby|ruby|rb)\\s*$"
+    beginCaptures:
+      "1":
+        name: support.constant.reka
+
+    patterns:
+      - include: source.ruby
+
+    end: "^\\s*\\-\\-\\-\\-*\\s*$"
+    contentName: source.ruby.embedded.reka
+
+  docOther:
+    name: punctuation.reka
+    begin: "\\s*<<\\-\\s+(\\S+)?\\s*$"
+    beginCaptures:
+      "1":
+        name: unknown.reka
+    end: "^\\s*\\-\\-\\-\\-*\\s*$"
+    contentName: string.unknown.reka
+
+
+  nested:
+    name: nested.reka
+    begin: "(\\{)\\s*$"
+    beginCaptures:
+      "1":
+        name: punctuation.reka
+
+    patterns:
+      - include: '#body'
+
+    end: "^\\s*(\\})\\s*$"
+    endCaptures:
+      "1":
+        name: punctuation.reka
+
+  val:
+    name: string.quoted.double.val.reka
+    match: "."
+
+  comment:
+    name: comment.entity.reka
+    begin: "\\/\\/"
+    patterns:
+      - include: '#docInComment'
+      - include: '#nestedInComment'
+      - include: '#valInComment'
+    end: "$"
+
+  entryInComment:
+    name: comment.reka
+    begin: "\\S+\\s?"
+    patterns:
+      - include: '#docInComment'
+      - include: '#nestedInComment'
+      - include: '#valInComment'
+    end: "$"
+
+  docInComment:
+    name: comment.reka
+    begin: "\\s*<<\\-\\s+\\S+?\\s*$"
+    end: "^\\s*\\-\\-\\-\\-*\\s*$"
+    contentName: comment.reka
+
+  nestedInComment:
+    name: comment.reka
+    begin: "\\{\\s*$"
+    patterns:
+      - include: '#bodyInComment'
+    end: "^\\s*\\}\\s*$"
+
+  valInComment:
+    name: comment.reka
+    match: "."
+
+  bodyInComment:
+    patterns:
+      - include: '#leadingSpace'
+      - include: '#invalid'
+      - include: '#entryInComment'
+
