@@ -7,6 +7,7 @@ import static reka.api.Path.root;
 
 import java.util.Iterator;
 
+import reka.DeployedResource;
 import reka.api.Path;
 import reka.api.flow.Flow;
 import reka.configurer.Configurer.ErrorCollector;
@@ -84,7 +85,7 @@ public class UseHTTP extends UseConfigurer {
 		@Override
 		public void setupTriggers(SetupTrigger trigger) {
 			
-			trigger.onStart(app -> {
+			trigger.addRegistrationHandler(app -> {
 				
 				checkNotNull(flowName, "export http: please specify which flow to run (from %s)", app.flows().names());
 				Flow flow = app.flows().flow(flowName);
@@ -92,14 +93,24 @@ public class UseHTTP extends UseConfigurer {
 				
 				String identity = format("http/%s/%s/%s", trigger.identity(), host, port);
 				
-				HttpSettings settings = new HttpSettings(port, host, Type.HTTP, Security.NONE);
+				HttpSettings settings = new HttpSettings(port, host, Type.HTTP, Security.NONE, trigger.applicationVersion());
 				server.deployHttp(identity, flow, settings);
-
-				app.onUndeploy((v) -> {
-					server.undeploy(identity);
+				
+				app.resource(new DeployedResource() {
+					
+					@Override
+					public void undeploy(int version) {
+						server.undeploy(identity, version);	
+					}
+					
+					@Override
+					public void freeze(int version) {
+						server.freeze(identity, version);
+					}
+					
 				});
 				
-				app.register(port, "http", MutableMemoryData.create((details) -> {
+				app.protocol(port, "http", MutableMemoryData.create((details) -> {
 					details.putString("host", host);
 					details.putString("run", flowName.last().toString());
 				}).readonly());

@@ -9,12 +9,14 @@ use {
   
   jdbc ▶ {
   
-    url jdbc:postgresql:todos5
+    url jdbc:postgresql:todos-10
   
     //url jdbc:h2:woahyeah
     
     username sa
     password sa
+
+    //password
 
     //username zoya
     //password zoya
@@ -71,7 +73,7 @@ flow http router {
 
   http/router {
   
-    GET /css/main.css @include(app/css/main.css)
+    GET /css/main.css @include(css/main.css)
       
     GET / {
     
@@ -88,7 +90,7 @@ flow http router {
         out.todos = todos;
       ---
       
-      jade html.main @include(app/todos.jade)
+      jade html.main @include(todos.jade)
       then render layout
     }
     

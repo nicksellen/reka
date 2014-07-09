@@ -6,27 +6,31 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.function.IntConsumer;
 
 import reka.api.Path;
-import reka.api.data.Data;
-import reka.core.builder.Flows;
 
 public class DefaultTriggerSetup implements SetupTrigger {
 	
 	private final String identity;
 	private final Path applicationName;
+	private final int applicationVersion;
 	private final Set<Path> requiresFlows = new HashSet<>();
-	private final List<Consumer<Contructed>> onStarts = new ArrayList<>();
+	private final List<Consumer<Registration>> registrationHandlers = new ArrayList<>();
 	
-	public DefaultTriggerSetup(String identity, Path applicationName) {
+	public DefaultTriggerSetup(String identity, Path applicationName, int applicationVersion) {
 		this.identity = identity;
 		this.applicationName = applicationName;
+		this.applicationVersion = applicationVersion;
 	}
 	
 	@Override
 	public Path applicationName() {
 		return applicationName;
+	}
+	
+	@Override
+	public int applicationVersion() {
+		return applicationVersion;
 	}
 	
 	@Override
@@ -47,47 +51,12 @@ public class DefaultTriggerSetup implements SetupTrigger {
 	}
 
 	@Override
-	public void onStart(Consumer<Contructed> onStart) {
-		onStarts.add(onStart);
+	public void addRegistrationHandler(Consumer<Registration> startup) {
+		registrationHandlers.add(startup);
 	}
 	
-	public List<Consumer<Contructed>> onStarts() {
-		return onStarts;
-	}
-	
-	public static class OnStart implements Contructed {
-		
-		private final Flows flows;
-		private final List<IntConsumer> undeploys = new ArrayList<>();
-		private final List<PortAndProtocol> ports = new ArrayList<>();
-		
-		public OnStart(Flows flows) {
-			this.flows = flows;
-		}
-
-		@Override
-		public Flows flows() {
-			return flows;
-		}
-
-		@Override
-		public void onUndeploy(IntConsumer run) {
-			undeploys.add(run);
-		}
-
-		@Override
-		public void register(int port, String protocol, Data data) {
-			ports.add(new PortAndProtocol(port, protocol, data));
-		}
-
-		public List<IntConsumer> undeploys() {
-			return undeploys;
-		}
-		
-		public List<PortAndProtocol> ports() {
-			return ports;
-		}
-		
+	public List<Consumer<Registration>> registrationHandlers() {
+		return registrationHandlers;
 	}
 
 }

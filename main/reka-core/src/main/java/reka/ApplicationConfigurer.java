@@ -37,8 +37,8 @@ import reka.core.builder.Flows;
 import reka.core.builder.FlowsBuilder;
 import reka.core.bundle.BundleManager;
 import reka.core.bundle.DefaultTriggerSetup;
+import reka.core.bundle.Registration;
 import reka.core.bundle.SetupTrigger;
-import reka.core.bundle.SetupTrigger.Contructed;
 import reka.core.bundle.TriggerConfigurer;
 import reka.core.bundle.UseConfigurer;
 import reka.core.bundle.UseConfigurer.UsesInitializer;
@@ -60,7 +60,7 @@ public class ApplicationConfigurer implements ErrorReporter {
 		rootUse.mappings(bundles.uses());
     }
 
-    private final FlowsBuilder flows = new FlowsBuilder();
+    private final FlowsBuilder flowsBuilder = new FlowsBuilder();
     
     private final List<Config> flowConfigs = new ArrayList<>();
     
@@ -143,9 +143,9 @@ public class ApplicationConfigurer implements ErrorReporter {
 			configuredFlows.put(path(config.valueAsString()), 
 					configure(new SequenceConfigurer(provider), config)));
 		
-    	configuredFlows.forEach((name, segment) -> flows.add(name, segment.get()));
+    	configuredFlows.forEach((name, segment) -> flowsBuilder.add(name, segment.get()));
     	
-    	return flows.buildVisualizers();
+    	return flowsBuilder.buildVisualizers();
     }
 
     public CompletableFuture<Application> build(String identity, int version) {
@@ -156,7 +156,7 @@ public class ApplicationConfigurer implements ErrorReporter {
     	return build(identity, version, previous, EverythingSubscriber.DO_NOTHING);
     }
     
-    private void configureTriggers(Map<Path, Supplier<TriggerConfigurer>> triggerConfigurers, SetupTrigger triggerSetup) {
+    private void configureTriggers(Map<Path, Supplier<TriggerConfigurer>> triggerConfigurers, SetupTrigger triggers) {
     	
 		triggerConfigs.forEach(e -> {
 			
@@ -167,35 +167,33 @@ public class ApplicationConfigurer implements ErrorReporter {
 					path.slashes(), 
 					triggerConfigurers.keySet().stream().map(Path::slashes).collect(toList()));
 			
-			configure(triggerConfigurers.get(path).get(), config).setupTriggers(triggerSetup);
+			configure(triggerConfigurers.get(path).get(), config).setupTriggers(triggers);
 			
 		});
 		
     }
     
-    public CompletableFuture<Application> build(String identity, int version, Application previous, final Subscriber s) {
+    public CompletableFuture<Application> build(String identity, int applicationVersion, Application previous, final Subscriber s) {
 
     	CompletableFuture<Application> future = new CompletableFuture<>();
     	
     	UsesInitializer initializer = UseConfigurer.process(rootUse);
     	
-    	ApplicationBuilder application = new ApplicationBuilder();
+    	ApplicationBuilder applicationBuilder = new ApplicationBuilder();
     	
-    	application.setName(applicationName);
-    	application.setVersion(version);
-    	application.setInitializerVisualizer(initializer.visualizer());
+    	applicationBuilder.setName(applicationName);
+    	applicationBuilder.setVersion(applicationVersion);
+    	applicationBuilder.setInitializerVisualizer(initializer.visualizer());
     	
     	Map<Path, Supplier<TriggerConfigurer>> triggerConfigurers = initializer.triggers();
-
-    	MultiConfigurerProvider provider = new MultiConfigurerProvider(initializer.providers());
     	
     	flowConfigs.forEach((config) -> 
-			flows.add(applicationName.add(config.valueAsString()), 
-					configure(new SequenceConfigurer(provider), config).get()));
+			flowsBuilder.add(applicationName.add(config.valueAsString()), 
+					configure(new SequenceConfigurer(new MultiConfigurerProvider(initializer.providers())), config).get()));
     	
-    	DefaultTriggerSetup triggerSetup = new DefaultTriggerSetup(identity, applicationName);
+    	DefaultTriggerSetup triggers = new DefaultTriggerSetup(identity, applicationName, applicationVersion);
 
-    	configureTriggers(triggerConfigurers, triggerSetup);
+    	configureTriggers(triggerConfigurers, triggers);
     	
     	// ok, run the app initializer
 
@@ -210,19 +208,19 @@ public class ApplicationConfigurer implements ErrorReporter {
 				
 		    	try {
 		    		
-					Flows f = flows.build(data); // constructs all the operations
+					Flows flows = flowsBuilder.build(data); // constructs all the operations
 					
-					application.setFlows(f);
+					applicationBuilder.setFlows(flows);
 					
-					DefaultTriggerSetup.OnStart s = new DefaultTriggerSetup.OnStart(f);
+					Registration registration = new Registration(flows);
 					
-					for (Consumer<Contructed> onStart : triggerSetup.onStarts()) {
-						onStart.accept(s);
+					for (Consumer<Registration> handler : triggers.registrationHandlers()) {
+						handler.accept(registration);
 					}
 					
-		    		application.registerThings(s);
+		    		applicationBuilder.register(registration);
 			    	
-			    	future.complete(application.build());
+			    	future.complete(applicationBuilder.build());
 			    	
 			    	subscriber.ok(data);
 		    	

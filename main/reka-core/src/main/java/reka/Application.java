@@ -3,7 +3,6 @@ package reka;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.IntConsumer;
 
 import reka.api.Path;
 import reka.api.flow.Flow;
@@ -13,7 +12,7 @@ import reka.core.bundle.PortAndProtocol;
 
 public class Application {
 
-	private final List<IntConsumer> undeploys;
+	private final List<DeployedResource> resources;
 	private final List<PortAndProtocol> ports; 
 
 	private final Path name;
@@ -22,14 +21,20 @@ public class Application {
 	private final Flows flows;
 	private final FlowVisualizer initializerVisualizer;
 	
-	public Application(Path name, int version, Flows flows, List<IntConsumer> undeploys, List<PortAndProtocol> ports, FlowVisualizer initializerVisualizer) {
+	public Application(
+			Path name, 
+			int version, 
+			Flows flows,  
+			List<PortAndProtocol> ports, 
+			FlowVisualizer initializerVisualizer,
+			List<DeployedResource> resources) {
 		this.name = name;
 		this.fullName = name.slashes();
 		this.version = version;
 		this.flows = flows;
-		this.undeploys = undeploys;
 		this.ports = ports;
 		this.initializerVisualizer = initializerVisualizer;
+		this.resources = resources;
 	}
 		
 	public Path name() {
@@ -65,13 +70,23 @@ public class Application {
 	}
 	
 	public void undeploy() {
-		for (IntConsumer undeploy : undeploys) {
+		for (DeployedResource resource : resources) {
 			try {
-				undeploy.accept(version);
+				resource.undeploy(version);
 			} catch (Throwable t) {
 				t.printStackTrace();
-			}
+			}			
 		}
+	}
+
+	public void freeze() {
+		for (DeployedResource resource : resources) {
+			try {
+				resource.freeze(version);
+			} catch (Throwable t) {
+				t.printStackTrace();
+			}			
+		}		
 	}
 
 }

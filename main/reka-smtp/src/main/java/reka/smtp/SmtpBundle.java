@@ -30,6 +30,7 @@ import org.subethamail.smtp.helper.SimpleMessageListener;
 import org.subethamail.smtp.helper.SimpleMessageListenerAdapter;
 import org.subethamail.smtp.server.SMTPServer;
 
+import reka.DeployedResource;
 import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
@@ -238,7 +239,7 @@ public class SmtpBundle implements RekaBundle {
 		@Override
 		public void setupTriggers(SetupTrigger trigger) {
 			
-			trigger.onStart(app -> {
+			trigger.addRegistrationHandler(app -> {
 				
 				SMTPServer smtpServer = new SMTPServer(
 					new SimpleMessageListenerAdapter(
@@ -248,14 +249,24 @@ public class SmtpBundle implements RekaBundle {
 				
 				log.debug("starting smtp server on port {}", port);
 				
-				app.register(port, "smtp", MutableMemoryData.create(details -> {
+				app.protocol(port, "smtp", MutableMemoryData.create(details -> {
 					details.putString("run", flowName.last().toString());
 				}).readonly());
 				
 				smtpServer.start();
 				
-				app.onUndeploy((v) -> {
-					smtpServer.stop();
+				app.resource(new DeployedResource() {
+					
+					@Override
+					public void undeploy(int version) {
+						smtpServer.stop();
+					}
+					
+					@Override
+					public void freeze(int version) {
+						// no-op
+					}
+					
 				});
 				
 			});

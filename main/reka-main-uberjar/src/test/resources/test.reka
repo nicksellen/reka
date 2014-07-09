@@ -1,0 +1,38 @@
+
+name a test app
+
+use {
+  http  
+}
+
+flow http router {
+
+  http/router {
+  
+    GET / <<- text/html
+      <html>
+        <head>
+          <link ref="stylesheet" src="/css/main.css">
+        </head>
+        <body>
+          <h1>hello in red</h1>
+        </body>
+      </html.
+    ---
+  
+    GET /css/main.css <<- text/css
+      h1 {
+        color: red;
+      }
+    ---
+        
+  }
+}
+
+trigger {
+
+  http localhost:5005 {
+    run http router
+  }
+  
+}

@@ -69,6 +69,11 @@ public class HttpServer {
 			return this;
 		}
 
+
+		public void freeze(String host) {
+			httpHandler.freeze(host);
+		}
+
 		public void broadcastWebsocket(String host, String msg) {
 			websocketHandler.broadcast(host, msg);
 		}
@@ -142,6 +147,7 @@ public class HttpServer {
 				throw unchecked(e, "could not bind port %d", port);
 			}
 		}
+		
 	}
 	
 	public Map<String,HttpSettings> deployed() {
@@ -254,17 +260,24 @@ public class HttpServer {
 		}
 	}
 	
-	public void undeploy(String identity) {
+	public void undeploy(String identity, int version) {
 		log.debug("undeploying [{}]", identity);
 		
 		synchronized (lock) {
 			
-			HttpSettings settings = deployed.remove(identity);
+			HttpSettings settings = deployed.get(identity);
 		
 			if (settings == null) {
 				log.debug("   it didn't seem to actually be deployed ({} were though)", deployed.keySet());
 				return;
 			}
+			
+			if (settings.applicationVersion() > version) {
+				log.info("tried to undeploy version {} but we're running a new version {}", version, settings.applicationVersion());
+				return;
+			}
+			
+			deployed.remove(identity);
 			
 			PortHandler handler = handlers.get(settings.port());
 			if (handler != null) {
@@ -272,6 +285,30 @@ public class HttpServer {
 				if (handler.isEmpty()) {
 					handlers.remove(settings.port());
 				}
+			}
+			
+		}
+	}
+	
+	public void freeze(String identity, int version) {
+		log.debug("freezing [{}]", identity);
+		
+		synchronized (lock) {
+			
+			HttpSettings settings = deployed.get(identity);
+		
+			if (settings == null) {
+				return;
+			}
+			
+			if (settings.applicationVersion() > version) {
+				log.info("tried to freeze version {} but we're running a new version {}", version, settings.applicationVersion());
+				return;
+			}
+			
+			PortHandler handler = handlers.get(settings.port());
+			if (handler != null) {
+				handler.freeze(settings.host());
 			}
 			
 		}

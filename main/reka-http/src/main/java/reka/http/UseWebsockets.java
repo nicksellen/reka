@@ -107,7 +107,7 @@ public class UseWebsockets extends UseConfigurer {
 		@Override
 		public void setupTriggers(SetupTrigger trigger) {
 
-			HttpSettings settings = new HttpSettings(port, host, Type.WEBSOCKET, Security.NONE);
+			HttpSettings settings = new HttpSettings(port, host, Type.WEBSOCKET, Security.NONE, trigger.applicationVersion());
 			
 			log.debug("setting http settings ref");
 			httpSettingsRef.set(settings);
@@ -118,9 +118,9 @@ public class UseWebsockets extends UseConfigurer {
 			
 			String identity = format("ws/%s/%s/%s", trigger.identity(), host, port);
 			
-			trigger.onStart(app -> {
+			trigger.addRegistrationHandler(app -> {
 				
-				app.register(port, "ws", MutableMemoryData.create()
+				app.protocol(port, "ws", MutableMemoryData.create()
 						.putString("host", host)
 					.readonly());
 				

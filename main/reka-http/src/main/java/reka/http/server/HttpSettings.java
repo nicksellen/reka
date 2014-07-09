@@ -11,12 +11,14 @@ public class HttpSettings {
 	private final String host;
 	private final Type type;
 	private final Security security;
+	private final int applicationVersion; // application version
 	
-	public HttpSettings(int port, String host, Type type, Security security) {
+	public HttpSettings(int port, String host, Type type, Security security, int applicationVersion) {
 		this.port = port;
 		this.host = host;
 		this.type = type;
 		this.security = security;
+		this.applicationVersion = applicationVersion;
 	}
 
 	public int port() {
@@ -33,6 +35,10 @@ public class HttpSettings {
 	
 	public Security security() {
 		return security;
+	}
+
+	public int applicationVersion() {
+		return applicationVersion;
 	}
 	
 	@Override

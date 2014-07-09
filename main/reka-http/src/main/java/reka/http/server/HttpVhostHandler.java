@@ -1,6 +1,7 @@
 package reka.http.server;
 
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
+import static java.util.Collections.synchronizedList;
 import static reka.api.content.Contents.integer;
 import static reka.api.content.Contents.utf8;
 import static reka.util.Util.unwrap;
@@ -18,6 +19,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.Consumer;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.slf4j.Logger;
@@ -38,6 +40,8 @@ public class HttpVhostHandler extends SimpleChannelInboundHandler<MutableData> {
 	
 	private static final Logger log = LoggerFactory.getLogger(HttpVhostHandler.class);
 	
+	private final ConcurrentMap<String,List<Consumer<Flow>>> frozen = new ConcurrentHashMap<>();
+	
 	private final ConcurrentMap<String,Flow> flows = new ConcurrentHashMap<>();
 	
 	public boolean isEmpty() {
@@ -46,15 +50,27 @@ public class HttpVhostHandler extends SimpleChannelInboundHandler<MutableData> {
 	
 	public HttpVhostHandler add(String host, Flow flow) {
 		flows.put(host, flow);
+		List<Consumer<Flow>> waiting = frozen.remove(host);
+		if (waiting != null) {
+			log.info("unfreezing {} connections for host {}", waiting.size(), host);
+			for (Consumer<Flow> c : waiting) {
+				c.accept(flow);
+			}
+		}
 		return this;
 	}
 
 	public boolean remove(String host) {
 		if (flows.remove(host) != null) {
 			log.info("removed host {}", host);
+			frozen.remove(host);
 			return true;
 		}
 		return false;
+	}
+
+	public void freeze(String host) {
+		frozen.putIfAbsent(host, synchronizedList(new ArrayList<>()));
 	}
 	
 	private static class ChannelHandlerContextDataSubscriber implements EverythingSubscriber {
@@ -128,6 +144,13 @@ public class HttpVhostHandler extends SimpleChannelInboundHandler<MutableData> {
 
 		String host = data.getString(Path.Request.HOST).orElse("localhost");
 		
+		if (frozen.containsKey(host)) {
+			frozen.get(host).add(flow -> {
+				executeFlow(context, flow, data, host);
+			});
+			return;
+		}
+		
 		Flow flow = flows.get(host);
 		
 		if (flow == null) {
@@ -135,14 +158,17 @@ public class HttpVhostHandler extends SimpleChannelInboundHandler<MutableData> {
 			return;
 		}
 		
-		log.info("[{}] {} {}", flow.fullName(), data.getString(Request.METHOD).orElse(""), data.getString(Request.PATH).orElse(""));
-		
-		flow.run(listeningDecorator(context.executor()), data, new ChannelHandlerContextDataSubscriber(context));
+		executeFlow(context, flow, data, host);
 	}
 	
 	private void noFlowFound(ChannelHandlerContext context, Data data, String host) {
 		log.debug("no flow registered for host {}", host);
 		context.close();
+	}
+	
+	private void executeFlow(ChannelHandlerContext context, Flow flow, MutableData data, String host) {
+		log.info("[{}] {} {}", flow.fullName(), data.getString(Request.METHOD).orElse(""), data.getString(Request.PATH).orElse(""));
+		flow.run(listeningDecorator(context.executor()), data, new ChannelHandlerContextDataSubscriber(context));
 	}
 
 	private static String rootExceptionMessage(Throwable t) {

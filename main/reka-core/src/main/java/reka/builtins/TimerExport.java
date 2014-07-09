@@ -50,7 +50,7 @@ public class TimerExport implements TriggerConfigurer, ErrorReporter {
 	@Override
 	public void setupTriggers(SetupTrigger trigger) {
 		
-		trigger.onStart(app -> {
+		trigger.addRegistrationHandler(app -> {
 			
 			Flow flow = app.flows().flow(run);
 			checkConfig(flow != null, "no run named %s", run);

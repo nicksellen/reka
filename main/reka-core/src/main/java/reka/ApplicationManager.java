@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import reka.api.Path;
+import reka.api.data.Data;
 import reka.api.run.EverythingSubscriber;
 import reka.api.run.Subscriber;
 import reka.config.ConfigBody;
@@ -182,7 +183,9 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 			boolean redeploy, 
 			Source source,
 			boolean isTransient, 
-			Subscriber subscriber) {
+			Subscriber s) {
+		
+		EverythingSubscriber subscriber = EverythingSubscriber.wrap(s);
 		
 		long stamp = lock.writeLock();
 		
@@ -194,56 +197,83 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 					throw runtime("we already have a deployment of %s", filename);
 				}
 			}
-				
+			
 			Application previous = applications.remove(identity);
 			
 			executor.execute(() -> {
 				
-				log.info("deploying {}{}", source, isTransient ? " (transient)" : "");
+				try {
 				
-				NavigableConfig config = bundles.processor().process(ConfigParser.fromSource(source));
-		
-				versions.putIfAbsent(identity, new AtomicInteger());
-				int version = versions.get(identity).incrementAndGet();
-
-				if (previous != null) {
-					// TODO: how do I get atomic redeploys again?
-					// it's complicated because it might be some services need to be closed, and reopened.
-					// I kind of need something to say: 
-					//   "hold any incoming requests wherever they come from, we have a new app on the way"
-					// but only where the service details actually match...
-					previous.undeploy();
-				}
-			
-				configure(new ApplicationConfigurer(bundles), config)
-					.build(identity, version, previous, subscriber)
-					.whenComplete((app, ex) -> {
-					try {
-						if (app != null) {
-							applications.put(identity, app);
-							if (!isTransient) {
-								applicationSource.put(identity, source);
-								if (source.isFile()) {
-									deployedFilenames.add(source.file().getAbsolutePath());
-								}
-							}
-							log.info("deployed [{}] listening on {}", app.fullName(), app.ports().stream().map(Object::toString).collect(joining(", ")));
-						} else if (ex != null) {
-							ex.printStackTrace();
-						}
-						saveState();
-					} finally {
-						lock.unlock(stamp);
-					}
+					log.info("deploying {}{}", source, isTransient ? " (transient)" : "");
 					
-				});
+					NavigableConfig config = bundles.processor().process(ConfigParser.fromSource(source));
+			
+					ApplicationConfigurer configurer = configure(new ApplicationConfigurer(bundles), config);
+					
+					versions.putIfAbsent(identity, new AtomicInteger());
+					int version = versions.get(identity).incrementAndGet();
+	
+					if (previous != null) {
+						// this handles atomic redeploys, we freeze existing apps
+						// this should cause them to stop processing any new requests
+						// they wait until either: 
+						//   1) we deploy a new app successfully
+						//   2) we fail to deploy the new app and unfreeze them (they should be processed with the old app)
+						//      (I don't quite know how to make this work yet...
+						//      ... we need to do as much as possible up front...)
+						//      ... could do a bit more processing below, before we run the initialize
+						//      thats the real no-going back bit where we need to freeze
+						
+						previous.freeze();
+					}
+				
+					configurer
+						.build(identity, version, previous, subscriber)
+						.whenComplete((app, ex) -> {
+						try {
+							if (app != null) {
+								applications.put(identity, app);
+								if (!isTransient) {
+									applicationSource.put(identity, source);
+									if (source.isFile()) {
+										deployedFilenames.add(source.file().getAbsolutePath());
+									}
+								}
+								
+								if (previous != null) {
+									previous.undeploy();
+								}
+								
+								log.info("deployed [{}] listening on {}", app.fullName(), app.ports().stream().map(Object::toString).collect(joining(", ")));
+							} else if (ex != null) {
+								log.info("exception whilst deploying!");
+								ex.printStackTrace();
+								subscriber.error(Data.NONE, ex);
+							}
+							saveState();
+						} finally {
+							log.info("unlocking {}", stamp);
+							lock.unlock(stamp);
+						}
+						
+					});
+				
+				} catch (Throwable t) {
+					log.info("unlocking {}", stamp);
+					lock.unlock(stamp);
+					subscriber.error(Data.NONE, t);
+					throw t;
+				}
 				
 			});
 		} catch (Throwable t) {
+			log.info("unlocking {}", stamp);
 			lock.unlock(stamp);
+			subscriber.error(Data.NONE, t);
 			throw t;
 		}
 	}
+	
 	public Optional<FlowVisualizer> visualize(String identity, Path flowName) {
 		long stamp = lock.readLock();
 		try {

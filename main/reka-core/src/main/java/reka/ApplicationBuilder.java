@@ -2,18 +2,17 @@ package reka;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.IntConsumer;
 
 import reka.api.Path;
 import reka.core.builder.FlowVisualizer;
 import reka.core.builder.Flows;
-import reka.core.bundle.DefaultTriggerSetup.OnStart;
 import reka.core.bundle.PortAndProtocol;
+import reka.core.bundle.Registration;
 
 public class ApplicationBuilder {
 
-	private final List<IntConsumer> undeploys = new ArrayList<>();
 	private final List<PortAndProtocol> ports = new ArrayList<>();
+	private final List<DeployedResource> resources = new ArrayList<>();
 
 	private Path name;
 	private int version = -1;
@@ -36,13 +35,13 @@ public class ApplicationBuilder {
 		this.visualizer = visualizer;
 	}
 
-	public void registerThings(OnStart s) {
-		undeploys.addAll(s.undeploys());
-		ports.addAll(s.ports());
+	public void register(Registration registration) {
+		resources.addAll(registration.resources());
+		ports.addAll(registration.ports());
 	}
 
 	public Application build() {
-		return new Application(name, version, flows, undeploys, ports, visualizer);
+		return new Application(name, version, flows, ports, visualizer, resources);
 	}
 
 }

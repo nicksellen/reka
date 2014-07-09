@@ -1,0 +1,44 @@
+
+bundle ../../extra/reka-extra-uberjar/target/reka-extra-uberjar-0.1.0.jar
+
+data /tmp/data
+
+
+app {
+  
+  name a small inline app
+
+  use {
+    http
+  }
+
+  flow main {
+
+    http/router {
+
+      GET /plaintext {
+        http/content <<- text/plain
+          Hello, World!
+        ---
+      }
+
+      GET /json {
+
+        put response {
+          content {
+            message Hello World
+          }
+        }
+
+      }
+
+    }
+  }
+
+  trigger {
+    http localhost:8081 {
+      run main
+    }
+  }
+
+}

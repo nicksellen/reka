@@ -1,0 +1,15 @@
+name adobe air download
+
+use {
+  http
+}
+
+run main {
+  http/content @include(AdobeAIRInstaller.bin)
+}
+
+trigger {
+  http 192.168.2.3:6090 {
+    run main
+  }
+}
