@@ -1,0 +1,343 @@
+footer {
+	margin-top: 200px;
+}
+
+.home.fa {
+	font-size: 680px;
+	color: #f5f5f5;
+	position: fixed;
+	top: 60px;
+	z-index: -10;
+}
+
+.app img.vis {
+	height: 160px;
+}
+
+button i.fa,
+.button i.fa {
+	padding-right: 1em;
+}
+
+section.main {
+	padding-top: 20px;
+}
+
+section.top-bar-section {
+	font-size: 20px;
+}
+
+section.top-bar-section i {
+	padding-right: 10px;
+}
+
+form.config textarea {
+	height: 500px;
+}
+
+.ace_config-k,
+.ace_config-kw {
+	color: #f99 !important;
+}
+
+#config-editor {
+	width: 100%;
+	height: 100%;
+}
+
+/*
+#config-editor {
+  position: fixed;
+  top: 60px;
+  bottom: 20px;
+  left: 80px;
+  right: 300px;
+}
+
+#config-editor-controls {
+  position: fixed;
+  right: 0;
+  top: 45px;
+  bottom: 0px;
+  width: 260px;
+  padding: 20px;
+  background-color: #f5f5f5;
+}
+*/
+#config-editor-controls button,
+#config-editor-controls .button {
+	width: 100%;
+}
+
+.title-area .name i.fa {
+	font-size: 60px;
+	color: #fff;
+	padding-top: 5px;
+}
+
+span.address {
+	padding-left: 10px;
+	color: #ccc;
+}
+
+section.app {
+	padding: 10px 20px;
+	border-left: 10px solid #f5f5f5;
+	margin: 20px 0;
+}
+
+section.app h1 {
+	margin-top: 0rem;
+	line-height: 1em;
+	margin-bottom: 1.2rem;
+}
+
+section.app form {
+	margin-bottom: 0;
+}
+
+section.app:hover {
+	background-color: #f5f5f5;
+	background-color: #F1F4F9;
+	border-left-color: #D9E5F9;
+	/*cursor: pointer;*/
+}
+
+.ace_comment {
+	color: #aaa !important;
+}
+
+.ace_doc_start,
+.ace_doc_end {
+	color: #D2E7EE !important;
+}
+
+.ace_doc_type {
+	color: #B5DBEE !important;
+}
+
+.ace_doc {
+	color: #308AB2 !important;
+}
+
+.ace_val {
+	color: #333 !important;
+	background-color: #fffff5;
+}
+
+.ace_paren {
+	color: #666 !important;
+}
+
+.title-area .name .first {
+	padding-left: 5px;
+	font-family: 'Monaco','Menlo','Ubuntu Mono','Consolas','source-code-pro',monospace;
+}
+
+.title-area span.name {
+	position: relative;
+	bottom: 24px;
+	left: 5px;
+}
+
+.title-area span.name * {
+	font-size: 22px;
+}
+
+.title-area span.name .second {
+	color: #B5CAE3;
+}
+
+.top-bar,
+.top-bar-section ul li>a,
+.top-bar-section li a:not(.button) {
+	background: #68b;
+}
+
+.top-bar-section li a:not(.button):hover {
+	background: #526D96;
+}
+
+button,
+.button {
+	background-color: #68b;
+	border-color: #68b;
+}
+
+button:hover,
+button:focus,
+.button:hover,
+.button:focus {
+	background-color: #526D96;
+}
+
+.top-bar-section ul li.active>a,
+.top-bar-section ul li.active>a:hover {
+	background: #fff;
+	color: #68b;
+}
+
+.actions>*,
+.actions .button,
+.actions button {
+	width: 100%;
+}
+
+.actions .button,
+.actions button {
+	font-size: 1em;
+	text-align: left;
+	padding-left: 44px;
+}
+
+.actions .button i.fa,
+.actions button i.fa {
+	font-size: 1.5em;
+	padding-right: 0.5em;
+	position: absolute;
+	left: 14px;
+	top: 10px;
+}
+
+.row {
+	max-width: none;
+}
+
+.panel {
+	border-color: transparent !important;
+}
+
+.panel.callout {
+	background-color: #fcf8e3;
+}
+
+.panel.callout .fa {
+	font-size: 5em;
+	color: #DED08A;
+}
+
+body.editor section.main>.row>.columns {
+	position: fixed;
+	padding-top: 65px;
+	top: 0;
+	height: 100%;
+	z-index: -10;
+}
+
+body.editor section.main>.row>.main {
+	left: 0;
+}
+
+body.editor section.main>.row>.sidebar {
+	right: 0;
+}
+
+ul.ports {
+	list-style: none;
+	font-size: 1.2em;
+	margin: 0;
+	margin-top: 20px;
+}
+
+ul.ports span.port {
+	color: #555;
+}
+
+ul.ports span.protocol {
+	padding-left: 10px;
+	padding-right: 10px;
+	color: #aaa;
+}
+
+ul.ports i.fa.green {
+	padding-right: 0.5em;
+	color: green;
+}
+
+ul.ports span.port,
+ul.ports span.protocol,
+ul.ports ul.details {
+	font-family: 'Monaco',
+ 'Menlo',
+ 'Ubuntu Mono',
+ 'Consolas',
+
+		'source-code-pro',
+ monospace;
+	afont-size: 0.9em;
+}
+
+ul.ports ul.details {
+	list-style: none;
+	display: inline;
+	margin: 0;
+	padding: 0;
+	padding-left: 0.5em;
+	padding-right: 1em;
+	font-size: 0.7em;
+}
+
+ul.ports ul.details li {
+	display: inline;
+	margin: 0;
+	margin-left: 10px;
+}
+
+ul.ports ul.details .name {
+	color: #333;
+	padding-right: 0.3em;
+}
+
+ul.ports ul.details .value {
+	padding-left: 0.3em;
+	padding: 3px 6px;
+	background-color: #fcf8e3;
+	color: #333;
+}
+
+section.app.flow {
+	/*border-left-color: #f5f5f5;*/
+	margin: 40px 0;
+	padding-left: 30px;
+}
+
+section.flow img.vis {
+	height: 220px;
+	margin-bottom: 20px;
+}
+
+section.detail {
+	border-top: 1px solid #ddd;
+	margin-top: 60px;
+	position: relative;
+	padding-top: 30px;
+}
+
+.app-detail h2 {
+	position: absolute;
+	top: -36px;
+	background-color: #fff;
+	padding-right: 20px;
+}
+
+.app-detail h1 {
+	font-size: 4em;
+}
+
+.flows>.flow {
+	float: left;
+	margin: 20px;
+	padding: 20px;
+	box-shadow: 0px 0px 12px -5px rgba(0,0,0,0.2);
+}
+
+.flows>.flow img.vis {
+	height: 200px;
+	margin-top: 15px;
+	margin: 0 auto;
+	display: block;
+}
+
+section.detail {
+	clear: both;
+}

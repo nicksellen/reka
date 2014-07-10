@@ -1,0 +1,17 @@
+running {
+  icon fa-play
+  title running
+  path /
+}
+
+apps {
+  icon fa-bars
+  title available apps
+  path /apps
+}
+
+new {
+  icon fa-plus
+  title new app
+  path /apps/new
+}

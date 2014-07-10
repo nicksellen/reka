@@ -1,0 +1,34 @@
+each app, id in apps
+  section.app
+    .row
+      .medium-9.columns
+        h1
+          a(href="/#{id}")= app.name
+        pre.appid= id
+        ul.ports
+          for port in app.ports
+            li
+              i.green.fa.fa-dot-circle-o
+              span.port= port.port
+              span.protocol= port.protocol
+              
+              unless empty(port.details)
+                ul.details
+                  for value, name in port.details
+                    li
+                      span.name= name
+                      span.value= value
+                      
+      .medium-3.columns
+        .actions
+          form.right(action="/#{id}", method='POST')
+            input(type='hidden', name='_method', value='DELETE')
+            button.tiny.alert(type='submit')
+              i.fa.fa-trash-o
+              | remove
+
+          form.right(action="/#{id}/redeploy", method='POST')
+            input(type='hidden', name='_method', value='PUT')
+            button.tiny.success(type='submit')
+              i.fa.fa-refresh
+              | redeploy
