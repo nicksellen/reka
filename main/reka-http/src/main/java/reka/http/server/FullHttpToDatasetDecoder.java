@@ -200,7 +200,7 @@ public class FullHttpToDatasetDecoder extends MessageToMessageDecoder<FullHttpRe
 				if (uploadCount == 0) {
 					logger.debug("ah no uploads, %d readable bytes..", request.content().readableBytes());
 				} else {
-					logger.debug("%d upload(s)", uploadCount);
+					logger.debug("{} upload(s)", uploadCount);
 					requestData.forEachContent((path, content) -> {
 						logger.debug("  {} -> {}", path.dots(), content);
 					});

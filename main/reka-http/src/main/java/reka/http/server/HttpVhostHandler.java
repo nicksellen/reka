@@ -16,9 +16,11 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -52,9 +54,11 @@ public class HttpVhostHandler extends SimpleChannelInboundHandler<MutableData> {
 		flows.put(host, flow);
 		List<Consumer<Flow>> waiting = frozen.remove(host);
 		if (waiting != null) {
-			log.info("unfreezing {} connections for host {}", waiting.size(), host);
-			for (Consumer<Flow> c : waiting) {
-				c.accept(flow);
+			synchronized (waiting) {
+				log.info("unfreezing {} connections for host {}", waiting.size(), host);
+				for (Consumer<Flow> c : waiting) {
+					c.accept(flow);
+				}
 			}
 		}
 		return this;
@@ -145,10 +149,16 @@ public class HttpVhostHandler extends SimpleChannelInboundHandler<MutableData> {
 		String host = data.getString(Path.Request.HOST).orElse("localhost");
 		
 		if (frozen.containsKey(host)) {
-			frozen.get(host).add(flow -> {
-				executeFlow(context, flow, data, host);
-			});
-			return;
+			List<Consumer<Flow>> waiting = frozen.get(host);
+			synchronized (waiting) {
+				// now we have the waiting list locked, check we are still frozen
+				if (frozen.containsKey(host)) {
+					waiting.add(flow -> {
+						executeFlow(context, flow, data, host);
+					});
+					return;	
+				}
+			}
 		}
 		
 		Flow flow = flows.get(host);

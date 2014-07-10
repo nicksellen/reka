@@ -1,4 +1,4 @@
-package reka.config.parser.states;
+package reka.config.parser.handlers;
 
 import static java.lang.Character.isWhitespace;
 
@@ -7,10 +7,10 @@ import java.util.List;
 
 import reka.config.Config;
 import reka.config.parser.ParseContext;
-import reka.config.parser.ParseState;
+import reka.config.parser.ParseHandler;
 import reka.config.parser.values.BodyVal;
 
-public class BodyState implements ParseState {
+public class BodyHandler implements ParseHandler {
 	
 	private final List<Config> configs = new ArrayList<>();
 
@@ -30,7 +30,7 @@ public class BodyState implements ParseState {
 				ctx.emit("body", new BodyVal(configs));
 				break;
 			} else {
-				ctx.parse(new ItemState());
+				ctx.parse(new ItemHandler());
 			}
 		}		
 		

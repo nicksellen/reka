@@ -1,4 +1,4 @@
-package reka.config.parser.states;
+package reka.config.parser.handlers;
 
 import static com.google.common.base.Preconditions.checkState;
 import static reka.config.ConfigUtil.doc;
@@ -7,13 +7,13 @@ import static reka.config.ConfigUtil.kv;
 import static reka.config.ConfigUtil.obj;
 import reka.config.Source;
 import reka.config.parser.ParseContext;
-import reka.config.parser.ParseState;
+import reka.config.parser.ParseHandler;
 import reka.config.parser.values.BodyVal;
 import reka.config.parser.values.DocVal;
 import reka.config.parser.values.KeyVal;
 import reka.config.parser.values.ValueVal;
 
-public class ItemState implements ParseState {
+public class ItemHandler implements ParseHandler {
 
 	private ValueVal value;
 	private DocVal doc;

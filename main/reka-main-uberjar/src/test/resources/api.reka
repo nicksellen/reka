@@ -8,7 +8,7 @@ use {
   http
   reka
   filesystem fs {
-    dir data-apps
+    dir /tmp/reka-api-data
   }
 }
 
@@ -54,6 +54,8 @@ run http {
         copy {
           request.data.spec path
         }
+        
+        println trying to deploy :path from :request.data
 
         fs/type :path {
 

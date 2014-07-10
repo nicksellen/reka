@@ -24,13 +24,13 @@ public final class ParseContext {
 	
 	private static class StackItem {
 		
-		final ParseState handler;
+		final ParseHandler handler;
 		
 		int pos = -1;
 
 		private StackItem next = null;
 		
-		StackItem(ParseState handler) {
+		StackItem(ParseHandler handler) {
 			this.handler = handler;
 		}
 		
@@ -72,7 +72,7 @@ public final class ParseContext {
 	private final char[] chars;
 	private int nextPos = 0;
 	
-	public ParseContext(Source source, ParseState root) {
+	public ParseContext(Source source, ParseHandler root) {
 		this.source = source;
 		this.root = new StackItem(root);
 		chars = source.content().toCharArray();
@@ -121,7 +121,7 @@ public final class ParseContext {
 		}
 	}
 	
-	public void next(ParseState next) {
+	public void next(ParseHandler next) {
 		checkState(!stack.isEmpty(), "you can't call next with an empty stack");
 		StackItem n = new StackItem(next);
 		stack.peek().next(n);
@@ -151,7 +151,7 @@ public final class ParseContext {
 		return supplier.get();
 	}
  
-	public void parse(ParseState state) {
+	public void parse(ParseHandler state) {
 		process(new StackItem(state));
 	}
 		
