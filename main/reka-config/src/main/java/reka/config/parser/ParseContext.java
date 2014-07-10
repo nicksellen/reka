@@ -161,13 +161,14 @@ public final class ParseContext {
 		
 		state.pos = nextPos;
 		state.handler.accept(this);
-
+		
+		stack.pop();
+		
 		if (state.next != null) {
 			StackItem next = state.next;
 			state.next(null);
 			process(next);
 		}
-		
 	}
 	
 	public boolean isEOF() {
