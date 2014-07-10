@@ -161,15 +161,13 @@ public final class ParseContext {
 		
 		state.pos = nextPos;
 		state.handler.accept(this);
-		
-		StackItem top = stack.pop();
 
-		checkState(top.equals(state), "hmpph!");
 		if (state.next != null) {
 			StackItem next = state.next;
 			state.next(null);
 			process(next);
 		}
+		
 	}
 	
 	public boolean isEOF() {

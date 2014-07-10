@@ -32,8 +32,7 @@ public class BodyState implements ParseState {
 			} else {
 				ctx.parse(new ItemState());
 			}
-		}
-		
+		}		
 		
 	}
 	

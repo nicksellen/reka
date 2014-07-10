@@ -1,7 +1,5 @@
 package reka.core.builder;
 
-import java.util.Objects;
-
 import reka.api.flow.FlowNode;
 
 public class FlowNodeConnection {
@@ -37,19 +35,46 @@ public class FlowNodeConnection {
 	public boolean optional() {
 		return optional;
 	}
-	
+
 	@Override
 	public int hashCode() {
-		return Objects.hash(source, destination, label);
+		final int prime = 31;
+		int result = 1;
+		result = prime * result
+				+ ((destination == null) ? 0 : destination.hashCode());
+		result = prime * result + ((label == null) ? 0 : label.hashCode());
+		result = prime * result + (optional ? 1231 : 1237);
+		result = prime * result + ((source == null) ? 0 : source.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		FlowNodeConnection other = (FlowNodeConnection) obj;
+		if (destination == null) {
+			if (other.destination != null)
+				return false;
+		} else if (!destination.equals(other.destination))
+			return false;
+		if (label == null) {
+			if (other.label != null)
+				return false;
+		} else if (!label.equals(other.label))
+			return false;
+		if (optional != other.optional)
+			return false;
+		if (source == null) {
+			if (other.source != null)
+				return false;
+		} else if (!source.equals(other.source))
+			return false;
+		return true;
 	}
 	
-	@Override
-	public boolean equals(Object object) {
-		if (object == this) return true;
-		if (!(object instanceof FlowNodeConnection)) return false;
-		FlowNodeConnection other = (FlowNodeConnection) object;
-		return source.equals(other.source)
-			&& destination.equals(other.destination)
-			&& ((label == null && other.label == null) || label.equals(other.label));
-	}
 }

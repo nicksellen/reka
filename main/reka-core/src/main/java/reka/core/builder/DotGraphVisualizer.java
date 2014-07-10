@@ -50,7 +50,7 @@ public class DotGraphVisualizer implements GraphVisualizer<String> {
 
 	@Override
 	public void connect(int from, int to, String label, boolean optional) {
-		connections.add(new Connection(from, to, label != null && !label.equals(to) ? label : null, optional));
+		connections.add(new Connection(from, to, label != null ? label : null, optional));
 	}
 	
 	private String idToText(int id) {
