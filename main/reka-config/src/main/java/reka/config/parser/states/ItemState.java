@@ -34,11 +34,11 @@ public class ItemState implements ParseState {
 	@Override
 	public void accept(ParseContext ctx) {
 		
-		KeyVal key = ctx.simpleParse(ParseStates.KEY);
+		KeyVal key = ctx.parseSync(ParseHandlers.KEY);
 		
 		checkState(!key.value().isEmpty(), "empty key at char %s in %s", ctx.startPos(), ctx.source().location());
 		
-		ctx.parse(ParseStates.VALUE);
+		ctx.parse(ParseHandlers.VALUE);
 		
 		Source src = ctx.source().subset(ctx.startPos(), ctx.endPos() - ctx.startPos());
 		
@@ -53,7 +53,7 @@ public class ItemState implements ParseState {
 			ctx.emit("k", k(src, key.value()));
 		}
 		
-		ctx.eat(ParseStates.WHITESPACE);
+		ctx.eat(ParseHandlers.WHITESPACE);
 		
 	}
 	

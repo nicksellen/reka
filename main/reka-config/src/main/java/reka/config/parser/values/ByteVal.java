@@ -16,7 +16,7 @@ public abstract class ByteVal {
 	
 	@Override
 	public String toString() {
-		return format("%s('%s')", getClass().getSimpleName(), value);
+		return format("%s", getClass().getSimpleName());
 	}
 	
 }

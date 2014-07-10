@@ -154,7 +154,7 @@ public class HttpRouter implements RoutingOperation {
 				return Integer.compare(
 						b.pattern.pattern().length(),
 						a.pattern.pattern().length());
-			} else if (a.method.name() != b.method.name()){
+			} else if (!a.method.name().equals(b.method.name())){
 				return a.method.name().compareTo(b.method.name());
 			} else {
 				return 0;
@@ -217,7 +217,7 @@ public class HttpRouter implements RoutingOperation {
 
 		@Override
 		public String toString() {
-			return format("<%s connection=%s path=%s method=%s group=%s>",
+			return format("<%s connection=%s path=%s method=%s>",
 					getClass().getSimpleName(), connectionName, path, method);
 		}
 

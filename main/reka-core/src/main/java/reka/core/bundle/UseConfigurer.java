@@ -285,12 +285,13 @@ public abstract class UseConfigurer {
 	public void use(Config config) {
 		if (config.hasBody()) {
 			for (Config childConfig : config.body()) {
+
+				checkConfig(mappings != null, "[%s] is not a valid 'use' module (try one of %s)", childConfig.key(), mappingNames());
 				
-				Supplier<UseConfigurer> supplier = mappings != null ? mappingFor(slashes(childConfig.key())) : null;
-			
-				checkConfig(supplier != null, "[%s] is not a valid 'use' module (try one of %s)", childConfig.key(), mappingNames());
+				Supplier<UseConfigurer> supplier = mappingFor(slashes(childConfig.key()));
 				
 				UseConfigurer child = supplier.get();
+				
 				child.mappings(mappings);
 				
 				child.parentPath(path);

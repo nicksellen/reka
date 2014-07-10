@@ -681,7 +681,7 @@ public class Path implements Iterable<Path.PathElement>, Comparable<Path>, Hasha
 	
 	@Override
 	public String toString() {
-		return elements.toString();
+		return Arrays.toString(elements);
 	}
 
 	public boolean isEmpty() {

@@ -311,13 +311,27 @@ public interface Content extends Hashable, JsonProvider {
 		public Hasher hash(Hasher hasher) {
 			return hasher.putInt(value);
 		}
-		
+
 		@Override
-		public boolean equals(Object object) {
-			if (object == this) return true;
-			if (!(object instanceof IntegerContent)) return false;
-			IntegerContent other = (IntegerContent) object;
-			return value == other.value;
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + value;
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			IntegerContent other = (IntegerContent) obj;
+			if (value != other.value)
+				return false;
+			return true;
 		}
 		
 	}
@@ -522,13 +536,30 @@ public interface Content extends Hashable, JsonProvider {
 		public boolean isEmpty() {
 			return value.isEmpty();
 		}
-		
+
 		@Override
-		public boolean equals(Object object) {
-			if (this == object) return true;
-			if (!(object instanceof UTF8Content)) return false;
-			UTF8Content other = (UTF8Content) object;
-			return value.equals(other.value);
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + ((value == null) ? 0 : value.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			UTF8Content other = (UTF8Content) obj;
+			if (value == null) {
+				if (other.value != null)
+					return false;
+			} else if (!value.equals(other.value))
+				return false;
+			return true;
 		}
 		
 	}
