@@ -34,7 +34,7 @@ public class ItemState implements ParseState {
 	@Override
 	public void accept(ParseContext ctx) {
 		
-		KeyVal key = ctx.simpleParse(ParseHandlers.KEY);
+		KeyVal key = ctx.parseSync(ParseHandlers.KEY);
 		
 		checkState(!key.value().isEmpty(), "empty key at char %s in %s", ctx.startPos(), ctx.source().location());
 		

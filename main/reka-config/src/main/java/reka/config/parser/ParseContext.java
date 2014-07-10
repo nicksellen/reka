@@ -131,7 +131,7 @@ public final class ParseContext {
 		process(root);
 	}
 	
-	public <V> V simpleParse(SimpleParseHandler<V> handler) {
+	public <V> V parseSync(SynchronousParseHandler<V> handler) {
 		return handler.apply(this);
 	}
 	
@@ -169,6 +169,7 @@ public final class ParseContext {
 			state.next(null);
 			process(next);
 		}
+		
 	}
 	
 	public boolean isEOF() {
