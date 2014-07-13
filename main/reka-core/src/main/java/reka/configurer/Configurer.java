@@ -35,7 +35,6 @@ import reka.configurer.annotations.Conf;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
 
 public class Configurer {
 	
@@ -226,7 +225,7 @@ public class Configurer {
     	
     }
     
-    private static class InvalidConfigurationException extends RuntimeException implements JsonProvider {
+    public static class InvalidConfigurationException extends RuntimeException implements JsonProvider {
     	
 		private static final long serialVersionUID = 8018639942600973192L;
 
@@ -399,9 +398,10 @@ public class Configurer {
 		}
 		
 		if (config.hasBody()) {
-			Set<String> leftovers = Sets.difference(allKeys(config), status.matchedKeys);
-			if (!leftovers.isEmpty()) {
-				errors.add(new ConfigurationError(config, format("invalid options %s", leftovers)));
+			for (Config c : config.body()) {
+				if (!status.matchedKeys.contains(c.key())) {
+					errors.add(new ConfigurationError(new WrappedConfig(c), format("invalid option %s", c.key())));		
+				}
 			}
 		}
 		

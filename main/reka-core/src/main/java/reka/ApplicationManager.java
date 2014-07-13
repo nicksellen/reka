@@ -2,6 +2,7 @@ package reka;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.stream.Collectors.joining;
+import static reka.api.Path.slashes;
 import static reka.configurer.Configurer.configure;
 import static reka.util.Util.runtime;
 
@@ -173,6 +174,11 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 		}
 		
 	}
+
+	public void validate(Source source) {
+		NavigableConfig config = bundles.processor().process(ConfigParser.fromSource(source));
+		configure(new ApplicationConfigurer(bundles), config).checkValid();
+	}
 	
 	public void deploy(String identity, Source source, Subscriber subscriber) {
 		deploySource(identity, false, source, false, subscriber);
@@ -190,12 +196,11 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 		long stamp = lock.writeLock();
 		
 		try {
-		
-			if (source.isFile()) {
-				String filename = source.file().getAbsolutePath();
-				if (deployedFilenames.contains(filename) && !redeploy) {
-					throw runtime("we already have a deployment of %s", filename);
-				}
+			
+			if (!redeploy && applications.containsKey(identity)) {
+				subscriber.error(Data.NONE, runtime("we already have a deployment of %s", identity));
+				lock.unlock(stamp);
+				return;
 			}
 			
 			Application previous = applications.remove(identity);
@@ -210,6 +215,8 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 			
 					ApplicationConfigurer configurer = configure(new ApplicationConfigurer(bundles), config);
 					
+					configurer.checkValid();
+					
 					versions.putIfAbsent(identity, new AtomicInteger());
 					int version = versions.get(identity).incrementAndGet();
 	
@@ -219,12 +226,7 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 						// they wait until either: 
 						//   1) we deploy a new app successfully
 						//   2) we fail to deploy the new app and unfreeze them (they should be processed with the old app)
-						//      (I don't quite know how to make this work yet...
-						//      ... we need to do as much as possible up front...)
-						//      ... could do a bit more processing below, before we run the initialize
-						//      thats the real no-going back bit where we need to freeze
-						
-						previous.freeze();
+						previous.pause();
 					}
 				
 					configurer
@@ -249,36 +251,46 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 								log.info("exception whilst deploying!");
 								ex.printStackTrace();
 								subscriber.error(Data.NONE, ex);
+								if (previous != null) {
+									previous.resume();
+								}
 							}
 							saveState();
 						} finally {
-							log.info("unlocking {}", stamp);
 							lock.unlock(stamp);
 						}
 						
 					});
 				
 				} catch (Throwable t) {
-					log.info("unlocking {}", stamp);
 					lock.unlock(stamp);
 					subscriber.error(Data.NONE, t);
+					if (previous != null) {
+						previous.resume();
+					}
 					throw t;
 				}
 				
 			});
 		} catch (Throwable t) {
-			log.info("unlocking {}", stamp);
 			lock.unlock(stamp);
 			subscriber.error(Data.NONE, t);
 			throw t;
 		}
 	}
 	
+	private static final Path INITIALIZER_VISUALIZER_NAME = slashes("__initializer__");
+	
 	public Optional<FlowVisualizer> visualize(String identity, Path flowName) {
 		long stamp = lock.readLock();
 		try {
 			Application app = applications.get(identity);
 			if (app == null) return Optional.empty();
+			
+			if (INITIALIZER_VISUALIZER_NAME.equals(flowName)) {
+				return Optional.of(app.initializerVisualizer());
+			}
+			
 			return Optional.ofNullable(app.flows().visualizer(flowName));
 		} finally {
 			lock.unlock(stamp);
@@ -318,6 +330,15 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 		long stamp = lock.readLock();
 		try {
 			return ImmutableMap.copyOf(applications).entrySet().iterator();
+		} finally {
+			lock.unlock(stamp);
+		}
+	}
+	
+	public boolean hasSourceFor(String identity){
+		long stamp = lock.readLock();
+		try {
+			return applicationSource.containsKey(identity);
 		} finally {
 			lock.unlock(stamp);
 		}

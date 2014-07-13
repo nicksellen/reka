@@ -23,15 +23,14 @@ import reka.api.flow.FlowSegment;
 import reka.api.run.SyncOperation;
 import reka.config.Config;
 import reka.configurer.annotations.Conf;
-import reka.core.bundle.SetupTrigger;
+import reka.core.bundle.TriggerSetup;
 import reka.core.bundle.TriggerConfigurer;
 import reka.core.bundle.UseConfigurer;
 import reka.core.bundle.UseInit;
 import reka.core.data.memory.MutableMemoryData;
 import reka.core.util.StringWithVars;
-import reka.http.server.HttpServer;
+import reka.http.server.HttpServerManager;
 import reka.http.server.HttpSettings;
-import reka.http.server.HttpSettings.Security;
 import reka.http.server.HttpSettings.Type;
 
 import com.google.common.base.Optional;
@@ -41,12 +40,12 @@ public class UseWebsockets extends UseConfigurer {
 	
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	
-	private final HttpServer server;
+	private final HttpServerManager server;
 	
 	// TODO: have a better way to pass data around
 	private final AtomicReference<HttpSettings> httpSettingsRef = new AtomicReference<>();
 	
-	public UseWebsockets(HttpServer server) {
+	public UseWebsockets(HttpServerManager server) {
 		this.server = server;
 	}
 
@@ -105,9 +104,9 @@ public class UseWebsockets extends UseConfigurer {
 		
 		
 		@Override
-		public void setupTriggers(SetupTrigger trigger) {
+		public void setupTriggers(TriggerSetup trigger) {
 
-			HttpSettings settings = new HttpSettings(port, host, Type.WEBSOCKET, Security.NONE, trigger.applicationVersion());
+			HttpSettings settings = HttpSettings.http(port, host, Type.WEBSOCKET, trigger.applicationVersion());
 			
 			log.debug("setting http settings ref");
 			httpSettingsRef.set(settings);

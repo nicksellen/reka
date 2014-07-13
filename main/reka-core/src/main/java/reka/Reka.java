@@ -14,7 +14,10 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Optional;
+
 import reka.admin.RekaSystemBundle;
+import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.FileSource;
 import reka.config.Source;
@@ -67,7 +70,9 @@ public class Reka {
 			
 			final File file = possibleFile;
 			
-			String identity = UUID.randomUUID().toString();
+			//String identity = UUID.randomUUID().toString();
+			
+			String identity = file.toPath().getFileName().toString().replaceFirst("\\.reka$", "");
 			
 			Source source = FileSource.from(file);
 			
@@ -77,6 +82,10 @@ public class Reka {
 		
 		for (ConfigBody config : configs) {
 			String identity = UUID.randomUUID().toString();
+			Optional<Config> name = config.at("name");
+			if (name.isPresent()) {
+				identity = name.get().valueAsString();
+			}
 			manager.deployTransient(identity, config);
 		}
 	}

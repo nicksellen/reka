@@ -24,7 +24,7 @@ public class HazelcastBundle implements RekaBundle {
 	
 	// TODO: what?? this is totally wrong, put needs to put to hazelcast, what does it mean?
 
-	public void setup(Setup setup) {
+	public void setup(BundleSetup setup) {
 		setup.use(path("hazelcast"), () -> new UseHazelcast());
 	}
 	

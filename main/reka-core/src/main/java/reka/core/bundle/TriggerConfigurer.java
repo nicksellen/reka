@@ -1,5 +1,5 @@
 package reka.core.bundle;
 
 public interface TriggerConfigurer {
-	void setupTriggers(SetupTrigger setup);
+	void setupTriggers(TriggerSetup setup);
 }

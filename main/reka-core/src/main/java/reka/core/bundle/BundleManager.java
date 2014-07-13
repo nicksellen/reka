@@ -38,7 +38,7 @@ public class BundleManager {
 	}
 	
 	private void setupBundle(RekaBundle bundle) {
-		RekaBundle.Setup setup = new RekaBundle.Setup();
+		RekaBundle.BundleSetup setup = new RekaBundle.BundleSetup();
 		bundle.setup(setup);
 		uses.addAll(setup.uses());
 		converters.addAll(setup.converters());
@@ -60,8 +60,7 @@ public class BundleManager {
 		for (Entry<Path, Supplier<UseConfigurer>> e : uses) {
 			keys.add(e.getKey());
 		}
-		return keys;
-		//return uses.stream().map(Entry<Path,?>::getKey).collect(toSet()); 
+		return keys; 
 	}
 
 }

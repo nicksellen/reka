@@ -147,7 +147,7 @@ class NodeBuilder {
 		List<NodeChild> children = buildChildren(factory);
 		List<FailureHandler> listeners = buildListeners(factory);
 		
-		boolean needsState = initialCounter > 1;
+		boolean stateful = initialCounter > 1;
 		boolean hasListeners = !listeners.isEmpty();
 		
 		final ActionHandler action;
@@ -176,7 +176,7 @@ class NodeBuilder {
 		FlowOperation operation = o.orNull();
 		
 		if (operation instanceof RoutingOperation) {
-			action = routing((RoutingOperation) o.get(), children);
+			action = routing((RoutingOperation) operation, children);
 		} else {
 			List<ActionHandler> childActions = children.stream().map(NodeChild::node).collect(toList());
 			ActionHandler next = actionHandlers(childActions);
@@ -202,7 +202,7 @@ class NodeBuilder {
 
 		//main = new TimeLoggerAction(id, main);
 		
-		if (needsState) {
+		if (stateful) {
 			ControlHandler stateHandler = new StatefulControl(id, initialCounter, main, halted, error);
 			main = stateHandler;
 			halted = stateHandler;

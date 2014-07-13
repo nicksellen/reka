@@ -4,7 +4,7 @@ import reka.core.bundle.RekaBundle;
 
 public class GitBundle implements RekaBundle {
 
-	public void setup(Setup setup) {
+	public void setup(BundleSetup setup) {
 		
 	}
 

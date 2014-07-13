@@ -12,30 +12,30 @@ import reka.config.processor.ConfigConverter;
 
 public interface RekaBundle {
 	
-	void setup(Setup setup);
+	void setup(BundleSetup setup);
 	
-	public static class Setup {
+	public static class BundleSetup {
 		
 		private final List<Entry<Path,Supplier<UseConfigurer>>> uses = new ArrayList<>();
 		private final List<ConfigConverter> converters = new ArrayList<>();
 		private final List<RekaBundle> moreBundles = new ArrayList<>();
 		
-		public Setup use(Path name, Supplier<UseConfigurer> supplier) {
+		public BundleSetup use(Path name, Supplier<UseConfigurer> supplier) {
 			uses.add(createEntry(name, supplier));
 			return this;
 		}
 		
-		public Setup converter(ConfigConverter converter) {
+		public BundleSetup converter(ConfigConverter converter) {
 			converters.add(converter);
 			return this;
 		}
 		
-		public Setup bundle(RekaBundle bundle) {
+		public BundleSetup bundle(RekaBundle bundle) {
 			moreBundles.add(bundle);
 			return this;
 		}
 		
-		public Setup bundles(RekaBundle... bundles) {
+		public BundleSetup bundles(RekaBundle... bundles) {
 			for (RekaBundle bundle : bundles) {
 				moreBundles.add(bundle);
 			}

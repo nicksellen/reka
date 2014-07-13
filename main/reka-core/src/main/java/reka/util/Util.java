@@ -6,6 +6,7 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.concurrent.CompletableFuture;
 
 public class Util {
 	
@@ -90,8 +91,21 @@ public class Util {
 			}
 		}
 		return removed.toArray(new Integer[removed.size()]);
+		
 	}
+	
 	public static <K,V> Entry<K, V> createEntry(K key, V value) {
 		return new AbstractMap.SimpleEntry<K,V>(key, value);
+	}
+	
+	public static <T> CompletableFuture<T> safelyCompletable(CompletableFuture<T> future, Runnable runnable) {
+		try {
+			runnable.run();
+		} catch (Throwable t) {
+			if (!future.isDone()) {
+				future.completeExceptionally(t);
+			}
+		}
+		return future;
 	}
 }

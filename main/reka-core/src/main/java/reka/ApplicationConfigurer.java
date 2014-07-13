@@ -7,6 +7,7 @@ import static reka.configurer.Configurer.configure;
 import static reka.configurer.Configurer.Preconditions.checkConfig;
 import static reka.configurer.Configurer.Preconditions.invalidConfig;
 import static reka.util.Util.createEntry;
+import static reka.util.Util.safelyCompletable;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -36,9 +37,8 @@ import reka.core.builder.FlowVisualizer;
 import reka.core.builder.Flows;
 import reka.core.builder.FlowsBuilder;
 import reka.core.bundle.BundleManager;
-import reka.core.bundle.DefaultTriggerSetup;
 import reka.core.bundle.Registration;
-import reka.core.bundle.SetupTrigger;
+import reka.core.bundle.TriggerSetup;
 import reka.core.bundle.TriggerConfigurer;
 import reka.core.bundle.UseConfigurer;
 import reka.core.bundle.UseConfigurer.UsesInitializer;
@@ -156,7 +156,7 @@ public class ApplicationConfigurer implements ErrorReporter {
     	return build(identity, version, previous, EverythingSubscriber.DO_NOTHING);
     }
     
-    private void configureTriggers(Map<Path, Supplier<TriggerConfigurer>> triggerConfigurers, SetupTrigger triggers) {
+    private void configureTriggers(Map<Path, Supplier<TriggerConfigurer>> triggerConfigurers, TriggerSetup triggers) {
     	
 		triggerConfigs.forEach(e -> {
 			
@@ -173,83 +173,120 @@ public class ApplicationConfigurer implements ErrorReporter {
 		
     }
     
+    public void checkValid() {
+    	UsesInitializer initializer = UseConfigurer.process(rootUse);
+    	Map<Path, Supplier<TriggerConfigurer>> triggerConfigurers = initializer.triggers();
+    	flowConfigs.forEach((config) -> configure(new SequenceConfigurer(new MultiConfigurerProvider(initializer.providers())), config).get());
+    	configureTriggers(triggerConfigurers, new TriggerSetup("validate", applicationName, -1));
+    }
+    
     public CompletableFuture<Application> build(String identity, int applicationVersion, Application previous, final Subscriber s) {
 
     	CompletableFuture<Application> future = new CompletableFuture<>();
     	
-    	UsesInitializer initializer = UseConfigurer.process(rootUse);
+    	return safelyCompletable(future, () -> {
     	
-    	ApplicationBuilder applicationBuilder = new ApplicationBuilder();
-    	
-    	applicationBuilder.setName(applicationName);
-    	applicationBuilder.setVersion(applicationVersion);
-    	applicationBuilder.setInitializerVisualizer(initializer.visualizer());
-    	
-    	Map<Path, Supplier<TriggerConfigurer>> triggerConfigurers = initializer.triggers();
-    	
-    	flowConfigs.forEach((config) -> 
-			flowsBuilder.add(applicationName.add(config.valueAsString()), 
-					configure(new SequenceConfigurer(new MultiConfigurerProvider(initializer.providers())), config).get()));
-    	
-    	DefaultTriggerSetup triggers = new DefaultTriggerSetup(identity, applicationName, applicationVersion);
-
-    	configureTriggers(triggerConfigurers, triggers);
-    	
-    	// ok, run the app initializer
-
-    	EverythingSubscriber subscriber = EverythingSubscriber.wrap(s);
-    	
-    	initializer.flow().run(new EverythingSubscriber() {
-			
-			@Override
-			public void ok(MutableData data) {
+	    	UsesInitializer initializer = UseConfigurer.process(rootUse);
+	    	
+	    	ApplicationBuilder applicationBuilder = new ApplicationBuilder();
+	    	
+	    	applicationBuilder.setName(applicationName);
+	    	applicationBuilder.setVersion(applicationVersion);
+	    	applicationBuilder.setInitializerVisualizer(initializer.visualizer());
+	    	
+	    	Map<Path, Supplier<TriggerConfigurer>> triggerConfigurers = initializer.triggers();
+	    	
+	    	List<Runnable> shutdownHandlers = initializer.shutdownHandlers();
+	    	
+	    	flowConfigs.forEach((config) -> 
+				flowsBuilder.add(applicationName.add(config.valueAsString()), 
+						configure(new SequenceConfigurer(new MultiConfigurerProvider(initializer.providers())), config).get()));
+	    	
+	    	TriggerSetup triggers = new TriggerSetup(identity, applicationName, applicationVersion);
+	
+	    	configureTriggers(triggerConfigurers, triggers);
+	    	
+	    	// ok, run the app initializer
+	
+	    	EverythingSubscriber subscriber = EverythingSubscriber.wrap(s);
+	    	
+	    	initializer.flow().run(new EverythingSubscriber() {
 				
-				log.debug("initialized with [{}]", data.toPrettyJson());
+				@Override
+				public void ok(MutableData data) {
+					
+					log.debug("initialized with [{}]", data.toPrettyJson());
+					
+			    	try {
+			    		
+						Flows flows = flowsBuilder.build(data); // constructs all the operations
+						
+						applicationBuilder.setFlows(flows);
+						
+						Registration registration = new Registration(flows);
+						
+						for (Consumer<Registration> handler : triggers.registrationHandlers()) {
+							handler.accept(registration);
+						}
+						
+						registration.resource(new DeployedResource() {
+							
+							@Override
+							public void undeploy(int version) {
+								log.debug("running {} shutdown handlers", shutdownHandlers.size());
+								for (Runnable handler : shutdownHandlers) {
+									try {
+										handler.run();
+									} catch (Throwable t) {
+										t.printStackTrace();
+									}
+								}
+							}
+							
+							@Override
+							public void pause(int version) {
+								// no-op
+							}
+	
+							@Override
+							public void resume(int version) {
+								// no-op
+							}
+							
+						});
+						
+			    		applicationBuilder.register(registration);
+				    	
+				    	future.complete(applicationBuilder.build());
+				    	
+				    	subscriber.ok(data);
+			    	
+			    	} catch (Throwable t) {
+			    		t.printStackTrace();
+			    		subscriber.error(data, t);
+			    		if (!future.isDone()) {
+			    			future.completeExceptionally(t);
+			    		}
+			    	}
+				}
 				
-		    	try {
-		    		
-					Flows flows = flowsBuilder.build(data); // constructs all the operations
-					
-					applicationBuilder.setFlows(flows);
-					
-					Registration registration = new Registration(flows);
-					
-					for (Consumer<Registration> handler : triggers.registrationHandlers()) {
-						handler.accept(registration);
-					}
-					
-		    		applicationBuilder.register(registration);
-			    	
-			    	future.complete(applicationBuilder.build());
-			    	
-			    	subscriber.ok(data);
-		    	
-		    	} catch (Throwable t) {
-		    		t.printStackTrace();
-		    		subscriber.error(data, t);
-		    		if (!future.isDone()) {
-		    			future.completeExceptionally(t);
-		    		}
-		    	}
-			}
-			
-			@Override
-			public void halted() {
-				log.debug("halted whilst initializing app :(");
-				subscriber.halted();
-				future.cancel(true);
-			}
-			
-			@Override
-			public void error(Data data, Throwable t) {
-				log.debug("error whilst initializing app :( {} {}", t.getMessage(), data.toPrettyJson());
-				t.printStackTrace();
-				subscriber.error(data, t);
-				future.completeExceptionally(t);
-			}
-		});
+				@Override
+				public void halted() {
+					log.debug("halted whilst initializing app :(");
+					subscriber.halted();
+					future.cancel(true);
+				}
+				
+				@Override
+				public void error(Data data, Throwable t) {
+					log.debug("error whilst initializing app :( {} {}", t.getMessage(), data.toPrettyJson());
+					t.printStackTrace();
+					subscriber.error(data, t);
+					future.completeExceptionally(t);
+				}
+			});
     	
-    	return future;
+    	});
     }
 
 }

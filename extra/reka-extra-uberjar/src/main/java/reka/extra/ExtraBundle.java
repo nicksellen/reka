@@ -10,7 +10,7 @@ import reka.validation.ValidatorBundle;
 public class ExtraBundle implements RekaBundle {
 	
 	@Override
-	public void setup(Setup setup) {
+	public void setup(BundleSetup setup) {
 		setup.bundles(
 			new ValidatorBundle(),
 			new JavascriptBundle(),

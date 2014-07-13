@@ -18,7 +18,7 @@ import reka.api.run.EverythingSubscriber;
 import reka.configurer.Configurer.ErrorCollector;
 import reka.configurer.ErrorReporter;
 import reka.configurer.annotations.Conf;
-import reka.core.bundle.SetupTrigger;
+import reka.core.bundle.TriggerSetup;
 import reka.core.bundle.TriggerConfigurer;
 
 public class TimerExport implements TriggerConfigurer, ErrorReporter {
@@ -48,7 +48,7 @@ public class TimerExport implements TriggerConfigurer, ErrorReporter {
 	}
 	
 	@Override
-	public void setupTriggers(SetupTrigger trigger) {
+	public void setupTriggers(TriggerSetup trigger) {
 		
 		trigger.addRegistrationHandler(app -> {
 			
@@ -75,7 +75,6 @@ public class TimerExport implements TriggerConfigurer, ErrorReporter {
 				});
 			}, 0, ms, TimeUnit.MILLISECONDS);	
 		});
-		
 		
 	}
 	

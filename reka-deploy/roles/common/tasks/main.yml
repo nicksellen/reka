@@ -1,0 +1,51 @@
+# based on http://lattejed.com/first-five-and-a-half-minutes-on-a-server-with-ansible
+
+- name: update apt cache
+  apt: update_cache=true cache_valid_time=30
+
+- name: apt upgrade safe
+  apt: upgrade=safe
+
+- name: Install fail2ban
+  apt: pkg=fail2ban state=installed
+
+- name: Install unattended-upgrades
+  apt: pkg=unattended-upgrades state=present
+
+- name: Set timezone variables
+  copy: content='UTC'
+        dest=/etc/timezone
+        owner=root
+        group=root
+        mode=0644
+        backup=yes
+  tags:
+    - timezone
+  notify:
+    - update timezone
+
+- template: src=apt_periodic.j2 dest=/etc/apt/apt.conf.d/10periodic
+- lineinfile: dest=/etc/apt/apt.conf.d/50unattended-upgrades line='Unattended-Upgrade::Mail "nick@letsmake.com";'
+
+- name: setup ufw (ssh)
+  shell: ufw allow 22/tcp
+
+- name: enable ufw
+  shell: echo y | ufw enable
+
+- name: add deploy user
+  user: name=deploy
+
+- name: add deploy to sudoers
+  lineinfile: dest=/etc/sudoers regexp="deploy ALL" line="deploy ALL=(ALL) ALL" state=present
+
+- name: add ssh key
+  authorized_key: user=deploy key='{{ item }}'
+  with_file:
+    - ~/.ssh/id_rsa.pub
+
+- name: disallow ssh password auth
+  lineinfile: dest=/etc/ssh/sshd_config regexp="^PasswordAuthentication" line="PasswordAuthentication no" state=present
+
+- name: restart ssh
+  service: name=ssh state=restarted

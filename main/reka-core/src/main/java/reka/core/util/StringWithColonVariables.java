@@ -122,8 +122,10 @@ class StringWithColonVariables implements Function<Data,String>, StringWithVars 
 				} else {
 					val = d.toPrettyJson();
 				}
-				output.insert(var.pos + offset, val);
-				offset += val.length();
+				if (val != null) {
+					output.insert(var.pos + offset, val);
+					offset += val.length();
+				}
 			}
 		}
 		return output.toString();

@@ -1,15 +1,11 @@
-bundle ../extra/reka-extra-uberjar/target/reka-extra-uberjar-0.1.0.jar
+//bundle ../extra/reka-extra-uberjar/target/reka-extra-uberjar-0.1.0.jar
 
 data /tmp/data2
 
 app @include(reka-ui/main.reka)
 app @include(api.reka)
 
-//app @include(nashorn.reka)
-//app @include(app.reka)
-//app @include(air.reka)
-
-app {
+// app {
   
   name a small inline app
 

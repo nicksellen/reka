@@ -1,0 +1,38 @@
+- file: dest=/var/apps/reka state=directory
+- file: dest=/var/apps/reka/lib state=directory
+- file: dest=/var/apps/reka/config state=directory
+
+- apt: pkg=libapr1 state=present
+- apt: pkg=graphviz state=present
+- shell: ln -s /usr/bin/dot /usr/local/bin/dot
+
+- name: send libs
+  synchronize: src=roles/reka/files/lib/ dest=/var/apps/reka/lib/
+  notify:
+    - restart reka
+  tags:
+    - deploy
+
+- name: send config
+  synchronize: src=roles/reka/files/config/ dest=/var/apps/reka/config/
+  notify:
+    - restart reka
+  tags:
+    - deploy
+
+- name: allow port 80,443
+  shell: ufw allow 80,443/tcp
+  tags:
+    - network
+
+- name: allow port 8000:8999
+  shell: ufw allow 8000:8999/tcp
+  tags:
+    - network
+
+- name: send upstart config
+  template: src=reka.upstart.conf.j2 dest=/etc/init/reka.conf
+  notify:
+    - restart reka
+  tags:
+    - deploy

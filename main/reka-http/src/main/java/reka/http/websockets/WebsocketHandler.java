@@ -27,7 +27,7 @@ import reka.api.data.MutableData;
 import reka.api.flow.Flow;
 import reka.api.run.EverythingSubscriber;
 import reka.core.data.memory.MutableMemoryData;
-import reka.http.server.HttpServer.WebsocketHandlers;
+import reka.http.server.HttpServerManager.WebsocketHandlers;
 
 @ChannelHandler.Sharable
 public class WebsocketHandler extends SimpleChannelInboundHandler<TextWebSocketFrame> {

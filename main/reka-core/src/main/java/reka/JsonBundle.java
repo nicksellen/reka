@@ -26,7 +26,7 @@ public class JsonBundle implements RekaBundle {
 	private static final JsonFactory jsonFactory = new JsonFactory();
 
 	@Override
-	public void setup(Setup setup) {
+	public void setup(BundleSetup setup) {
 		setup.use(path("json"), () -> new UseJson());
 	}
 	

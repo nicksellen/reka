@@ -12,7 +12,7 @@ public class JRubyBundle implements RekaBundle {
 	 */
 
 	@Override
-	public void setup(Setup setup) {
+	public void setup(BundleSetup setup) {
 		setup.use(slashes("jruby"), () -> new UseJRuby());
 	}
 

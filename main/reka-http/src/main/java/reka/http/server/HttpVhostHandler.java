@@ -4,6 +4,7 @@ import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator
 import static java.util.Collections.synchronizedList;
 import static reka.api.content.Contents.integer;
 import static reka.api.content.Contents.utf8;
+import static reka.util.Util.createEntry;
 import static reka.util.Util.unwrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
@@ -16,11 +17,10 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -42,7 +42,7 @@ public class HttpVhostHandler extends SimpleChannelInboundHandler<MutableData> {
 	
 	private static final Logger log = LoggerFactory.getLogger(HttpVhostHandler.class);
 	
-	private final ConcurrentMap<String,List<Consumer<Flow>>> frozen = new ConcurrentHashMap<>();
+	private final ConcurrentMap<String,List<Entry<Flow,Consumer<Flow>>>> paused = new ConcurrentHashMap<>();
 	
 	private final ConcurrentMap<String,Flow> flows = new ConcurrentHashMap<>();
 	
@@ -52,12 +52,12 @@ public class HttpVhostHandler extends SimpleChannelInboundHandler<MutableData> {
 	
 	public HttpVhostHandler add(String host, Flow flow) {
 		flows.put(host, flow);
-		List<Consumer<Flow>> waiting = frozen.remove(host);
+		List<Entry<Flow,Consumer<Flow>>> waiting = paused.remove(host);
 		if (waiting != null) {
 			synchronized (waiting) {
-				log.info("unfreezing {} connections for host {}", waiting.size(), host);
-				for (Consumer<Flow> c : waiting) {
-					c.accept(flow);
+				log.info("resuming {} connections for host {} from newly deployed flow", waiting.size(), host);
+				for (Entry<Flow, Consumer<Flow>> c : waiting) {
+					c.getValue().accept(flow);
 				}
 			}
 		}
@@ -67,14 +67,32 @@ public class HttpVhostHandler extends SimpleChannelInboundHandler<MutableData> {
 	public boolean remove(String host) {
 		if (flows.remove(host) != null) {
 			log.info("removed host {}", host);
-			frozen.remove(host);
+			paused.remove(host);
 			return true;
 		}
 		return false;
 	}
 
-	public void freeze(String host) {
-		frozen.putIfAbsent(host, synchronizedList(new ArrayList<>()));
+	public void pause(String host) {
+		paused.putIfAbsent(host, synchronizedList(new ArrayList<>()));
+	}
+
+
+	public void resume(String host) {
+		List<Entry<Flow,Consumer<Flow>>> waiting = paused.remove(host);
+		if (waiting != null) {
+			synchronized (waiting) {
+				log.info("resuming {} connections for host {} from existing flow", waiting.size(), host);
+				for (Entry<Flow, Consumer<Flow>> c : waiting) {
+					c.getValue().accept(c.getKey());
+				}
+			}
+		}
+	}
+
+	private Flow flowForHost(String host) {
+		Flow flow = flows.get(host);
+		return flow != null ? flow : flows.get("*");
 	}
 	
 	private static class ChannelHandlerContextDataSubscriber implements EverythingSubscriber {
@@ -147,25 +165,25 @@ public class HttpVhostHandler extends SimpleChannelInboundHandler<MutableData> {
 	protected void channelRead0(ChannelHandlerContext context, MutableData data) {
 
 		String host = data.getString(Path.Request.HOST).orElse("localhost");
-		
-		if (frozen.containsKey(host)) {
-			List<Consumer<Flow>> waiting = frozen.get(host);
-			synchronized (waiting) {
-				// now we have the waiting list locked, check we are still frozen
-				if (frozen.containsKey(host)) {
-					waiting.add(flow -> {
-						executeFlow(context, flow, data, host);
-					});
-					return;	
-				}
-			}
-		}
-		
-		Flow flow = flows.get(host);
+
+		Flow flow = flowForHost(host);
 		
 		if (flow == null) {
 			noFlowFound(context, data, host);
 			return;
+		}
+		
+		if (paused.containsKey(host)) {
+			List<Entry<Flow,Consumer<Flow>>> waiting = paused.get(host);
+			synchronized (waiting) {
+				// now we have the waiting list locked, check we are still frozen
+				if (paused.containsKey(host)) {
+					waiting.add(createEntry(flow, (newFlow) -> {
+						executeFlow(context, newFlow, data, host);
+					}));
+					return;	
+				}
+			}
 		}
 		
 		executeFlow(context, flow, data, host);

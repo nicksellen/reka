@@ -1,0 +1,39 @@
+name simple
+
+use {
+  http
+}
+
+flow main {
+
+  http/router {
+
+    GET / {
+      http/content <<- text/html
+        <!doctype html>
+        <html>
+          <head>
+            <link rel="stylesheet" href="/css/main.css">
+          </head>
+          <body>
+            <h1>Heya!</h1>
+            <p>that should be in pink! ^^^</p>    
+          </body>
+        </html>
+      ---
+    }
+
+    GET /css/main.css <<- text/css
+      h1 {
+        color: pink;
+      }
+    ---
+  }
+
+}
+
+trigger {
+  http localhost:5050 {
+    run main
+  }
+}

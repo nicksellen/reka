@@ -81,7 +81,7 @@ public class VisualizeAppOperation implements SyncOperation {
 			Entry<Content,Content> entry = cache.get(hash, () -> {
 				
 				FlowVisualizer vis = manager.visualize(identity, flowName).orElseThrow(() -> 
-					runtime("no visualization available for %s/%s :(", identity, flowName));
+					runtime("no visualization available for %s:%s :(", identity, flowName.slashes()));
 				
 				String dotcontent = vis.build(new DotGraphVisualizer());
 				

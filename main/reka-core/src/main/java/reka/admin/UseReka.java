@@ -37,6 +37,7 @@ public class UseReka extends UseConfigurer {
 	public void setup(UseInit use) {
 		use.operation("list", () -> new RekaListConfigurer(manager));
 		use.operation("get", () -> new RekaDetailsConfigurer(manager));
+		use.operation("validate", (provider) -> new RekaValidateConfigurer(provider, manager));
 		use.operation("deploy", () -> new RekaDeployConfigurer(manager));
 		use.operation("undeploy", () -> new RekaUndeployConfigurer(manager));
 		use.operation("redeploy", () -> new RekaRedeployConfigurer(manager));

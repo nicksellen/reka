@@ -8,7 +8,7 @@ import reka.pg.PostgresBundle;
 public class JdbcBundle implements RekaBundle {
 
 	@Override
-	public void setup(Setup setup) {
+	public void setup(BundleSetup setup) {
 		setup.bundle(new H2Bundle());
 		setup.bundle(new PostgresBundle());
 		setup.use(path("jdbc"), () -> new UseJdbc());

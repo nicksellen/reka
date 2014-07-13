@@ -117,6 +117,7 @@ public class UseInit {
 
 	private final Path path;
 	private final List<Supplier<FlowSegment>> segments = new ArrayList<>();
+	private final List<Runnable> shutdownHandlers = new ArrayList<>();
 	private final Map<Path,Supplier<TriggerConfigurer>> triggers = new HashMap<>();
 	private final Map<Path,Function<ConfigurerProvider,Supplier<FlowSegment>>> providers = new HashMap<>();
 	
@@ -143,6 +144,10 @@ public class UseInit {
 	public UseInit runAsync(String name, AsyncOperation operation) {
 		segments.add(() -> async(name, () -> operation));
 		return this;
+	}
+
+	public void shutdown(String name, Runnable handler) {
+		shutdownHandlers.add(handler);
 	}
 	
 	public UseInit operation(String name, Supplier<Supplier<FlowSegment>> supplier) {
@@ -194,6 +199,10 @@ public class UseInit {
 	
 	public Map<Path,Supplier<TriggerConfigurer>> triggers() {
 		return triggers;
+	}
+	
+	public List<Runnable> shutdownHandlers() {
+		return shutdownHandlers;
 	}
 	
 }

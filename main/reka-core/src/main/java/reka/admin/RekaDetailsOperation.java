@@ -32,8 +32,8 @@ public class RekaDetailsOperation implements SyncOperation {
 	@Override
 	public MutableData call(MutableData data) {
 		
-		String id = appFn.apply(data);
-		Optional<Application> opt = manager.get(id);
+		String identity = appFn.apply(data);
+		Optional<Application> opt = manager.get(identity);
 		
 		if (!opt.isPresent()) return data;
 		
@@ -42,6 +42,9 @@ public class RekaDetailsOperation implements SyncOperation {
 		MutableData appdata = data.createMapAt(out);
 		
 		appdata.putString("name", app.name().slashes());
+		
+		appdata.putBool("redeployable", manager.hasSourceFor(identity));
+		appdata.putBool("removable", manager.hasSourceFor(identity));
 		
 		MutableData portsdata = appdata.createListAt(path("ports"));
 		int i = 0;

@@ -1,0 +1,3 @@
+//bundle lib/reka-extra.jar
+app @include(api.reka)
+app @include(reka-ui/reka-ui.reka)

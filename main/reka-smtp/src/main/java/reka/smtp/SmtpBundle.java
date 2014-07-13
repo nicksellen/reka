@@ -41,7 +41,7 @@ import reka.api.run.SyncOperation;
 import reka.config.Config;
 import reka.configurer.annotations.Conf;
 import reka.core.bundle.RekaBundle;
-import reka.core.bundle.SetupTrigger;
+import reka.core.bundle.TriggerSetup;
 import reka.core.bundle.TriggerConfigurer;
 import reka.core.bundle.UseConfigurer;
 import reka.core.bundle.UseInit;
@@ -52,7 +52,7 @@ public class SmtpBundle implements RekaBundle {
 	
 	private static final Logger log = LoggerFactory.getLogger(SmtpBundle.class);
 
-	public void setup(Setup setup) {
+	public void setup(BundleSetup setup) {
 		setup.use(path("smtp"), () -> new UseSMTPConfigurer());
 	}
 	
@@ -237,7 +237,7 @@ public class SmtpBundle implements RekaBundle {
 		}
 		
 		@Override
-		public void setupTriggers(SetupTrigger trigger) {
+		public void setupTriggers(TriggerSetup trigger) {
 			
 			trigger.addRegistrationHandler(app -> {
 				
@@ -263,7 +263,12 @@ public class SmtpBundle implements RekaBundle {
 					}
 					
 					@Override
-					public void freeze(int version) {
+					public void pause(int version) {
+						// no-op
+					}
+					
+					@Override
+					public void resume(int version) {
 						// no-op
 					}
 					

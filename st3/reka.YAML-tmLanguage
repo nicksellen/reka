@@ -86,6 +86,7 @@ repository:
       - include: '#docHTML'
       - include: '#docCSS'
       - include: '#docJade'
+      - include: '#docHandlebars'
       - include: '#docXML'
       - include: '#docJS'
       - include: '#docSQL'
@@ -119,6 +120,19 @@ repository:
 
     end: "^\\s*\\-\\-\\-\\-*\\s*$"
     contentName: source.jade.embedded.reka
+
+  docHandlebars:
+    name: punctuation.reka
+    begin: "\\s*<<\\-\\s+(text\\/x\\-handlebars\\-template|handlebars|hbs)\\s*$"
+    beginCaptures:
+      "1":
+        name: support.constant.reka
+
+    patterns:
+      - include: text.html.handlebars
+
+    end: "^\\s*\\-\\-\\-\\-*\\s*$"
+    contentName: source.handlebars.embedded.reka
 
   docXML:
     name: punctuation.reka

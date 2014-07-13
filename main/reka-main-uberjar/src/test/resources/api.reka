@@ -40,11 +40,51 @@ run http {
     }
     
     GET /apps/:appid/flows/:flow*.:format {
+    
       reka/visualize {
         app :appid
         flow :flow
         format :format
       }
+      
+    }
+    
+    named validate app {
+    
+      POST /validate {
+      
+        copy {
+          request.data.spec path
+        }
+
+        fs/type :path {
+
+          when dir {
+            put response {
+              status 400
+              content {
+                message cannot deploy directories
+              }
+            }
+          }
+
+          when missing {
+            put response {
+              status 400
+              content {
+                message does not exist
+              }
+            }
+          }
+
+          when file {
+            run validate from path
+          }
+
+        }
+        
+      }
+    
     }
 
     named deploy new app {
@@ -54,8 +94,6 @@ run http {
         copy {
           request.data.spec path
         }
-        
-        println trying to deploy :path from :request.data
 
         fs/type :path {
 
@@ -219,22 +257,58 @@ flow deploy from path {
     filename :fullpath
   }
 
-  put {
-    host http://reka:5100
-  }
-
   reka/get response.content.details {
     app :identity
   }
 
-  putvars response {
+  putv response {
     status 200
     content {
       id :identity
-      url :host/apps/:identity
       message :identity was deployed!
     }
   }
+}
+
+flow validate from path {
+  
+  fs/resolve {
+    in :path
+    out fullpath
+  }
+
+  reka/validate {
+  
+    filename :fullpath
+    
+    when ok {
+      putv response {
+        status 200
+        content {
+          message ok :)
+        }
+      }
+    }
+    
+    when error {
+      println validation errors :errors (error is :error)
+      
+      putv response {
+        status 400
+        content {
+          message not ok :(
+        }
+      }
+      
+      copy {
+        error   response.content.message
+        errors  response.content.errors
+      }
+      
+    }
+    
+  }
+  
 }
 
 trigger {

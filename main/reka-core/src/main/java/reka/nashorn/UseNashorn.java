@@ -51,7 +51,6 @@ public class UseNashorn extends UseConfigurer {
 			
 		};
 		
-		
 		init.operation(asList("run", ""), () -> new NashornRunConfigurer(runner, root()));
 	}
 

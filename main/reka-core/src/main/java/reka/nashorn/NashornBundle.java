@@ -12,7 +12,7 @@ import reka.core.bundle.RekaBundle;
 public class NashornBundle implements RekaBundle {
 
 	@Override
-	public void setup(Setup setup) {
+	public void setup(BundleSetup setup) {
 		setup.use(path("nashorn"), () -> new UseNashorn());
 	}
 

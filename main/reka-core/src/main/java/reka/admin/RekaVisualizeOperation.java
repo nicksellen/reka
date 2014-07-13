@@ -66,8 +66,6 @@ public class RekaVisualizeOperation implements SyncOperation {
 				
 				Collection<FlowVisualizer> vs = manager.visualize(UseReka.getConfigFromData(data, in));
 				
-				//Collection<FlowVisualizer> vs = configure(new ApplicationConfigurer(bundles), UseAdminCore.getConfigFromData(data, in)).visualize();
-				
 				Iterator<FlowVisualizer> it = vs.iterator();
 				FlowVisualizer first = null;
 				

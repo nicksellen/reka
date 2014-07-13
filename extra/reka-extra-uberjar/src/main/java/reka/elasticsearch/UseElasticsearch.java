@@ -9,14 +9,20 @@ import static reka.util.Util.runtime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
 
+import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.ActionRequestBuilder;
+import org.elasticsearch.action.admin.cluster.state.ClusterStateResponse;
+import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.cluster.metadata.IndexMetaData;
+import org.elasticsearch.common.settings.ImmutableSettings;
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
 
 import reka.api.Path;
+import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.run.AsyncOperation;
 import reka.config.Config;
@@ -24,8 +30,10 @@ import reka.configurer.annotations.Conf;
 import reka.core.bundle.UseConfigurer;
 import reka.core.bundle.UseInit;
 
+import com.google.common.base.Function;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 
 public class UseElasticsearch extends UseConfigurer {
 	
@@ -47,17 +55,21 @@ public class UseElasticsearch extends UseConfigurer {
 		Path nodePath = base.add("node");
 		Path clientPath = base.add("client");
 		
+		Function<Data,Client> clientFn = data -> data.getContent(clientPath).orElseThrow(() -> runtime("waaaah!")).valueAs(Client.class);
+		
 		use.run("start node", (data) -> {
+
+			Settings settings = ImmutableSettings.settingsBuilder()
+					  .classLoader(Settings.class.getClassLoader())
+						// TODO: not sure about this stuff!
+	  				  .put("gateway.type", "none")
+					  .build();
 			
 			NodeBuilder builder = nodeBuilder()
 					.data(true)
 					.local(true)
-					.clusterName("james");
-					
-			// TODO: not sure about this stuff!
-			builder.settings()
-				.put("gateway.type", "none")
-				.put("index.gateway.type", "none");
+					.clusterName("james")
+					.settings(settings);
 			
 			Node node = builder.build();
 			
@@ -74,6 +86,32 @@ public class UseElasticsearch extends UseConfigurer {
 		use.runAsync("wait for it to go yellow", withClient(clientPath, (client) -> {
 			return client.admin().cluster().prepareHealth().setWaitForYellowStatus();
 		}));
+
+		
+		use.runAsync("list indices", (data) -> {
+			
+			SettableFuture<MutableData> future = SettableFuture.create();
+			
+			clientFn.apply(data).admin().cluster().prepareState().execute().addListener(new ActionListener<ClusterStateResponse>(){
+
+				@Override
+				public void onResponse(ClusterStateResponse response) {
+					for (IndexMetaData imd : response.getState().getMetaData()) {
+						System.err.printf("found index [%s]\n", imd.getIndex());
+						data.putBool(Path.path("indices", imd.getIndex()), true);
+					}
+					future.set(data);
+				}
+
+				@Override
+				public void onFailure(Throwable e) {
+					future.setException(e);
+				}
+				
+			});
+			
+			return future;
+		});
 		
 		use.parallel((run) -> {
 			
@@ -81,9 +119,31 @@ public class UseElasticsearch extends UseConfigurer {
 				
 				run.sequential(format("index [%s]", index), (seq) -> {
 					
-					seq.runAsync(format("create", index), withClient(clientPath, (client) -> {
-						return client.admin().indices().prepareCreate(index);
-					}));
+					seq.runAsync(format("create %s (if not exists)", index), (data) -> {
+						SettableFuture<MutableData> future = SettableFuture.create();
+						
+						if (data.existsAt(Path.path("indices", index))) {
+							future.set(data);
+							return future;
+						}
+						
+						clientFn.apply(data).admin().indices().prepareCreate(index)
+							.execute().addListener(new ActionListener<CreateIndexResponse>(){
+
+							@Override
+							public void onResponse(CreateIndexResponse response) {
+								future.set(data);
+							}
+
+							@Override
+							public void onFailure(Throwable e) {
+								future.setException(e);
+							}
+							
+						});
+						
+						return future;
+					});
 					
 					seq.run(format("add mappings", index), (data) -> data);
 					
@@ -98,9 +158,9 @@ public class UseElasticsearch extends UseConfigurer {
 		
 	}
 	
-	private AsyncOperation withClient(Path path, Function<Client,ActionRequestBuilder<?,?,?>> f) {
+	private AsyncOperation withClient(Path clientPath, Function<Client, ActionRequestBuilder<?,?,?>> f) {
 		return (data) -> {
-			Client client = data.getContent(path).orElseThrow(() -> runtime("waaaah!")).valueAs(Client.class);
+			Client client = data.getContent(clientPath).orElseThrow(() -> runtime("waaaah!")).valueAs(Client.class);
 			ListenableFuture<?> lf = new ListenableElasticsearchFuture<>(f.apply(client).execute());
 			return Futures.transform(lf, new com.google.common.base.Function<Object,MutableData>(){
 

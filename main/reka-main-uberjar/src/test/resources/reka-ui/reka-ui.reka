@@ -1,0 +1,155 @@
+name reka/ui
+
+version 10.2
+
+use {
+  http
+  reka
+  mustache
+  jade
+  filesystem fs {
+    dir data-apps
+  }
+}
+
+run http {
+
+  http/router {
+
+    group static HTML with layout {
+      
+      GET /who {
+        put html.main @include(pages/who.md)
+      }
+      
+      GET /how {
+        put html.main @include(pages/how.md)
+      }
+      
+      run render layout
+    }  
+    
+    group running apps {
+
+      group with layout {
+        
+        GET / {
+          reka/list
+          put html.sidebar @include(running/list/sidebar.md)
+          jade html.main   @include(running/list/main.jade)
+        }
+
+        GET /:id* {
+        
+          reka/get app {
+            app :id
+          }
+          
+          then {
+            put html.sidebar @include(running/show/sidebar.md)
+            jade html.main   @include(running/show/main.jade)
+          }
+        }
+
+        GET /:id*/flow/:flow* {
+
+          reka/visualize {
+            app :id
+            flow :flow
+            format svg
+            out visualization
+          }
+          
+          reka/get app {
+            app :id
+          }
+          
+          put extrastyles @include(visualize-extras.html)
+          
+          put {
+            layout wide
+          }
+        
+          jade html.main <<- jade
+          
+            != extrastyles
+            
+            ul.inline-list.flow-list
+              each fl in app.flows
+                li(id="flow-#{fl}", class=flow==fl ? 'active' : '')
+                  h3
+                    a(href="/#{id}/flow/#{fl}")= fl
+            
+            .svg-container
+              .inner!= visualization
+            
+          ---  
+        
+        }
+          
+        run render layout
+      }
+      
+      GET /:id/flow/:flow*.:format {
+        reka/visualize {
+          app :id
+          flow :flow
+          format :format
+        }
+      }
+
+      PUT /:id/redeploy {
+        reka/redeploy :id
+        http/redirect :request.headers.Referer
+      }
+    
+      DELETE /:id {
+        reka/undeploy :id
+        http/redirect /
+      }
+    }
+    
+    group static HTTP assets {
+      GET /css/app.css    @include(app.css)
+    }
+  
+  }
+
+}
+
+run render layout {
+  
+  put menu {
+    running {
+      icon fa-play
+      title running
+      path /
+    }
+  }
+
+  put utilmenu {
+    how {
+      icon fa-question
+      title how does it work?
+      path /how
+    }
+
+    who {
+      icon fa-male
+      title who made this?
+      path /who 
+    }
+  }
+
+  jade @include(layout.jade)
+
+}
+
+trigger {
+  http localhost:5099 {
+    run http
+  }
+  http reka:5099 {
+    run http
+  }
+}

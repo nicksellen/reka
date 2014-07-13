@@ -25,7 +25,7 @@ import reka.core.util.StringWithVars;
 public class FilesystemBundle implements RekaBundle {
 
 	@Override
-	public void setup(Setup setup) {
+	public void setup(BundleSetup setup) {
 		setup.use(path("filesystem"), () -> new UseFilesystem());
 	}
 	

@@ -3,17 +3,21 @@
   h1= app.name
   pre.appid= id
 
-  form.right(action="/#{id}", method='POST')
-    input(type='hidden', name='_method', value='DELETE')
-    button.tiny.alert(type='submit')
-      i.fa.fa-trash-o
-      | remove
+  if app.removable
 
-  form.right(action="/#{id}/redeploy", method='POST')
-    input(type='hidden', name='_method', value='PUT')
-    button.tiny.success(type='submit')
-      i.fa.fa-refresh
-      | redeploy
+    form.right(action="/#{id}", method='POST')
+      input(type='hidden', name='_method', value='DELETE')
+      button.tiny.alert(type='submit')
+        i.fa.fa-trash-o
+        | remove
+        
+  if app.redeployable
+
+    form.right(action="/#{id}/redeploy", method='POST')
+      input(type='hidden', name='_method', value='PUT')
+      button.tiny.success(type='submit')
+        i.fa.fa-refresh
+        | redeploy
 
   section.detail  
     h2 network

@@ -22,12 +22,16 @@ public class TimeLoggerAction implements ActionHandler {
 	@Override
 	public void call(MutableData data, FlowContext context) {
 		
-		log.debug("f:{} c:{} t:{} n:{} > {} us", 
-			context.flowId(), 
-			context.id(), 
-			context.threadId(), 
-			nodeId, 
-			Math.round((System.nanoTime() - context.started()) / 1E3));
+		if (log.isDebugEnabled()) {
+		
+			log.debug("f:{} c:{} t:{} n:{} > {} us", 
+				context.flowId(), 
+				context.id(), 
+				context.threadId(), 
+				nodeId, 
+				Math.round((System.nanoTime() - context.started()) / 1E3));
+		
+		}
 		
 		next.call(data, context);
 	}

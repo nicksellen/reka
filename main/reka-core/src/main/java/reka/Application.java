@@ -79,14 +79,24 @@ public class Application {
 		}
 	}
 
-	public void freeze() {
+	public void pause() {
 		for (DeployedResource resource : resources) {
 			try {
-				resource.freeze(version);
+				resource.pause(version);
 			} catch (Throwable t) {
 				t.printStackTrace();
 			}			
 		}		
+	}
+
+	public void resume() {
+		for (DeployedResource resource : resources) {
+			try {
+				resource.resume(version);
+			} catch (Throwable t) {
+				t.printStackTrace();
+			}			
+		}	
 	}
 
 }

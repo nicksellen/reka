@@ -4,7 +4,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static reka.util.Util.unwrap;
 
 import java.io.File;
-import java.util.UUID;
 import java.util.function.Function;
 
 import org.slf4j.Logger;
@@ -37,9 +36,11 @@ public class RekaDeployFromFileOperation implements AsyncOperation {
 
 		SettableFuture<MutableData> result = SettableFuture.create();
 		
-		String identity = UUID.randomUUID().toString();
+		//String identity = UUID.randomUUID().toString();
 		
 		String filename = filenameFn.apply(data);
+		
+		String identity = new File(filename.replaceFirst("\\.reka$", "")).toPath().getFileName().toString();
 		
 		File file = new File(filename);
 		

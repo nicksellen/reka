@@ -12,14 +12,14 @@ import reka.api.flow.FlowSegment;
 import reka.api.run.SyncOperation;
 import reka.core.bundle.UseConfigurer;
 import reka.core.bundle.UseInit;
-import reka.http.server.HttpServer;
+import reka.http.server.HttpServerManager;
 import reka.http.server.HttpSettings;
 
 public class UseHttpAdmin extends UseConfigurer {
 
-	private final HttpServer server;
+	private final HttpServerManager server;
 	
-	public UseHttpAdmin(HttpServer server) {
+	public UseHttpAdmin(HttpServerManager server) {
 		this.server = server;
 	}
 	

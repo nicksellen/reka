@@ -1,0 +1,10 @@
+description "Reka service"
+author "Nick Sellen"
+
+start on runlevel [2345]
+stop on runlevel [!2345]
+
+respawn
+
+chdir /var/apps/reka
+exec java -server -Xmx384m -jar lib/reka-main.jar config/config.reka >> reka.log 2>&1

@@ -30,10 +30,12 @@ public class RekaListOperation implements SyncOperation {
 	public MutableData call(MutableData data) {
 		
 		for (Entry<String, Application> entry : manager) {
-			String id = entry.getKey();
+			String identity = entry.getKey();
 			Application app = entry.getValue();
-			MutableData appdata = data.createMapAt(out.add(id));
+			MutableData appdata = data.createMapAt(out.add(identity));
 			appdata.putString("name", app.name().slashes());
+			appdata.putBool("redeployable", manager.hasSourceFor(identity));
+			appdata.putBool("removable", manager.hasSourceFor(identity));
 			
 			MutableData portsdata = appdata.createListAt(path("ports"));
 			int i = 0;

@@ -10,7 +10,7 @@ import reka.core.bundle.RekaBundle;
 public class BuiltinsBundle implements RekaBundle {
 
 	@Override
-	public void setup(Setup setup) {
+	public void setup(BundleSetup setup) {
 		setup.use(root(), () -> new UseBuiltins());
 		setup.converter(new CommentConverter()); 
 		setup.converter(new IncludeConverter());

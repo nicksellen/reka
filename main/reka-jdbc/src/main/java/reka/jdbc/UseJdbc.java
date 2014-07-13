@@ -231,6 +231,14 @@ public class UseJdbc extends UseConfigurer {
 			return data;
 		});
 		
+		init.shutdown("close connection pool", () -> {
+			try {
+				jdbc.close();
+			} catch (Exception e) {
+				e.printStackTrace(); // whatever
+			}
+		});
+		
 	}
 
 }

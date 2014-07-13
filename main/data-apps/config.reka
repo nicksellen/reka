@@ -1,0 +1,6 @@
+
+app @include(/data/code/reka/main/reka-main-uberjar/src/test/resources/api.reka)
+app @include(/data/code/reka/main/reka-main-uberjar/data-apps/reka-ui/main.reka)
+
+//app @include(simple.reka)
+//app @include(/data/code/reka/main/reka-main-uberjar/src/test/resources/todos/main.reka)

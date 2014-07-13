@@ -5,7 +5,7 @@ import reka.core.bundle.RekaBundle;
 
 public class ClojureBundle implements RekaBundle {
 
-	public void setup(Setup setup) {
+	public void setup(BundleSetup setup) {
 		setup.use(slashes("clojure/embedded"), () -> new UseClojure());
 	}
 }

@@ -33,7 +33,7 @@ public class TwilioBundle implements RekaBundle {
 	
 	private static final Logger log = LoggerFactory.getLogger(TwilioBundle.class);
 
-	public void setup(Setup setup) {
+	public void setup(BundleSetup setup) {
 		setup.use(path("twilio"), () -> new UseTwilioConfigurer());
 	}
 	
