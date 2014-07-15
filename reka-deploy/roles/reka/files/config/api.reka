@@ -8,7 +8,7 @@ use {
   http
   reka
   filesystem fs {
-    dir /tmp/reka-api-data
+    dir /var/apps/reka/api-data/
   }
 }
 

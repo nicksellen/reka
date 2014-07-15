@@ -38,11 +38,8 @@
                   span.name= name
                   span.value= value
             
-            if (port.protocol == 'http' || port.protocol == 'https') && port.details.host != null
-              host = port.details.host != '*' ? port.details.host : request.host
-
-              url = port.protocol + '://' + host + ':' + port.port
-              a.right(href=url, target='_blank')
+            if port.url
+              a.right(href=port.url, target='_blank')
                 | visit&nbsp;
                 strong= port.details.host
                 | &nbsp;
@@ -61,4 +58,4 @@
   
   section.detail
     h2 data
-    pre!= app
+    pre.json!= app

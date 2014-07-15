@@ -1,10 +1,13 @@
 each app, id in apps
-  section.app
+  path = "/apps/" + id
+  section.app(onclick="window.location.pathname = '" + path + "'")
     .row
-      .medium-9.columns
-        h1
-          a(href="/apps/#{id}")= app.name
+      .medium-3.columns
+        h1(title=app.name)
+          a(href=path)= app.name
         pre.appid= id
+        
+      .medium-9.columns
         ul.ports
           for port in app.ports
             li
@@ -18,22 +21,20 @@ each app, id in apps
                     li
                       span.name= name
                       span.value= value
-                      
-      .medium-3.columns
-        .actions
-          
-          if app.removable
-          
-            form.right(action="/apps/#{id}", method='POST')
-              input(type='hidden', name='_method', value='DELETE')
-              button.tiny.alert(type='submit')
-                i.fa.fa-trash-o
-                | remove
+    .actions
 
-          if app.redeployable
+      if app.removable
+          
+        form.right(action="/apps/#{id}", method='POST', title="remove")
+          input(type='hidden', name='_method', value='DELETE')
+          button.tiny.alert(type='submit')
+            i.fa.fa-trash-o
+            | &nbsp;
 
-            form.right(action="/apps/#{id}/redeploy", method='POST')
-              input(type='hidden', name='_method', value='PUT')
-              button.tiny.success(type='submit')
-                i.fa.fa-refresh
-                | redeploy
+      if app.redeployable
+
+        form.right(action="/apps/#{id}/redeploy", method='POST', title="redeploy")
+          input(type='hidden', name='_method', value='PUT')
+          button.tiny.success(type='submit')
+            i.fa.fa-refresh
+            | &nbsp;

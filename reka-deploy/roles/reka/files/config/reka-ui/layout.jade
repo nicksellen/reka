@@ -42,8 +42,8 @@ html
           .medium-12.columns
             != html.main  
         else  
-          if empty(html.sidebar)
-            .medium-8.medium-offset-1.columns
+          if true || empty(html.sidebar)
+            .medium-8.medium-offset-2.columns
               != html.main
           else
             .medium-7.medium-offset-1.columns.main
