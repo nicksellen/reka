@@ -1,12 +1,12 @@
 package reka.http.configurers;
 
-import static java.lang.String.format;
+import static reka.api.Path.dots;
 import static reka.configurer.Configurer.configure;
 import static reka.core.builder.FlowSegments.sequential;
 import io.netty.handler.codec.http.HttpMethod;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -20,6 +20,9 @@ import reka.configurer.annotations.Conf;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.http.operations.HttpRouter;
+import reka.http.operations.HttpRouter.RouteKey;
+
+import com.google.common.collect.ImmutableList;
 
 public class HttpRouterConfigurer extends HttpRouteGroupConfigurer implements Supplier<FlowSegment> {
 	
@@ -45,10 +48,13 @@ public class HttpRouterConfigurer extends HttpRouteGroupConfigurer implements Su
 	//private static final Pattern BRACE_PATH_ROUTE = Pattern.compile("(?:\\{([a-zA-Z0-9_-]+\\*?\\??)\\})");
 	
 	/* 		examples:
-	 * 			"/some/:param/thing"
-	 * 			"/something/:else*
+	 * 			/some/:param/thing
+	 * 			/something/:else
+	 * 			/something/:else*
+	 * 			/a/:{nested.kind.of.path}/inside/here
+	 * 			/same/but/with/:{a.star.at.the.end.too}*
 	 */
-	private static final Pattern COLON_PATH_ROUTE = Pattern.compile("(?:\\:([a-zA-Z0-9_-]+\\*?\\??))");
+	private static final Pattern PATH_VAR = Pattern.compile("(?:\\:(?:([a-zA-Z0-9_\\-]+\\*?\\??)|(\\{[a-zA-Z0-9_\\-\\.]+\\}\\*?\\??)))");
 
 	@Conf.At("missing")
 	public void missing(Config config) {
@@ -84,20 +90,28 @@ public class HttpRouterConfigurer extends HttpRouteGroupConfigurer implements Su
 		
 		public HttpRouter.Route build() {
 			
-			Map<String, String> keys = new HashMap<>();
+			List<RouteKey> keys = new ArrayList<>();
 			
 			StringBuffer regex = new StringBuffer();
 			
 			regex.append("^");
 			
-			Matcher matcher = COLON_PATH_ROUTE.matcher(path);
+			Matcher matcher = PATH_VAR.matcher(path);
 
 			int pos = 0;
 			String key;
 			
+			int matchGroupId = 1;
+			
 			while (matcher.find()) {
 				
 				key = matcher.group(1);
+				
+				if (key == null) {
+					// a {path} kind of key, just remove the '{' and '}'
+					key = matcher.group(2);
+					key = key.substring(1, key.length() - 1);
+				}
 
 				boolean starred = false;
 				boolean optional = false;
@@ -112,34 +126,27 @@ public class HttpRouterConfigurer extends HttpRouteGroupConfigurer implements Su
 					key = key.substring(0, key.length() - 1);
 				}
 				
-				int num = 0;
-				String safeKey = key;// TODO I don't know why this bit was in here key.replace("-", ""); // to let us use it as a named group name
-				String keykey = format("%s%d", safeKey, num);
-				while (keys.containsKey(keykey)) {
-					keykey = format("%s%d", safeKey, ++num);
-				}
-				keys.put(keykey, key);
+				keys.add(new RouteKey(matchGroupId++, dots(key)));
 
 				// the bit of text between the last var and this one
 				String remainder = "";
 				if (pos != matcher.start()) {
-					//regex.append(Pattern.quote(path.substring(pos, matcher.start())));
 					remainder = path.substring(pos, matcher.start());
 				}
 
 				if (starred && matcher.end() == path.length() && remainder.endsWith("/")) {
 					// a * in the last position, make the preceding '/' optional
 					remainder = remainder.substring(0, remainder.length() - 1);
-					regex.append(Pattern.quote(remainder)); // remainder minus the ending slash
-					regex.append("\\/?"); // optional slash
+					regex.append(Pattern.quote(remainder)); // remainder without the trailing slash
+					regex.append("\\/?"); // optional trailing slash
 				} else if (!remainder.isEmpty()) {
 					regex.append(Pattern.quote(remainder));
 				}
 				
 				if (starred) {
-					regex.append(format("(?<%s>.*)", keykey));
+					regex.append("(.*)");
 				} else {
-					regex.append(format("(?<%s>[^\\/]+)", keykey));
+					regex.append("([^\\/]+)");
 				}
 				
 				if (optional) {
@@ -169,7 +176,7 @@ public class HttpRouterConfigurer extends HttpRouteGroupConfigurer implements Su
 				return new HttpRouter.StaticRoute(connectionName, path, method, name, RouteFormatters.create(path));
 			} else {
 				log.debug("http router regex [{}] for [{}]", pattern, connectionName);
-				return new HttpRouter.RegexRoute(connectionName, pattern, keys, method, name, RouteFormatters.create(path));
+				return new HttpRouter.RegexRoute(connectionName, pattern, ImmutableList.copyOf(keys), method, name, RouteFormatters.create(path));
 			}
 		}
 

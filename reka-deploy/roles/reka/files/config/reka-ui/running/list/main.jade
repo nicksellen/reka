@@ -2,12 +2,12 @@ each app, id in apps
   path = "/apps/" + id
   section.app(onclick="window.location.pathname = '" + path + "'")
     .row
-      .medium-3.columns
+      .medium-4.columns
         h1(title=app.name)
           a(href=path)= app.name
         pre.appid= id
         
-      .medium-9.columns
+      .medium-8.columns
         ul.ports
           for port in app.ports
             li

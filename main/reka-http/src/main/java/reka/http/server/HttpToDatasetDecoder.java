@@ -1,6 +1,5 @@
 package reka.http.server;
 
-import static java.lang.String.format;
 import static reka.api.Path.dots;
 import static reka.api.content.Contents.trueValue;
 import io.netty.channel.ChannelHandler.Sharable;
@@ -10,7 +9,6 @@ import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.QueryStringDecoder;
 
-import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Map.Entry;
 
@@ -39,9 +37,11 @@ public class HttpToDatasetDecoder extends MessageToMessageDecoder<HttpRequest> {
 		
 		String host = HttpHeaders.getHost(request).split(":")[0];
 
+		/*
 		InetSocketAddress local = (InetSocketAddress) ctx.channel().localAddress();
 		int port = local.getPort();
 		data.putString("something", format("%s://%s%s", "http", host, port == 80 ? "" : ":" + port));
+		*/
 		
 		data.putString(Request.PATH, QueryStringDecoder.decodeComponent(qs.path()))
 			.putString(Request.HOST, host);

@@ -2,6 +2,8 @@ package reka.http.server;
 
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 import static java.util.Collections.synchronizedList;
+import static org.apache.commons.lang3.StringEscapeUtils.escapeHtml4;
+import static reka.api.Path.dots;
 import static reka.api.content.Contents.integer;
 import static reka.api.content.Contents.utf8;
 import static reka.util.Util.createEntry;
@@ -23,12 +25,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Consumer;
 
-import org.apache.commons.lang3.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import reka.api.Path;
 import reka.api.Path.Request;
+import reka.api.Path.Response;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.flow.Flow;
@@ -38,7 +40,7 @@ import reka.core.data.memory.MutableMemoryData;
 @ChannelHandler.Sharable
 public class HttpVhostHandler extends SimpleChannelInboundHandler<MutableData> {
 	
-	private static final Path CLOSE_CHANNEL = Path.dots("options.close");
+	private static final Path CLOSE_CHANNEL = dots("options.close");
 	
 	private static final Logger log = LoggerFactory.getLogger(HttpVhostHandler.class);
 	
@@ -115,9 +117,9 @@ public class HttpVhostHandler extends SimpleChannelInboundHandler<MutableData> {
 		public void halted() {
 
             MutableData data = MutableMemoryData.create()
-				.put(Path.Response.CONTENT, utf8("uh, oh it got halted :("))
-				.put(Path.Response.Headers.CONTENT_TYPE, utf8("text/plain"))
-				.put(Path.Response.STATUS, integer(500));
+				.put(Response.CONTENT, utf8("uh, oh it got halted :("))
+				.put(Response.Headers.CONTENT_TYPE, utf8("text/plain"))
+				.put(Response.STATUS, integer(500));
 			
 			ChannelFuture writeFuture = context.writeAndFlush(data);
 			
@@ -129,13 +131,13 @@ public class HttpVhostHandler extends SimpleChannelInboundHandler<MutableData> {
 
 		@Override
 		public void error(Data data, Throwable incoming) {
-			incoming.printStackTrace();
+			
 			Throwable t = unwrap(incoming);
 			StringWriter stackTrace = new StringWriter();
 			t.printStackTrace(new PrintWriter(stackTrace));
 			
 			MutableData responseData = MutableMemoryData.create()
-					.putString(Path.Response.CONTENT, 
+					.putString(Response.CONTENT, 
                             "<html><body>" +
                                     "<h1>Oh noes!</h1>" +
                                     "<h2>" +
@@ -147,16 +149,14 @@ public class HttpVhostHandler extends SimpleChannelInboundHandler<MutableData> {
                                     "</pre>" +
                                     "<h3>Data at time of error</h3>" +
                                     "<pre>" +
-                                    StringEscapeUtils.escapeHtml4(data.toPrettyJson()) +
+                                    escapeHtml4(data.toPrettyJson()) +
                                     "</pre>" +
                                     "</body></html>")
-					.putString(Path.Response.Headers.CONTENT_TYPE, "text/html")
-					.putInt(Path.Response.STATUS, 500);
+					.putString(Response.Headers.CONTENT_TYPE, "text/html")
+					.putInt(Response.STATUS, 500);
 			
-			ChannelFuture writeFuture = context.writeAndFlush(responseData);
-			if (responseData.existsAt(CLOSE_CHANNEL)) {
-				writeFuture.addListener(ChannelFutureListener.CLOSE);
-			}
+			context.writeAndFlush(responseData).addListener(ChannelFutureListener.CLOSE);
+			
 		}
 		
 	}

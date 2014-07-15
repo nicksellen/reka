@@ -169,12 +169,12 @@ public class UseHTTP extends UseConfigurer {
 		}
 		
 		SslSettings build() {
-			return new SslSettings(byteToFile(".crt", crt), byteToFile(".key", key));
+			return new SslSettings(byteToFile(crt), byteToFile(key));
 		}
 		
-		private static File byteToFile(String suffix, byte[] bytes) {
+		private static File byteToFile(byte[] bytes) {
 			try {
-				java.nio.file.Path tmp = Files.createTempFile("reka.", suffix);
+				java.nio.file.Path tmp = Files.createTempFile("reka.", "");
 				Files.write(tmp, bytes);
 				return tmp.toFile();
 			} catch (IOException e) {

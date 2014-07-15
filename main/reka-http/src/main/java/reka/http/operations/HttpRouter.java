@@ -2,7 +2,6 @@ package reka.http.operations;
 
 import static java.lang.String.format;
 import static reka.api.Path.dots;
-import static reka.api.Path.path;
 import static reka.util.Util.runtime;
 import static reka.util.Util.unsupported;
 import io.netty.handler.codec.http.HttpMethod;
@@ -15,7 +14,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -77,11 +75,10 @@ public class HttpRouter implements RoutingOperation {
 	public MutableData call(MutableData data, RouteCollector router) {
 		
 		String path = data.getString(Request.PATH).orElse("");
-		String contentType = data.getString(Request.Headers.CONTENT_TYPE).orElse("");
 		HttpMethod method = HttpMethod.valueOf(data.getString(Request.METHOD).orElse("GET"));
 		
 		for (Route route : routes) {
-			if (route.matches(method, contentType, path, data)) {
+			if (route.matches(method, path, data)) {
 				router.routeTo(route.connectionName());
 				break;
 			}
@@ -102,7 +99,7 @@ public class HttpRouter implements RoutingOperation {
 	
 	public static interface Route {
 		public String connectionName();
-		public boolean matches(HttpMethod method, String contentType, String path, MutableData params);
+		public boolean matches(HttpMethod method, String path, MutableData data);
 		public String name();
 		public RouteFormatter formatter();
 	}
@@ -181,7 +178,7 @@ public class HttpRouter implements RoutingOperation {
 		}
 
 		@Override
-		public boolean matches(HttpMethod method, String contentType, String path, MutableData params) {
+		public boolean matches(HttpMethod method, String path, MutableData datah) {
 			return path.equals(prefix) || path.startsWith(prefixWithTrailingSlash);
 		}
 
@@ -232,7 +229,7 @@ public class HttpRouter implements RoutingOperation {
 		}
 
 		@Override
-		public boolean matches(HttpMethod method, String contentType, String path, MutableData params) {
+		public boolean matches(HttpMethod method, String path, MutableData data) {
 			return method.equals(this.method) && this.path.equals(path);
 		}
 
@@ -242,16 +239,34 @@ public class HttpRouter implements RoutingOperation {
 		}
 	}
 	
+	public static final class RouteKey {
+		private final int id;
+		private final Path path;
+		public RouteKey(int id, Path path) {
+			this.id = id;
+			this.path = path;
+		}
+	}
+	
 	public static final class RegexRoute implements Route {
 		
 		private final String connectionName;
 		private final Pattern pattern;
-		private final Map<String, String> keys;
+		private final List<RouteKey> keys;
 		private final HttpMethod method;
 		private final String name;
 		private final RouteFormatter formatter;
+		
+		private final ThreadLocal<Matcher> m = new ThreadLocal<Matcher>(){
 
-		public RegexRoute(String connectionName, Pattern pattern, Map<String, String> keys,
+			@Override
+			protected Matcher initialValue() {
+				return pattern.matcher("");
+			}
+			
+		};
+
+		public RegexRoute(String connectionName, Pattern pattern, List<RouteKey> keys,
 				HttpMethod method, String name, RouteFormatter formatter) {
 			this.connectionName = connectionName;
 			this.pattern = pattern;
@@ -277,14 +292,14 @@ public class HttpRouter implements RoutingOperation {
 		}
 		
 		@Override
-		public boolean matches(HttpMethod method, String contentType, String path, MutableData params) {
+		public boolean matches(HttpMethod method, String path, MutableData data) {
 			if (method.equals(this.method)) {
-				Matcher matcher = pattern.matcher(path);
+				Matcher matcher = m.get().reset(path);
 				if (matcher.matches()) {
-					for (Entry<String, String> key : keys.entrySet()) {
-						String value = matcher.group(key.getKey());
+					for (RouteKey key : keys) {
+						String value = matcher.group(key.id);
 						if (value != null) {
-							params.putString(path(key.getValue()), value);
+							data.putString(key.path, value);
 						}
 					}
 					return true;

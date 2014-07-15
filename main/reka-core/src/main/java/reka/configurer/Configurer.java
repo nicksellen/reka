@@ -406,7 +406,7 @@ public class Configurer {
 		}
 		
 		if (!errors.isEmpty()) {
-			log.debug("there are %d errors! {}\n", errors.size(), errors);
+			log.debug("there are {} errors! {}\n", errors.size(), errors);
 		}
 		
 		return new Configured<Object>(config, instance, errors);
@@ -423,7 +423,8 @@ public class Configurer {
 	}
 	
 	private static String rootExceptionMessage(Throwable t) {
-		return allExceptionMessages(t).iterator().next();
+		Collection<String> msgs = allExceptionMessages(t);
+		return msgs.isEmpty() ? "unknown" : msgs.iterator().next();
 	}
 	
 	private static Throwable rootCause(Throwable t) {
@@ -448,13 +449,6 @@ public class Configurer {
 		}
 		
 		Collections.reverse(result);
-		
-		/*
-		if (result.isEmpty()) {
-			original.printStackTrace();
-			result.add("unknown error");
-		}
-		*/
 		
 		return result;
 	}
