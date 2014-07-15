@@ -110,7 +110,7 @@ run http {
     }
     
     group static HTTP assets {
-      GET /css/app.css    @include(app.css)
+      GET /css/app.css @include(app.css)
     }
   
   }
@@ -122,7 +122,7 @@ run render layout {
   put menu {
     running {
       icon fa-play
-      title running
+      title apps
       path /
     }
   }
@@ -162,4 +162,5 @@ trigger {
     }
     run http
   }
+
 }

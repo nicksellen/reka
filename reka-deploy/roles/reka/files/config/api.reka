@@ -2,7 +2,10 @@ name reka/api
 
 description a nice API for reka
 
-version 10.2
+// meta {
+  description this is the description
+  nothing-else ok nice
+}
 
 use {
   http

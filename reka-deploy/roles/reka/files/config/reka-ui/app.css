@@ -108,7 +108,8 @@ section.app form.action-remove {
   right: 0;
 }
 
-section.app form button {
+section.app form button,
+section.app form .button {
     margin-bottom: 0;
 }
 
@@ -127,12 +128,16 @@ section.app .actions {
     right: 0px;
 }
 
-section.app .actions button {
+section.app .actions button,
+section.app .actions .button {
     opacity: 0.6;
     font-size: 14px;
+    height: 41px;
+    width: 46px;
 }
 
-section.app:hover .actions button {
+section.app:hover .actions button,
+section.app:hover .actions .button {
     opacity: 1;
 }
 
@@ -343,6 +348,8 @@ section.app h1 {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    line-height: 130%;
+    margin-bottom: 10px;
 }
 
 section.flow img.vis {
