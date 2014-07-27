@@ -12,6 +12,7 @@ import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.ConfigUtil;
 import reka.config.Source;
+import reka.config.parser.values.KeyVal;
 import reka.config.processor.ConfigConverter.Output;
 
 class ProcessorOutput implements ConfigConverter.Output {
@@ -71,32 +72,32 @@ class ProcessorOutput implements ConfigConverter.Output {
     }
 
 	@Override
-	public Output key(String keyword) {
+	public Output key(KeyVal keyword) {
 		return add(k(source, keyword));
 	}
 
 	@Override
-	public Output keyvalue(String key, String value) {
+	public Output keyvalue(KeyVal key, String value) {
 		return add(kv(source, key, value));
 	}
 
 	@Override
-	public Output doc(String key, String type, byte[] content) {
+	public Output doc(KeyVal key, String type, byte[] content) {
 		return add(ConfigUtil.doc(source, key, type, content));
 	}
 
 	@Override
-	public Output doc(String key, Object value, String type, byte[] content) {
+	public Output doc(KeyVal key, Object value, String type, byte[] content) {
 		return add(ConfigUtil.doc(source, key, value, type, content));
 	}
 
     @Override
-    public Output obj(String key, Iterable<Config> children) {
+    public Output obj(KeyVal key, Iterable<Config> children) {
     	return obj(key, null, children);
     }
     
     @Override
-    public Output obj(String key, Object value, Iterable<Config> children) {
+    public Output obj(KeyVal key, Object value, Iterable<Config> children) {
         return add(ConfigUtil.obj(source, key, value, children));
     }
 
@@ -117,12 +118,12 @@ class ProcessorOutput implements ConfigConverter.Output {
     }
 
     @Override
-    public Output obj(String key, Config... children) {
+    public Output obj(KeyVal key, Config... children) {
         return obj(key, ConfigBody.of(source, children));
     }
 
     @Override
-    public Output obj(String key, Object value, Config... children) {
+    public Output obj(KeyVal key, Object value, Config... children) {
         return obj(key, value, ConfigBody.of(source, children));
     }
     

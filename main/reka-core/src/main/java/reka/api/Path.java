@@ -125,6 +125,7 @@ public class Path implements Iterable<Path.PathElement>, Comparable<Path>, Hasha
 	public static abstract class PathElement implements Comparable<PathElement>, Hashable {
 		public boolean isKey() { return false; }
 		public boolean isIndex() { return false; }
+		public boolean isIndexical() { return isIndex() || isNextIndex(); }
 		public boolean isNextIndex() { return false; }
 		public boolean isEmpty() { return false; }
 		public int index() { return -1; }
@@ -364,6 +365,9 @@ public class Path implements Iterable<Path.PathElement>, Comparable<Path>, Hasha
 			public static final Path IF_NONE_MATCH 	= HEADERS.add("If-None-Match");
 			public static final Path AUTHORIZATION 	= HEADERS.add("Authorization");
 			public static final Path ACCEPT 		= HEADERS.add("Accept");
+		}
+		public static final class Params {
+			public static final Path PRETTY = PARAMS.add("pretty");
 		}
 	}
 	

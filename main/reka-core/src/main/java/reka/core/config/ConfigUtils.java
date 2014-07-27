@@ -1,7 +1,11 @@
 package reka.core.config;
 
 import static reka.api.Path.dots;
+import static reka.api.Path.root;
+import static reka.api.content.Contents.falseValue;
+import static reka.api.content.Contents.trueValue;
 import static reka.api.content.Contents.utf8;
+import static reka.configurer.Configurer.Preconditions.checkConfig;
 import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
@@ -11,39 +15,37 @@ import reka.core.data.memory.MutableMemoryData;
 public class ConfigUtils {
 
 	public static Data configToData(Config config) {
-		return addConfigToData(config, MutableMemoryData.create()).readonly();
+		return addConfigToData(config, MutableMemoryData.create(), root()).immutable();
 	}
 	
 	public static Data configToData(Iterable<Config> body) {
 		MutableData data = MutableMemoryData.create();
 		for (Config child : body) {
-			addConfigToData(child, data);
+			addConfigToData(child, data, root());
 		}
-		return data.readonly();	
+		return data.immutable();	
 	}
 
-	private static MutableData addConfigToData(Config config, MutableData data) {
-		Path path = dots(config.key());
+	private static MutableData addConfigToData(Config config, MutableData data, Path base) {
+		Path path = base.add(dots(config.key()));
 		if (config.hasBody()) {
-			MutableData next = data.createMapAt(path);
+			if (config.hasValue()) {
+				data.putOrAppend(path.add("@"), utf8(config.valueAsString()));
+			}
 			for (Config child : config.body()) {
-				addConfigToData(child, next);
+				addConfigToData(child, data, path);
 			}
 		} else if (config.hasValue()) {
-			String value = config.valueAsString();
-			if ("{}".equals(value)) {
-				data.createMapAt(path);
-			} else { 
-				data.put(path, utf8(value));
-			}
+			data.putOrAppend(path, utf8(config.valueAsString()));
 		} else if (config.hasDocument()) {
-			data.putString(path, config.documentContentAsString());
+			checkConfig(!config.hasValue(), "you can't include a value and a document");
+			data.putOrAppend(path, utf8(config.documentContentAsString()));
 		} else {
 			String key = config.key();
 			if (key.startsWith("!")) {
-				data.putBool(dots(key.substring(1)), false);
+				data.putOrAppend(dots(key.substring(1)), falseValue());
 			} else {
-				data.putBool(path, true);
+				data.putOrAppend(path, trueValue());
 			}
 		}
 		return data;

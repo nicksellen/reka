@@ -22,7 +22,6 @@ import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
 import io.netty.handler.codec.http.multipart.InterfaceHttpData;
 
 import java.io.InputStream;
-import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -69,7 +68,9 @@ public class FullHttpToDatasetDecoder extends MessageToMessageDecoder<FullHttpRe
 		
 		QueryStringDecoder qs = new QueryStringDecoder(request.getUri());
 		
-		String host = hostSplitter.split(HttpHeaders.getHost(request)).iterator().next();
+		String host = hostSplitter.split(HttpHeaders.getHost(request, "")).iterator().next();
+		
+		/*
 
 		InetSocketAddress local = (InetSocketAddress) ctx.channel().localAddress();
 		
@@ -80,6 +81,7 @@ public class FullHttpToDatasetDecoder extends MessageToMessageDecoder<FullHttpRe
 		}
 		String fullHostname = sb.toString();
 		data.putString(path(PathElements.name("something")), fullHostname);
+		*/
 		
 		data.putString(Request.PATH, QueryStringDecoder.decodeComponent(qs.path()))
 			.putString(Request.HOST, host);

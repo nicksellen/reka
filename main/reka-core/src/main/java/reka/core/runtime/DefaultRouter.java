@@ -19,7 +19,7 @@ public class DefaultRouter implements RouteCollector {
 	
 	private String defaultRoute;
 	
-	private DefaultRouter(Collection<String> nodes) {
+	DefaultRouter(Collection<String> nodes) {
 		this.nodes = nodes;
 	}
 	

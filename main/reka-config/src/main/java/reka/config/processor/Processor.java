@@ -6,12 +6,13 @@ import java.util.List;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.NavigableConfig;
+import reka.config.parser.values.KeyVal;
 import reka.config.processor.ConfigConverter.Output;
 
 import com.google.common.collect.Iterables;
 
 public class Processor {
-
+	
     private static final int MAX_ITERATIONS = 5;
     
     private final ConfigConverter converter;
@@ -42,7 +43,7 @@ public class Processor {
             out2.add(rebuiltChild);
         }
         if (changed) {
-            out.obj(config.key(), config.value(), out2.configs());
+            out.obj(new KeyVal(config), config.value(), out2.configs());
         } else {
             out.add(config);
         }
@@ -65,8 +66,12 @@ public class Processor {
 	
     private NavigableConfig rebuild(ProcessorOutput toplevel, NavigableConfig input, String[] path) {
 
+		input = convert(toplevel, ConfigBody.of(input.source(), input), path);
+		
         ProcessorOutput out = new ProcessorOutput(toplevel, input.source(), path);
+        
     	for (Config config : input.each()) {
+    		
             if (config.hasBody()) {
                processChildren(toplevel, config, out, path);
             } else {
@@ -75,7 +80,8 @@ public class Processor {
     	}
 
     	toplevel.mark();
-    	NavigableConfig result = convert(toplevel, ConfigBody.of(input.source(), out.configs()), path);
+    	
+    	NavigableConfig result = ConfigBody.of(input.source(), out.configs());
     	
     	if (path.length == 0) {
         	List<Config> finaloutput = new ArrayList<>();

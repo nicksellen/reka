@@ -14,7 +14,7 @@ import reka.api.data.Data;
 import reka.api.flow.FlowSegment;
 import reka.config.Config;
 import reka.configurer.annotations.Conf;
-import reka.http.operations.HttpContent;
+import reka.http.operations.HttpContentWithETag;
 
 public class HttpContentConfigurer implements Supplier<FlowSegment> {
 	
@@ -67,7 +67,7 @@ public class HttpContentConfigurer implements Supplier<FlowSegment> {
 				contentType = utf8(ct);
 			}
 		}
-		return sync("http-content", () -> new HttpContent(content, contentType));
+		return sync("http-content", () -> new HttpContentWithETag(content, contentType));
 	}
 
 }

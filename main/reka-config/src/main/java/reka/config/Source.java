@@ -10,6 +10,9 @@ public interface Source {
     
     boolean isFile();
     File file();
+    
+    boolean isConstrained();
+    File constraint();
 
     boolean supportsNestedFile();
     File nestedFile(String location);

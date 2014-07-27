@@ -1,10 +1,12 @@
 package reka.core.data.memory;
 
+import static com.google.common.base.Preconditions.checkState;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toSet;
 import static java.util.stream.IntStream.range;
 import static reka.api.Path.dots;
 import static reka.api.Path.root;
+import static reka.api.Path.PathElements.nextIndex;
 import static reka.api.content.Contents.doubleValue;
 import static reka.api.content.Contents.falseValue;
 import static reka.api.content.Contents.integer;
@@ -521,12 +523,14 @@ public class MutableMemoryData implements MutableDataProvider<Object> {
 			objNext = get(obj, elem);
 			elemNext = es[i];
 			
-			if ((elemNext.isIndex() || elemNext.isNextIndex()) && !(objNext instanceof List)) {
+			// TODO need to handle the case append=true here...
+			
+			if (elemNext.isIndexical() && !(objNext instanceof List)) {
 				objNext = createList();
 				put(obj, elem, objNext);
 			} else if (elemNext.isKey() && !(objNext instanceof Map)) {
 				objNext = createMap();
-				put(obj, elem, objNext);
+				put(obj, elem, objNext);				
 			}
 			
 			obj = objNext;
@@ -534,7 +538,8 @@ public class MutableMemoryData implements MutableDataProvider<Object> {
 		}
 		
 		if (append) {
-			putOrAppend(obj, es[es.length - 1], o);
+			Object obj2 = putOrAppend(obj, es[es.length - 1], o);
+			checkState(obj == obj2, "object changed, but we didn't do anything with it, obj: %s, path: %s, o: %s", obj, p.dots(), o);
 		} else {
 			put(obj, es[es.length - 1], o);
 		}
@@ -572,17 +577,18 @@ public class MutableMemoryData implements MutableDataProvider<Object> {
 		return root;
 	}
 	
-	private void putOrAppend(Object obj, PathElement e, Object o) {
+	private Object putOrAppend(Object obj, PathElement e, Object o) {
 		Object existing = get(obj, e);
 		if (existing instanceof List) {
-			put(existing, e, o);
+			put(existing, nextIndex(), o);
+			return obj;
 		} else if (existing != null) {
 			List<Object> l = createList();
 			l.add(existing);
 			l.add(o);
-			put(obj, e, l);
+			return put(obj, e, l);
 		} else {
-			put(obj, e, o);
+			return put(obj, e, o);
 		}
 	}
 	

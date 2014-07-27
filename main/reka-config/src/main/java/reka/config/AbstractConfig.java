@@ -26,6 +26,11 @@ public abstract class AbstractConfig implements Config {
     }
     
     @Override
+    public boolean hasSubkey() {
+    	return subkey() != null;
+    }
+    
+    @Override
     public Source source() {
         return source;
     }

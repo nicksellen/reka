@@ -7,24 +7,36 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.nio.file.Path;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.io.ByteStreams;
 
 public class FileSource extends AbstractSource {
 
+	private final Logger log = LoggerFactory.getLogger(getClass());
+	
     private final File file;
     private final Source parent;
+    private final File constrainTo;
     
     public static Source from(File file) {
-        return new FileSource(file, null);
-    }
-
-    public static Source from(File file, Source parent) {
-        return new FileSource(file, parent);
+        return new FileSource(file, file.getParentFile(), null);
     }
     
-    private FileSource(File file, Source parent) {
+    public static Source from(File file, File constrainTo) {
+        return new FileSource(file, constrainTo, null);
+    }
+
+    public static Source from(File file, File constrainTo, Source parent) {
+        return new FileSource(file, constrainTo, parent);
+    }
+    
+    private FileSource(File file, File constrainTo, Source parent) {
         this.file = file;
+        this.constrainTo = constrainTo;
         this.parent = parent;
     }
     
@@ -74,6 +86,15 @@ public class FileSource extends AbstractSource {
 
     @Override
     public File nestedFile(String location) {
+    	
+		Path other = file.toPath().getParent().resolve(location);
+		if (isConstrained()) {
+			if (!other.startsWith(constraint().toPath())) {
+				log.error("tried to load nested file {} but we have a constraint {}", other, constrainTo.getAbsolutePath());
+				throw new RuntimeException("illegal path!");
+			}
+		}
+    	
         return file.toPath().getParent().resolve(location).toFile();
     }
 
@@ -84,7 +105,7 @@ public class FileSource extends AbstractSource {
 
     @Override
     public byte[] nestedData(String location) {
-    	try (FileInputStream fis = new FileInputStream(nestedFile(location));) {
+    	try (FileInputStream fis = new FileInputStream(nestedFile(location))) {
     		return ByteStreams.toByteArray(fis);
     	} catch (IOException e) {
     		throw new RuntimeException(e);
@@ -95,5 +116,15 @@ public class FileSource extends AbstractSource {
     public String location() {
         return file.getAbsolutePath();
     }
+
+	@Override
+	public boolean isConstrained() {
+		return constrainTo != null;
+	}
+
+	@Override
+	public File constraint() {
+		return constrainTo;
+	}
 
 }

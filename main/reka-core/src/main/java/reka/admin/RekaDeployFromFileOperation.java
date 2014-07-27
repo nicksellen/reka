@@ -41,21 +41,27 @@ public class RekaDeployFromFileOperation implements AsyncOperation {
 		String filename = filenameFn.apply(data);
 		
 		String identity = new File(filename.replaceFirst("\\.reka$", "")).toPath().getFileName().toString();
+
+		data.putString("identity", identity);
 		
 		File file = new File(filename);
 		
 		checkArgument(file.exists(), "file does not exist [%s]", filename);
 		checkArgument(!file.isDirectory(), "path is a directory [%s]", filename);
 		
+		log.info("deploying {}", identity);
+		
 		manager.deploy(identity, FileSource.from(file), new EverythingSubscriber() {
 
 			@Override
 			public void ok(MutableData initializationData) {
+				log.info("deploying {} ok", identity);
 				result.set(data.putString("message", "created application!"));
 			}
 
 			@Override
 			public void halted() {
+				log.info("deploying {} halt", identity);
 				String msg = "failed to deploy application; initialization halted";
 				log.debug(msg);
 				data.putString("message", msg);
@@ -64,6 +70,7 @@ public class RekaDeployFromFileOperation implements AsyncOperation {
 
 			@Override
 			public void error(Data initializationData, Throwable t) {
+				log.info("deploying {} error", identity);
 				t = unwrap(t);
 				log.error("failed to deploy application",  t);
 				t.printStackTrace();
@@ -71,8 +78,6 @@ public class RekaDeployFromFileOperation implements AsyncOperation {
 			}
 			
 		});
-		
-		data.putString("identity", identity);
 		
 		return result;
 		

@@ -28,7 +28,7 @@ final class ParseHandlers {
 				sb.append(ctx.popChar());
 			}
 			ctx.eat(SPACE);
-			return new KeyVal(sb.toString());
+			return KeyVal.parse(sb.toString());
 		}
 		
 	}
@@ -37,7 +37,7 @@ final class ParseHandlers {
 
 		@Override
 		public void eat(ParseContext ctx) {
-			while (!ctx.isEOF() && ctx.peekChar() == ' ' || ctx.peekChar() == '\t') {
+			while (!ctx.isEOF() && (ctx.peekChar() == ' ' || ctx.peekChar() == '\t')) {
 				ctx.popChar();
 			}
 		}

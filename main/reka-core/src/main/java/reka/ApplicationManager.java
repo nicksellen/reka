@@ -1,5 +1,6 @@
 package reka;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.stream.Collectors.joining;
 import static reka.api.Path.slashes;
@@ -203,7 +204,15 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 				return;
 			}
 			
-			Application previous = applications.remove(identity);
+			Application previous = applications.get(identity);
+			
+			File constrainTo = new File("/");
+			
+			if (source.isFile()) {
+				constrainTo = source.file().getParentFile();
+			}
+			
+			checkArgument(constrainTo.isDirectory(), "constraint dir %s is not a dir", constrainTo.getAbsolutePath());
 			
 			executor.execute(() -> {
 				

@@ -36,7 +36,7 @@ public class ItemHandler implements ParseHandler {
 		
 		KeyVal key = ctx.parseSync(ParseHandlers.KEY);
 		
-		checkState(!key.value().isEmpty(), "empty key at char %s in %s", ctx.startPos(), ctx.source().location());
+		checkState(!key.key().isEmpty(), "empty key at char %s in %s", ctx.startPos(), ctx.source().location());
 		
 		ctx.parse(ParseHandlers.VALUE);
 		
@@ -44,13 +44,13 @@ public class ItemHandler implements ParseHandler {
 		
 		String val = value != null ? value.value() : null;
 		if (body != null) {
-			ctx.emit("obj", obj(src, key.value(), val, body.configs()));
+			ctx.emit("obj", obj(src, key, val, body.configs()));
 		} else if (doc != null) {
-			ctx.emit("doc", doc(src, key.value(), val, doc.contentType(), doc.value()));
+			ctx.emit("doc", doc(src, key, val, doc.contentType(), doc.value()));
 		} else if (key != null && value != null) {
-			ctx.emit("kv", kv(src, key.value(), value.value()));
+			ctx.emit("kv", kv(src, key, value.value()));
 		} else if (key != null) {
-			ctx.emit("k", k(src, key.value()));
+			ctx.emit("k", k(src, key));
 		}
 		
 		ctx.eat(ParseHandlers.WHITESPACE);

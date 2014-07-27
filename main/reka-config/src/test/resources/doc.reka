@@ -1,0 +1,17 @@
+text-document <<- text/plain
+   this is my text document
+---
+
+text-document-with-dashes <<- text/plain
+
+  this has got
+  - some nice
+  - dashes in it
+  - a bit like markdown
+  - ah, it counted the three!
+  
+  - - - 
+  -- -
+  - --
+  
+---

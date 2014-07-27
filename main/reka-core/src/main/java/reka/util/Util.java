@@ -76,7 +76,7 @@ public class Util {
 		return new RuntimeException(format(msg, args));
 	}
 	
-	public static Integer[] removedValues(int[] from, int[] to) {
+	public static int[] removedValues(int[] from, int[] to) {
 		List<Integer> removed = new ArrayList<>();
 		for (int existing : from) {
 			boolean wasRemoved = true;
@@ -90,7 +90,9 @@ public class Util {
 				removed.add(existing);
 			}
 		}
-		return removed.toArray(new Integer[removed.size()]);
+		int[] out = new int[removed.size()];
+		for (int i = 0; i < removed.size(); i++) out[i] = removed.get(i);
+		return out;
 		
 	}
 	

@@ -33,6 +33,7 @@ class DocHandler implements ParseHandler {
 		int inEnd = 0;
 		boolean foundEnd = false;
 		while (!ctx.isEOF()) {
+			
 			char c = ctx.popChar();
 			
 			if (c == '\n') {
@@ -52,10 +53,11 @@ class DocHandler implements ParseHandler {
 						ctx.emit("doc", new DocVal(contentType, str.getBytes(Charsets.UTF_8)), offset + 1, str.length());
 						break;
 					}
+				} else if (isWhitespace(c) && inEnd == 0) {
+					// continue
 				} else {
-					if (inEnd > 0 || !isWhitespace(c)) {
-						freshLine = false;
-					}
+					inEnd = 0;
+					freshLine = false;
 				}
 			}
 		}

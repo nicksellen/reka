@@ -121,7 +121,7 @@ public class UseWebsockets extends UseConfigurer {
 				
 				app.protocol(port, "ws", MutableMemoryData.create()
 						.putString("host", host)
-					.readonly());
+					.immutable());
 				
 				server.deployWebsocket(identity, settings, deploy -> {
 					

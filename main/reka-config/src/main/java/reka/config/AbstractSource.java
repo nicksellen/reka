@@ -4,6 +4,7 @@ import java.io.File;
 
 public abstract class AbstractSource implements Source {
     
+
 	@Override
 	public int originOffsetStart() {
 		return 0;
@@ -46,6 +47,16 @@ public abstract class AbstractSource implements Source {
 	@Override
 	public SourceLinenumbers linenumbers() {
 		return SourceUtils.linenumbersFor(content());
+	}
+
+	@Override
+	public boolean isConstrained() {
+		return false;
+	}
+
+	@Override
+	public File constraint() {
+		return null;
 	}
 
 

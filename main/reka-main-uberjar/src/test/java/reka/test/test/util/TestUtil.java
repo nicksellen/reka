@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 public class TestUtil {
 	
 	private static final Logger log = LoggerFactory.getLogger(TestUtil.class);
-
+	
 	public static void timed(final int warmup, final int times, int threads, final Runnable runnable) {
 		
 		final CountDownLatch startLatch = new CountDownLatch(threads);

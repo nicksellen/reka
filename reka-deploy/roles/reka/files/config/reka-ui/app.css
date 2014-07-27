@@ -92,6 +92,12 @@ section.app {
   position: relative;
 }
 
+section.app {
+  box-shadow: 0 2px 3px 3px #fafafa;
+  background-color: #fff;
+  border-left-color: #fff;
+}
+
 section.app h1 {
 	margin-top: 0rem;
 	line-height: 1em;

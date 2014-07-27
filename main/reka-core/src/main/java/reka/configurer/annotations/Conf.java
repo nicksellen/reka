@@ -80,4 +80,9 @@ public interface Conf {
 	public @interface Key {
 	}
 	
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(ElementType.METHOD)
+	public @interface Subkey {
+	}
+	
 }

@@ -144,7 +144,7 @@ public class UseHTTP extends UseConfigurer {
 				app.protocol(port, settings.isSsl() ? "https" : "http", MutableMemoryData.create((details) -> {
 					details.putString("host", host);
 					details.putString("run", flowName.last().toString());
-				}).readonly());
+				}).immutable());
 				
 			});
 			

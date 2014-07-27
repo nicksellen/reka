@@ -10,6 +10,9 @@ public interface Config extends Formattable {
 	
 	boolean hasKey();
 	String key();
+	
+	boolean hasSubkey();
+	String subkey();
     
     Source source();
     
@@ -35,7 +38,7 @@ public interface Config extends Formattable {
     byte[] data();
     
     public static NavigableConfig fromFile(File file) {
-		return fromSource(FileSource.from(file));
+		return fromSource(FileSource.from(file, file.getParentFile()));
 	}
 	
 	public static NavigableConfig fromString(String content) {

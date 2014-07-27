@@ -1,13 +1,14 @@
 package reka.config;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import reka.config.parser.values.KeyVal;
 
 public class KeyAndDocument extends KeyAndOptionalValue {
     
     private final String type;
     private final byte[] content;
 
-    public KeyAndDocument(Source source, String key, Object value, String type, byte[] content) {
+    public KeyAndDocument(Source source, KeyVal key, Object value, String type, byte[] content) {
         super(source, key, value);
     	checkNotNull(type);
         this.type = type;

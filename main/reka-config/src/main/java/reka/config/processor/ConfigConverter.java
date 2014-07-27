@@ -1,6 +1,7 @@
 package reka.config.processor;
 
 import reka.config.Config;
+import reka.config.parser.values.KeyVal;
 
 public interface ConfigConverter {
 
@@ -10,14 +11,14 @@ public interface ConfigConverter {
         public Output add(Config config);
         public Output add(Iterable<Config> configs);
 		public Output embed(Config config);
-		public Output key(String keyword);
-		public Output keyvalue(String key, String value);
-		public Output doc(String key, String type, byte[] content);
-		public Output doc(String key, Object value, String type, byte[] content);
-        public Output obj(String key, Config... children);
-        public Output obj(String key, Iterable<Config> children);
-        public Output obj(String key, Object value, Config... children);
-		public Output obj(String key, Object value, Iterable<Config> children);
+		public Output key(KeyVal keyword);
+		public Output keyvalue(KeyVal key, String value);
+		public Output doc(KeyVal key, String type, byte[] content);
+		public Output doc(KeyVal key, Object value, String type, byte[] content);
+        public Output obj(KeyVal key, Config... children);
+        public Output obj(KeyVal key, Iterable<Config> children);
+        public Output obj(KeyVal key, Object value, Config... children);
+		public Output obj(KeyVal key, Object value, Iterable<Config> children);
 		public Output toplevel();
 		public boolean isTopLevel();
 		public String[] path();

@@ -1,6 +1,8 @@
 package reka.http.server;
 
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
+import static reka.core.data.MoreDataUtils.writeToOutputStreamAsJson;
+import static reka.core.data.MoreDataUtils.writeToOutputStreamAsPrettyJson;
 import static reka.util.Util.unchecked;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufOutputStream;
@@ -33,14 +35,18 @@ import reka.api.Path.Request;
 import reka.api.Path.Response;
 import reka.api.content.Content;
 import reka.api.data.Data;
-import reka.core.data.MoreDataUtils;
 
 import com.google.common.base.Charsets;
 import com.google.common.net.HttpHeaders;
 
 public class DataToHttpEncoder extends MessageToMessageEncoder<Data> {
 	
-	private static final String DEFAULT_SERVER_NAME = "reka-http"; 
+	private static final String DEFAULT_SERVER_NAME = "reka-http";
+	
+	private static final byte[] NEW_LINE = "\n".getBytes(Charsets.UTF_8);
+	
+	private static final String TEXT_PLAIN = "text/plain";
+	private static final String APPLICATION_JSON = "application/json";
 
 	private final Logger logger = LoggerFactory.getLogger("http-encoder");
 	
@@ -111,19 +117,19 @@ public class DataToHttpEncoder extends MessageToMessageEncoder<Data> {
 				// send content data json
 				buffer = context.alloc().buffer();
 				
-				if (data.existsAt(Request.PARAMS.add("pretty"))) {
-					MoreDataUtils.writeToOutputStreamAsPrettyJson(contentData, new ByteBufOutputStream(buffer));
-					buffer.writeBytes("\n".getBytes(Charsets.UTF_8));
+				if (data.existsAt(Request.Params.PRETTY)) {
+					writeToOutputStreamAsPrettyJson(contentData, new ByteBufOutputStream(buffer));
+					buffer.writeBytes(NEW_LINE);
 				} else {
-					MoreDataUtils.writeToOutputStreamAsJson(contentData, new ByteBufOutputStream(buffer));
+					writeToOutputStreamAsJson(contentData, new ByteBufOutputStream(buffer));
 				}
-				contentType = "application/json";
+				contentType = APPLICATION_JSON;
 				
 			} else if (!responseStatus.equals(HttpResponseStatus.NO_CONTENT)) {
 				
 				// 404
 				FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.NOT_FOUND);
-				response.headers().set(HttpHeaders.CONTENT_TYPE, "text/plain");
+				response.headers().set(HttpHeaders.CONTENT_TYPE, TEXT_PLAIN);
 				response.content().writeBytes("no page here!\n\n".getBytes(Charsets.UTF_8));
 				response.content().writeBytes(data.toPrettyJson().getBytes(Charsets.UTF_8));
 				out.add(response);

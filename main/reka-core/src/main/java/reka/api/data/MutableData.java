@@ -14,13 +14,13 @@ public interface MutableData extends Data, DataMutation<MutableData> {
 		return this;
 	}
 	
-	// TODO: actually set a readonly flag somewhere....
-	default Data readonly() {
+	// TODO: actually set a immutable flag somewhere....
+	default Data immutable() {
 		return this;
 	}
 	
 	@Override
 	default Data copy() {
-		return mutableCopy().readonly();
+		return mutableCopy().immutable();
 	}
 }

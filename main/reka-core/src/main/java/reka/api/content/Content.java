@@ -715,6 +715,7 @@ public interface Content extends Hashable, JsonProvider {
 		protected long size() {
 			return bytes.length;
 		}
+		
 	}
 	
 	public abstract static class BinaryContent extends BaseContent {

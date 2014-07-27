@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.toList;
 import static reka.api.Path.dots;
 import static reka.api.Path.root;
 import static reka.api.content.Contents.binary;
+import static reka.api.content.Contents.utf8;
 import static reka.configurer.Configurer.configure;
 import static reka.configurer.Configurer.Preconditions.checkConfig;
 import static reka.core.builder.FlowSegments.async;
@@ -634,17 +635,33 @@ public class UseBuiltins extends UseConfigurer {
 		
 		@Conf.Config
 		public void config(Config config) {
-			if (config.hasDocument()) {
+			if (config.hasSubkey()) {
+				out = out.add(dots(config.subkey()));
+				if (config.hasDocument()) {
+					if (config.hasValue()) {
+						out = out.add(dots(config.valueAsString()));
+					}
+					content = binary(config.documentType(), config.documentContent());
+				} else if (config.hasValue()) {
+					checkConfig(!config.hasBody(), "can't have a body if you are using subkey and value");
+					content = utf8(config.valueAsString());
+				} else if (config.hasBody()) {
+					if (config.hasValue()) {
+						out = out.add(dots(config.valueAsString()));
+					}
+					data = configToData(config.body());	
+				}
+			} else if (config.hasDocument()) {
 				content = binary(config.documentType(), config.documentContent());
+				if (config.hasValue()) {
+					out = out.add(dots(config.valueAsString()));
+				}
 			} else if (config.hasBody()) {
 				data = configToData(config.body());
+				if (config.hasValue()) {
+					out = out.add(dots(config.valueAsString()));
+				}
 			}
-		}
-
-		@Conf.Val
-		@Conf.At("out")
-		public void out(String val) {
-			out = dots(val);
 		}
 		
 		@Override
@@ -727,14 +744,14 @@ public class UseBuiltins extends UseConfigurer {
 	public static class PutDataWithVarsOperation implements SyncOperation {
 
 		private final LoadingCache<Content,StringWithVars> cache = CacheBuilder.newBuilder()
-				.build(new CacheLoader<Content, StringWithVars>(){
-
-					@Override
-					public StringWithVars load(Content content) throws Exception {
-						return StringWithVars.compile(content.asUTF8());
-					}
-					
-				});
+			.build(new CacheLoader<Content, StringWithVars>(){
+	
+				@Override
+				public StringWithVars load(Content content) throws Exception {
+					return StringWithVars.compile(content.asUTF8());
+				}
+				
+			});
 		
 		private final Data dataValue;
 		private final Path out;

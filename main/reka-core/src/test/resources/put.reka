@@ -1,0 +1,41 @@
+simple {
+  put {
+    name nick
+  }
+}
+
+subkey {
+  put:name nick
+}
+
+nested {
+  put name {
+    first nick
+  }
+}
+
+with-val-and-body {
+  put yay {
+    name peter
+    age 20
+    inner wooo {
+      it should
+      work ok
+    }
+  }
+}
+
+array-intent {
+  put {
+    people james
+    people andrew
+    people woah
+    people nick
+  }
+}
+
+invalid {
+  put:name woah {
+    not allowed
+  }
+}

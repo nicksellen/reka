@@ -366,6 +366,7 @@ public class Configurer {
 			(method) -> configureDeprecated(method, method.getAnnotation(Conf.Deprecated.class)),
 			(method) -> configureDeprecatedWarning(method, method.getAnnotation(Conf.Deprecated.Warning.class)),
 			(method) -> configureKey(method, method.getAnnotation(Conf.Key.class)),
+			(method) -> configureSubkey(method, method.getAnnotation(Conf.Subkey.class)),
 			(method) -> configureVal(method, method.getAnnotation(Conf.Val.class)),
 			(method) -> configureConfig(method, method.getAnnotation(Conf.Config.class)),
 			(method) -> configureAt(method, method.getAnnotationsByType(Conf.At.class)),
@@ -710,6 +711,32 @@ public class Configurer {
 		}
 		
 	}
+	
+	private class SubkeyOption extends ConfOption {
+		
+		SubkeyOption(Method method) {
+			super(method);
+		}
+
+		@Override
+		public void apply(ConfigOrNavigableConfig config, Object instance, Status status) {
+			if (config.hasConfig() && config.config().hasSubkey()) {
+				try {
+					checkDeprecation(method, config.config());
+					status.matchedKeys.add(config.config().key());
+					method.invoke(instance, config.config().subkey());
+                } catch (Throwable t) {
+					throw asInvalidConfigurationException(config.config(), t);
+                }
+			}
+		}
+
+		@Override
+		public int order() {
+			return 5;
+		}
+		
+	}
 		
 	private class StringValOption extends ConfOption {
 		
@@ -967,6 +994,17 @@ public class Configurer {
 					String.class.getSimpleName());
 		
 		options.add(new KeyOption(method));
+	}
+	
+	private void configureSubkey(Method method, Conf.Subkey annotation) {
+		if (annotation == null) return;
+		checkArgument(method.getParameterTypes().length == 1 && method.getParameterTypes()[0].equals(String.class), 
+				"@%s %s must accept a single %s parameter",
+					Conf.Subkey.class.getSimpleName(),
+					method, 
+					String.class.getSimpleName());
+		
+		options.add(new SubkeyOption(method));
 	}
 
 	private void configureVal(Method method, Conf.Val annotation) {

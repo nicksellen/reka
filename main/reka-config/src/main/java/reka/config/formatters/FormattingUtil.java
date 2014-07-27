@@ -1,7 +1,11 @@
 package reka.config.formatters;
 
+import static com.google.common.collect.Iterables.toArray;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.google.common.base.Splitter;
 
 public class FormattingUtil {
 	
@@ -41,10 +45,11 @@ public class FormattingUtil {
     private static final Pattern leadingWS = Pattern.compile("^([\\ \t]+)\\S+");
 
     private static final String SPACE_INDENT = "    ";
+    private static final Splitter linesplitter = Splitter.on("\n");
 
     public static String removeIndentation(String val) {
     	if (val.length() > 0 && val.charAt(0) == '\n') val = val.substring(1);
-        String[] lines = val.replaceAll("\t", SPACE_INDENT).split("\n");
+        String[] lines = toArray(linesplitter.split(val.replaceAll("\t", SPACE_INDENT)), String.class);
         String indent = null;
         for (String line : lines) {
             Matcher m = leadingWS.matcher(line);

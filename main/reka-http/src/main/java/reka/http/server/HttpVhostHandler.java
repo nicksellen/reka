@@ -99,6 +99,7 @@ public class HttpVhostHandler extends SimpleChannelInboundHandler<MutableData> {
 	
 	private static class ChannelHandlerContextDataSubscriber implements EverythingSubscriber {
 
+		private final long started = System.nanoTime();
 		private final ChannelHandlerContext context;
 		
 		ChannelHandlerContextDataSubscriber(ChannelHandlerContext context) {
@@ -108,6 +109,8 @@ public class HttpVhostHandler extends SimpleChannelInboundHandler<MutableData> {
 		@Override
 		public void ok(MutableData data) {
 			ChannelFuture writeFuture = context.writeAndFlush(data);
+			long took = (System.nanoTime() - started) / 1000;
+			log.info("{} {} {} {}µs", data.getInt(Response.STATUS).orElse(-1), data.getString(Request.METHOD).orElse(""), data.getString(Request.PATH).orElse(""), took);
 			if (data.existsAt(CLOSE_CHANNEL)) {
 				writeFuture.addListener(ChannelFutureListener.CLOSE);
 			}
@@ -195,7 +198,7 @@ public class HttpVhostHandler extends SimpleChannelInboundHandler<MutableData> {
 	}
 	
 	private void executeFlow(ChannelHandlerContext context, Flow flow, MutableData data, String host) {
-		log.info("[{}] {} {}", flow.fullName(), data.getString(Request.METHOD).orElse(""), data.getString(Request.PATH).orElse(""));
+		//log.info("[{}] {} {}", flow.fullName(), data.getString(Request.METHOD).orElse(""), data.getString(Request.PATH).orElse(""));
 		flow.run(listeningDecorator(context.executor()), data, new ChannelHandlerContextDataSubscriber(context));
 	}
 

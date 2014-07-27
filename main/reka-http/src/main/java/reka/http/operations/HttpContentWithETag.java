@@ -31,7 +31,8 @@ public class HttpContentWithETag implements SyncOperation {
 	
 	private final Content content;
 	private final Content contentType;
-	private final String etag;
+	private final String etagStr;
+	private final Content etag;
 	
 	private static final Content EMPTY = utf8("");
 	private static final Content NOT_MODIFIED = integer(304);
@@ -64,12 +65,13 @@ public class HttpContentWithETag implements SyncOperation {
 		content.hash(hasher);
 		hasher.putByte((byte)0);
 		contentType.hash(hasher);
-		etag = hex.encode(hasher.hash().asBytes());
+		etagStr = hex.encode(hasher.hash().asBytes());
+		etag = utf8(etagStr);
 	}
 	
 	@Override
 	public MutableData call(MutableData data) {
-		if (etag.equals(data.getString(Request.Headers.IF_NONE_MATCH).orElse(""))) {
+		if (data.existsAt(Request.Headers.IF_NONE_MATCH) && etagStr.equals(data.getString(Request.Headers.IF_NONE_MATCH).orElse(""))) {
 			return data
 				.put(Response.CONTENT, EMPTY)
 				.put(Response.STATUS, NOT_MODIFIED);
@@ -77,7 +79,7 @@ public class HttpContentWithETag implements SyncOperation {
 			return data
 				.put(Response.CONTENT, content)
 				.put(Response.Headers.CONTENT_TYPE, contentType)
-				.put(Response.Headers.ETAG, utf8(etag));
+				.put(Response.Headers.ETAG, etag);
 		}
 	}
 

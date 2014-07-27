@@ -19,7 +19,7 @@ import reka.api.data.MutableData;
 import reka.core.data.memory.MutableMemoryData;
 
 @Sharable
-public class HttpToDatasetDecoder extends MessageToMessageDecoder<HttpRequest> {
+public class HttpToDataDecoder extends MessageToMessageDecoder<HttpRequest> {
 	
 	@Override
 	protected void decode(ChannelHandlerContext ctx, HttpRequest request, List<Object> out) throws Exception {

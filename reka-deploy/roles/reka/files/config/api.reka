@@ -318,8 +318,8 @@ trigger {
   }
   http api.reka.io {
     ssl {
-      crt @include(/root/reka.crt)
-      key @include(/root/reka.key)
+      crt @include(reka.crt)
+      key @include(reka.key)
     }
     run http
   }

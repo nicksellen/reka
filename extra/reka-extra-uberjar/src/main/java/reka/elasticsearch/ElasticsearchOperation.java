@@ -17,7 +17,7 @@ public abstract class ElasticsearchOperation <Response extends ActionResponse> i
 	
 	@Override
 	public ListenableFuture<MutableData> call(MutableData data) {
-		ListenableFuture<Response> lf = new ListenableElasticsearchFuture<>(request(data.readonly()).execute());
+		ListenableFuture<Response> lf = new ListenableElasticsearchFuture<>(request(data.immutable()).execute());
 		return Futures.transform(lf, new com.google.common.base.Function<Response,MutableData>(){
 
 			@Override

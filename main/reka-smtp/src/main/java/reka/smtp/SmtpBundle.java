@@ -251,7 +251,7 @@ public class SmtpBundle implements RekaBundle {
 				
 				app.protocol(port, "smtp", MutableMemoryData.create(details -> {
 					details.putString("run", flowName.last().toString());
-				}).readonly());
+				}).immutable());
 				
 				smtpServer.start();
 				

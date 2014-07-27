@@ -42,7 +42,7 @@ class ValueHandler implements ParseHandler {
 			ctx.next(ParseHandlers.DOC);
 		} else if (body) {
 			ctx.eat(ParseHandlers.WHITESPACE);
-			ctx.next(new BodyHandler());
+			ctx.next(new BodyHandler(false));
 		}
 		
 	}
