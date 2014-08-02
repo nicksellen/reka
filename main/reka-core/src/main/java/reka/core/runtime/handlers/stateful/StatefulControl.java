@@ -36,7 +36,7 @@ public class StatefulControl implements ControlHandler {
 		switch (state.lifecycle()) {
 		case ACTIVE:
 		case ALWAYS_ACTIVE:
-			run(context, data);
+			run(context);
 		default:
 			break;
 		}
@@ -51,7 +51,7 @@ public class StatefulControl implements ControlHandler {
 		switch (state.lifecycle()) {
 		case ACTIVE:
 		case ALWAYS_ACTIVE:
-			run(context, null);
+			run(context);
 			break;
 		case INACTIVE:
 			halt.halted(context);
@@ -65,7 +65,7 @@ public class StatefulControl implements ControlHandler {
 		return context.stateFor(id).initialize(initialCount);
 	}
 	
-	private void run(final FlowContext context, MutableData incomingData) {
+	private void run(final FlowContext context) {
 		
 		NodeState state = stateFor(context);
 		
@@ -75,10 +75,6 @@ public class StatefulControl implements ControlHandler {
 		
 		while (it.hasNext()) {
 			mergedData.merge(it.next());
-		}
-
-		if (incomingData != null) { // might be triggered from a halted call
-			mergedData.merge(incomingData);
 		}
 
 		try {

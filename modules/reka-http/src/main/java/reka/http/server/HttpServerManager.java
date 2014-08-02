@@ -292,7 +292,7 @@ public class HttpServerManager {
 			}
 			
 			if (settings.applicationVersion() > version) {
-				log.info("tried to undeploy version {} but we're running a new version {}", version, settings.applicationVersion());
+				log.info("ignoring request to undeploy version {} as we're on version {}", version, settings.applicationVersion());
 				return;
 			}
 			
