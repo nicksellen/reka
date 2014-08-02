@@ -245,7 +245,7 @@ public abstract class UseConfigurer {
 		}
 	}
 
-	public abstract void setup(UseInit init);
+	public abstract void setup(UseInit use);
 	
 	public boolean isRoot() {
 		return isRoot;
@@ -281,7 +281,7 @@ public abstract class UseConfigurer {
 		return name();
 	}
 	
-	public Path fullPath() {
+	private Path fullPath() {
 		return parentPath.add(slashes(name()));
 	}
 	
@@ -298,9 +298,11 @@ public abstract class UseConfigurer {
 		if (config.hasBody()) {
 			for (Config childConfig : config.body()) {
 
-				checkConfig(mappings != null, "[%s] is not a valid 'use' module (try one of %s)", childConfig.key(), mappingNames());
+				checkConfig(mappings != null, "'%s' is not a valid module (try one of %s)", childConfig.key(), mappingNames());
 				
 				Supplier<UseConfigurer> supplier = mappingFor(slashes(childConfig.key()));
+				
+				checkConfig(supplier != null, "'%s' is not a valid module (try one of %s)", childConfig.key(), mappingNames());
 				
 				UseConfigurer child = supplier.get();
 				

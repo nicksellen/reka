@@ -190,9 +190,9 @@ public class ApplicationConfigurer implements ErrorReporter {
 	    	
 	    	ApplicationBuilder applicationBuilder = new ApplicationBuilder();
 	    	
-	    	applicationBuilder.setName(applicationName);
-	    	applicationBuilder.setVersion(applicationVersion);
-	    	applicationBuilder.setInitializerVisualizer(initializer.visualizer());
+	    	applicationBuilder.name(applicationName);
+	    	applicationBuilder.version(applicationVersion);
+	    	applicationBuilder.initializerVisualizer(initializer.visualizer());
 	    	
 	    	Map<Path, Supplier<TriggerConfigurer>> triggerConfigurers = initializer.triggers();
 	    	

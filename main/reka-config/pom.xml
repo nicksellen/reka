@@ -3,15 +3,10 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>reka-config</artifactId>
+	<groupId>io.reka</groupId>
+	<version>0.1.0</version>
 
 	<name>reka-config</name>
-
-	<parent>
-		<groupId>io.reka</groupId>
-		<artifactId>reka-main</artifactId>
-		<version>0.1.0</version>
-		<relativePath>../reka-main/pom.xml</relativePath>
-	</parent>
 
 	<dependencies>
 		<dependency>
@@ -19,11 +14,6 @@
 			<artifactId>junit</artifactId>
 			<version>4.11</version>
 			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>1.7.5</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.guava</groupId>
@@ -34,6 +24,11 @@
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
       <version>3.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.7.5</version>
     </dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
@@ -56,6 +51,5 @@
 			</plugin>
 		</plugins>
 	</build>
-
 
 </project>

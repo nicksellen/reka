@@ -64,7 +64,7 @@ public class RekaConfigurer {
 	}
 	
 	private void unpackBundle(String jarpath) {
-		log.info("loading bundles from jar {}", jarpath);
+		log.info("loading bundle from {}", jarpath);
 		try {
 			File file = new File(jarpath);
 			checkArgument(file.exists(), "[%s] does not exist", jarpath);
@@ -72,14 +72,16 @@ public class RekaConfigurer {
 				ZipEntry entry = zip.getEntry("META-INF/MANIFEST.MF");
 				checkArgument(entry != null, "must include META-INF/MANIFEST.MF in your jar");
 				Manifest manifest = new Manifest(zip.getInputStream(entry));
-				String rekaBundlesValue = manifest.getMainAttributes().getValue("Reka-Bundles");
-				checkArgument(rekaBundlesValue != null, "you must include a Reka-Bundles value in the manifest");
-				String[] bundleNames = rekaBundlesValue.split(",");
-				checkArgument(bundleNames.length > 0, "no bundles specified in Reka-Bundles");
+
+				String coreVersion = manifest.getMainAttributes().getValue("Reka-Version");
+				checkArgument(coreVersion != null, "you must include a Reka-Version value in the manifest, specifiying the core version");
+				
+				// TODO: actually make it check the version against the self version
+				
+				String bundleName = manifest.getMainAttributes().getValue("Reka-Bundle");
+				checkArgument(bundleName != null, "you must include a Reka-Bundle value in the manifest");
 				List<String> names = new ArrayList<>();
-				for (String bundleName : bundleNames) {
-					names.add(bundleName);
-				}
+				names.add(bundleName);
 				addedBundles.put(file.toURI().toURL(), names);
 			}
 		} catch (Throwable t) {

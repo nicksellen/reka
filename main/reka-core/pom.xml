@@ -3,42 +3,23 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>reka-core</artifactId>
+	<groupId>io.reka</groupId>
+	<version>0.1.0</version>
 
 	<name>reka-core</name>
 
-	<parent>
-		<groupId>io.reka</groupId>
-		<artifactId>reka-main</artifactId>
-		<version>0.1.0</version>
-		<relativePath>../reka-main/pom.xml</relativePath>
-	</parent>
-
 	<dependencies>
-
-		<dependency>
-			<groupId>io.reka</groupId>
-			<artifactId>reka-config</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-
+    <dependency>
+      <groupId>io.reka</groupId>
+      <artifactId>reka-config</artifactId>
+      <version>0.1.0</version>
+    </dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.11</version>
 			<scope>test</scope>
 		</dependency>
-		<dependency>
-			<groupId>com.google.inject</groupId>
-			<artifactId>guice</artifactId>
-			<version>4.0-beta</version>
-			<exclusions>
-				<exclusion>
-					<artifactId>guava</artifactId>
-					<groupId>com.google.guava</groupId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-
 		<dependency>
 			<groupId>org.codehaus.jackson</groupId>
 			<artifactId>jackson-core-asl</artifactId>
@@ -55,36 +36,55 @@
 			<version>1.9.12</version>
 		</dependency>
 		<dependency>
-			<groupId>org.mindrot</groupId>
-			<artifactId>jbcrypt</artifactId>
-			<version>0.3m</version>
+			<groupId>args4j</groupId>
+			<artifactId>args4j</artifactId>
+			<version>2.0.26</version>
 		</dependency>
-		<dependency>
-			<groupId>de.neuland</groupId>
-			<artifactId>jade4j</artifactId>
-			<version>0.3.12</version>
-		</dependency>
-		<dependency>
-			<groupId>com.github.spullara.mustache.java</groupId>
-			<artifactId>compiler</artifactId>
-			<version>0.8.13</version>
-		</dependency>
-    <dependency>
-      <groupId>args4j</groupId>
-      <artifactId>args4j</artifactId>
-      <version>2.0.26</version>
-    </dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
 			<version>1.7.5</version>
 		</dependency>
 
+		<!-- I'd like to remove these from core -->
+
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>2.4</version>
+		</dependency>
+		<dependency>
+			<groupId>org.pegdown</groupId>
+			<artifactId>pegdown</artifactId>
+			<version>1.4.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.mindrot</groupId>
+			<artifactId>jbcrypt</artifactId>
+			<version>0.3m</version>
+		</dependency>
+
 	</dependencies>
+
 	<repositories>
 		<repository>
 			<id>jade4j-releases</id>
 			<url>https://raw.github.com/neuland/jade4j/master/releases</url>
 		</repository>
 	</repositories>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.1</version>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
 </project>

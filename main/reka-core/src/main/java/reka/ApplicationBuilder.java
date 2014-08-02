@@ -19,11 +19,11 @@ public class ApplicationBuilder {
 	private Flows flows;
 	private FlowVisualizer visualizer;
 
-	public void setName(Path name) {
+	public void name(Path name) {
 		this.name = name;
 	}
 	
-	public void setVersion(int version) {
+	public void version(int version) {
 		this.version = version;
 	}
 	
@@ -31,7 +31,7 @@ public class ApplicationBuilder {
 		this.flows = flows;
 	}
 	
-	public void setInitializerVisualizer(FlowVisualizer visualizer) {
+	public void initializerVisualizer(FlowVisualizer visualizer) {
 		this.visualizer = visualizer;
 	}
 

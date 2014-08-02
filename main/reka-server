@@ -1,0 +1,3 @@
+#!/bin/bash
+
+java -Dlog4j.configurationFile=reka-main/log4j2-info.xml -jar reka-main/target/reka-main-0.1.0.jar "$@"
