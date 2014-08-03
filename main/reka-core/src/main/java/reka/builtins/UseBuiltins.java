@@ -1,5 +1,6 @@
 package reka.builtins;
 
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static reka.api.Path.dots;
@@ -50,10 +51,12 @@ import reka.config.ConfigBody;
 import reka.configurer.Configurer.ErrorCollector;
 import reka.configurer.ErrorReporter;
 import reka.configurer.annotations.Conf;
+import reka.core.builder.FlowSegments;
 import reka.core.bundle.UseConfigurer;
 import reka.core.bundle.UseInit;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
+import reka.core.data.memory.MutableMemoryData;
 import reka.core.util.StringWithVars;
 
 import com.google.common.cache.CacheBuilder;
@@ -664,14 +667,27 @@ public class UseBuiltins extends UseConfigurer {
 			}
 		}
 		
+		private String name() {
+			if (out.isEmpty()) {
+				return "put";
+			} else {
+				return format("put %s", out.dots());
+			}
+		}
+		
 		@Override
 		public FlowSegment get() {
+			MutableData meta = MutableMemoryData.create();
+			FlowSegment segment = null;
 			if (content != null) {
-				return sync("put", () -> new PutContentOperation(content, out));
+				meta.put("content", content);
+				segment = sync(name(), () -> new PutContentOperation(content, out));
 			} else if (data != null) {
-				return sync("put", () -> new PutDataOperation(data, out));
+				meta.put("data", content);
+				segment = sync(name(), () -> new PutDataOperation(data, out));
 			}
-			throw runtime("you must have content or data");
+			checkConfig(segment != null, "you must have content or data");
+			return FlowSegments.meta(segment, meta);
 		}
 		
 	}
@@ -680,6 +696,13 @@ public class UseBuiltins extends UseConfigurer {
 
 		private Data data;
 		private Path out = root();
+		
+		private String key;
+		
+		@Conf.Key
+		public void key(String val) {
+			key = val;
+		}
 		
 		@Conf.Config
 		public void config(Config config) {
@@ -693,11 +716,19 @@ public class UseBuiltins extends UseConfigurer {
 		public void out(String val) {
 			out = dots(val);
 		}
+
+		private String name() {
+			if (out.isEmpty()) {
+				return key;
+			} else {
+				return format("%s %s", key, out.dots());
+			}
+		}
 		
 		@Override
 		public FlowSegment get() {
 			if (data != null) {
-				return sync("putvars", () -> new PutDataWithVarsOperation(data, out));
+				return sync(name(), () -> new PutDataWithVarsOperation(data, out));
 			}
 			throw runtime("you must have content or data");
 		}

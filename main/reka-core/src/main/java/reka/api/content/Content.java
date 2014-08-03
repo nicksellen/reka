@@ -740,7 +740,7 @@ public interface Content extends Hashable, JsonProvider {
 		
 		@Override
 		public void writeObj(ObjBuilder obj) {
-			if (contentType != null && contentType.startsWith("text/")) {
+			if (contentType != null && (contentType.startsWith("text/") || contentType.startsWith("application/"))) {
 				obj.writeValue(new String(as(Encoding.NONE).bytes(), Charsets.UTF_8));
 			} else {
 				obj.writeValue(as(Encoding.NONE).bytes()); // ? this might not really want a byte array...

@@ -7,15 +7,20 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import reka.api.data.Data;
+import reka.api.data.MutableData;
 import reka.api.flow.FlowConnection;
 import reka.api.flow.FlowDependency;
 import reka.api.flow.FlowNode;
 import reka.api.flow.FlowSegment;
 import reka.api.run.OperationSupplier;
+import reka.core.data.memory.MutableMemoryData;
 
 import com.google.common.collect.ImmutableList;
 
 public class AbstractFlowNode implements FlowNode {
+	
+	private final MutableData meta = MutableMemoryData.create();
 	
 	private String name;
 	private OperationSupplier<?> supplier;
@@ -114,6 +119,11 @@ public class AbstractFlowNode implements FlowNode {
 	@Override
 	public String outputName() {
 		return null;
+	}
+	
+	@Override
+	public Data meta() {
+		return meta;
 	}
 	
 	@Override

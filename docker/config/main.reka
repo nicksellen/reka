@@ -1,0 +1,28 @@
+@include(bundles.reka)
+
+app @include(apps/reka-ui/reka-ui.reka)
+app @include(apps/reka-api/reka-api.reka)
+
+app {
+  name a small inline app
+  use {
+    http
+  }
+  flow main {
+    http/router {
+      GET / {
+        http/content <<- text/html
+          <h1>Hello HTML World!</h1>
+        ---
+      }
+    }
+  }
+  trigger {
+    //http inline.reka {
+      run main
+    }
+    http localhost:5050 {
+      run main
+    }
+  }
+}

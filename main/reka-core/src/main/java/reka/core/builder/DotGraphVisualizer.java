@@ -10,6 +10,7 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import reka.api.Path;
+import reka.api.data.Data;
 import reka.core.builder.FlowVisualizer.GraphVisualizer;
 import reka.core.builder.FlowVisualizer.NodeType;
 
@@ -74,9 +75,6 @@ public class DotGraphVisualizer implements GraphVisualizer<String> {
 			case END:
 				shape = "circle";
 				break;
-			case EMBEDDED:
-				shape = "cds";
-				break;
 			default:
 				shape = "box";
 				break;
@@ -90,9 +88,14 @@ public class DotGraphVisualizer implements GraphVisualizer<String> {
 		}
 		
 		for (DotGraphVisualizer.Connection connection : connections) {
-			String formattedLabel = connection.name == null ? "" : format(", label=%s", quote(connection.name));
-			sb.append(format("  %s -> %s [fontname=%s, fonsize=8, color=\"#888888\", style=%s%s, arrowsize=.5]\n", 
-				quote(String.valueOf(connection.from)), quote(String.valueOf(connection.to)), quote(font), connection.optional ? "dashed" : "solid", formattedLabel));
+			String label = labelFor(connection);
+			String formattedLabel = label == null ? "" : format(", label=%s", quote(label));
+			sb.append(format("  %s -> %s [id=%s, fontname=%s, fonsize=8, color=\"#888888\", style=%s%s, arrowsize=.5]\n", 
+				quote(String.valueOf(connection.from)), 
+				quote(String.valueOf(connection.to)),  
+				quote(format("connection__%s__%s", connection.from, connection.to)),
+				quote(font), 
+				connection.optional ? "dashed" : "solid", formattedLabel));
 		}
 		
 		int id = 0;
@@ -115,7 +118,7 @@ public class DotGraphVisualizer implements GraphVisualizer<String> {
 			}
 			
 			sb.append(format("%ssubgraph cluster_%d {\n", indent, ++id));
-			sb.append(format("%s  graph[style=solid, color=\"#dddddd\"]\n", indent));
+			sb.append(format("%s  graph[style=dashed, color=\"#dddddd\"]\n", indent));
 			sb.append(format("%s  labeljust=\"l\"\n", indent));
 			sb.append(format("%s  label = \"%s\"\n", indent, path.last()));
 			
@@ -136,6 +139,17 @@ public class DotGraphVisualizer implements GraphVisualizer<String> {
 		return sb.toString();
 	}
 	
+	private String labelFor(Connection connection) {
+		return null;
+		/*
+		if (connection.name != null && !connection.name.isEmpty()) {
+			return connection.name;
+		} else {
+			return null;
+		}
+		*/
+	}
+
 	private String indent(int depth) {
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < depth; i++) {
@@ -150,6 +164,11 @@ public class DotGraphVisualizer implements GraphVisualizer<String> {
 	
 	private String quoteUnlessHTML(String value) {
 	    return value.startsWith("<") && value.endsWith(">") ? value : quote(value);
+	}
+
+	@Override
+	public void meta(int id, List<Data> metas) {
+		
 	}
 	
 }

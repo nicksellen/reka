@@ -14,6 +14,8 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import reka.api.data.Data;
+import reka.api.data.MutableData;
 import reka.api.flow.FlowConnection;
 import reka.api.flow.FlowNode;
 import reka.api.flow.FlowSegment;
@@ -24,6 +26,7 @@ import reka.api.run.RoutingOperation;
 import reka.api.run.SyncOperation;
 import reka.api.run.SyncOperationSupplier;
 import reka.core.config.NoOpSupplier;
+import reka.core.data.memory.MutableMemoryData;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -222,6 +225,19 @@ public class FlowSegments extends AbstractFlowNode {
 	public static FlowSegment label(String label, FlowSegment... segment) {
 		return new Labelled(label, Sequential.of(segment));
 	}
+
+	public static FlowSegment meta(FlowSegment segment, Data meta) {
+		return new Meta(segment, meta);
+	}
+	
+	public static class Meta extends AbstractFlowSegment {
+
+		public Meta(FlowSegment segment, Data other) {
+			mutableMeta().merge(other);
+			start(segment).end(segment);
+		}
+		
+	}
 	
 	public static FlowSegment namedInput(String name, FlowSegment... segment) {
 		return new NamedInput(name, Sequential.of(segment));
@@ -267,6 +283,8 @@ public class FlowSegments extends AbstractFlowNode {
 	
 	public static abstract class AbstractFlowSegment implements FlowSegment {
 
+		private final MutableData meta = MutableMemoryData.create();
+		
 		private String inputName;
 		private String outputName;
 		private String label;
@@ -300,6 +318,10 @@ public class FlowSegments extends AbstractFlowNode {
 		protected AbstractFlowSegment connection(FlowSegment source, FlowSegment destination, String label) {
 			connections.add(DefaultFlowConnection.create(source, destination, label));
 			return this;
+		}
+		
+		protected MutableData mutableMeta() {
+			return meta;
 		}
 		
 		protected AbstractFlowSegment inputName(String value) {
@@ -354,6 +376,11 @@ public class FlowSegments extends AbstractFlowNode {
 		@Override
 		public String label() {
 			return label;
+		}
+		
+		@Override
+		public Data meta() {
+			return meta.immutable();
 		}
 		
 		@Override

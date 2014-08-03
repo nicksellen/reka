@@ -2,20 +2,24 @@ package reka.api.flow;
 
 import java.util.Collection;
 
+import reka.api.data.Data;
+
 public interface FlowSegment {
 
     // not optional!
-    public Collection<FlowSegment> sources();
-    public Collection<FlowSegment> destinations();
-    public Collection<FlowConnection> connections();
-	public Collection<FlowSegment> segments();
-	public boolean isNode();
-	//public boolean isEmpty();
+    Collection<FlowSegment> sources();
+    Collection<FlowSegment> destinations();
+    Collection<FlowConnection> connections();
+	Collection<FlowSegment> segments();
+	boolean isNode();
+	//boolean isEmpty();
 
     // all optional (well, should be)
-    public String inputName();
-    public String label();
-    public String outputName();
-	public FlowNode node();
+    String inputName();
+    String label();
+    String outputName();
+	FlowNode node();
+	
+	Data meta();
 	
 }

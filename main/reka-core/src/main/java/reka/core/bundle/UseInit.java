@@ -13,6 +13,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -23,8 +24,6 @@ import reka.api.run.AsyncOperation;
 import reka.api.run.SyncOperation;
 import reka.core.builder.FlowSegments;
 import reka.core.config.ConfigurerProvider;
-
-import com.google.common.base.Optional;
 
 public class UseInit {
 	
@@ -186,7 +185,7 @@ public class UseInit {
 	
 	public Optional<FlowSegment> buildFlowSegment() {
 		if (segments.isEmpty()) {
-			return Optional.absent();
+			return Optional.empty();
 		} else {
 			List<FlowSegment> built = segments.stream().map(Supplier<FlowSegment>::get).collect(toList());
 			return Optional.of(label(path.slashes(), seq(built)));

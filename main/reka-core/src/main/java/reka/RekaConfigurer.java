@@ -7,6 +7,7 @@ import static reka.util.Util.unchecked;
 import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,7 +38,10 @@ public class RekaConfigurer {
 	
 	private final Map<URL, List<String>> addedBundles = new HashMap<>();
 	
-	public RekaConfigurer(List<RekaBundle> defaultBundles) {
+	private final Path bundleBasedir;
+	
+	public RekaConfigurer(Path bundleBasedir, List<RekaBundle> defaultBundles) {
+		this.bundleBasedir = bundleBasedir;
 		this.defaultBundles.addAll(defaultBundles);
 	}
 	
@@ -66,8 +70,8 @@ public class RekaConfigurer {
 	private void unpackBundle(String jarpath) {
 		log.info("loading bundle from {}", jarpath);
 		try {
-			File file = new File(jarpath);
-			checkArgument(file.exists(), "[%s] does not exist", jarpath);
+			File file = bundleBasedir.resolve(jarpath).toFile();
+			checkArgument(file.exists(), "[%s] does not exist", file.getAbsolutePath());
 			try (ZipFile zip = new ZipFile(file)) {
 				ZipEntry entry = zip.getEntry("META-INF/MANIFEST.MF");
 				checkArgument(entry != null, "must include META-INF/MANIFEST.MF in your jar");

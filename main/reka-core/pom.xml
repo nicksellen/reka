@@ -8,12 +8,16 @@
 
 	<name>reka-core</name>
 
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
 	<dependencies>
-    <dependency>
-      <groupId>io.reka</groupId>
-      <artifactId>reka-config</artifactId>
-      <version>0.1.0</version>
-    </dependency>
+		<dependency>
+			<groupId>io.reka</groupId>
+			<artifactId>reka-config</artifactId>
+			<version>0.1.0</version>
+		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
@@ -65,13 +69,6 @@
 		</dependency>
 
 	</dependencies>
-
-	<repositories>
-		<repository>
-			<id>jade4j-releases</id>
-			<url>https://raw.github.com/neuland/jade4j/master/releases</url>
-		</repository>
-	</repositories>
 
 	<build>
 		<plugins>

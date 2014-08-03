@@ -3,7 +3,6 @@ package reka.core.builder;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static reka.core.builder.FlowConnector.connectSegments;
-import static reka.core.builder.FlowSegments.label;
 import static reka.core.builder.FlowSegments.seq;
 import static reka.core.builder.FlowSegments.startNode;
 import static reka.core.builder.FlowSegments.subscribeableEndNode;
@@ -60,7 +59,7 @@ public class FlowsBuilder {
 			this.name = name;
 			this.start = startNode("start");
 			this.end = subscribeableEndNode("end");
-			this.segment = seq(start, label(name.slashes(), main), end);;
+			this.segment = seq(start, main, end);;
 		}
 		
 		public FlowInfo visualizer(DefaultFlowVisualizer visualizer) {

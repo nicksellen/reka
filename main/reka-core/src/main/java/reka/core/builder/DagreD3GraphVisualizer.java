@@ -1,7 +1,11 @@
 package reka.core.builder;
 
 import static java.lang.String.format;
+
+import java.util.List;
+
 import reka.api.Path;
+import reka.api.data.Data;
 import reka.core.builder.FlowVisualizer.GraphVisualizer;
 import reka.core.builder.FlowVisualizer.NodeType;
 
@@ -43,6 +47,11 @@ public class DagreD3GraphVisualizer implements GraphVisualizer<String> {
 	@Override
 	public String build() {
 		return sb.toString();
+	}
+
+	@Override
+	public void meta(int id, List<Data> metas) {
+		
 	}
 	
 }

@@ -25,6 +25,7 @@ import reka.api.data.MutableData;
 import reka.api.run.SyncOperation;
 import reka.core.builder.DotGraphVisualizer;
 import reka.core.builder.FlowVisualizer;
+import reka.core.builder.JsonGraphVisualizer;
 import reka.util.Graphviz;
 
 import com.google.common.base.Charsets;
@@ -75,13 +76,23 @@ public class VisualizeAppOperation implements SyncOperation {
 
 		flowName.hash(hasher);
 		
+		hasher.putString(format);
+		
 		HashCode hash = hasher.hash();
+		
+		log.info("making visualization of {}:{} in {}", identity, flowName.slashes(), format);
 
 		try {
 			Entry<Content,Content> entry = cache.get(hash, () -> {
 				
 				FlowVisualizer vis = manager.visualize(identity, flowName).orElseThrow(() -> 
 					runtime("no visualization available for %s:%s :(", identity, flowName.slashes()));
+				
+				if ("json".equals(format)) {
+					log.debug("is json!");
+					return createEntry(utf8("application/json"), 
+							           utf8(vis.build(new JsonGraphVisualizer())));
+				}
 				
 				String dotcontent = vis.build(new DotGraphVisualizer());
 				

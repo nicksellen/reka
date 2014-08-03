@@ -16,6 +16,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -32,7 +33,6 @@ import reka.core.config.ConfigurerProvider;
 import reka.core.runtime.NoFlow;
 import reka.core.runtime.NoFlowVisualizer;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -125,12 +125,13 @@ public abstract class UseConfigurer {
 			
 			Map<UseConfigurer,FlowSegment> map = new HashMap<>();
 			for (UseConfigurer use : all) {
+				
 				UseInit init = new UseInit(use.fullPath());
 				use.setup(init);
-				Optional<FlowSegment> segment = init.buildFlowSegment();
-				if (segment.isPresent()) {
-					map.put(use, segment.get());
-				}
+				
+				init.buildFlowSegment().ifPresent(segment -> {
+					map.put(use, segment);
+				});
 				
 				providersCollector.putAll(init.providers());
 				triggerCollector.putAll(init.triggers());
@@ -144,18 +145,15 @@ public abstract class UseConfigurer {
 			
 			List<FlowSegment> segments = new ArrayList<>();
 			for (UseConfigurer use : uses) {
-				Optional<FlowSegment> seg = buildSegment(use, built);
-				if (seg.isPresent()) {
-					segments.add(seg.get());
-				}
+				buildSegment(use, built).ifPresent(segment -> segments.add(segment));
 			}
 			
-			return segments.isEmpty() ? Optional.absent() : Optional.of(par(segments));
+			return segments.isEmpty() ? Optional.empty() : Optional.of(par(segments));
 			
 		}
 		
 		private static Optional<FlowSegment> buildSegment(UseConfigurer use, Map<UseConfigurer, FlowSegment> built) {
-			if (use.isRoot()) return Optional.absent();
+			if (use.isRoot()) return Optional.empty();
 			
 			List<FlowSegment> sequence = new ArrayList<>();
 			
@@ -168,7 +166,7 @@ public abstract class UseConfigurer {
 				sequence.add(c.get());
 			}
 			
-			return sequence.isEmpty() ? Optional.absent() : Optional.of(seq(sequence));
+			return sequence.isEmpty() ? Optional.empty() : Optional.of(seq(sequence));
 		}
 		
 		private static void resolveNamedDependencies(Set<UseConfigurer> all, Map<String, UseConfigurer> allMap) {

@@ -31,7 +31,6 @@ public interface DataMutation<T> {
 	T putMap(Path path, Consumer<MapMutation> map);
 	T putList(Path path, Consumer<ListMutation> list);
 
-
 	default MutableData createMapAt(PathElement element) {
 		return createMapAt(path(element));
 	}

@@ -342,6 +342,8 @@ public class MutableMemoryData implements MutableDataProvider<Object> {
 			listWriteTo((List<Object>) o, json);
 		} else if (o instanceof Content) {
 			contentWriteTo((Content) o, json);
+		} else if (o == null) {
+			json.writeNull();
 		} else {
 			throw runtime("can't write %s (%s) to json [%s]", o, o != null ? o.getClass() : "null", o != null ? o.toString() : "");
 		}

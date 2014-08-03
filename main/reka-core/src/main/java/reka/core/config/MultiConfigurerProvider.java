@@ -6,13 +6,12 @@ import static reka.api.Path.slashes;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 import reka.api.Path;
 import reka.api.flow.FlowSegment;
-
-import com.google.common.base.Optional;
 
 public class MultiConfigurerProvider implements ConfigurerProvider {
 
@@ -28,7 +27,7 @@ public class MultiConfigurerProvider implements ConfigurerProvider {
 		Function<ConfigurerProvider, Supplier<FlowSegment>> p = providers.get(typePath);
 		String typesWeCanMake = provider.types().stream().map(Path::slashes).collect(joining(", "));
 		checkNotNull(p, "don't know how to make a [%s] (we can make [%s])", typePath.slashes(), typesWeCanMake);
-		return Optional.fromNullable(p.apply(provider));
+		return Optional.ofNullable(p.apply(provider));
 	}
 
 	@Override

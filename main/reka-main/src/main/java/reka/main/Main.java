@@ -45,7 +45,7 @@ public class Main {
 			new JsonBundle());
 		
 		NavigableConfig conf = new BundleManager(defaultBundles).processor().process(ConfigParser.fromFile(file));
-		configure(new RekaConfigurer(defaultBundles), conf).build().run();
+		configure(new RekaConfigurer(file.getParentFile().toPath(), defaultBundles), conf).build().run();
 		
 	}
 

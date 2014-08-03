@@ -16,6 +16,7 @@
       <groupId>io.reka</groupId>
       <artifactId>reka-core</artifactId>
       <version>${core.version}</version>
+      <scope>provided</scope>
     </dependency>
 		<dependency>
 			<groupId>io.reka</groupId>

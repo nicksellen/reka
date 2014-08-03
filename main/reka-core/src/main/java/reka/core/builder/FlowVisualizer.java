@@ -1,6 +1,9 @@
 package reka.core.builder;
 
+import java.util.List;
+
 import reka.api.Path;
+import reka.api.data.Data;
 
 public interface FlowVisualizer {
 	
@@ -12,10 +15,11 @@ public interface FlowVisualizer {
 	}
 	
 	public static interface GraphVisualizer <T> {
-		public void node(int id, String name, NodeType type);
-		public void group(Path path, int id);
-		public void connect(int from, int to, String label, boolean optional);
-		public T build();
+		void node(int id, String name, NodeType type);
+		void group(Path path, int id);
+		void connect(int from, int to, String label, boolean optional);
+		T build();
+		void meta(int id, List<Data> metas);
 	}
 	
 }
