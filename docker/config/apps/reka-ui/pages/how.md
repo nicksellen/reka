@@ -2,4 +2,4 @@
 
 One for another day I think...
 
-(I've put a [draft document](http://reka.io/draft.html) up on the reka homepage)
+(the [main website](https://reka.io) might tell you more)

@@ -33,13 +33,13 @@ run http {
       reka/list response.content
     }
 
-    GET /apps/:appid {
+    GET /apps/:appid* {
       reka/get response.content {
         app :appid
       }
     }
     
-    GET /apps/:appid/flows/:flow*.:format {
+    GET /apps/:appid*/flows/:flow*.:format {
       reka/visualize {
         app :appid
         flow :flow
@@ -58,7 +58,7 @@ run http {
 
     named redeploy app {
 
-      PUT /apps/:appid/redeploy {
+      PUT /apps/:appid*/redeploy {
 
         reka/redeploy :appid
         
@@ -75,7 +75,7 @@ run http {
 
     named undeploy app {
   
-      DELETE /apps/:appid {
+      DELETE /apps/:appid* {
         
         reka/undeploy :appid
 
@@ -307,10 +307,19 @@ flow validate from path {
 }
 
 trigger {
-  //http api.reka {
-    run http
-  }
-  http *:5100 {
-    run http
+  @env:container {
+    when docker {
+      http api.reka {
+        run http
+      }
+      http localhost:15100 {
+        run http
+      }
+    }
+    otherwise {
+      http localhost:5100 {
+        run http
+      }
+    }
   }
 }

@@ -1,8 +1,7 @@
 package reka.test.config;
 
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static reka.api.Path.dots;
 import static reka.config.ConfigTestUtil.loadconfig;
 import static reka.configurer.Configurer.configure;
@@ -19,6 +18,7 @@ import org.junit.Test;
 import reka.api.Path.PathElement;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
+import reka.api.flow.FlowNode;
 import reka.api.flow.FlowOperation;
 import reka.api.flow.FlowSegment;
 import reka.api.run.AsyncOperation;
@@ -91,7 +91,7 @@ public class PutTest {
 		
 		configure(s, config);
 		
-		OperationSupplier<?> supplier = s.get().node().operationSupplier();
+		OperationSupplier<?> supplier = firstNode(s.get()).operationSupplier();
 		FlowOperation op = (FlowOperation) OperationSupplier.supply(supplier, Data.NONE).get();
 		if (op instanceof SyncOperation) {
 			return callSync((SyncOperation) op, input);
@@ -103,6 +103,21 @@ public class PutTest {
 		throw runtime("couldn't work out %s", op);
 	}
 	
+	private static FlowNode firstNode(FlowSegment segment) {
+		if (segment.isNode()) {
+			return segment.node();
+		} else {
+			for (FlowSegment s : segment.segments()) {
+				if (s.equals(segment)) continue;
+				FlowNode n = firstNode(s);
+				if (n != null) {
+					return n;
+				}
+			}
+		}
+		return null;
+	}
+
 	private static Data callSync(SyncOperation op, MutableData input) {
 		return op.call(input);
 	}

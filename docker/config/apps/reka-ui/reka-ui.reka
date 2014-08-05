@@ -137,6 +137,13 @@ run http {
     
     group static HTTP assets {
       GET /css/app.css @include(app.css)
+      GET /css/foundation.css @include(foundation.min.css)
+      GET /css/font-awesome.css @include(font-awesome.min.css)
+      GET /fonts/FontAwesome.otf @include(fonts/FontAwesome.otf)
+      GET /fonts/fontawesome-webfont.eot @include(fonts/fontawesome-webfont.eot)
+      GET /fonts/fontawesome-webfont.svg @include(fonts/fontawesome-webfont.svg)
+      GET /fonts/fontawesome-webfont.ttf @include(fonts/fontawesome-webfont.ttf)
+      GET /fonts/fontawesome-webfont.woff @include(fonts/fontawesome-webfont.woff)
     }
   
   }
@@ -172,13 +179,19 @@ run render layout {
 }
 
 trigger {
-
-  //http ui.reka {
-    run http
+  @env:container {
+    when docker {
+      http ui.reka {
+        run http
+      }
+      http localhost:15099 {
+        run http
+      }
+    }
+    otherwise {
+      http localhost:5099 {
+        run http
+      }
+    }
   }
-
-  http *:5099 {
-    run http
-  }
-
 }

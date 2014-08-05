@@ -4,10 +4,13 @@ app @include(apps/reka-ui/reka-ui.reka)
 app @include(apps/reka-api/reka-api.reka)
 
 app {
+
   name a small inline app
+
   use {
     http
   }
+
   flow main {
     http/router {
       GET / {
@@ -17,12 +20,21 @@ app {
       }
     }
   }
+
   trigger {
-    //http inline.reka {
-      run main
-    }
-    http localhost:5050 {
-      run main
+    @env:container {
+      when docker {
+        http inline.reka {
+          run main
+        } 
+      }
+      otherwise {
+        http localhost:5050 {
+          run main
+        }
+      }
     }
   }
+
 }
+

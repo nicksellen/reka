@@ -1,7 +1,6 @@
 package reka.core.builder;
 
 import static reka.api.Path.path;
-import static reka.api.Path.PathElements.index;
 import static reka.api.Path.PathElements.name;
 import static reka.api.Path.PathElements.nextIndex;
 

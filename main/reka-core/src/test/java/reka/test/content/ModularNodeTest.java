@@ -1,9 +1,9 @@
 package reka.test.content;
 
 import static java.util.Arrays.asList;
-import static junit.framework.Assert.fail;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 import static reka.api.Path.dots;
 import static reka.api.content.Contents.utf8;
 import static reka.core.runtime.handlers.DSL.actionHandlers;
@@ -36,7 +36,6 @@ public class ModularNodeTest {
 	
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	
-	@SuppressWarnings("deprecation")
 	@Test
 	public void test() throws InterruptedException {
 
@@ -67,7 +66,6 @@ public class ModularNodeTest {
 		}
 	}
 	
-	@SuppressWarnings("deprecation")
 	@Test
 	public void testAsync() throws InterruptedException {
 		
