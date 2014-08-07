@@ -9,6 +9,7 @@ app {
 
   use {
     http
+    reka
   }
 
   flow main {
@@ -18,13 +19,38 @@ app {
           <h1>Hello HTML World!</h1>
         ---
       }
+      POST / {
+
+        uuid/generate :uuid
+
+        unzip {
+          in request.content
+          dir /tmp/:uuid
+        }
+
+        reka/deploy {
+          filename /tmp/:uuid/main.reka
+        }
+
+        reka/get response.content.details {
+          app :identity
+        }
+
+        putv response {
+          status 200
+          content {
+            id :identity
+            message :identity was deployed!
+          }
+        }
+      }
     }
   }
 
   trigger {
     @env:container {
       when docker {
-        http inline.reka {
+        http hello.reka {
           run main
         } 
       }

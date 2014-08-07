@@ -1,7 +1,7 @@
 name=reka
 image=nicksellen/${name}
 
-runlocal:
+runlocal: copy
 
 	@java \
 		-jar reka-main.jar \
@@ -11,7 +11,7 @@ runlocal:
 copy: 
 
 	@echo "Removing existing bundles dir"
-	@rm -rf config/bundles
+	@sudo rm -rf config/bundles
 
 	@mkdir config/bundles
 

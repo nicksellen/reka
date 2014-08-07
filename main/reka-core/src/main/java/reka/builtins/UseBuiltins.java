@@ -94,6 +94,8 @@ public class UseBuiltins extends UseConfigurer {
     	init.operation("coerce/int64", () -> new Coercion.CoerceLongConfigurer());
     	init.operation("coerce/bool", () -> new Coercion.CoerceBooleanConfigurer());
     	
+    	init.operation("unzip", () -> new UnzipConfigurer());
+    	
 		init.trigger(Path.path("every"), () -> new TimerExport());
 		
 	}
