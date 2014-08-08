@@ -44,7 +44,7 @@ public class NashornRunOperation implements SyncOperation {
 	public MutableData call(MutableData data) {
 		
 		Map<String,Object> m = new HashMap<>();
-		m.put("data", data.toMap());
+		m.put("data", data.viewAsMap());
 		m.put("out", new HashMap<>());
 		
 		Object outval = runner.get().run(compiled.get(), m).get("out");

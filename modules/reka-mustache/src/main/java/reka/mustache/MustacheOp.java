@@ -27,7 +27,7 @@ public class MustacheOp implements SyncOperation {
 	@Override
 	public MutableData call(MutableData data) {
 		StringWriter writer = new StringWriter();
-		mustache.execute(writer, data.at(in).toMap());
+		mustache.execute(writer, data.at(in).viewAsMap());
 		data.putString(out, writer.toString());
 		return data;
 	}

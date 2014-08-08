@@ -3,7 +3,8 @@ image=nicksellen/${name}
 
 runlocal: copy
 
-	@java \
+	@REKA_ENV=development java \
+		-Dlog4j.configurationFile=../main/reka-main/log4j2-errors-only.xml \
 		-jar reka-main.jar \
 		config/main.reka
 

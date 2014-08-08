@@ -1,5 +1,6 @@
 package reka.api.data;
 
+import static com.google.common.base.Preconditions.checkState;
 import static reka.api.Path.path;
 import static reka.api.Path.root;
 import static reka.api.data.DataUtils.dataIsEqual;
@@ -13,6 +14,7 @@ import static reka.util.Util.unsupported;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -185,6 +187,20 @@ public interface Data extends Iterable<Entry<PathElement,Data>>, JsonProvider, O
 	default <T extends MutableData> T copyTo(T data) {
 		forEachContent((path, content) -> data.put(path, content));
 		return data;
+	}
+	
+	default Object view() {
+		return DataViewUtil.convert(this);
+	}
+	
+	default Map<String,Object> viewAsMap() {
+		checkState(isMap(), "not a map");
+		return new DataMapView(this);
+	}
+	
+	default List<Object> viewAsList() {
+		checkState(isMap(), "not a list");
+		return new DataListView(this);
 	}
 
 	Map<String, Object> toMap();

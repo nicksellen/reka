@@ -28,8 +28,8 @@ public class Jade implements SyncOperation {
 	public MutableData call(MutableData data) {
 		if (mainResponse) data.putString(Response.Headers.CONTENT_TYPE, "text/html");
 		StringWriter writer = new StringWriter();
-        JadeModel model = new JadeModel(Collections.emptyMap());
-        model.putAll(data.at(inputPath).toMap());
+        JadeModel model = new JadeModel(data.at(inputPath).viewAsMap());
+        //model.putAll(data.at(inputPath).viewAsMap());
         template.process(model, writer);
 	    return data.putString(outputPath, writer.toString());
 	}

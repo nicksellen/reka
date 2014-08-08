@@ -198,11 +198,13 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 		
 		try {
 			
+			/*
 			if (!redeploy && applications.containsKey(identity)) {
 				subscriber.error(Data.NONE, runtime("we already have a deployment of %s", identity));
 				lock.unlock(stamp);
 				return;
 			}
+			*/
 			
 			Application previous = applications.get(identity);
 			

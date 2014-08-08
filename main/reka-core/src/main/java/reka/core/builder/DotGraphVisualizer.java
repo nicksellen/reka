@@ -140,14 +140,11 @@ public class DotGraphVisualizer implements GraphVisualizer<String> {
 	}
 	
 	private String labelFor(Connection connection) {
-		return null;
-		/*
 		if (connection.name != null && !connection.name.isEmpty()) {
 			return connection.name;
 		} else {
 			return null;
 		}
-		*/
 	}
 
 	private String indent(int depth) {

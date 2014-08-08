@@ -24,11 +24,12 @@ public class RekaDeployFromFileOperation implements AsyncOperation {
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	
 	private final ApplicationManager manager;
-	private final Function<Data,String> filenameFn;
+	private final Function<Data,String> filenameFn, identityFn;
 	
-	public RekaDeployFromFileOperation(ApplicationManager manager, Function<Data,String> filenameFn) {
+	public RekaDeployFromFileOperation(ApplicationManager manager, Function<Data,String> filenameFn, Function<Data,String> identityFn) {
 		this.manager = manager;
 		this.filenameFn = filenameFn;
+		this.identityFn = identityFn;
 	}
 	
 	@Override
@@ -36,11 +37,8 @@ public class RekaDeployFromFileOperation implements AsyncOperation {
 
 		SettableFuture<MutableData> result = SettableFuture.create();
 		
-		//String identity = UUID.randomUUID().toString();
-		
 		String filename = filenameFn.apply(data);
-		
-		String identity = new File(filename.replaceFirst("\\.reka$", "")).toPath().getFileName().toString();
+		String identity = identityFn.apply(data);
 
 		data.putString("identity", identity);
 		

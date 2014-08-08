@@ -1,0 +1,88 @@
+
+
+name newapi
+
+use {
+  http
+  reka
+  filesystem fs {
+    dir /
+  }
+}
+
+flow main {
+  http/router {
+    GET /apps {
+      reka/list response.content
+    }
+    GET /apps/:appid* {
+      reka/get response.content {
+        app :appid
+      }
+    }
+    GET /apps/:appid*/flows/:flow*.:format {
+      reka/visualize {
+        app :appid
+        flow :flow
+        format :format
+      }
+    }
+    POST /apps/:identity* {
+      fs/mktmpdir tmpdir
+      unzip {
+        data request.content
+        out :tmpdir
+      }
+      fs/type :tmpdir/main.reka {
+        when file {
+          reka/deploy {
+            identity :identity
+            filename :tmpdir/main.reka
+          }
+          put response {
+            status 200
+            content running
+          }
+        }
+        when dir {
+          putv response {
+            status 400
+            content main.reka should be a file
+          }            
+        }
+        when missing {
+          putv response {
+            status 400
+            content missing main.reka
+          }            
+        }
+      }
+      fs/rm :tmpdir 
+    }
+    named undeploy app {
+      DELETE /apps/:identity* {
+        reka/undeploy :identity
+        putv response {
+          status 200
+          content removed
+        }
+      }
+    }
+  }
+}
+
+trigger {
+  @env:container {
+    when docker {
+      http newapi.reka {
+        run main
+      } 
+    }
+    otherwise {
+      http localhost:5101 {
+        run main
+      }
+    }
+  }
+}
+
