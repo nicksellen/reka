@@ -24,27 +24,27 @@ public class UnzipOperation implements SyncOperation {
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	
-	private final Function<Data,Path> inFn;
+	private final Function<Data,Path> dataPathFn;
 	private final Function<Data,java.nio.file.Path> outputDirFn;
 	
-	public UnzipOperation(Function<Data,Path> inFn, Function<Data,java.nio.file.Path> outputDirFn) {
-		this.inFn = inFn;
+	public UnzipOperation(Function<Data,Path> dataPathFn, Function<Data,java.nio.file.Path> outputDirFn) {
+		this.dataPathFn = dataPathFn;
 		this.outputDirFn = outputDirFn;
 	}
 	
 	@Override
 	public MutableData call(MutableData data) {
-		Path in = inFn.apply(data);
+		Path dataPath = dataPathFn.apply(data);
 		java.nio.file.Path outputDir = outputDirFn.apply(data);
 		
-		Data val = data.at(in);
+		Data val = data.at(dataPath);
 		
 		if (!val.isPresent()) {
-			throw runtime("no data at %s", in.dots());
+			throw runtime("no data at %s", dataPath.dots());
 		}
 		
 		if (!val.isContent()) {
-			throw runtime("not content at %s", in.dots());
+			throw runtime("not content at %s", dataPath.dots());
 		}
 		
 		try {

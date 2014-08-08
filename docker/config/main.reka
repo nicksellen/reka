@@ -10,6 +10,9 @@ app {
   use {
     http
     reka
+    filesystem fs {
+      dir /
+    }
   }
 
   flow main {
@@ -21,28 +24,63 @@ app {
       }
       POST / {
 
-        uuid/generate :uuid
+        //uuid/generate :uuid
+
+        fs/mktmpdir tmpdir
 
         unzip {
-          in request.content
-          dir /tmp/:uuid
+          data request.content
+          out :tmpdir
         }
 
-        reka/deploy {
-          filename /tmp/:uuid/main.reka
-        }
+        fs/type :tmpdir/main.reka {
 
-        reka/get response.content.details {
-          app :identity
-        }
+          when file {
 
-        putv response {
-          status 200
-          content {
-            id :identity
-            message :identity was deployed!
+            reka/deploy {
+              filename :tmpdir/main.reka
+            }
+
+            reka/get response.content.details {
+              app :identity
+            }
+
+            putv response {
+              status 200
+              content {
+                id :identity
+                message :identity was deployed!
+              }
+            }
+
           }
+
+          when dir {
+
+            putv response {
+              status 400
+              content {
+                message main.reka must be a file
+              }
+            }            
+
+          }
+
+          when missing {
+
+            putv response {
+              status 400
+              content {
+                message project must have main.reka
+              }
+            }            
+
+          }
+
         }
+
+        fs/rm :tmpdir
+        
       }
     }
   }
@@ -50,7 +88,7 @@ app {
   trigger {
     @env:container {
       when docker {
-        http hello.reka {
+        http newapi.reka {
           run main
         } 
       }

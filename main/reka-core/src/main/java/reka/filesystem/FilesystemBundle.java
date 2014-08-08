@@ -8,6 +8,7 @@ import static reka.core.builder.FlowSegments.sequential;
 import static reka.core.builder.FlowSegments.sync;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -74,6 +75,7 @@ public class FilesystemBundle implements RekaBundle {
 			this.basedir = basedir;
 		}
 		
+		@Conf.Val
 		@Conf.At("filename")
 		public void filename(String val) {
 			filenameFn = StringWithVars.compile(val);
@@ -110,6 +112,22 @@ public class FilesystemBundle implements RekaBundle {
 		@Override
 		public FlowSegment get() {
 			return sync("files/list", () -> new FilesystemList(basedir, dataPathFn, dirFn));
+		}
+		
+	}
+	
+	public static class FilesystemMktmpDirConfigurer implements Supplier<FlowSegment> {
+		
+		private reka.api.Path dirname = path("tmpdir");
+		
+		@Conf.Val
+		public void data(String val) {
+			dirname = dots(val);
+		}
+		
+		@Override
+		public FlowSegment get() {
+			return sync("files/mktmpdir", () -> new FilesystemMktempDir(dirname));
 		}
 		
 	}

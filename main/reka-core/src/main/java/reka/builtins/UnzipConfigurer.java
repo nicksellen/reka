@@ -15,22 +15,22 @@ import reka.core.util.StringWithVars;
 
 public class UnzipConfigurer implements Supplier<FlowSegment> {
 
-	private Function<Data,Path> inFn;
+	private Function<Data,Path> dataPathFn;
 	private Function<Data,java.nio.file.Path> outputDirFn;
 	
-	@Conf.At("in")
+	@Conf.At("data")
 	public void in(String val) {
-		inFn = StringWithVars.compile(val).andThen(v -> dots(v));
+		dataPathFn = StringWithVars.compile(val).andThen(v -> dots(v));
 	}
 	
-	@Conf.At("dir")
+	@Conf.At("out")
 	public void out(String val) {
 		outputDirFn = StringWithVars.compile(val).andThen(s -> new File(s).toPath());
 	}
 	
 	@Override
 	public FlowSegment get() {
-		return sync("unzip", () -> new UnzipOperation(inFn, outputDirFn));
+		return sync("unzip", () -> new UnzipOperation(dataPathFn, outputDirFn));
 	}
 
 }
