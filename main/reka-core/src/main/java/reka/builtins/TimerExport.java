@@ -73,7 +73,7 @@ public class TimerExport implements TriggerConfigurer, ErrorReporter {
 					}
 				
 				});
-			}, 0, ms, TimeUnit.MILLISECONDS);	
+			}, ms, ms, TimeUnit.MILLISECONDS);	
 		});
 		
 	}

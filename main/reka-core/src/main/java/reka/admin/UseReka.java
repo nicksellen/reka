@@ -1,5 +1,6 @@
 package reka.admin;
 
+import static reka.api.Path.path;
 import static reka.util.Util.runtime;
 
 import java.util.Optional;
@@ -35,13 +36,13 @@ public class UseReka extends UseConfigurer {
 
 	@Override
 	public void setup(UseInit use) {
-		use.operation("list", () -> new RekaListConfigurer(manager));
-		use.operation("get", () -> new RekaDetailsConfigurer(manager));
-		use.operation("validate", (provider) -> new RekaValidateConfigurer(provider, manager));
-		use.operation("deploy", () -> new RekaDeployConfigurer(manager));
-		use.operation("undeploy", () -> new RekaUndeployConfigurer(manager));
-		use.operation("redeploy", () -> new RekaRedeployConfigurer(manager));
-		use.operation("visualize", () -> new RekaVisualizeConfigurer(manager));
+		use.operation(path("list"), () -> new RekaListConfigurer(manager));
+		use.operation(path("get"), () -> new RekaDetailsConfigurer(manager));
+		use.operation(path("validate"), (provider) -> new RekaValidateConfigurer(provider, manager));
+		use.operation(path("deploy"), () -> new RekaDeployConfigurer(manager));
+		use.operation(path("undeploy"), () -> new RekaUndeployConfigurer(manager));
+		use.operation(path("redeploy"), () -> new RekaRedeployConfigurer(manager));
+		use.operation(path("visualize"), () -> new RekaVisualizeConfigurer(manager));
 	}
 	
 	static String getConfigStringFromData(Data data, Path in) {

@@ -2,6 +2,7 @@ package reka.http;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static reka.api.Path.path;
 import static reka.api.Path.root;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import static reka.core.builder.FlowSegments.sync;
@@ -51,8 +52,8 @@ public class UseWebsockets extends UseConfigurer {
 
 	@Override
 	public void setup(UseInit init) {
-		init.operation("send", () -> new WebsocketSendConfigurer());
-		init.operation("broadcast", () -> new WebsocketBroadcastConfigurer());
+		init.operation(path("send"), () -> new WebsocketSendConfigurer());
+		init.operation(path("broadcast"), () -> new WebsocketBroadcastConfigurer());
 		init.trigger(root(), () -> new WebsocketsTriggerConfigurer());
 	}
 

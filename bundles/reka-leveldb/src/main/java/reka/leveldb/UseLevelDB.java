@@ -1,6 +1,7 @@
 package reka.leveldb;
 
 import static reka.api.Path.dots;
+import static reka.api.Path.path;
 import static reka.core.builder.FlowSegments.sync;
 
 import java.util.function.Function;
@@ -21,11 +22,11 @@ import com.google.common.base.Charsets;
 
 public class UseLevelDB extends UseConfigurer {
 
-	private String path;
+	private String dbfile;
 	
 	@Conf.At("db")
-	public void path(String val) {
-		path = val;
+	public void dbfile(String val) {
+		dbfile = val;
 	}
 	
 	@Override
@@ -34,13 +35,13 @@ public class UseLevelDB extends UseConfigurer {
 		Path dbPath = use.path().add("db");
 		
 		use.run("open or create db", (data) ->  {
-			LevelDBStorage db = new LevelDBStorage(path);
+			LevelDBStorage db = new LevelDBStorage(dbfile);
 			data.put(dbPath, Contents.nonSerializableContent(db));
 			return data;
 		});
 		
-		use.operation("put", () -> new PutConfigurer(dbPath));
-		use.operation("get", () -> new GetConfigurer(dbPath));
+		use.operation(path("put"), () -> new PutConfigurer(dbPath));
+		use.operation(path("get"), () -> new GetConfigurer(dbPath));
 		
 	}
 	

@@ -17,9 +17,9 @@ import reka.config.NavigableConfig;
 import reka.config.parser.ConfigParser;
 import reka.core.bundle.BundleManager;
 import reka.core.bundle.RekaBundle;
-import reka.external.ExternalProcessBundle;
 import reka.filesystem.FilesystemBundle;
 import reka.nashorn.NashornBundle;
+import reka.process.ProcessBundle;
 
 public class Main {
 
@@ -43,7 +43,7 @@ public class Main {
 			new BuiltinsBundle(), 
 			new FilesystemBundle(),
 			new NashornBundle(),
-			new ExternalProcessBundle(),
+			new ProcessBundle(),
 			new JsonBundle());
 		
 		NavigableConfig conf = new BundleManager(defaultBundles).processor().process(ConfigParser.fromFile(file));

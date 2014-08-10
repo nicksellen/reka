@@ -1,0 +1,31 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                      http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>io.reka</groupId>
+  <artifactId>modules</artifactId>
+  <version>0.1.0</version>
+  <packaging>pom</packaging>
+
+  <modules>
+    <module>reka-chronicle</module>
+    <module>reka-clojure</module>
+    <module>reka-command</module>
+    <module>reka-elasticsearch</module>
+    <module>reka-git</module>
+    <module>reka-gitfordata</module>
+    <module>reka-hazelcast</module>
+    <module>reka-http</module>
+    <module>reka-jade</module>
+    <module>reka-jdbc</module>
+    <module>reka-jruby</module>
+    <module>reka-leveldb</module>
+    <module>reka-mustache</module>
+    <module>reka-rhino</module>
+    <module>reka-smtp</module>
+    <module>reka-twilio</module>
+    <module>reka-validation</module>
+  </modules>
+</project>

@@ -9,6 +9,14 @@ runlocal: copy
 		-jar reka-main.jar \
 		config/main.reka
 
+runlocalnolog: copy
+
+	@rm -rf data
+
+	@REKA_ENV=development java \
+		-Dlog4j.configurationFile=../main/reka-main/log4j2-errors-only.xml \
+		-jar reka-main.jar \
+		config/main.reka
 
 copy: 
 

@@ -4,7 +4,9 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static reka.api.Path.dots;
+import static reka.api.Path.path;
 import static reka.api.Path.root;
+import static reka.api.Path.slashes;
 import static reka.api.content.Contents.binary;
 import static reka.api.content.Contents.utf8;
 import static reka.config.configurer.Configurer.configure;
@@ -73,30 +75,30 @@ public class UseBuiltins extends UseConfigurer {
 	@Override
 	public void setup(UseInit init) {
 		
-		init.operation(asList("set", "put", "+"), () -> new PutConfigurer());
-		init.operation(asList("putvars", "putv"), () -> new PutWithVarsConfigurer());
-		init.operation(asList("copy", "cp"), () -> new CopyConfigurer());
-    	init.operation(asList("run", "then"), (provider) -> new RunConfigurer(provider));
-    	init.operation("run/parallel", (provider) -> new RunParallelConfigurer(provider));
-    	init.operation("log", () -> new LogConfigurer());
-    	init.operation("label", (provider) -> new LabelConfigurer(provider));
-    	init.operation("stringwithvariables", () -> new StringWithVariablesConfigurer());
-    	init.operation("sleep", () -> new SleepConfigurer());
-    	init.operation("halt!", () -> new HaltConfigurer());
-    	init.operation("uuid/generate", () -> new GenerateUUIDConfigurer());
-    	init.operation("println", () -> new PrintlnConfigurer());
-    	init.operation("bcrypt/hashpw", () -> new BCryptHashpwConfigurer());
-    	init.operation("bcrypt/checkpw", (provider) -> new BCryptCheckpwConfigurer(provider));
-    	init.operation("throw", () -> new ThrowConfigurer());
-    	init.operation("inspect", () -> new InspectConfigurer());
-    	init.operation("random/string", () -> new RandomStringConfigurer());
-    	init.operation("coerce", () -> new Coercion.CoerceConfigurer());
-    	init.operation("coerce/int64", () -> new Coercion.CoerceLongConfigurer());
-    	init.operation("coerce/bool", () -> new Coercion.CoerceBooleanConfigurer());
+		init.operation(path("put"), () -> new PutConfigurer());
+		init.operation(path("putv"), () -> new PutWithVarsConfigurer());
+		init.operation(path("copy"), () -> new CopyConfigurer());
+    	init.operation(asList(path("run"), path("then")), (provider) -> new RunConfigurer(provider));
+    	init.operation(slashes("run/parallel"), (provider) -> new RunParallelConfigurer(provider));
+    	init.operation(path("log"), () -> new LogConfigurer());
+    	init.operation(path("label"), (provider) -> new LabelConfigurer(provider));
+    	init.operation(path("stringwithvariables"), () -> new StringWithVariablesConfigurer());
+    	init.operation(path("sleep"), () -> new SleepConfigurer());
+    	init.operation(path("halt!"), () -> new HaltConfigurer());
+    	init.operation(slashes("uuid/generate"), () -> new GenerateUUIDConfigurer());
+    	init.operation(path("println"), () -> new PrintlnConfigurer());
+    	init.operation(slashes("bcrypt/hashpw"), () -> new BCryptHashpwConfigurer());
+    	init.operation(path("bcrypt/checkpw"), (provider) -> new BCryptCheckpwConfigurer(provider));
+    	init.operation(path("throw"), () -> new ThrowConfigurer());
+    	init.operation(path("inspect"), () -> new InspectConfigurer());
+    	init.operation(path("random/string"), () -> new RandomStringConfigurer());
+    	init.operation(path("coerce"), () -> new Coercion.CoerceConfigurer());
+    	init.operation(slashes("coerce/int64"), () -> new Coercion.CoerceLongConfigurer());
+    	init.operation(slashes("coerce/bool"), () -> new Coercion.CoerceBooleanConfigurer());
     	
-    	init.operation("unzip", () -> new UnzipConfigurer());
+    	init.operation(path("unzip"), () -> new UnzipConfigurer());
     	
-		init.trigger(Path.path("every"), () -> new TimerExport());
+		init.trigger(path("every"), () -> new TimerExport());
 		
 	}
 	

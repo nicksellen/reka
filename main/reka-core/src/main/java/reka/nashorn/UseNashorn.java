@@ -2,6 +2,7 @@ package reka.nashorn;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static reka.api.Path.path;
 import static reka.api.Path.root;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 
@@ -51,7 +52,7 @@ public class UseNashorn extends UseConfigurer {
 			
 		};
 		
-		init.operation(asList("run", ""), () -> new NashornRunConfigurer(runner, root()));
+		init.operation(asList(path("run"), root()), () -> new NashornRunConfigurer(runner, root()));
 	}
 
 }

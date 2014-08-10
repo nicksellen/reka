@@ -1,5 +1,6 @@
 package reka.validation;
 
+import static reka.api.Path.path;
 import static reka.config.configurer.Configurer.configure;
 
 import java.util.ArrayList;
@@ -21,7 +22,7 @@ public class UseValidator extends UseConfigurer {
 
 	@Override
 	public void setup(UseInit init) {
-    	init.operation("validate", (provider) -> new ValidateConfigurer(provider, rules));
+    	init.operation(path("validate"), (provider) -> new ValidateConfigurer(provider, rules));
 	}
 
 }

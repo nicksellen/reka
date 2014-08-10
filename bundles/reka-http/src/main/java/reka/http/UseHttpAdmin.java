@@ -1,6 +1,7 @@
 package reka.http;
 
 import static reka.api.Path.dots;
+import static reka.api.Path.path;
 import static reka.core.builder.FlowSegments.sync;
 
 import java.util.Map.Entry;
@@ -25,7 +26,7 @@ public class UseHttpAdmin extends UseConfigurer {
 	
 	@Override
 	public void setup(UseInit use) {
-		use.operation("list", () -> new ListConfigurer());
+		use.operation(path("list"), () -> new ListConfigurer());
 	}
 	
 	class ListConfigurer implements Supplier<FlowSegment> {

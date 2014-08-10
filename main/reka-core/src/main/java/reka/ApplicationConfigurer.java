@@ -93,6 +93,7 @@ public class ApplicationConfigurer implements ErrorReporter {
     
     @Conf.EachUnmatched
     public void useModule(Config config) {
+    	log.info("setting up module {} {}", config.key(), config.hasValue() ? config.valueAsString() : "<unnamed>");
     	rootUse.useThisConfig(config);
     }
     

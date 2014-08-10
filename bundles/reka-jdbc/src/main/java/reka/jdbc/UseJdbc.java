@@ -3,6 +3,8 @@ package reka.jdbc;
 import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.util.Arrays.asList;
+import static reka.api.Path.path;
+import static reka.api.Path.root;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import static reka.core.config.ConfigUtils.configToData;
 import static reka.util.Util.unchecked;
@@ -120,8 +122,8 @@ public class UseJdbc extends UseConfigurer {
 		
 		Path poolPath = use.path().add("pool");
 		
-		use.operation(asList("query", "q", ""), () -> new JdbcQueryConfigurer(config, jdbc));
-		use.operation("insert", () -> new JdbcInsertConfigurer(jdbc));
+		use.operation(asList(path("query"), path("q"), root()), () -> new JdbcQueryConfigurer(config, jdbc));
+		use.operation(path("insert"), () -> new JdbcInsertConfigurer(jdbc));
 
 		if (!migrations.isEmpty()) {
 		

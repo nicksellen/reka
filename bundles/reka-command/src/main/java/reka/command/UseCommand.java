@@ -1,5 +1,7 @@
 package reka.command;
 
+import static reka.api.Path.root;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,7 +35,7 @@ public class UseCommand extends UseConfigurer {
 	
 	@Override
 	public void setup(UseInit init) {
-		init.operation("", () -> new RunCommandConfigurer(exec, args));
+		init.operation(root(), () -> new RunCommandConfigurer(exec, args));
 	}
 
 }

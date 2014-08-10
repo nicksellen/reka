@@ -1,2 +1,9 @@
 **/target
 **/*.jar
+**/dependency-reduced-pom.xml
+**/.reka
+**/.classpath
+**/.settings
+**/.project
+**/*.log
+**/*.iml

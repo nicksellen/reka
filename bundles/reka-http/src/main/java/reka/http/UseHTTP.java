@@ -3,6 +3,7 @@ package reka.http;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static reka.api.Path.path;
 import static reka.api.Path.root;
 import static reka.config.configurer.Configurer.configure;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
@@ -119,10 +120,10 @@ public class UseHTTP extends UseConfigurer {
 	@Override
 	public void setup(UseInit http) {
 		
-		http.operation("router", (provider) -> new HttpRouterConfigurer(provider));
-		http.operation("redirect", () -> new HttpRedirectConfigurer());
-		http.operation("content", () -> new HttpContentConfigurer());
-		http.operation(asList("request", "req"), () -> new HttpRequestConfigurer(server.group()));
+		http.operation(path("router"), (provider) -> new HttpRouterConfigurer(provider));
+		http.operation(path("redirect"), () -> new HttpRedirectConfigurer());
+		http.operation(path("content"), () -> new HttpContentConfigurer());
+		http.operation(asList(path("request"), path("req")), () -> new HttpRequestConfigurer(server.group()));
 		http.trigger(root(), () -> new HTTPTriggerConfigurer());
 		
 		for (Function<ConfigurerProvider, Supplier<FlowSegment>> h : requestHandlers) {

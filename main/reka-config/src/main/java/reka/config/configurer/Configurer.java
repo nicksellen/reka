@@ -584,17 +584,19 @@ public class Configurer {
 		@Override
 		public void apply(ConfigOrNavigableConfig config, Object instance, Status status) {
 		    if (config.hasBody()) {
+		    	Set<String> newlymatched = new HashSet<>();
     			for (Config child : config.body()) {
     				if (!status.matchedKeys.contains(child.key())) {
     					try {
         					checkDeprecation(method, child);
-        					status.matchedKeys.add(child.key()); // it is matched now
+        					newlymatched.add(child.key());
     						method.invoke(instance, child);
 		                } catch (Throwable t) {
 							throw asInvalidConfigurationException(child, t);
 		                }
     				}
     		    }
+    			status.matchedKeys.addAll(newlymatched); // they are matched now :)
 		    }
 		}
 

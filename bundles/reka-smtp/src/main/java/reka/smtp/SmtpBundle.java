@@ -83,7 +83,7 @@ public class SmtpBundle implements RekaBundle {
 
 		@Override
 		public void setup(UseInit init) {
-			init.operation("send", () -> new SMTPSendConfigurer(host, port, username, password));
+			init.operation(path("send"), () -> new SMTPSendConfigurer(host, port, username, password));
 			init.trigger(root(), () -> new SMTPTriggerThing());
 		}
 		

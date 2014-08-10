@@ -1,6 +1,6 @@
 package reka.clojure;
 
-import static java.util.Arrays.asList;
+import static reka.api.Path.root;
 import static reka.util.Util.unchecked;
 
 import java.io.StringReader;
@@ -43,7 +43,7 @@ public class UseClojure extends UseConfigurer {
 			return data;
 		});
 		
-		init.operation(asList(""), () -> new ClojureRunConfigurer());
+		init.operation(root(), () -> new ClojureRunConfigurer());
 	}
 	
 }

@@ -157,26 +157,26 @@ public class UseInit {
 		shutdownHandlers.add(handler);
 	}
 	
-	public UseInit operation(String name, Supplier<Supplier<FlowSegment>> supplier) {
-		providers.put(toPath(name), (provider) -> supplier.get());
+	public UseInit operation(Path name, Supplier<Supplier<FlowSegment>> supplier) {
+		providers.put(path.add(name), (provider) -> supplier.get());
 		return this;
 	}
 	
-	public UseInit operation(String name, Function<ConfigurerProvider,Supplier<FlowSegment>> provider) {
-		providers.put(toPath(name), provider);
+	public UseInit operation(Path name, Function<ConfigurerProvider,Supplier<FlowSegment>> provider) {
+		providers.put(path.add(name), provider);
 		return this;
 	}
 
-	public UseInit operation(Iterable<String> names, Supplier<Supplier<FlowSegment>> supplier) {
+	public UseInit operation(Iterable<Path> names, Supplier<Supplier<FlowSegment>> supplier) {
 		Function<ConfigurerProvider,Supplier<FlowSegment>> provider = (p) -> supplier.get();
-		for (String name : names) {
+		for (Path name : names) {
 			operation(name, provider);
 		}
 		return this;
 	}
 
-	public UseInit operation(Iterable<String> names, Function<ConfigurerProvider,Supplier<FlowSegment>> provider) {
-		for (String name : names) {
+	public UseInit operation(Iterable<Path> names, Function<ConfigurerProvider,Supplier<FlowSegment>> provider) {
+		for (Path name : names) {
 			operation(name, provider);
 		}
 		return this;

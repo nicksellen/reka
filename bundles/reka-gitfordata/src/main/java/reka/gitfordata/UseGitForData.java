@@ -1,6 +1,7 @@
 package reka.gitfordata;
 
 import static reka.api.Path.dots;
+import static reka.api.Path.path;
 import static reka.api.Path.root;
 import static reka.api.Path.slashes;
 import static reka.api.content.Contents.nonSerializableContent;
@@ -88,11 +89,11 @@ public class UseGitForData extends UseConfigurer {
 			return data;
 		});
 		
-		init.operation("put", () -> new PutConfigurer(branchPath));
-		init.operation("delete", () -> new DeleteConfigurer(branchPath));
-		init.operation("get", () -> new GetConfigurer(branchPath));
-		init.operation("keys", () -> new KeysConfigurer(branchPath));
-		init.operation("list", () -> new ListConfigurer(branchPath));
+		init.operation(path("put"), () -> new PutConfigurer(branchPath));
+		init.operation(path("delete"), () -> new DeleteConfigurer(branchPath));
+		init.operation(path("get"), () -> new GetConfigurer(branchPath));
+		init.operation(path("keys"), () -> new KeysConfigurer(branchPath));
+		init.operation(path("list"), () -> new ListConfigurer(branchPath));
 	}
 	
 	public static DataRepoBranch branch(Data data, Path branchPath) {

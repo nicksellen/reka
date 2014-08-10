@@ -34,7 +34,7 @@ public class JsonBundle implements RekaBundle {
 
 		@Override
 		public void setup(UseInit init) {
-			init.operation("parse", () -> new JsonParseConfigurer());
+			init.operation(Path.path("parse"), () -> new JsonParseConfigurer());
 		}
 		
 	}

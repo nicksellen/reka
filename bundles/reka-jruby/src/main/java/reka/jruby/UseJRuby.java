@@ -1,6 +1,8 @@
 package reka.jruby;
 
 import static java.util.Arrays.asList;
+import static reka.api.Path.path;
+import static reka.api.Path.root;
 import static reka.api.content.Contents.nonSerializableContent;
 
 import org.jruby.embed.LocalContextScope;
@@ -45,7 +47,7 @@ public class UseJRuby extends UseConfigurer {
 			return data;
 		});
 		
-		init.operation(asList("run", ""), () -> new JRubyRunConfigurer(runtimePath, init.path()));
+		init.operation(asList(path("run"), root()), () -> new JRubyRunConfigurer(runtimePath, init.path()));
 		
 	}
 	

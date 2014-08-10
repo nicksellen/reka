@@ -21,8 +21,6 @@ import reka.core.bundle.UseConfigurer;
 import reka.core.bundle.UseInit;
 
 public class HazelcastBundle implements RekaBundle {
-	
-	// TODO: what?? this is totally wrong, put needs to put to hazelcast, what does it mean?
 
 	public void setup(BundleSetup setup) {
 		setup.use(path("hazelcast"), () -> new UseHazelcast());
@@ -32,7 +30,7 @@ public class HazelcastBundle implements RekaBundle {
 
 		@Override
 		public void setup(UseInit init) {
-			init.operation("put", () -> new PutConfigurer());
+			init.operation(path("put"), () -> new PutConfigurer());
 		}
 		
 	}

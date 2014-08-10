@@ -3,6 +3,8 @@ package reka.elasticsearch;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.elasticsearch.node.NodeBuilder.nodeBuilder;
+import static reka.api.Path.path;
+import static reka.api.Path.root;
 import static reka.api.content.Contents.nonSerializableContent;
 import static reka.util.Util.runtime;
 
@@ -153,8 +155,8 @@ public class UseElasticsearch extends UseConfigurer {
 			
 		});
 
-		use.operation(asList("query", "q", ""), () -> new ElasticsearchQueryConfigurer(clientRef));
-		use.operation(asList("index"), () -> new ElasticsearchIndexConfigurer(clientRef));
+		use.operation(asList(path("query"), path("q"), root()), () -> new ElasticsearchQueryConfigurer(clientRef));
+		use.operation(path("index"), () -> new ElasticsearchIndexConfigurer(clientRef));
 		
 	}
 	

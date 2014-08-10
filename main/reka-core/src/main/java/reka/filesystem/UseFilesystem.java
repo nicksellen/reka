@@ -1,6 +1,7 @@
 package reka.filesystem;
 
 import static java.util.Arrays.asList;
+import static reka.api.Path.path;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -25,13 +26,13 @@ public class UseFilesystem extends UseConfigurer {
 
 	@Override
 	public void setup(UseInit init) {
-		init.operation("write", () -> new FilesystemWriteConfigurer(basedir));
-		init.operation("read", () -> new FilesystemReadConfigurer(basedir));
-		init.operation(asList("list", "ls"), () -> new FilesystemListConfigurer(basedir));
-		init.operation(asList("mktmpdir"), () -> new FilesystemMktmpDirConfigurer());
-		init.operation(asList("delete", "rm"), () -> new FilesystemDeleteConfigurer(basedir));
-		init.operation(asList("resolve", "expand", "full-path"), () -> new FilesystemResolveConfigurer(basedir));
-		init.operation(asList("type", "switch"), (provider) -> new FilesystemTypeConfigurer(provider, basedir));
+		init.operation(path("write"), () -> new FilesystemWriteConfigurer(basedir));
+		init.operation(path("read"), () -> new FilesystemReadConfigurer(basedir));
+		init.operation(asList(path("list"), path("ls")), () -> new FilesystemListConfigurer(basedir));
+		init.operation(asList(path("mktmpdir")), () -> new FilesystemMktmpDirConfigurer());
+		init.operation(asList(path("delete"), path("rm")), () -> new FilesystemDeleteConfigurer(basedir));
+		init.operation(asList(path("resolve"), path("expand"), path("full-path")), () -> new FilesystemResolveConfigurer(basedir));
+		init.operation(asList(path("type"), path("switch")), (provider) -> new FilesystemTypeConfigurer(provider, basedir));
 	}
 	
 }

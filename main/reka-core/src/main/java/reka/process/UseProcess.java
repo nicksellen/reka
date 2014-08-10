@@ -1,6 +1,7 @@
-package reka.external;
+package reka.process;
 
 import static java.util.Arrays.asList;
+import static reka.api.Path.root;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import static reka.core.builder.FlowSegments.async;
 import static reka.util.Util.createEntry;
@@ -8,12 +9,15 @@ import static reka.util.Util.runtime;
 import static reka.util.Util.unchecked;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Map.Entry;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -42,7 +46,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 
 
-public class UseExternal extends UseConfigurer {
+public class UseProcess extends UseConfigurer {
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	
@@ -67,10 +71,12 @@ public class UseExternal extends UseConfigurer {
 		}
 	}
 
-	public static class ProcessManager {
+	public static class SimpleProcessManager implements ProcessManager {
 
 		private final Logger log = LoggerFactory.getLogger(getClass());
 		
+		@SuppressWarnings("unused")
+		private final ProcessBuilder builder;
 		private final Process process;
 		
 		private final OutputStream stdin;
@@ -80,10 +86,16 @@ public class UseExternal extends UseConfigurer {
 		
 		private final Thread thread;
 		
-		private final BlockingDeque<Entry<String,Consumer<String>>> q = new LinkedBlockingDeque<>();
+		private final BlockingDeque<Entry<String,Consumer<String>>> q;
 		
-		public ProcessManager(Process process) {
-			this.process = process;
+		public SimpleProcessManager(ProcessBuilder builder, BlockingDeque<Entry<String,Consumer<String>>> q) {
+			this.q = q;
+			this.builder = builder;
+			try {
+				this.process = builder.start();
+			} catch (IOException e1) {
+				throw unchecked(e1);
+			}
 			
 			stdin = process.getOutputStream();
 			stdout = process.getInputStream();
@@ -123,9 +135,14 @@ public class UseExternal extends UseConfigurer {
 		
 		private void drain(InputStream stream) {
 			byte[] buf = new byte[8192];
+			int readLength;
 			try {
 				if (stream.available() > 0) {
-					while (stream.read(buf, 0, buf.length) > 0) { /* ignore it */ }
+					ByteArrayOutputStream baos = new ByteArrayOutputStream();
+					while ((readLength = stream.read(buf, 0, buf.length)) > 0) { 
+						baos.write(buf, 0, readLength);
+					}
+					System.err.printf("stderr: %s\n", new String(baos.toByteArray(), Charsets.UTF_8));
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -135,15 +152,52 @@ public class UseExternal extends UseConfigurer {
 		
 		private static final byte[] NEW_LINE = "\n".getBytes(Charsets.UTF_8);
 		
+		@Override
 		public void run(String input, Consumer<String> consumer) {
 			if (!process.isAlive()) throw runtime("process is dead!");
 			q.offer(createEntry(input, consumer));
 		}
 
+		@Override
 		public void kill() {
 			if (process.isAlive()) {
 				process.destroyForcibly();
 			}
+		}
+		
+	}
+	
+	public static class MultiProcessManager implements ProcessManager {
+
+		private final BlockingDeque<Entry<String,Consumer<String>>> q = new LinkedBlockingDeque<>();
+		private final ProcessBuilder builder;
+		private final Collection<SimpleProcessManager> all = new ArrayList<>();
+		
+		public MultiProcessManager(ProcessBuilder builder, int count) {
+			this.builder = builder;
+			
+			for (int i = 0; i < count; i++) {
+				all.add(new SimpleProcessManager(this.builder, q));
+			}
+			
+			/*
+			this.manager = ThreadLocal.withInitial(() -> {
+				SimpleProcessManager m = new SimpleProcessManager(this.builder, q);
+				all.add(m);
+				return m;
+			});
+			*/ 
+		}
+		
+		@Override
+		public void run(String input, Consumer<String> consumer) {
+			//manager.get().run(input, consumer);
+			q.offer(createEntry(input, consumer));
+		}
+
+		@Override
+		public void kill() {
+			all.forEach(m -> m.kill());
 		}
 		
 	}
@@ -159,8 +213,7 @@ public class UseExternal extends UseConfigurer {
 				builder.command(command);
 				log.info("starting {}\n", asList(command));
 				builder.environment().clear();
-				Process process = builder.start();
-				managerRef.set(new ProcessManager(process));
+				managerRef.set(new MultiProcessManager(builder, Runtime.getRuntime().availableProcessors()));
 				return data;
 			} catch (Exception e) {
 				throw unchecked(e);
@@ -171,7 +224,7 @@ public class UseExternal extends UseConfigurer {
 			managerRef.get().kill();
 		});
 		
-		use.operation("", () -> new ExternalRunConfigurer(managerRef));
+		use.operation(root(), () -> new ExternalRunConfigurer(managerRef));
 	}
 	
 	public static class ExternalRunConfigurer implements Supplier<FlowSegment> {

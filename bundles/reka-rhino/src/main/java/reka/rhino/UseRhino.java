@@ -1,6 +1,8 @@
 package reka.rhino;
 
 import static java.util.Arrays.asList;
+import static reka.api.Path.path;
+import static reka.api.Path.root;
 import static reka.api.content.Contents.nonSerializableContent;
 import static reka.rhino.RhinoHelper.compileJavascript;
 import static reka.rhino.RhinoHelper.runJavascriptInScope;
@@ -73,7 +75,7 @@ public class UseRhino extends UseConfigurer {
 			});
 		}
 		
-		init.operation(asList("", "run"), () -> new RhinoConfigurer(scopePath));
+		init.operation(asList(root(), path("run")), () -> new RhinoConfigurer(scopePath));
 		
 	}
 

@@ -223,7 +223,7 @@ public abstract class UseConfigurer {
 	private boolean isRoot;
 	
 	private Path parentPath = Path.root();
-	private Path path = Path.root();
+	private Path usePath = Path.root();
 	
 	private final List<String> usesNames = new ArrayList<>();
 	
@@ -261,8 +261,8 @@ public abstract class UseConfigurer {
 		return this;
 	}
 	
-	public UseConfigurer path(Path path) {
-		this.path = path;
+	public UseConfigurer usePath(Path path) {
+		this.usePath = path;
 		return this;
 	}
 
@@ -304,7 +304,7 @@ public abstract class UseConfigurer {
 		checkConfig(supplier != null, "'%s' is not a valid module (try one of %s)", config.key(), mappingNames());
 		UseConfigurer child = supplier.get();
 		child.mappings(mappings);
-		child.parentPath(path);
+		child.parentPath(usePath);
 		configure(child, config);
 		uses.add(child);
 		child.usedBy.add(this);

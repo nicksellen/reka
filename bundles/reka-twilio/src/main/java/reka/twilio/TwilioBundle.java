@@ -60,7 +60,7 @@ public class TwilioBundle implements RekaBundle {
 
 		@Override
 		public void setup(UseInit init) {
-			init.operation("send", () -> new TwilioSendConfigurer(sid, token, defaultFrom));
+			init.operation(path("send"), () -> new TwilioSendConfigurer(sid, token, defaultFrom));
 		}
 		
 	}
