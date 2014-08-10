@@ -30,10 +30,17 @@
 			<version>1.0.1</version>
 		</dependency>
 		<dependency>
+			<groupId>org.projectodd.shimdandy</groupId>
+			<artifactId>shimdandy-impl</artifactId>
+			<version>1.0.1</version>
+		</dependency>
+		<!-- 
+		<dependency>
 			<groupId>org.clojure</groupId>
 			<artifactId>clojure</artifactId>
-			<version>1.6.0-alpha3</version>
+			<version>1.6.0</version>
 		</dependency>
+		 -->
 	</dependencies>
 	
 	<build>
