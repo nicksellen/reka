@@ -10,7 +10,7 @@
   <packaging>pom</packaging>
 
   <modules>
-    <module>modules</module>
+    <module>bundles</module>
     <module>main</module>
   </modules>
 </project>

@@ -1,15 +1,12 @@
 package reka.admin;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static reka.api.Path.path;
+import static reka.api.Path.PathElements.name;
+import static reka.api.Path.PathElements.nextIndex;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
-
-import org.codehaus.jackson.map.ObjectMapper;
 
 import reka.ApplicationManager;
 import reka.api.data.Data;
@@ -17,13 +14,12 @@ import reka.api.data.MutableData;
 import reka.api.run.RouteCollector;
 import reka.api.run.RoutingOperation;
 import reka.config.FileSource;
-import reka.configurer.Configurer.InvalidConfigurationException;
-import reka.core.data.memory.MutableMemoryData;
+import reka.config.Source;
+import reka.config.SourceLinenumbers;
+import reka.config.configurer.Configurer.InvalidConfigurationException;
 import reka.util.Util;
 
 public class RekaValidateFromFileOperation implements RoutingOperation {
-	
-	private static final ObjectMapper jsonMapper = new ObjectMapper();
 	
 	private final ApplicationManager manager;
 	private final Function<Data,String> filenameFn;
@@ -47,18 +43,19 @@ public class RekaValidateFromFileOperation implements RoutingOperation {
 			t = Util.unwrap(t);
 			if (t instanceof InvalidConfigurationException) {
 				InvalidConfigurationException e = (InvalidConfigurationException) t;
-				try {
-					
-					Map<String,Object> map = new HashMap<>();
-					map.put("errors", jsonMapper.readValue(e.toJson(), List.class));
-					
-					MutableMemoryData.createFromMap(map).forEachContent((p, c) -> {
-						data.put(p, c);
+				e.errors().forEach(error -> {
+					data.putMap(path(name("errors"), nextIndex()), map -> {
+						Source source = error.config().source();
+						SourceLinenumbers linenumbers = source.linenumbers();
+						if (linenumbers != null) {
+							map.putInt("start-line", linenumbers.startLine());
+							map.putInt("end-line", linenumbers.endLine());
+							map.putInt("start-pos", linenumbers.startPos());
+							map.putInt("end-pos", linenumbers.endPos());
+						}
+						
 					});
-					
-				} catch (IOException e1) {
-					data.putString("error", e.getMessage());
-				}
+				});
 			} else {
 				data.putString("error", t.getMessage());
 			}

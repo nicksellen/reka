@@ -1,17 +1,32 @@
-
-
 name newapi
 
-use {
-  http
-  reka
-  filesystem fs {
-    dir /
+reka
+
+filesystem fs {
+  dir /
+}
+
+http {
+  @env CONTAINER {
+    when docker {
+      listen api.reka
+    }
+    otherwise {
+      listen localhost:5101
+    }
+  }
+  on request {
+    run main
   }
 }
 
-flow main {
+def main {
   http/router {
+    GET / {
+      put response.content {
+        message nowt much to see here try /apps
+      }
+    }
     GET /apps {
       reka/list response.content
     }
@@ -27,7 +42,7 @@ flow main {
         format :format
       }
     }
-    POST /apps/:identity* {
+    POST /apps/:appid* {
       fs/mktmpdir tmpdir
       unzip {
         data request.content
@@ -36,7 +51,7 @@ flow main {
       fs/type :tmpdir/main.reka {
         when file {
           reka/deploy {
-            identity :identity
+            identity :appid
             filename :tmpdir/main.reka
           }
           put response {
@@ -60,8 +75,8 @@ flow main {
       fs/rm :tmpdir 
     }
     named undeploy app {
-      DELETE /apps/:identity* {
-        reka/undeploy :identity
+      DELETE /apps/:appid* {
+        reka/undeploy :appid
         putv response {
           status 200
           content removed
@@ -70,19 +85,3 @@ flow main {
     }
   }
 }
-
-trigger {
-  @env:container {
-    when docker {
-      http newapi.reka {
-        run main
-      } 
-    }
-    otherwise {
-      http localhost:5101 {
-        run main
-      }
-    }
-  }
-}
-

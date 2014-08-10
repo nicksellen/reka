@@ -5,13 +5,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 
 import reka.config.formatters.ConfigFormatter;
 import reka.config.formatters.Formatter;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 public class BaseConfigBody extends ConfigBody {
@@ -86,7 +86,7 @@ public class BaseConfigBody extends ConfigBody {
                     continue;
                 }
             }
-            if (!found) return Optional.absent();
+            if (!found) return Optional.empty();
         }
         String last = elements[elements.length - 1];
         for (Config item : current) {
@@ -94,7 +94,7 @@ public class BaseConfigBody extends ConfigBody {
                 return Optional.of(item);
             }
         }
-        return Optional.absent();
+        return Optional.empty();
     }
     
     @Override

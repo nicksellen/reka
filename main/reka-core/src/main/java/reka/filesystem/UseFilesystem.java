@@ -5,7 +5,7 @@ import static java.util.Arrays.asList;
 import java.io.File;
 import java.nio.file.Path;
 
-import reka.configurer.annotations.Conf;
+import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.UseConfigurer;
 import reka.core.bundle.UseInit;
 import reka.filesystem.FilesystemBundle.FilesystemDeleteConfigurer;

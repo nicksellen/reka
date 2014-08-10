@@ -3,13 +3,13 @@ package reka.nashorn;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static reka.api.Path.root;
-import static reka.configurer.Configurer.Preconditions.checkConfig;
+import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import reka.config.Config;
-import reka.configurer.annotations.Conf;
+import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.UseConfigurer;
 import reka.core.bundle.UseInit;
 

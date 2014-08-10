@@ -2,7 +2,7 @@ package reka.test.config;
 
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.junit.Assert.assertThat;
-import static reka.configurer.Configurer.configure;
+import static reka.config.configurer.Configurer.configure;
 
 import java.io.File;
 import java.io.IOException;

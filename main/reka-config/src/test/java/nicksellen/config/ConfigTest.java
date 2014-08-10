@@ -9,6 +9,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Optional;
 
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -21,7 +22,6 @@ import reka.config.processor.IncludeConverter;
 import reka.config.processor.Processor;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
 
 public class ConfigTest {
 	

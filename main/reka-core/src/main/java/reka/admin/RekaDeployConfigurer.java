@@ -12,7 +12,7 @@ import reka.ApplicationManager;
 import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.flow.FlowSegment;
-import reka.configurer.annotations.Conf;
+import reka.config.configurer.annotations.Conf;
 import reka.core.util.StringWithVars;
 
 public class RekaDeployConfigurer implements Supplier<FlowSegment> {

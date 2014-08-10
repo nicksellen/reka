@@ -2,8 +2,8 @@ package reka.core.config;
 
 import static java.util.stream.Collectors.toList;
 import static reka.api.Path.dots;
-import static reka.configurer.Configurer.configure;
-import static reka.configurer.Configurer.Preconditions.checkConfig;
+import static reka.config.configurer.Configurer.configure;
+import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import static reka.core.builder.FlowSegments.meta;
 import static reka.core.builder.FlowSegments.seq;
 import static reka.util.Util.createEntry;
@@ -17,7 +17,7 @@ import java.util.function.Supplier;
 import reka.api.data.MutableData;
 import reka.api.flow.FlowSegment;
 import reka.config.Config;
-import reka.configurer.annotations.Conf;
+import reka.config.configurer.annotations.Conf;
 import reka.core.data.memory.MutableMemoryData;
 
 

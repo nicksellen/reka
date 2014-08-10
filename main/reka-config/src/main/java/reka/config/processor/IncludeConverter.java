@@ -7,6 +7,7 @@ import static java.util.Arrays.asList;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -23,7 +24,6 @@ import reka.config.parser.ConfigParser;
 import reka.config.parser.values.KeyVal;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
 import com.google.common.io.Files;
 
 public final class IncludeConverter implements ConfigConverter {
@@ -100,7 +100,7 @@ public final class IncludeConverter implements ConfigConverter {
 		String location = from.valueAsString();
 
 		Optional<Config> typeO = body.at("as");
-		Optional<String> contentType = typeO.isPresent() ? Optional.of(typeO.get().valueAsString()) : Optional.<String>absent();
+		Optional<String> contentType = typeO.isPresent() ? Optional.of(typeO.get().valueAsString()) : Optional.empty();
 		
 		if (!contentType.isPresent()) {
 			contentType = Optional.of(locationToType(location));
@@ -110,7 +110,7 @@ public final class IncludeConverter implements ConfigConverter {
 			CONFIG_TYPES.contains(locationToType(location))) {
 			includeNestedConfig(key, val, source, location, out);
 		} else {
-			includeDocument(key, val, contentType.orNull(), source, location, out);
+			includeDocument(key, val, contentType.orElse(null), source, location, out);
 		}
     	
 	}

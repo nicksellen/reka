@@ -4,7 +4,7 @@ import static reka.api.Path.dots;
 import static reka.api.content.Contents.falseValue;
 import static reka.api.content.Contents.longValue;
 import static reka.api.content.Contents.trueValue;
-import static reka.configurer.Configurer.Preconditions.checkConfig;
+import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import static reka.core.builder.FlowSegments.sync;
 import static reka.util.Util.createEntry;
 
@@ -20,7 +20,7 @@ import reka.api.data.MutableData;
 import reka.api.flow.FlowSegment;
 import reka.api.run.SyncOperation;
 import reka.config.Config;
-import reka.configurer.annotations.Conf;
+import reka.config.configurer.annotations.Conf;
 
 import com.google.common.collect.ImmutableList;
 

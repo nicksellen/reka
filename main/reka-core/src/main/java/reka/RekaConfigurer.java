@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import reka.config.Config;
 import reka.config.ConfigBody;
-import reka.configurer.annotations.Conf;
+import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.RekaBundle;
 
 public class RekaConfigurer {

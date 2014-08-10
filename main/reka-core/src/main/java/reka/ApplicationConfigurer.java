@@ -3,10 +3,9 @@ package reka;
 import static java.util.stream.Collectors.toList;
 import static reka.api.Path.path;
 import static reka.api.Path.slashes;
-import static reka.configurer.Configurer.configure;
-import static reka.configurer.Configurer.Preconditions.checkConfig;
-import static reka.configurer.Configurer.Preconditions.invalidConfig;
-import static reka.util.Util.createEntry;
+import static reka.config.configurer.Configurer.configure;
+import static reka.config.configurer.Configurer.Preconditions.checkConfig;
+import static reka.config.configurer.Configurer.Preconditions.invalidConfig;
 import static reka.util.Util.safelyCompletable;
 
 import java.math.BigDecimal;
@@ -30,9 +29,9 @@ import reka.api.flow.FlowSegment;
 import reka.api.run.EverythingSubscriber;
 import reka.api.run.Subscriber;
 import reka.config.Config;
-import reka.configurer.Configurer.ErrorCollector;
-import reka.configurer.ErrorReporter;
-import reka.configurer.annotations.Conf;
+import reka.config.configurer.Configurer.ErrorCollector;
+import reka.config.configurer.ErrorReporter;
+import reka.config.configurer.annotations.Conf;
 import reka.core.builder.FlowVisualizer;
 import reka.core.builder.Flows;
 import reka.core.builder.FlowsBuilder;
@@ -42,6 +41,8 @@ import reka.core.bundle.TriggerConfigurer;
 import reka.core.bundle.TriggerSetup;
 import reka.core.bundle.UseConfigurer;
 import reka.core.bundle.UseConfigurer.UsesInitializer;
+import reka.core.bundle.UseInit.Registration2;
+import reka.core.bundle.UseInit.Trigger2;
 import reka.core.config.MultiConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 
@@ -90,44 +91,20 @@ public class ApplicationConfigurer implements ErrorReporter {
     	}
     }
     
-    @Conf.Each("use")
-    public void use(Config config) {
-    	checkConfig(config.hasBody(), "must have a body");
-		rootUse.use(config);
-    }
-
-    @Conf.Each("trigger")
-    @Conf.Each("export")
-    public void trigger(Config config) {
-    	if (config.hasBody()) {
-    		for (Config child : config.body()) {
-    			trigger(slashes(child.key()), child);	
-    		}
-    	} else {
-    		invalidConfig("must have value or body");
-    	}
+    @Conf.EachUnmatched
+    public void useModule(Config config) {
+    	rootUse.useThisConfig(config);
     }
     
-    private void trigger(Path key, Config config) {
-    	triggerConfigs.add(createEntry(key, config));
-    }
-    
-    @Conf.Each("run")
-    public void run(Config config) {
+    @Conf.Each("def")
+    public void def(Config config) {
     	checkConfig(config.hasValue(), "you must provide a value/name");
     	flowConfigs.add(config);
-    }
-
-    @Conf.Each("flow")
-    public void flow(Config config) {
-    	run(config);
     }
 
 	@Override
 	public void errors(ErrorCollector errors) {
 		if (applicationName == null) errors.add("name is required");
-		if (triggerConfigs.isEmpty()) errors.add("please add at least one trigger");
-		if (flowConfigs.isEmpty()) errors.add("please add at least one flow (with 'run', or 'flow')");
 	}
     
     public Path name() {
@@ -176,8 +153,35 @@ public class ApplicationConfigurer implements ErrorReporter {
     public void checkValid() {
     	UsesInitializer initializer = UseConfigurer.process(rootUse);
     	Map<Path, Supplier<TriggerConfigurer>> triggerConfigurers = initializer.triggers();
-    	flowConfigs.forEach((config) -> configure(new SequenceConfigurer(new MultiConfigurerProvider(initializer.providers())), config).get());
+    	MultiConfigurerProvider configurerProvider = new MultiConfigurerProvider(initializer.providers());
+    	initializer.trigger2s().forEach(t -> t.supplier().apply(configurerProvider).get());
+    	flowConfigs.forEach((config) -> configure(new SequenceConfigurer(configurerProvider), config).get());
     	configureTriggers(triggerConfigurers, new TriggerSetup("validate", applicationName, -1));
+    }
+    
+    public static class Trigger2Build {
+
+    	private final Trigger2 trigger;
+    	
+    	private Path flowName;
+    	
+		public Trigger2Build(Trigger2 trigger) {
+			this.trigger = trigger;
+		}
+		
+		public Trigger2 trigger() {
+			return trigger;
+		}
+		
+		public Trigger2Build flowName(Path val) {
+			flowName = val;
+			return this;
+		}
+		
+		public Path flowName() {
+			return flowName;
+		}
+    	
     }
     
     public CompletableFuture<Application> build(String identity, int applicationVersion, Application previous, final Subscriber s) {
@@ -198,9 +202,19 @@ public class ApplicationConfigurer implements ErrorReporter {
 	    	
 	    	List<Runnable> shutdownHandlers = initializer.shutdownHandlers();
 	    	
+	    	MultiConfigurerProvider configurerProvider = new MultiConfigurerProvider(initializer.providers());
+	    	
+	    	List<Trigger2Build> trigger2builts = new ArrayList<>();
+	    	
+	    	initializer.trigger2s().forEach(t -> {
+	    		Trigger2Build tt = new Trigger2Build(t).flowName(applicationName.add("trigger").add(t.name()));
+	    		flowsBuilder.add(tt.flowName(), t.supplier().apply(configurerProvider).get());
+	    		trigger2builts.add(tt);
+	    	});
+	    	
 	    	flowConfigs.forEach((config) -> 
 				flowsBuilder.add(applicationName.add(config.valueAsString()), 
-						configure(new SequenceConfigurer(new MultiConfigurerProvider(initializer.providers())), config).get()));
+						configure(new SequenceConfigurer(configurerProvider), config).get()));
 	    	
 	    	TriggerSetup triggers = new TriggerSetup(identity, applicationName, applicationVersion);
 	
@@ -229,11 +243,17 @@ public class ApplicationConfigurer implements ErrorReporter {
 							handler.accept(registration);
 						}
 						
-						registration.resource(new DeployedResource() {
+						for (Trigger2Build t : trigger2builts) {
+							Registration2 registration2 = new Registration2(applicationVersion, flows.flow(t.flowName()), identity);
+							t.trigger().consumer().accept(registration2);
+							applicationBuilder.register(registration2);
+							
+						}
+						
+						registration.resource(new SimpleDeployedResource() {
 							
 							@Override
 							public void undeploy(int version) {
-								log.debug("running {} shutdown handlers", shutdownHandlers.size());
 								for (Runnable handler : shutdownHandlers) {
 									try {
 										handler.run();
@@ -241,16 +261,6 @@ public class ApplicationConfigurer implements ErrorReporter {
 										t.printStackTrace();
 									}
 								}
-							}
-							
-							@Override
-							public void pause(int version) {
-								// no-op
-							}
-	
-							@Override
-							public void resume(int version) {
-								// no-op
 							}
 							
 						});

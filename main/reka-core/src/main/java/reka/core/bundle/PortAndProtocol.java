@@ -33,7 +33,7 @@ public class PortAndProtocol {
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append(protocol).append(':').append(port);
+		sb.append(protocol).append('/').append(port);
 		if (details.isPresent()) {
 			sb.append(" ");
 			sb.append(details.toJson());

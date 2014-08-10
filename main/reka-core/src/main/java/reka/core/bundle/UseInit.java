@@ -2,6 +2,7 @@ package reka.core.bundle;
 
 import static java.util.stream.Collectors.toList;
 import static reka.api.Path.slashes;
+import static reka.config.configurer.Configurer.configure;
 import static reka.core.builder.FlowSegments.async;
 import static reka.core.builder.FlowSegments.label;
 import static reka.core.builder.FlowSegments.par;
@@ -18,12 +19,18 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import reka.DeployedResource;
+import reka.SimpleDeployedResource;
 import reka.api.Path;
+import reka.api.data.Data;
+import reka.api.flow.Flow;
 import reka.api.flow.FlowSegment;
 import reka.api.run.AsyncOperation;
 import reka.api.run.SyncOperation;
+import reka.config.ConfigBody;
 import reka.core.builder.FlowSegments;
 import reka.core.config.ConfigurerProvider;
+import reka.core.config.SequenceConfigurer;
 
 public class UseInit {
 	
@@ -118,6 +125,7 @@ public class UseInit {
 	private final List<Supplier<FlowSegment>> segments = new ArrayList<>();
 	private final List<Runnable> shutdownHandlers = new ArrayList<>();
 	private final Map<Path,Supplier<TriggerConfigurer>> triggers = new HashMap<>();
+	private final List<Trigger2> trigger2s = new ArrayList<>();
 	private final Map<Path,Function<ConfigurerProvider,Supplier<FlowSegment>>> providers = new HashMap<>();
 	
 	public UseInit(Path path) {
@@ -178,6 +186,98 @@ public class UseInit {
 		triggers.put(path.add(triggerPath), supplier);
 		return this;
 	}
+	
+	public static class Registration2 {
+		
+		private final int applicationVersion;
+		private final Flow flow;
+		private final String identity;
+		private final List<DeployedResource> resources = new ArrayList<>();
+		private final List<PortAndProtocol> network = new ArrayList<>();
+		 
+		public Registration2(int applicationVersion, Flow flow, String identity) {
+			this.applicationVersion = applicationVersion;
+			this.flow = flow;
+			this.identity = identity;
+		}
+		
+		public int applicationVersion() {
+			return applicationVersion;
+		}
+		
+		public Flow flow() {
+			return flow;
+		}
+		
+		public String identity() {
+			return identity;
+		}
+		
+		public Registration2 resource(DeployedResource r) {
+			resources.add(r);
+			return this;
+		}
+
+		public void undeploy(Runnable r) {
+			resource(new SimpleDeployedResource() {
+				@Override
+				public void undeploy(int version) {
+					r.run();
+				}
+			});
+		}
+		
+		public Registration2 network(int port, String protocol, Data details) {
+			network.add(new PortAndProtocol(port, protocol, details));
+			return this;
+		}
+		
+		public List<DeployedResource> resources() {
+			return resources;
+		}
+		
+		public List<PortAndProtocol> network() {
+			return network;
+		}
+		
+	}
+	
+	public static class Trigger2 {
+		
+		private final Path name;
+		private final Function<ConfigurerProvider, Supplier<FlowSegment>> supplier;
+		private final Consumer<Registration2> consumer;
+		
+		public Trigger2(Path name,
+				Function<ConfigurerProvider, Supplier<FlowSegment>> supplier,
+				Consumer<Registration2> consumer) {
+			this.name = name;
+			this.supplier = supplier;
+			this.consumer = consumer;
+		}
+		
+		public Path name() {
+			return name;
+		}
+		
+		public Function<ConfigurerProvider, Supplier<FlowSegment>> supplier() {
+			return supplier;
+		}
+		
+		public Consumer<Registration2> consumer() {
+			return consumer;
+		}
+		
+	}
+	
+	public UseInit trigger2(String name, ConfigBody body, Consumer<Registration2> c) {
+		return trigger2(name,  (provider) -> configure(new SequenceConfigurer(provider), body), c);
+	}
+	
+	public UseInit trigger2(String name, Function<ConfigurerProvider, Supplier<FlowSegment>> supplier, Consumer<Registration2> c) {
+		trigger2s.add(new Trigger2(path.add(name), supplier, c));
+		return this;
+	}
 
 	private Path toPath(String name) {
 		return name == null || "".equals(name.trim()) ? path : path.add(slashes(name));
@@ -198,6 +298,10 @@ public class UseInit {
 	
 	public Map<Path,Supplier<TriggerConfigurer>> triggers() {
 		return triggers;
+	}
+	
+	public List<Trigger2> trigger2s() {
+		return trigger2s;
 	}
 	
 	public List<Runnable> shutdownHandlers() {

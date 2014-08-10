@@ -1,8 +1,8 @@
 package reka.config;
 
-import reka.config.formatters.Formattable;
+import java.util.Optional;
 
-import com.google.common.base.Optional;
+import reka.config.formatters.Formattable;
 
 public interface NavigableConfig extends Formattable, Iterable<Config> {
     

@@ -2,11 +2,19 @@ package reka.util;
 
 import static java.lang.String.format;
 
+import java.io.IOException;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
+
+import org.codehaus.jackson.JsonGenerator;
+
+import reka.api.JsonProvider;
+import reka.config.Source;
+import reka.config.SourceLinenumbers;
+import reka.config.configurer.Configurer.InvalidConfigurationException;
 
 public class Util {
 	
@@ -34,7 +42,6 @@ public class Util {
 	public static void println(String msg, Object... objs) {
 		System.out.printf(msg + "\n", objs);
 	}
-	
 	
 	public static RuntimeException unchecked(Throwable t) {
 		if (t instanceof RuntimeException) {
@@ -100,7 +107,7 @@ public class Util {
 		return new AbstractMap.SimpleEntry<K,V>(key, value);
 	}
 	
-	public static <T> CompletableFuture<T> safelyCompletable(CompletableFuture<T> future, Runnable runnable) {
+	public static <T> CompletableFuture<T> safelyCompletable(CompletableFuture<T> future, ThrowingRunnable runnable) {
 		try {
 			runnable.run();
 		} catch (Throwable t) {
@@ -109,5 +116,52 @@ public class Util {
 			}
 		}
 		return future;
+	}
+		
+	public static interface ThrowingRunnable {
+		void run() throws Throwable;
+	}
+
+	public static void ignoreExceptions(ThrowingRunnable r) {
+		try {
+			r.run();
+		} catch (Throwable t) {
+			// ignore
+		}
+	}
+	
+	public static class InvalidConfigurationExceptionJsonProvider implements JsonProvider {
+		
+		private final InvalidConfigurationException ex;
+		
+		public InvalidConfigurationExceptionJsonProvider(InvalidConfigurationException ex) {
+			this.ex = ex;
+		}
+		
+		@Override
+		public void writeJsonTo(JsonGenerator json) throws IOException {
+			json.writeStartArray();
+			ex.errors().forEach(e -> {
+				try {
+					json.writeStartObject();
+					json.writeStringField("message", e.message());
+					Source source = e.config().source();
+					SourceLinenumbers linenumbers = source.linenumbers();
+					if (linenumbers != null) {
+							json.writeFieldName("linenumbers");
+							json.writeStartObject();
+							json.writeNumberField("start-line", linenumbers.startLine());
+							json.writeNumberField("end-line", linenumbers.endLine());
+							json.writeNumberField("start-pos", linenumbers.startPos());
+							json.writeNumberField("end-pos", linenumbers.endPos());
+							json.writeEndObject();
+					}
+					json.writeEndObject();
+				} catch (Exception e1) {
+					throw unchecked(e1);
+				}
+			});
+			json.writeEndArray();
+		}
 	}
 }

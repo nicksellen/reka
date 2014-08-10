@@ -35,7 +35,6 @@ for (var i = 0; i < graph.nodes.length; i++) {
 
 function addDistanceFrom(prop, id, d) {
   var otherIds = connectedNodesFor(prop === 's' ? forwardConns : backwardConns, id);
-  console.log('distance to', prop, 'for', id, 'otherIds', otherIds);
   for (var i = 0; i < otherIds.length; i++) {
     var other = nodes[otherIds[i]];
 
@@ -75,7 +74,6 @@ function traverseTo(prop, id, callback) {
 function highlightPathTo(prop, id) {
   traverseTo(prop, id, function(a, b){
     var attr = prop === 's' ? 'data-highlight-start' : 'data-highlight-end';
-    console.log('highligting', a.id, b.id);
     $('#connection__' +  a.id + '__' + b.id).attr(attr, true);
     $('#connection__' +  b.id + '__' + a.id).attr(attr, true);
     $('#' + b.domid).attr(attr, true);

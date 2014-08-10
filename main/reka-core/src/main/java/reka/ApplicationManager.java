@@ -4,8 +4,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.stream.Collectors.joining;
 import static reka.api.Path.slashes;
-import static reka.configurer.Configurer.configure;
-import static reka.util.Util.runtime;
+import static reka.config.configurer.Configurer.configure;
 
 import java.io.File;
 import java.io.IOException;

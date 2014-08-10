@@ -1,6 +1,6 @@
 package reka.test.config;
 
-import static reka.configurer.Configurer.configure;
+import static reka.config.configurer.Configurer.configure;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -10,7 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import reka.config.Config;
-import reka.configurer.annotations.Conf;
+import reka.config.configurer.annotations.Conf;
 
 public class TestConfigure {
 	

@@ -1,7 +1,7 @@
 package reka.admin;
 
 import static reka.api.Path.dots;
-import static reka.configurer.Configurer.configure;
+import static reka.config.configurer.Configurer.configure;
 import static reka.core.builder.FlowSegments.router;
 import static reka.core.builder.FlowSegments.sequential;
 import static reka.util.Util.runtime;
@@ -15,7 +15,7 @@ import reka.api.data.Data;
 import reka.api.flow.FlowSegment;
 import reka.config.Config;
 import reka.config.ConfigBody;
-import reka.configurer.annotations.Conf;
+import reka.config.configurer.annotations.Conf;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.core.util.StringWithVars;

@@ -1,7 +1,7 @@
 package reka.main;
 
 import static java.util.Arrays.asList;
-import static reka.configurer.Configurer.configure;
+import static reka.config.configurer.Configurer.configure;
 
 import java.io.File;
 import java.util.List;
@@ -17,6 +17,7 @@ import reka.config.NavigableConfig;
 import reka.config.parser.ConfigParser;
 import reka.core.bundle.BundleManager;
 import reka.core.bundle.RekaBundle;
+import reka.external.ExternalProcessBundle;
 import reka.filesystem.FilesystemBundle;
 import reka.nashorn.NashornBundle;
 
@@ -42,6 +43,7 @@ public class Main {
 			new BuiltinsBundle(), 
 			new FilesystemBundle(),
 			new NashornBundle(),
+			new ExternalProcessBundle(),
 			new JsonBundle());
 		
 		NavigableConfig conf = new BundleManager(defaultBundles).processor().process(ConfigParser.fromFile(file));

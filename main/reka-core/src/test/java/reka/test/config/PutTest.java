@@ -4,7 +4,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.*;
 import static reka.api.Path.dots;
 import static reka.config.ConfigTestUtil.loadconfig;
-import static reka.configurer.Configurer.configure;
+import static reka.config.configurer.Configurer.configure;
 import static reka.util.Util.runtime;
 import static reka.util.Util.unchecked;
 
@@ -28,7 +28,7 @@ import reka.api.run.SyncOperation;
 import reka.builtins.UseBuiltins;
 import reka.config.Config;
 import reka.config.NavigableConfig;
-import reka.configurer.Configurer.InvalidConfigurationException;
+import reka.config.configurer.Configurer.InvalidConfigurationException;
 import reka.core.data.memory.MutableMemoryData;
 import reka.core.runtime.DefaultRouter;
 

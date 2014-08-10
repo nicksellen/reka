@@ -15,7 +15,7 @@ import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.flow.FlowSegment;
 import reka.api.run.SyncOperation;
-import reka.configurer.annotations.Conf;
+import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.RekaBundle;
 import reka.core.bundle.UseConfigurer;
 import reka.core.bundle.UseInit;

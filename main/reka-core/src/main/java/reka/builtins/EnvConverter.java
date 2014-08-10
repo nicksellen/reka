@@ -1,5 +1,6 @@
 package reka.builtins;
 
+import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import static reka.util.Util.createEntry;
 
 import java.util.ArrayList;
@@ -17,30 +18,18 @@ public class EnvConverter implements ConfigConverter {
 	
 	static final Splitter splitter = Splitter.on(" ").trimResults();
 	
-	private static final String DEFAULT_VAR = "REKA_ENV";
-	
 	@Override
 	public void convert(Config config, Output out) {
 		if (config.hasKey() && config.key().equals("@env")) {
-			String envVar = config.hasSubkey() ? config.subkey() : DEFAULT_VAR;
+			
+			checkConfig(config.hasValue(), "must have value");
+			
+			String envVar = config.valueAsString();
 
 			Map<String, String> env = System.getenv();
 			String envVal = env.get(envVar);
 			
-			if (config.hasValue()) {
-				
-				if (envVal != null) { 
-				
-					for (String e : splitter.split(config.valueAsString())) {
-						if (e.equals(envVal)) {
-							out.add(config.body());
-							break;
-						}
-					}
-				
-				}
-
-			} else if (config.hasBody()) {
+			if (config.hasBody()) {
 				
 				List<Entry<String,ConfigBody>> cases = new ArrayList<>();
 				List<ConfigBody> otherwises = new ArrayList<>();

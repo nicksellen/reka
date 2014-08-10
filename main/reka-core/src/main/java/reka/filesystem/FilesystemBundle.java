@@ -3,12 +3,11 @@ package reka.filesystem;
 import static java.util.Arrays.asList;
 import static reka.api.Path.dots;
 import static reka.api.Path.path;
-import static reka.configurer.Configurer.configure;
+import static reka.config.configurer.Configurer.configure;
 import static reka.core.builder.FlowSegments.sequential;
 import static reka.core.builder.FlowSegments.sync;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -17,7 +16,7 @@ import reka.api.data.Data;
 import reka.api.flow.FlowSegment;
 import reka.config.Config;
 import reka.config.ConfigBody;
-import reka.configurer.annotations.Conf;
+import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.RekaBundle;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;

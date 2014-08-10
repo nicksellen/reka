@@ -1,6 +1,5 @@
 package reka.api.data;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.stream.Collectors.toSet;
 import static reka.util.Util.createEntry;
 

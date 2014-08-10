@@ -1,5 +1,8 @@
 package reka.core.builder;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.stream.Collectors.toSet;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -44,6 +47,8 @@ public class Flows {
 				}
 			}
 		}
+		
+		checkNotNull(flow, "no flow named %s, we have %s", name.slashes(), flowsByName.keySet().stream().map(Path::slashes).collect(toSet()));
 		
 		return flow;
 	}

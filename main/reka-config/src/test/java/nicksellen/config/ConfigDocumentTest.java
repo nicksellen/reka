@@ -19,7 +19,7 @@ public class ConfigDocumentTest {
 	@Test
 	public void test() {
 		NavigableConfig root = loadconfig("/doc.reka");
-		Config t = root.at("text-document").orNull();
+		Config t = root.at("text-document").orElse(null);
 		assertNotNull(t);
 		assertTrue(t.hasDocument());
 		assertThat(t.documentType(), equalTo("text/plain"));
@@ -29,7 +29,7 @@ public class ConfigDocumentTest {
 	@Test
 	public void test2() {
 		NavigableConfig root = loadconfig("/doc.reka");
-		Config t = root.at("text-document-with-dashes").orNull();
+		Config t = root.at("text-document-with-dashes").orElse(null);
 		assertNotNull(t);
 		assertTrue(t.hasDocument());
 		assertThat(t.documentType(), equalTo("text/plain"));

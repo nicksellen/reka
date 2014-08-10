@@ -1,14 +1,12 @@
 package reka.test.dataview;
 
 import java.io.IOException;
-import java.util.Map;
 
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
 
-import reka.api.data.DataMapView;
 import reka.api.data.MutableData;
 import reka.core.data.memory.MutableMemoryData;
 

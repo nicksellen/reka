@@ -3,7 +3,7 @@ package reka;
 import java.util.function.Supplier;
 
 import reka.api.flow.FlowSegment;
-import reka.configurer.annotations.Conf;
+import reka.config.configurer.annotations.Conf;
 import reka.core.builder.EmbeddedFlowNode;
 
 public class EmbeddedFlowConfigurer implements Supplier<FlowSegment> {

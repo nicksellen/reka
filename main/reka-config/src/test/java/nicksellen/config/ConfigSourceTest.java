@@ -6,6 +6,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.util.Optional;
 
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -14,8 +15,6 @@ import org.slf4j.LoggerFactory;
 import reka.config.Config;
 import reka.config.NavigableConfig;
 import reka.config.parser.ConfigParser;
-
-import com.google.common.base.Optional;
 
 public class ConfigSourceTest {
 	

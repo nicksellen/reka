@@ -1,5 +1,6 @@
 package reka.builtins;
 
+import static reka.api.Path.path;
 import static reka.api.Path.root;
 import reka.MarkdownConverter;
 import reka.config.processor.CommentConverter;
@@ -12,6 +13,7 @@ public class BuiltinsBundle implements RekaBundle {
 	@Override
 	public void setup(BundleSetup setup) {
 		setup.use(root(), () -> new UseBuiltins());
+		setup.use(path("timer"), () -> new UseTimer());
 		setup.converter(new CommentConverter()); 
 		setup.converter(new IncludeConverter());
 		setup.converter(new MarkdownConverter());

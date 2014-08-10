@@ -8,7 +8,7 @@ import java.util.function.Supplier;
 import reka.ApplicationManager;
 import reka.api.Path;
 import reka.api.flow.FlowSegment;
-import reka.configurer.annotations.Conf;
+import reka.config.configurer.annotations.Conf;
 
 public class RekaListConfigurer implements Supplier<FlowSegment> {
 	

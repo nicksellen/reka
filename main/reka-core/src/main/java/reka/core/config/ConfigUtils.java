@@ -5,7 +5,7 @@ import static reka.api.Path.root;
 import static reka.api.content.Contents.falseValue;
 import static reka.api.content.Contents.trueValue;
 import static reka.api.content.Contents.utf8;
-import static reka.configurer.Configurer.Preconditions.checkConfig;
+import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.data.MutableData;

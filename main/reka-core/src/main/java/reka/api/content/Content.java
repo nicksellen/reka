@@ -749,9 +749,11 @@ public interface Content extends Hashable, JsonProvider {
 		
 		@Override
 		public Object value() {
-			logger.warn("not sure why we are using binarycontent.value()");
-			Util.printStackTrace();
-			return as(Encoding.NONE).bytes();
+			if (contentType != null && (contentType.startsWith("text/") || contentType.startsWith("application/"))) {
+				return new String(as(Encoding.NONE).bytes(), Charsets.UTF_8);
+			} else {
+				return as(Encoding.NONE).bytes();
+			}
 		}
 
 		@Override

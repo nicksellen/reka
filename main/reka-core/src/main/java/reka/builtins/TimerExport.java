@@ -1,7 +1,7 @@
 package reka.builtins;
 
 import static reka.api.Path.path;
-import static reka.configurer.Configurer.Preconditions.checkConfig;
+import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -15,11 +15,11 @@ import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.flow.Flow;
 import reka.api.run.EverythingSubscriber;
-import reka.configurer.Configurer.ErrorCollector;
-import reka.configurer.ErrorReporter;
-import reka.configurer.annotations.Conf;
-import reka.core.bundle.TriggerSetup;
+import reka.config.configurer.Configurer.ErrorCollector;
+import reka.config.configurer.ErrorReporter;
+import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.TriggerConfigurer;
+import reka.core.bundle.TriggerSetup;
 
 public class TimerExport implements TriggerConfigurer, ErrorReporter {
 	
