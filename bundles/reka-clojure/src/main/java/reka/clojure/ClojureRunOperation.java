@@ -2,7 +2,6 @@ package reka.clojure;
 
 import reka.api.data.MutableData;
 import reka.api.run.SyncOperation;
-import reka.clojure.UseClojure.ClojureEnv;
 
 public class ClojureRunOperation implements SyncOperation {
 	

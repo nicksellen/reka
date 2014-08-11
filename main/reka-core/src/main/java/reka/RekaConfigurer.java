@@ -36,7 +36,7 @@ public class RekaConfigurer {
 
 	private final List<RekaBundle> defaultBundles = new ArrayList<>();
 	
-	private final Map<URL, List<String>> addedBundles = new HashMap<>();
+	private final Map<URL, String> addedBundles = new HashMap<>();
 	
 	private final Path bundleBasedir;
 	
@@ -84,9 +84,7 @@ public class RekaConfigurer {
 				
 				String bundleName = manifest.getMainAttributes().getValue("Reka-Bundle");
 				checkArgument(bundleName != null, "you must include a Reka-Bundle value in the manifest");
-				List<String> names = new ArrayList<>();
-				names.add(bundleName);
-				addedBundles.put(file.toURI().toURL(), names);
+				addedBundles.put(file.toURI().toURL(), bundleName);
 			}
 		} catch (Throwable t) {
 			throw unchecked(t);
@@ -101,20 +99,21 @@ public class RekaConfigurer {
 		
 		URL[] urls = addedBundles.keySet().toArray(new URL[addedBundles.size()]);
 		
-		@SuppressWarnings("resource")
-		ClassLoader cl = new URLClassLoader(urls, getClass().getClassLoader());
-		
 		boolean classLoadingError = false;
-		for (Entry<URL, List<String>> e : addedBundles.entrySet()) {
-			for (String classname : e.getValue()) {
-				try {
-					Object obj = cl.loadClass(classname).newInstance();
-					bundles.add((RekaBundle) obj);
-				} catch (ClassCastException | ClassNotFoundException | InstantiationException | IllegalAccessException error) {
-					error.printStackTrace();
-					log.error("couldn't load {} from {}", classname, e.getKey());
-					classLoadingError = true;
-				}
+		for (Entry<URL, String> e : addedBundles.entrySet()) {
+			
+			// classloader per bundle keeps things isolated (each bundle can have it's own versions of libraries)
+			@SuppressWarnings("resource")
+			ClassLoader cl = new URLClassLoader(urls, getClass().getClassLoader());
+			
+			String classname = e.getValue();
+			try {
+				Object obj = cl.loadClass(classname).newInstance();
+				bundles.add((RekaBundle) obj);
+			} catch (ClassCastException | ClassNotFoundException | InstantiationException | IllegalAccessException error) {
+				error.printStackTrace();
+				log.error("couldn't load {} from {}", classname, e.getKey());
+				classLoadingError = true;
 			}
 		}
 		

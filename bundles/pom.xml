@@ -11,6 +11,7 @@
 
   <modules>
     <module>reka-chronicle</module>
+    <module>clojure-env</module>
     <module>reka-clojure</module>
     <module>reka-command</module>
     <module>reka-elasticsearch</module>

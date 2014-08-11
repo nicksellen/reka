@@ -1,55 +1,33 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-
-	<artifactId>reka-clojure</artifactId>
 	<groupId>io.reka</groupId>
-	<version>0.1.0</version>
-
-	<properties>
-		<core.version>0.1.0</core.version>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-	</properties>
+	<artifactId>clojure-env-impl</artifactId>
+	<version>0.0.1</version>
 
 	<dependencies>
 		<dependency>
 			<groupId>io.reka</groupId>
-			<artifactId>reka-core</artifactId>
-			<version>${core.version}</version>
+			<artifactId>clojure-env-api</artifactId>
+			<version>0.0.1</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-			<groupId>io.reka</groupId>
-			<artifactId>clojure-env-api</artifactId>
-			<version>0.0.1</version>
+			<groupId>org.clojure</groupId>
+			<artifactId>clojure</artifactId>
+			<version>1.6.0</version>
 		</dependency>
 		<dependency>
-			<groupId>io.reka</groupId>
-			<artifactId>clojure-env-build</artifactId>
-			<version>0.0.1</version>
+			<groupId>org.clojure</groupId>
+			<artifactId>core.async</artifactId>
+			<version>0.1.319.0-6b1aca-alpha</version>
 		</dependency>
 		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.11</version>
-			<scope>test</scope>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>1.7.5</version>
 		</dependency>
-		<!-- 
-		<dependency>
-			<groupId>org.projectodd.shimdandy</groupId>
-			<artifactId>shimdandy-api</artifactId>
-			<version>1.0.1</version>
-		</dependency>
-		<dependency>
-			<groupId>org.projectodd.shimdandy</groupId>
-			<artifactId>shimdandy-impl</artifactId>
-			<version>1.0.1</version>
-		</dependency>
-		 -->
-		<!-- <dependency> <groupId>org.clojure</groupId> <artifactId>clojure</artifactId> 
-			<version>1.6.0</version> </dependency> -->
 	</dependencies>
-
 	<build>
 		<plugins>
 			<plugin>
@@ -84,15 +62,10 @@
 							<goal>shade</goal>
 						</goals>
 						<configuration>
+							<finalName>clojure-env-impl</finalName>
 							<transformers>
 								<transformer
-									implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
-								<transformer
 									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<manifestEntries>
-										<Reka-Bundle>reka.clojure.ClojureBundle</Reka-Bundle>
-										<Reka-Version>${core.version}</Reka-Version>
-									</manifestEntries>
 								</transformer>
 							</transformers>
 						</configuration>
@@ -101,5 +74,4 @@
 			</plugin>
 		</plugins>
 	</build>
-
 </project>

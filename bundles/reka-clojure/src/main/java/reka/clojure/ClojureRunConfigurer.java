@@ -6,7 +6,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
 import reka.api.flow.FlowSegment;
-import reka.clojure.UseClojure.ClojureEnv;
 import reka.config.configurer.annotations.Conf;
 
 public class ClojureRunConfigurer implements Supplier<FlowSegment> {
