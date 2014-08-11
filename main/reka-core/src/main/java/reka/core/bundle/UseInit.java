@@ -1,7 +1,6 @@
 package reka.core.bundle;
 
 import static java.util.stream.Collectors.toList;
-import static reka.api.Path.slashes;
 import static reka.config.configurer.Configurer.configure;
 import static reka.core.builder.FlowSegments.async;
 import static reka.core.builder.FlowSegments.label;
@@ -277,10 +276,6 @@ public class UseInit {
 	public UseInit trigger2(String name, Function<ConfigurerProvider, Supplier<FlowSegment>> supplier, Consumer<Registration2> c) {
 		trigger2s.add(new Trigger2(path.add(name), supplier, c));
 		return this;
-	}
-
-	private Path toPath(String name) {
-		return name == null || "".equals(name.trim()) ? path : path.add(slashes(name));
 	}
 	
 	public Optional<FlowSegment> buildFlowSegment() {

@@ -89,7 +89,7 @@ public class DefaultFlow implements Flow {
 	
 	@Override
 	public void run(EverythingSubscriber subscriber) {
-		run(MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()), MutableMemoryData.create(), subscriber);
+		run(DEFAULT_EXECUTOR, MutableMemoryData.create(), subscriber);
 	}
 	
 	@Override

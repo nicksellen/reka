@@ -12,7 +12,6 @@ public class ClojureRunConfigurer implements Supplier<FlowSegment> {
 	
 	private final AtomicReference<ClojureEnv> runtimeRef;
 
-	//private String script;
 	private String fn;
 	
 	public ClojureRunConfigurer(AtomicReference<ClojureEnv> runtimeRef) {
@@ -23,15 +22,6 @@ public class ClojureRunConfigurer implements Supplier<FlowSegment> {
 	public void fn(String val) {
 		fn = val;
 	}
-	
-	/*
-	@Conf.Config
-	public void config(Config config) {
-		if (config.hasDocument()) {
-			script = config.documentContentAsString();
-		}
-	}
-	*/
 	
 	@Override
 	public FlowSegment get() {

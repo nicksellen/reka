@@ -6,20 +6,16 @@ import reka.api.run.SyncOperation;
 public class ClojureRunOperation implements SyncOperation {
 	
 	private final ClojureEnv runtime;
-	private final String ns;
-	private final String fn;
+	private final String namespacedFn;
 	
-	public ClojureRunOperation(ClojureEnv runtime, String val) {
+	public ClojureRunOperation(ClojureEnv runtime, String namespacedFn) {
 		this.runtime = runtime;
-		String[] f = val.split("\\/");
-		ns = f[0];
-		fn = f[1];
+		this.namespacedFn = namespacedFn;
 	}
 
 	@Override
 	public MutableData call(MutableData data) {
-		runtime.run(ns, fn, data.viewAsMap());
-//		Compiler.load(new StringReader(script));
+		runtime.run(namespacedFn, data.viewAsMap());
 		return data;
 	}
 	
