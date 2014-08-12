@@ -45,6 +45,7 @@ build:
 run: 
 	@docker run -d \
 		--name reka \
+		--privileged \
 		-e "CONTAINER=docker" \
 		-p 80:80 \
 		-p 443:443 \
