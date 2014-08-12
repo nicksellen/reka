@@ -29,7 +29,7 @@ import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.builder.FlowVisualizer;
 import reka.core.builder.SingleFlow;
-import reka.core.bundle.UseInit.Trigger2;
+import reka.core.bundle.UseInit.Trigger;
 import reka.core.config.ConfigurerProvider;
 import reka.core.runtime.NoFlow;
 import reka.core.runtime.NoFlowVisualizer;
@@ -44,21 +44,18 @@ public abstract class UseConfigurer {
 		private final Flow flow;
 		private final FlowVisualizer visualizer;
 		private final Map<Path,Function<ConfigurerProvider,Supplier<FlowSegment>>> providers;
-		private final Map<Path,Supplier<TriggerConfigurer>> triggers;
-		private final List<Trigger2> trigger2s;
+		private final List<Trigger> triggers;
 		private final List<Runnable> shutdownHandlers;
 		
 		UsesInitializer(Flow initialize, FlowVisualizer visualizer, 
 				Map<Path,Function<ConfigurerProvider,Supplier<FlowSegment>>> providers,
-				Map<Path,Supplier<TriggerConfigurer>> triggers,
-				List<Trigger2> trigger2s,
+				List<Trigger> triggers,
 				List<Runnable> shutdownHandlers) {
 			
 			this.flow = initialize;
 			this.visualizer = visualizer;
 			this.providers = ImmutableMap.copyOf(providers);
-			this.triggers = ImmutableMap.copyOf(triggers);
-			this.trigger2s = ImmutableList.copyOf(trigger2s);
+			this.triggers = ImmutableList.copyOf(triggers);
 			this.shutdownHandlers = ImmutableList.copyOf(shutdownHandlers);
 			
 		}
@@ -75,12 +72,8 @@ public abstract class UseConfigurer {
 			return providers;
 		}
 		
-		public Map<Path,Supplier<TriggerConfigurer>> triggers() {
+		public List<Trigger> triggers() {
 			return triggers;
-		}
-		
-		public List<Trigger2> trigger2s() {
-			return trigger2s;
 		}
 		
 		public List<Runnable> shutdownHandlers() {
@@ -103,11 +96,10 @@ public abstract class UseConfigurer {
 			resolveNamedDependencies(all, rootsMap);
 			
 			Map<Path,Function<ConfigurerProvider,Supplier<FlowSegment>>> providersCollector = new HashMap<>();
-			Map<Path,Supplier<TriggerConfigurer>> triggerCollector = new HashMap<>();
-			List<Trigger2> trigger2Collector = new ArrayList<>();
+			List<Trigger> triggerCollector = new ArrayList<>();
 			List<Runnable> shutdownHandlers = new ArrayList<>();
 			
-			Map<UseConfigurer,FlowSegment> segments = makeSegments(all, providersCollector, triggerCollector, trigger2Collector, shutdownHandlers);
+			Map<UseConfigurer,FlowSegment> segments = makeSegments(all, providersCollector, triggerCollector, shutdownHandlers);
 			
 			Optional<FlowSegment> segment = buildSegment(toplevel, segments);
 			
@@ -120,13 +112,12 @@ public abstract class UseConfigurer {
 				visualizer = entry.getValue();	
 			}
 			
-			return new UsesInitializer(flow, visualizer, providersCollector, triggerCollector, trigger2Collector, shutdownHandlers);
+			return new UsesInitializer(flow, visualizer, providersCollector, triggerCollector, shutdownHandlers);
 		}
 		
 		private static Map<UseConfigurer, FlowSegment> makeSegments(Collection<UseConfigurer> all, 
 				Map<Path,Function<ConfigurerProvider,Supplier<FlowSegment>>> providersCollector,
-				Map<Path,Supplier<TriggerConfigurer>> triggerCollector,
-				List<Trigger2> trigger2Collector,
+				List<Trigger> triggerCollector,
 				List<Runnable> shutdownHandlers) {
 			
 			Map<UseConfigurer,FlowSegment> map = new HashMap<>();
@@ -140,8 +131,7 @@ public abstract class UseConfigurer {
 				});
 				
 				providersCollector.putAll(init.providers());
-				triggerCollector.putAll(init.triggers());
-				trigger2Collector.addAll(init.trigger2s());
+				triggerCollector.addAll(init.triggers());
 				shutdownHandlers.addAll(init.shutdownHandlers());
 				
 			}

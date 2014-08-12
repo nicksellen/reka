@@ -1,13 +1,13 @@
 package reka.smtp;
 
 import static reka.api.Path.path;
-import static reka.api.Path.root;
 import static reka.api.Path.PathElements.name;
 import static reka.api.Path.PathElements.nextIndex;
 import static reka.api.content.Contents.binary;
 import static reka.api.content.Contents.utf8;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import static reka.core.builder.FlowSegments.background;
+import static reka.util.Util.runtime;
 import static reka.util.Util.unchecked;
 
 import java.io.IOException;
@@ -31,7 +31,6 @@ import org.subethamail.smtp.helper.SimpleMessageListenerAdapter;
 import org.subethamail.smtp.server.SMTPServer;
 
 import reka.DeployedResource;
-import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.flow.Flow;
@@ -39,10 +38,9 @@ import reka.api.flow.FlowSegment;
 import reka.api.run.EverythingSubscriber;
 import reka.api.run.SyncOperation;
 import reka.config.Config;
+import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.RekaBundle;
-import reka.core.bundle.TriggerSetup;
-import reka.core.bundle.TriggerConfigurer;
 import reka.core.bundle.UseConfigurer;
 import reka.core.bundle.UseInit;
 import reka.core.data.memory.MutableMemoryData;
@@ -54,6 +52,73 @@ public class SmtpBundle implements RekaBundle {
 
 	public void setup(BundleSetup setup) {
 		setup.use(path("smtp"), () -> new UseSMTPConfigurer());
+		setup.use(path("smtp/server"), () -> new UseSMTPServerConfigurer());
+	}
+	
+	public static class UseSMTPServerConfigurer extends UseConfigurer {
+
+		private ConfigBody emailHandler;
+		private int port = 25;
+
+		@Conf.At("port")
+		public void port(String val) {
+			port = Integer.valueOf(val);
+		}
+		
+		@Conf.Each("on")
+		public void on(Config config) {
+			checkConfig(config.hasValue(), "must have a value");
+			checkConfig(config.hasBody(), "must have a body");
+			switch (config.valueAsString()) {
+			case "email":
+				emailHandler = config.body();
+				break;
+			default:
+				throw runtime("unknown trigger %s", config.valueAsString());
+			}
+		}
+		
+		@Override
+		public void setup(UseInit use) {
+			if (emailHandler != null) {
+				use.trigger("email", emailHandler, registration -> {
+					
+					SMTPServer smtpServer = new SMTPServer(
+							new SimpleMessageListenerAdapter(
+								new EmailListener(registration.flow())));
+						
+					smtpServer.setPort(port);
+					
+					log.debug("starting smtp server on port {}", port);
+					
+					registration.network(port, "smtp", MutableMemoryData.create(details -> {
+						details.putString("run", registration.flow().name().last().toString());
+					}).immutable());
+					
+					smtpServer.start();
+					
+					registration.resource(new DeployedResource() {
+						
+						@Override
+						public void undeploy(int version) {
+							smtpServer.stop();
+						}
+						
+						@Override
+						public void pause(int version) {
+							// no-op
+						}
+						
+						@Override
+						public void resume(int version) {
+							// no-op
+						}
+						
+					});
+				});
+			}
+		}
+		
 	}
 	
 	public static class UseSMTPConfigurer extends UseConfigurer {
@@ -84,7 +149,6 @@ public class SmtpBundle implements RekaBundle {
 		@Override
 		public void setup(UseInit init) {
 			init.operation(path("send"), () -> new SMTPSendConfigurer(host, port, username, password));
-			init.trigger(root(), () -> new SMTPTriggerThing());
 		}
 		
 	}
@@ -215,66 +279,6 @@ public class SmtpBundle implements RekaBundle {
 			} catch (EmailException e) {
 				throw unchecked(e);
 			}
-			
-		}
-		
-	}
-	
-	public static class SMTPTriggerThing implements TriggerConfigurer {
-
-		private int port = 25;
-		private Path flowName;
-		
-		@Conf.Config
-		public void config(Config config) {
-			checkConfig(config.hasValue(), "must have a value (for the port)");
-			port = config.valueAsInt();
-		}
-		
-		@Conf.At("run")
-		public void run(String val) {
-			flowName = path(val); // FIXME: namespacing?
-		}
-		
-		@Override
-		public void setupTriggers(TriggerSetup trigger) {
-			
-			trigger.addRegistrationHandler(app -> {
-				
-				SMTPServer smtpServer = new SMTPServer(
-					new SimpleMessageListenerAdapter(
-						new EmailListener(app.flows().flow(flowName))));
-				
-				smtpServer.setPort(port);
-				
-				log.debug("starting smtp server on port {}", port);
-				
-				app.protocol(port, "smtp", MutableMemoryData.create(details -> {
-					details.putString("run", flowName.last().toString());
-				}).immutable());
-				
-				smtpServer.start();
-				
-				app.resource(new DeployedResource() {
-					
-					@Override
-					public void undeploy(int version) {
-						smtpServer.stop();
-					}
-					
-					@Override
-					public void pause(int version) {
-						// no-op
-					}
-					
-					@Override
-					public void resume(int version) {
-						// no-op
-					}
-					
-				});
-				
-			});
 			
 		}
 		

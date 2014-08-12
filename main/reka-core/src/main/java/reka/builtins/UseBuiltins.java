@@ -95,10 +95,7 @@ public class UseBuiltins extends UseConfigurer {
     	init.operation(path("coerce"), () -> new Coercion.CoerceConfigurer());
     	init.operation(slashes("coerce/int64"), () -> new Coercion.CoerceLongConfigurer());
     	init.operation(slashes("coerce/bool"), () -> new Coercion.CoerceBooleanConfigurer());
-    	
     	init.operation(path("unzip"), () -> new UnzipConfigurer());
-    	
-		init.trigger(path("every"), () -> new TimerExport());
 		
 	}
 	
@@ -551,31 +548,31 @@ public class UseBuiltins extends UseConfigurer {
 	
 	public static class LogConfigurer implements Supplier<FlowSegment> {
 
-		private Path in;
+		private Function<Data,String> msgFn;
 		
 		@Conf.Val
 		public void in(String val) {
-			in = dots(val);
+			msgFn = StringWithVars.compile(val);
 		}
 		
 		@Override
 		public FlowSegment get() {
-			return sync("log", () -> new LogOperation(in));
+			return sync("log", () -> new LogOperation(msgFn));
 		}
 		
 	}
 	
 	public static class LogOperation implements SyncOperation {
 		
-		private final Path in;
+		private final Function<Data,String> msgFn;
 		
-		public LogOperation(Path in) {
-			this.in = in;
+		public LogOperation(Function<Data,String> msgFn) {
+			this.msgFn = msgFn;
 		}
 
 		@Override
 		public MutableData call(MutableData data) {
-			log.debug(data.at(in).toPrettyJson());
+			log.info(msgFn.apply(data));
 			return data;
 		}
 		
@@ -587,14 +584,10 @@ public class UseBuiltins extends UseConfigurer {
 
 		@Conf.Each
 		public void entry(Config item) {
-			//if (config.hasBody()) {
-				//for (Config item : config.body()) {
-					if (item.hasValue()) {
-						log.debug("adding copy [{}] -> [{}]", dots(item.key()).dots(), dots(item.valueAsString()).dots());
-						entries.add(createEntry(dots(item.key()), dots(item.valueAsString())));
-					}
-				//}
-			//}
+			if (item.hasValue()) {
+				log.debug("adding copy [{}] -> [{}]", dots(item.key()).dots(), dots(item.valueAsString()).dots());
+				entries.add(createEntry(dots(item.key()), dots(item.valueAsString())));
+			}
 		}
 		
 		@Override

@@ -8,7 +8,7 @@
 	<version>0.1.0</version>
 	
 	<properties>
-    <core.version>0.1.0</core.version>
+    <reka.version>0.1</reka.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
@@ -16,7 +16,7 @@
 		<dependency>
 			<groupId>io.reka</groupId>
 			<artifactId>reka-core</artifactId>
-			<version>${core.version}</version>
+			<version>${reka.version}.0</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
@@ -126,7 +126,7 @@
                   implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                   <manifestEntries>
                     <Reka-Bundle>reka.http.HttpBundle</Reka-Bundle>
-                    <Reka-Version>${core.version}</Reka-Version>
+                    <Reka-Version>${reka.version}</Reka-Version>
                   </manifestEntries>
                 </transformer>
               </transformers>

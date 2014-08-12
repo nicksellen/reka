@@ -50,7 +50,7 @@ public class UseTimer extends UseConfigurer {
 	@Override
 	public void setup(UseInit use) {
 		every.forEach(config -> {
-			use.trigger2(format("every %s", config.valueAsString()), config.body(), register -> {
+			use.trigger(format("every %s", config.valueAsString()), config.body(), register -> {
 				ScheduledFuture<?> f = executor.scheduleAtFixedRate(new TimerRun(register.flow()), 0, parseMs(config.valueAsString()), TimeUnit.MILLISECONDS);
 				register.undeploy(() -> {
 					f.cancel(false);

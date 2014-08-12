@@ -104,6 +104,10 @@ public class FlowsBuilder {
 		return this;
 	}
 	
+	public Collection<Path> roots() {
+		return roots.keySet();
+	}
+	
 	public Flows build(Data initializationData) {
 		
 		for (FlowInfo root : roots.values()) {

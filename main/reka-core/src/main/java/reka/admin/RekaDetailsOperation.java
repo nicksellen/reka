@@ -43,6 +43,10 @@ public class RekaDetailsOperation implements SyncOperation {
 		
 		appdata.putString("name", app.name().slashes());
 		
+		if (app.meta().isPresent()) {
+			appdata.put(path("meta"), app.meta());
+		}
+		
 		appdata.putBool("redeployable", manager.hasSourceFor(identity));
 		appdata.putBool("removable", manager.hasSourceFor(identity));
 		

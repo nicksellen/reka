@@ -1,22 +1,19 @@
 package reka;
 
-import static java.util.stream.Collectors.toList;
 import static reka.api.Path.path;
 import static reka.api.Path.slashes;
 import static reka.config.configurer.Configurer.configure;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
-import static reka.config.configurer.Configurer.Preconditions.invalidConfig;
+import static reka.core.config.ConfigUtils.configToData;
 import static reka.util.Util.safelyCompletable;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.slf4j.Logger;
@@ -37,24 +34,21 @@ import reka.core.builder.Flows;
 import reka.core.builder.FlowsBuilder;
 import reka.core.bundle.BundleManager;
 import reka.core.bundle.Registration;
-import reka.core.bundle.TriggerConfigurer;
-import reka.core.bundle.TriggerSetup;
 import reka.core.bundle.UseConfigurer;
 import reka.core.bundle.UseConfigurer.UsesInitializer;
 import reka.core.bundle.UseInit.Registration2;
-import reka.core.bundle.UseInit.Trigger2;
+import reka.core.bundle.UseInit.Trigger;
 import reka.core.config.MultiConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
+import reka.core.data.memory.MutableMemoryData;
 
 public class ApplicationConfigurer implements ErrorReporter {
 	
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	
     private Path applicationName;
-    private Number version;
     
-    @SuppressWarnings("unused") // one day!
-	private String description;
+    private final MutableData meta = MutableMemoryData.create();
     
     public ApplicationConfigurer(BundleManager bundles) {
         rootUse = new UseRoot();
@@ -67,28 +61,15 @@ public class ApplicationConfigurer implements ErrorReporter {
     
     private final UseConfigurer rootUse;
     
-    private final List<Entry<Path,Config>> triggerConfigs = new ArrayList<>();
-    
     @Conf.At("name")
     public void name(String val) {
         applicationName = slashes(val);
     }
-    
-    @Conf.At("version")
-    public void version(BigDecimal val) {
-    	version = val;
-    	log.debug("version: {}", version);
-    }
-    
-    @Conf.At("description")
-    public void description(Config config) {
-    	if (config.hasDocument()) {
-    		description = config.documentContentAsString();
-    	} else if (config.hasValue()) {
-    		description = config.valueAsString();
-    	} else {
-    		invalidConfig("must be a document or a value");
-    	}
+
+    @Conf.At("meta")
+    public void meta(Config val) {
+    	checkConfig(val.hasBody(), "must have a body");
+    	meta.merge(configToData(val.body()));
     }
     
     @Conf.EachUnmatched
@@ -134,47 +115,28 @@ public class ApplicationConfigurer implements ErrorReporter {
     	return build(identity, version, previous, EverythingSubscriber.DO_NOTHING);
     }
     
-    private void configureTriggers(Map<Path, Supplier<TriggerConfigurer>> triggerConfigurers, TriggerSetup triggers) {
-    	
-		triggerConfigs.forEach(e -> {
-			
-			Path path = e.getKey();
-			Config config = e.getValue();
-			
-			checkConfig(triggerConfigurers.containsKey(path), "we don't have a trigger configurer for [%s] try one of %s", 
-					path.slashes(), 
-					triggerConfigurers.keySet().stream().map(Path::slashes).collect(toList()));
-			
-			configure(triggerConfigurers.get(path).get(), config).setupTriggers(triggers);
-			
-		});
-		
-    }
-    
     public void checkValid() {
     	UsesInitializer initializer = UseConfigurer.process(rootUse);
-    	Map<Path, Supplier<TriggerConfigurer>> triggerConfigurers = initializer.triggers();
     	MultiConfigurerProvider configurerProvider = new MultiConfigurerProvider(initializer.providers());
-    	initializer.trigger2s().forEach(t -> t.supplier().apply(configurerProvider).get());
+    	initializer.triggers().forEach(trigger -> trigger.supplier().apply(configurerProvider).get());
     	flowConfigs.forEach((config) -> configure(new SequenceConfigurer(configurerProvider), config).get());
-    	configureTriggers(triggerConfigurers, new TriggerSetup("validate", applicationName, -1));
     }
     
-    public static class Trigger2Build {
+    public static class TriggerSetup {
 
-    	private final Trigger2 trigger;
+    	private final Trigger trigger;
     	
     	private Path flowName;
     	
-		public Trigger2Build(Trigger2 trigger) {
+		public TriggerSetup(Trigger trigger) {
 			this.trigger = trigger;
 		}
 		
-		public Trigger2 trigger() {
+		public Trigger trigger() {
 			return trigger;
 		}
 		
-		public Trigger2Build flowName(Path val) {
+		public TriggerSetup flowName(Path val) {
 			flowName = val;
 			return this;
 		}
@@ -196,30 +158,35 @@ public class ApplicationConfigurer implements ErrorReporter {
 	    	ApplicationBuilder applicationBuilder = new ApplicationBuilder();
 	    	
 	    	applicationBuilder.name(applicationName);
+	    	applicationBuilder.meta(meta.immutable());
 	    	applicationBuilder.version(applicationVersion);
 	    	applicationBuilder.initializerVisualizer(initializer.visualizer());
-	    	
-	    	Map<Path, Supplier<TriggerConfigurer>> triggerConfigurers = initializer.triggers();
 	    	
 	    	List<Runnable> shutdownHandlers = initializer.shutdownHandlers();
 	    	
 	    	MultiConfigurerProvider configurerProvider = new MultiConfigurerProvider(initializer.providers());
 	    	
-	    	List<Trigger2Build> trigger2builts = new ArrayList<>();
+	    	List<TriggerSetup> triggerSetups = new ArrayList<>();
 	    	
-	    	initializer.trigger2s().forEach(t -> {
-	    		Trigger2Build tt = new Trigger2Build(t).flowName(applicationName.add("trigger").add(t.name()));
-	    		flowsBuilder.add(tt.flowName(), t.supplier().apply(configurerProvider).get());
-	    		trigger2builts.add(tt);
+	    	initializer.triggers().forEach(trigger -> {
+	    		/*
+	    		Path baseFlowName = applicationName.add("trigger").add(trigger.name());
+	    		Path flowName = baseFlowName;
+	    		int num = 1;
+	    		while (flowsBuilder.roots().contains(flowName)) {
+	    			flowName = baseFlowName.add(num);
+	    			num++;
+	    		}
+	    		*/
+	    		Path flowName = applicationName.add(UUID.randomUUID().toString()).add(trigger.name());
+	    		TriggerSetup setup = new TriggerSetup(trigger).flowName(flowName);
+	    		flowsBuilder.add(setup.flowName(), trigger.supplier().apply(configurerProvider).get());
+	    		triggerSetups.add(setup);
 	    	});
 	    	
 	    	flowConfigs.forEach((config) -> 
 				flowsBuilder.add(applicationName.add(config.valueAsString()), 
 						configure(new SequenceConfigurer(configurerProvider), config).get()));
-	    	
-	    	TriggerSetup triggers = new TriggerSetup(identity, applicationName, applicationVersion);
-	
-	    	configureTriggers(triggerConfigurers, triggers);
 	    	
 	    	// ok, run the app initializer
 	
@@ -240,11 +207,7 @@ public class ApplicationConfigurer implements ErrorReporter {
 						
 						Registration registration = new Registration(flows);
 						
-						for (Consumer<Registration> handler : triggers.registrationHandlers()) {
-							handler.accept(registration);
-						}
-						
-						for (Trigger2Build t : trigger2builts) {
+						for (TriggerSetup t : triggerSetups) {
 							Registration2 registration2 = new Registration2(applicationVersion, flows.flow(t.flowName()), identity);
 							t.trigger().consumer().accept(registration2);
 							applicationBuilder.register(registration2);

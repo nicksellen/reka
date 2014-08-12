@@ -1,6 +1,9 @@
 name reka/ui
 
-version 10.2
+meta {
+  author nick
+  description this is a nice application
+}
 
 reka
 mustache

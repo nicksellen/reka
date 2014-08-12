@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.List;
 
 import reka.api.Path;
+import reka.api.data.Data;
 import reka.api.flow.Flow;
 import reka.core.builder.FlowVisualizer;
 import reka.core.builder.Flows;
@@ -16,6 +17,7 @@ public class Application {
 	private final List<PortAndProtocol> ports; 
 
 	private final Path name;
+	private final Data meta;
 	private final String fullName;
 	private final int version;
 	private final Flows flows;
@@ -23,6 +25,7 @@ public class Application {
 	
 	public Application(
 			Path name, 
+			Data meta,
 			int version, 
 			Flows flows,  
 			List<PortAndProtocol> ports, 
@@ -30,6 +33,7 @@ public class Application {
 			List<DeployedResource> resources) {
 		this.name = name;
 		this.fullName = name.slashes();
+		this.meta = meta;
 		this.version = version;
 		this.flows = flows;
 		this.ports = ports;
@@ -39,6 +43,10 @@ public class Application {
 		
 	public Path name() {
 		return name;
+	}
+	
+	public Data meta() {
+		return meta;
 	}
 	
 	public String fullName() {

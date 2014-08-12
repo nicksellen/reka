@@ -1,5 +1,13 @@
 .app-detail
 
+  if app.meta
+    table.meta
+      each value, name in app.meta
+        tr
+          th= name
+          td= value
+
+
   h1= app.name
   pre.appid= id
 

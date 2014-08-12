@@ -1,16 +1,12 @@
 package reka.http;
 
-import static java.lang.String.format;
-import static java.util.Arrays.asList;
 import static reka.api.Path.path;
-import static reka.api.Path.root;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import static reka.core.builder.FlowSegments.sync;
+import static reka.util.Util.runtime;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -18,24 +14,18 @@ import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.flow.FlowSegment;
 import reka.api.run.SyncOperation;
 import reka.config.Config;
+import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.TriggerConfigurer;
-import reka.core.bundle.TriggerSetup;
 import reka.core.bundle.UseConfigurer;
 import reka.core.bundle.UseInit;
-import reka.core.data.memory.MutableMemoryData;
 import reka.core.util.StringWithVars;
 import reka.http.server.HttpServerManager;
 import reka.http.server.HttpSettings;
-import reka.http.server.HttpSettings.Type;
-
-import com.google.common.base.Splitter;
 
 public class UseWebsockets extends UseConfigurer {
 	
@@ -49,13 +39,57 @@ public class UseWebsockets extends UseConfigurer {
 	public UseWebsockets(HttpServerManager server) {
 		this.server = server;
 	}
+	
+	private final List<ConfigBody> onConnect = new ArrayList<>();
+	private final List<ConfigBody> onDisconnect = new ArrayList<>();
+	private final List<ConfigBody> onMessage = new ArrayList<>();
+
+	@Conf.Each("on")
+	public void on(Config config) {
+		checkConfig(config.hasValue(), "must have a value");
+		checkConfig(config.hasBody(), "must have a body");
+		switch (config.valueAsString()) {
+		case "connect":
+			onConnect.add(config.body());
+			break;
+		case "disconnect":
+			onDisconnect.add(config.body());
+			break;
+		case "message":
+			onMessage.add(config.body());
+			break;
+		default:
+			throw runtime("unknown trigger %s", config.valueAsString());
+		}
+	}
 
 	@Override
 	public void setup(UseInit init) {
 		init.operation(path("send"), () -> new WebsocketSendConfigurer());
 		init.operation(path("broadcast"), () -> new WebsocketBroadcastConfigurer());
-		init.trigger(root(), () -> new WebsocketsTriggerConfigurer());
+		
+		// TODO: fixup websockets, I can't pass all these connection things into
+		// it because they come back independently. I need something that lets me add in
+		// handlers one at a time. and maybe something at the end to confirm we're all done...
+		
+		onConnect.forEach(body -> {
+			init.trigger("connect", body, registration -> {
+				
+			});
+		});
+		
+		onDisconnect.forEach(body -> {
+			
+		});
+		
+		onMessage.forEach(body -> {
+			
+		});
+		
+		//init.trigger(root(), () -> new WebsocketsTriggerConfigurer());
 	}
+	
+	/*
 
 	public class WebsocketsTriggerConfigurer implements TriggerConfigurer {
 
@@ -145,6 +179,7 @@ public class UseWebsockets extends UseConfigurer {
 		}
 		
 	}
+	*/
 	
 
 	public class WebsocketSendConfigurer implements Supplier<FlowSegment> {

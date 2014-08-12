@@ -15,7 +15,7 @@ class StringWithoutVariables implements Function<Data,String>, StringWithVars {
 	}
 
 	@Override
-	public String apply(Data t) {
+	public String apply(Data data) {
 		return val;
 	}
 
@@ -30,7 +30,7 @@ class StringWithoutVariables implements Function<Data,String>, StringWithVars {
 	}
 
 	@Override
-	public String withPlaceholder(String unused) {
+	public String withPlaceholder(String placeholder) {
 		return val;
 	}
 	

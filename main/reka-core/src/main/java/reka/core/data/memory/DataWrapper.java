@@ -79,13 +79,13 @@ public class DataWrapper<T> implements Data {
 
 	@Override
 	public String toPrettyJson() {
-		if (root == null) return "";
+		if (root == null) return "{}";
 		return provider.toPrettyJson(root);
 	}
 
 	@Override
 	public String toJson() {
-		if (root == null) return "";
+		if (root == null) return "{}";
 		return provider.toJson(root);
 	}
 
@@ -130,8 +130,12 @@ public class DataWrapper<T> implements Data {
 
 	@Override
 	public void writeJsonTo(JsonGenerator json) throws IOException {
-		if (root == null) return;
-		provider.out(root, json);
+		if (root == null) {
+			json.writeStartObject();
+			json.writeEndObject();
+		} else {
+			provider.out(root, json);
+		}
 	}
 
 	@Override

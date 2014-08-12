@@ -123,8 +123,7 @@ public class UseInit {
 	private final Path path;
 	private final List<Supplier<FlowSegment>> segments = new ArrayList<>();
 	private final List<Runnable> shutdownHandlers = new ArrayList<>();
-	private final Map<Path,Supplier<TriggerConfigurer>> triggers = new HashMap<>();
-	private final List<Trigger2> trigger2s = new ArrayList<>();
+	private final List<Trigger> triggers = new ArrayList<>();
 	private final Map<Path,Function<ConfigurerProvider,Supplier<FlowSegment>>> providers = new HashMap<>();
 	
 	public UseInit(Path path) {
@@ -178,11 +177,6 @@ public class UseInit {
 		for (Path name : names) {
 			operation(name, provider);
 		}
-		return this;
-	}
-
-	public UseInit trigger(Path triggerPath, Supplier<TriggerConfigurer> supplier) {
-		triggers.put(path.add(triggerPath), supplier);
 		return this;
 	}
 	
@@ -241,13 +235,13 @@ public class UseInit {
 		
 	}
 	
-	public static class Trigger2 {
+	public static class Trigger {
 		
 		private final Path name;
 		private final Function<ConfigurerProvider, Supplier<FlowSegment>> supplier;
 		private final Consumer<Registration2> consumer;
 		
-		public Trigger2(Path name,
+		public Trigger(Path name,
 				Function<ConfigurerProvider, Supplier<FlowSegment>> supplier,
 				Consumer<Registration2> consumer) {
 			this.name = name;
@@ -269,12 +263,12 @@ public class UseInit {
 		
 	}
 	
-	public UseInit trigger2(String name, ConfigBody body, Consumer<Registration2> c) {
-		return trigger2(name,  (provider) -> configure(new SequenceConfigurer(provider), body), c);
+	public UseInit trigger(String name, ConfigBody body, Consumer<Registration2> c) {
+		return trigger(name,  (provider) -> configure(new SequenceConfigurer(provider), body), c);
 	}
 	
-	public UseInit trigger2(String name, Function<ConfigurerProvider, Supplier<FlowSegment>> supplier, Consumer<Registration2> c) {
-		trigger2s.add(new Trigger2(path.add(name), supplier, c));
+	public UseInit trigger(String name, Function<ConfigurerProvider, Supplier<FlowSegment>> supplier, Consumer<Registration2> c) {
+		triggers.add(new Trigger(path.add(name), supplier, c));
 		return this;
 	}
 	
@@ -291,12 +285,8 @@ public class UseInit {
 		return providers;
 	}
 	
-	public Map<Path,Supplier<TriggerConfigurer>> triggers() {
+	public List<Trigger> triggers() {
 		return triggers;
-	}
-	
-	public List<Trigger2> trigger2s() {
-		return trigger2s;
 	}
 	
 	public List<Runnable> shutdownHandlers() {

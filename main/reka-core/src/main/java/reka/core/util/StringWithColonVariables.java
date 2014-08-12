@@ -9,9 +9,6 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
@@ -20,10 +17,7 @@ import reka.core.data.memory.MutableMemoryData;
 import com.google.common.collect.ImmutableList;
 
 class StringWithColonVariables implements Function<Data,String>, StringWithVars {
-
-	private static final Logger log = LoggerFactory.getLogger(StringWithColonVariables.class);
 	
-	//private static final Pattern pattern = Pattern.compile(":([^:\\s,()]+[^:\\s,().])");
 	private static final Pattern pattern = Pattern.compile(":\\{?([a-zA-Z0-9-_\\.\\[\\]]+\\b)\\}?");
 	
 	public static void main(String[] args) throws Exception {
@@ -36,9 +30,9 @@ class StringWithColonVariables implements Function<Data,String>, StringWithVars 
 		data.put(dots("person.name"), utf8("a name!"));
 		
 		String out = v.apply(data);
-		log.debug("formatted: {}\n", out);
+		System.out.printf("formatted: %s\n", out);
 		
-		log.debug("no variables [{}]\n", StringWithVars.compile("a nice normal string").apply(data));
+		System.out.printf("no variables [%s]\n", StringWithVars.compile("a nice normal string").apply(data));
 	}
 	
 
@@ -120,7 +114,7 @@ class StringWithColonVariables implements Function<Data,String>, StringWithVars 
 				if (d.isContent()) {
 					val = d.content().asUTF8();
 				} else {
-					val = d.toPrettyJson();
+					val = d.toJson();
 				}
 				if (val != null) {
 					output.insert(var.pos + offset, val);
@@ -135,8 +129,8 @@ class StringWithColonVariables implements Function<Data,String>, StringWithVars 
 	public String withPlaceholder(String val) {
 		StringBuilder output = new StringBuilder(base);
 		int offset = 0;
-		for (Variable _var : entries) {
-			ColonVariable var = (ColonVariable) _var;
+		for (Variable v : entries) {
+			ColonVariable var = (ColonVariable) v;
 			output.insert(var.pos + offset, val);
 			offset += val.length();
 		}

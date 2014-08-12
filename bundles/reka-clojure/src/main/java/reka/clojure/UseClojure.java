@@ -52,8 +52,8 @@ public class UseClojure extends UseConfigurer {
 		}
 	}
 	
-	@Conf.Each("on")
-	public void on(Config config) {
+	@Conf.Each("defn")
+	public void defn(Config config) {
 		checkConfig(config.hasValue(), "must have a value");
 		triggerFns.put(config.valueAsString(), config.body());
 	}
@@ -75,13 +75,8 @@ public class UseClojure extends UseConfigurer {
 			} catch (IOException e) {
 				throw unchecked(e);
 			}
-				
-			env.run("reka/define-callback", "reka/callme", (Runnable) () -> {
-				System.out.printf("woah you called me! thanks :)\n");
-			});
 
-			// forward declare all the callbacks so the initialization can refer to them
-			// they'll be overwritten later...
+			// forward declare all the callbacks so the initialization can refer to them (they'll be overwritten later..._
 			triggerFns.forEach((name, body) -> {
 				env.run("reka/define-callback", name, (Runnable) () -> {
 					throw runtime("sorry you can't use callback %s during initialization", name);
@@ -92,7 +87,7 @@ public class UseClojure extends UseConfigurer {
 			envs.put(env, "");
 			
 			runtimeRef.set(env);
-			System.out.printf("there are %d clojure envs in memory\n", envs.size());
+			
 			return data;
 		});
 		
@@ -102,7 +97,7 @@ public class UseClojure extends UseConfigurer {
 		});
 		
 		triggerFns.forEach((name, body) -> {
-			init.trigger2(name, body, registration -> {
+			init.trigger(name, body, registration -> {
 				runtimeRef.get().run("reka/define-callback", name, (Runnable) () -> {
 					registration.flow().run();
 				});

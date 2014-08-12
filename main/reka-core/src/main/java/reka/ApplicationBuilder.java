@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import reka.api.Path;
+import reka.api.data.Data;
 import reka.core.builder.FlowVisualizer;
 import reka.core.builder.Flows;
 import reka.core.bundle.PortAndProtocol;
@@ -16,12 +17,17 @@ public class ApplicationBuilder {
 	private final List<DeployedResource> resources = new ArrayList<>();
 
 	private Path name;
+	private Data meta;
 	private int version = -1;
 	private Flows flows;
 	private FlowVisualizer visualizer;
 
 	public void name(Path name) {
 		this.name = name;
+	}
+	
+	public void meta(Data meta) {
+		this.meta = meta;
 	}
 	
 	public void version(int version) {
@@ -47,7 +53,7 @@ public class ApplicationBuilder {
 	}
 
 	public Application build() {
-		return new Application(name, version, flows, ports, visualizer, resources);
+		return new Application(name, meta, version, flows, ports, visualizer, resources);
 	}
 
 }
