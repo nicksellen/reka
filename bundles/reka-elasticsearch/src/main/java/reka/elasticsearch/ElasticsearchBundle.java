@@ -7,7 +7,7 @@ public class ElasticsearchBundle implements RekaBundle {
 
 	@Override
 	public void setup(BundleSetup setup) {
-		setup.use(path("elasticsearch"), () -> new UseElasticsearch());
+		setup.use(path("elasticsearch"), () -> new ElasticsearchModule());
 	}
 
 }

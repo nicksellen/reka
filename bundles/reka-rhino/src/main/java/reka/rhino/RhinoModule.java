@@ -16,12 +16,12 @@ import org.slf4j.LoggerFactory;
 import reka.api.Path;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.UseConfigurer;
-import reka.core.bundle.UseInit;
+import reka.core.bundle.ModuleConfigurer;
+import reka.core.bundle.ModuleInit;
 
 import com.google.common.base.Charsets;
 
-public class UseRhino extends UseConfigurer {
+public class RhinoModule extends ModuleConfigurer {
 	
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	
@@ -46,11 +46,11 @@ public class UseRhino extends UseConfigurer {
 	}
 
 	@Override
-	public void setup(UseInit init) {
+	public void setup(ModuleInit init) {
 		
 		Path scopePath = init.path().add("scope");
 		
-		init.run("create js scope", (data) -> {
+		init.init("create js scope", (data) -> {
 			Context context = Context.enter();
 			try {
 				ScriptableObject scope = context.initStandardObjects(null, false);
@@ -66,7 +66,7 @@ public class UseRhino extends UseConfigurer {
 		});
 		
 		if (script != null) {
-			init.run("run initial javascript", (data) -> {
+			init.init("run initial javascript", (data) -> {
 				log.debug("running initial js");
 				ScriptableObject scope = data.getContent(scopePath).get().valueAs(ScriptableObject.class);
 				runJavascriptInScope(scope, script);

@@ -7,7 +7,7 @@ public class ProcessBundle implements RekaBundle {
 
 	@Override
 	public void setup(BundleSetup setup) {
-		setup.use(path("process"), () -> new UseProcess());
+		setup.use(path("process"), () -> new ProcessModule());
 	}
 
 }

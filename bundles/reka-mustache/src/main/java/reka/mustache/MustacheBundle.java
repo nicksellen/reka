@@ -7,7 +7,7 @@ public class MustacheBundle implements RekaBundle {
 
 	@Override
 	public void setup(BundleSetup setup) {
-		setup.use(path("mustache"), () -> new UseMustache());
+		setup.use(path("mustache"), () -> new MustacheModule());
 	}
 
 }

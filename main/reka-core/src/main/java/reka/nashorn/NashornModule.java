@@ -11,10 +11,10 @@ import java.util.List;
 
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.UseConfigurer;
-import reka.core.bundle.UseInit;
+import reka.core.bundle.ModuleConfigurer;
+import reka.core.bundle.ModuleInit;
 
-public class UseNashorn extends UseConfigurer {
+public class NashornModule extends ModuleConfigurer {
 	
 	List<String> scripts = new ArrayList<>();
 	
@@ -40,7 +40,7 @@ public class UseNashorn extends UseConfigurer {
 	}
 
 	@Override
-	public void setup(UseInit init) {
+	public void setup(ModuleInit init) {
 		
 
 		ThreadLocal<NashornRunner> runner = new ThreadLocal<NashornRunner>(){

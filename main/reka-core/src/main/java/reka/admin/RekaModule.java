@@ -19,23 +19,23 @@ import reka.config.processor.DocConverter;
 import reka.config.processor.IncludeConverter;
 import reka.config.processor.MultiConverter;
 import reka.config.processor.Processor;
-import reka.core.bundle.UseConfigurer;
-import reka.core.bundle.UseInit;
+import reka.core.bundle.ModuleConfigurer;
+import reka.core.bundle.ModuleInit;
 
 import com.google.common.base.Charsets;
 
-public class UseReka extends UseConfigurer {
+public class RekaModule extends ModuleConfigurer {
 	
-	private static final Logger log = LoggerFactory.getLogger(UseReka.class);
+	private static final Logger log = LoggerFactory.getLogger(RekaModule.class);
 	
 	private final ApplicationManager manager;
 	
-	public UseReka(ApplicationManager manager) {
+	public RekaModule(ApplicationManager manager) {
 		this.manager = manager;
 	}
 
 	@Override
-	public void setup(UseInit use) {
+	public void setup(ModuleInit use) {
 		use.operation(path("list"), () -> new RekaListConfigurer(manager));
 		use.operation(path("get"), () -> new RekaDetailsConfigurer(manager));
 		use.operation(path("validate"), (provider) -> new RekaValidateConfigurer(provider, manager));

@@ -12,8 +12,8 @@ public class BuiltinsBundle implements RekaBundle {
 
 	@Override
 	public void setup(BundleSetup setup) {
-		setup.use(root(), () -> new UseBuiltins());
-		setup.use(path("timer"), () -> new UseTimer());
+		setup.use(root(), () -> new BuiltinsModule());
+		setup.use(path("timer"), () -> new TimerModule());
 		setup.converter(new CommentConverter()); 
 		setup.converter(new IncludeConverter());
 		setup.converter(new MarkdownConverter());

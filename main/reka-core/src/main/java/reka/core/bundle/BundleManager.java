@@ -17,7 +17,7 @@ public class BundleManager {
 	
 	private final Set<RekaBundle> bundles = new HashSet<>();
 	
-	private final List<Entry<Path,Supplier<UseConfigurer>>> uses = new ArrayList<>();
+	private final List<Entry<Path,Supplier<ModuleConfigurer>>> uses = new ArrayList<>();
 	private final List<ConfigConverter> converters = new ArrayList<>();
 	
 	public BundleManager(Collection<RekaBundle> incoming) {
@@ -47,7 +47,7 @@ public class BundleManager {
 		}
 	}
 	
-	public List<Entry<Path,Supplier<UseConfigurer>>> uses() {
+	public List<Entry<Path,Supplier<ModuleConfigurer>>> uses() {
 		return uses;
 	}
 	
@@ -57,7 +57,7 @@ public class BundleManager {
 	
 	public Collection<Path> useKeys() {
 		Set<Path> keys = new HashSet<>();
-		for (Entry<Path, Supplier<UseConfigurer>> e : uses) {
+		for (Entry<Path, Supplier<ModuleConfigurer>> e : uses) {
 			keys.add(e.getKey());
 		}
 		return keys; 

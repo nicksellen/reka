@@ -9,7 +9,7 @@ import reka.core.builder.FlowVisualizer;
 import reka.core.builder.Flows;
 import reka.core.bundle.PortAndProtocol;
 import reka.core.bundle.Registration;
-import reka.core.bundle.UseInit.Registration2;
+import reka.core.bundle.ModuleInit.TriggerRegistration;
 
 public class ApplicationBuilder {
 
@@ -34,7 +34,7 @@ public class ApplicationBuilder {
 		this.version = version;
 	}
 	
-	public void setFlows(Flows flows) {
+	public void flows(Flows flows) {
 		this.flows = flows;
 	}
 	
@@ -47,7 +47,7 @@ public class ApplicationBuilder {
 		ports.addAll(registration.ports());
 	}
 	
-	public void register(Registration2 registration) {
+	public void register(TriggerRegistration registration) {
 		resources.addAll(registration.resources());
 		ports.addAll(registration.network());
 	}

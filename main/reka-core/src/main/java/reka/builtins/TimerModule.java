@@ -17,10 +17,10 @@ import java.util.regex.Pattern;
 import reka.api.flow.Flow;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.UseConfigurer;
-import reka.core.bundle.UseInit;
+import reka.core.bundle.ModuleConfigurer;
+import reka.core.bundle.ModuleInit;
 
-public class UseTimer extends UseConfigurer {
+public class TimerModule extends ModuleConfigurer {
 	
 	private final static ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
 	
@@ -48,7 +48,7 @@ public class UseTimer extends UseConfigurer {
 	}
 	
 	@Override
-	public void setup(UseInit use) {
+	public void setup(ModuleInit use) {
 		every.forEach(config -> {
 			use.trigger(format("every %s", config.valueAsString()), config.body(), register -> {
 				ScheduledFuture<?> f = executor.scheduleAtFixedRate(new TimerRun(register.flow()), 0, parseMs(config.valueAsString()), TimeUnit.MILLISECONDS);

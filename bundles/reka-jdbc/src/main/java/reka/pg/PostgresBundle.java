@@ -8,7 +8,7 @@ public class PostgresBundle implements RekaBundle {
 
 	@Override
 	public void setup(BundleSetup setup) {
-		setup.use(path("postgres"), () -> new UsePostgres());
+		setup.use(path("postgres"), () -> new PostgresModule());
 	}
 
 }

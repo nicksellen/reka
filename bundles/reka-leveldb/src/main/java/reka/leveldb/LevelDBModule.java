@@ -14,13 +14,13 @@ import reka.api.data.MutableData;
 import reka.api.flow.FlowSegment;
 import reka.api.run.SyncOperation;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.UseConfigurer;
-import reka.core.bundle.UseInit;
+import reka.core.bundle.ModuleConfigurer;
+import reka.core.bundle.ModuleInit;
 import reka.core.util.StringWithVars;
 
 import com.google.common.base.Charsets;
 
-public class UseLevelDB extends UseConfigurer {
+public class LevelDBModule extends ModuleConfigurer {
 
 	private String dbfile;
 	
@@ -30,11 +30,11 @@ public class UseLevelDB extends UseConfigurer {
 	}
 	
 	@Override
-	public void setup(UseInit use) {
+	public void setup(ModuleInit use) {
 		
 		Path dbPath = use.path().add("db");
 		
-		use.run("open or create db", (data) ->  {
+		use.init("open or create db", (data) ->  {
 			LevelDBStorage db = new LevelDBStorage(dbfile);
 			data.put(dbPath, Contents.nonSerializableContent(db));
 			return data;

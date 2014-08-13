@@ -35,15 +35,15 @@ import reka.api.content.Contents;
 import reka.api.data.Data;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.UseConfigurer;
-import reka.core.bundle.UseInit;
+import reka.core.bundle.ModuleConfigurer;
+import reka.core.bundle.ModuleInit;
 import reka.core.util.StringWithVars;
 import reka.core.util.StringWithVars.Variable;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
-public class UseJdbc extends UseConfigurer {
+public class JdbcModule extends ModuleConfigurer {
 
 	@SuppressWarnings("unused")
 	private final Logger log = LoggerFactory.getLogger(getClass());
@@ -108,7 +108,7 @@ public class UseJdbc extends UseConfigurer {
 	}
 
 	@Override
-	public void setup(UseInit use) {
+	public void setup(ModuleInit use) {
 		
 		JdbcConfiguration config = new JdbcConfiguration(returnGeneratedKeys);
 		
@@ -127,7 +127,7 @@ public class UseJdbc extends UseConfigurer {
 
 		if (!migrations.isEmpty()) {
 		
-			use.run("run migrations", (data) -> {
+			use.init("run migrations", (data) -> {
 				
 				File tmpdir = Files.createTempDir();
 				
@@ -168,7 +168,7 @@ public class UseJdbc extends UseConfigurer {
 		
 		}
 		
-		use.run("run sql", (data) -> {
+		use.init("run sql", (data) -> {
 			data.put(poolPath, Contents.nonSerializableContent(jdbc));
 			try (Connection connection = jdbc.getConnection()){
 	            Statement stmt = connection.createStatement();
@@ -181,7 +181,7 @@ public class UseJdbc extends UseConfigurer {
 			return data;
 		});
 		
-		use.run("seed data", (data) -> {
+		use.init("seed data", (data) -> {
 			
 			try (Connection conn = jdbc.getConnection()) {
 				for (Entry<String, List<Data>> e : seeds.entrySet()) {

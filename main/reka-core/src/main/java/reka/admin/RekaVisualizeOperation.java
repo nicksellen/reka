@@ -64,7 +64,7 @@ public class RekaVisualizeOperation implements SyncOperation {
 		try {
 			Entry<Content,Content> entry = cache.get(hash, () -> {
 				
-				Collection<FlowVisualizer> vs = manager.visualize(UseReka.getConfigFromData(data, in));
+				Collection<FlowVisualizer> vs = manager.visualize(RekaModule.getConfigFromData(data, in));
 				
 				Iterator<FlowVisualizer> it = vs.iterator();
 				FlowVisualizer first = null;

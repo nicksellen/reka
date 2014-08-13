@@ -4,13 +4,13 @@ import static reka.util.Util.unchecked;
 
 import org.h2.Driver;
 
-import reka.core.bundle.UseConfigurer;
-import reka.core.bundle.UseInit;
+import reka.core.bundle.ModuleConfigurer;
+import reka.core.bundle.ModuleInit;
 
-public class UseH2 extends UseConfigurer {
+public class H2Module extends ModuleConfigurer {
 
 	@Override
-	public void setup(UseInit init) {
+	public void setup(ModuleInit init) {
 		
 		try {
 			Class.forName(Driver.class.getName());

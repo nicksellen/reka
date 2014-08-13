@@ -3,9 +3,7 @@ package reka.process;
 import java.util.function.Consumer;
 
 public interface ProcessManager {
-
-	public abstract void run(String input, Consumer<String> consumer);
-
-	public abstract void kill();
-
+	void run(String input);
+	void run(String input, Consumer<String> consumer);
+	void kill();
 }

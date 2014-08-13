@@ -17,8 +17,8 @@ import reka.api.run.SyncOperation;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.RekaBundle;
-import reka.core.bundle.UseConfigurer;
-import reka.core.bundle.UseInit;
+import reka.core.bundle.ModuleConfigurer;
+import reka.core.bundle.ModuleInit;
 
 public class HazelcastBundle implements RekaBundle {
 
@@ -26,10 +26,10 @@ public class HazelcastBundle implements RekaBundle {
 		setup.use(path("hazelcast"), () -> new UseHazelcast());
 	}
 	
-	public static class UseHazelcast extends UseConfigurer {
+	public static class UseHazelcast extends ModuleConfigurer {
 
 		@Override
-		public void setup(UseInit init) {
+		public void setup(ModuleInit init) {
 			init.operation(path("put"), () -> new PutConfigurer());
 		}
 		

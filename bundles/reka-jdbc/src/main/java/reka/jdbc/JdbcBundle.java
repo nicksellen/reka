@@ -11,7 +11,7 @@ public class JdbcBundle implements RekaBundle {
 	public void setup(BundleSetup setup) {
 		setup.bundle(new H2Bundle());
 		setup.bundle(new PostgresBundle());
-		setup.use(path("jdbc"), () -> new UseJdbc());
+		setup.use(path("jdbc"), () -> new JdbcModule());
 	}
 
 }

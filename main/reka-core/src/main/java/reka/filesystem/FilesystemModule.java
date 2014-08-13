@@ -7,15 +7,15 @@ import java.io.File;
 import java.nio.file.Path;
 
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.UseConfigurer;
-import reka.core.bundle.UseInit;
+import reka.core.bundle.ModuleConfigurer;
+import reka.core.bundle.ModuleInit;
 import reka.filesystem.FilesystemBundle.FilesystemDeleteConfigurer;
 import reka.filesystem.FilesystemBundle.FilesystemListConfigurer;
 import reka.filesystem.FilesystemBundle.FilesystemMktmpDirConfigurer;
 import reka.filesystem.FilesystemBundle.FilesystemReadConfigurer;
 import reka.filesystem.FilesystemBundle.FilesystemTypeConfigurer;
 
-public class UseFilesystem extends UseConfigurer {
+public class FilesystemModule extends ModuleConfigurer {
 	
 	private Path basedir = new File("/").toPath();
 	
@@ -25,7 +25,7 @@ public class UseFilesystem extends UseConfigurer {
 	}
 
 	@Override
-	public void setup(UseInit init) {
+	public void setup(ModuleInit init) {
 		init.operation(path("write"), () -> new FilesystemWriteConfigurer(basedir));
 		init.operation(path("read"), () -> new FilesystemReadConfigurer(basedir));
 		init.operation(asList(path("list"), path("ls")), () -> new FilesystemListConfigurer(basedir));

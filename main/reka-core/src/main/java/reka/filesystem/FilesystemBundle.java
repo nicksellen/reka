@@ -26,7 +26,7 @@ public class FilesystemBundle implements RekaBundle {
 
 	@Override
 	public void setup(BundleSetup setup) {
-		setup.use(path("filesystem"), () -> new UseFilesystem());
+		setup.use(path("filesystem"), () -> new FilesystemModule());
 	}
 	
 	public static class FilesystemReadConfigurer implements Supplier<FlowSegment> {

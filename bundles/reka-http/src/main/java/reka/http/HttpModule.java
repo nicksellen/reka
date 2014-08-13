@@ -22,8 +22,8 @@ import reka.DeployedResource;
 import reka.api.flow.FlowSegment;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.UseConfigurer;
-import reka.core.bundle.UseInit;
+import reka.core.bundle.ModuleConfigurer;
+import reka.core.bundle.ModuleInit;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.core.data.memory.MutableMemoryData;
@@ -36,7 +36,7 @@ import reka.http.server.HttpSettings;
 import reka.http.server.HttpSettings.SslSettings;
 import reka.http.server.HttpSettings.Type;
 
-public class UseHTTP extends UseConfigurer {
+public class HttpModule extends ModuleConfigurer {
 
 	// listen 8080
 	// listen localhost:500
@@ -72,7 +72,7 @@ public class UseHTTP extends UseConfigurer {
 		sslSettings = configure(new SslConfigurer(), config).build();
 	}
 	
-	public UseHTTP(HttpServerManager server) {
+	public HttpModule(HttpServerManager server) {
 		this.server = server;
 	}
 	
@@ -107,7 +107,7 @@ public class UseHTTP extends UseConfigurer {
 	}
 
 	@Override
-	public void setup(UseInit http) {
+	public void setup(ModuleInit http) {
 		
 		http.operation(path("router"), (provider) -> new HttpRouterConfigurer(provider));
 		http.operation(path("redirect"), () -> new HttpRedirectConfigurer());
@@ -116,26 +116,26 @@ public class UseHTTP extends UseConfigurer {
 		
 		for (Function<ConfigurerProvider, Supplier<FlowSegment>> h : requestHandlers) {
 			
-			http.trigger("request", h, register -> {
+			http.trigger("request", h, registration -> {
 				
 				for (HostAndPort listen : listens) {
 					
 					final String host = listen.host() == null ? "*" : listen.host();
 					final int port = listen.port() == -1 ? (sslSettings != null ? 443 : 80) : listen.port();
 					
-					String identity = format("%s/%s/%s", register.identity(), host, port);
+					String identity = format("%s/%s/%s", registration.applicationIdentity(), host, port);
 				
 					HttpSettings settings;
 					
 					if (sslSettings != null) {
-						settings = HttpSettings.https(port, host, Type.HTTP, sslSettings, register.applicationVersion());
+						settings = HttpSettings.https(port, host, Type.HTTP, sslSettings, registration.applicationVersion());
 					} else {
-						settings = HttpSettings.http(port, host, Type.HTTP, register.applicationVersion());
+						settings = HttpSettings.http(port, host, Type.HTTP, registration.applicationVersion());
 					}
 					
-					server.deployHttp(identity, register.flow(), settings);
+					server.deployHttp(identity, registration.flow(), settings);
 					
-					register.resource(new DeployedResource() {
+					registration.resource(new DeployedResource() {
 						
 						@Override
 						public void undeploy(int version) {
@@ -155,9 +155,9 @@ public class UseHTTP extends UseConfigurer {
 						
 					});
 					
-					register.network(port, settings.isSsl() ? "https" : "http", MutableMemoryData.create((details) -> {
+					registration.network(port, settings.isSsl() ? "https" : "http", MutableMemoryData.create((details) -> {
 						details.putString("host", host);
-						details.putString("run", register.flow().name().last().toString());
+						details.putString("run", registration.flow().name().last().toString());
 					}).immutable());
 				
 				}

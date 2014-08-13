@@ -15,14 +15,14 @@ import reka.api.data.MutableData;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.UseConfigurer;
-import reka.core.bundle.UseInit;
+import reka.core.bundle.ModuleConfigurer;
+import reka.core.bundle.ModuleInit;
 import reka.core.data.memory.MutableMemoryData;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
-public class UseClojure extends UseConfigurer {
+public class ClojureModule extends ModuleConfigurer {
 
 	private final static WeakHashMap<ClojureEnv, String> envs = new WeakHashMap<>();
 	
@@ -30,8 +30,8 @@ public class UseClojure extends UseConfigurer {
 	
 	public static void main(String[] args) throws InterruptedException {
 		
-		ClojureEnv a = ClojureEnv.create(UseClojure.class.getClassLoader());
-		ClojureEnv b = ClojureEnv.create(UseClojure.class.getClassLoader());
+		ClojureEnv a = ClojureEnv.create(ClojureModule.class.getClassLoader());
+		ClojureEnv b = ClojureEnv.create(ClojureModule.class.getClassLoader());
 		
 		a.eval("(ns nick)\n(defn doit [m] (println (into {} m)))");
 		b.eval("(ns nick)\n(defn doit [m] (println \"alex\"))");
@@ -59,16 +59,16 @@ public class UseClojure extends UseConfigurer {
 	}
 	
 	@Override
-	public void setup(UseInit init) {
+	public void setup(ModuleInit init) {
 		
 		AtomicReference<ClojureEnv> runtimeRef = new AtomicReference<>();
 		
-		init.run("initialize environment", (data) -> {
+		init.init("initialize environment", (data) -> {
 			
-			ClojureEnv env = ClojureEnv.create(UseClojure.class.getClassLoader());
+			ClojureEnv env = ClojureEnv.create(ClojureModule.class.getClassLoader());
 
 			try {
-				String rekaClj = Resources.toString(Resources.getResource(UseClojure.class, "/reka.clj"), Charsets.UTF_8);
+				String rekaClj = Resources.toString(Resources.getResource(ClojureModule.class, "/reka.clj"), Charsets.UTF_8);
 				
 				env.eval(rekaClj);
 				

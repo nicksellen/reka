@@ -7,7 +7,7 @@ public class GitForDataBundle implements RekaBundle {
 
 	@Override
 	public void setup(BundleSetup setup) {
-		setup.use(path("store"), () -> new UseGitForData());
+		setup.use(path("store"), () -> new GitForDataModule());
 	}
 
 }

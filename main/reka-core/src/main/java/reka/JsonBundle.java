@@ -17,8 +17,8 @@ import reka.api.flow.FlowSegment;
 import reka.api.run.SyncOperation;
 import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.RekaBundle;
-import reka.core.bundle.UseConfigurer;
-import reka.core.bundle.UseInit;
+import reka.core.bundle.ModuleConfigurer;
+import reka.core.bundle.ModuleInit;
 import reka.core.data.memory.MutableMemoryData;
 
 public class JsonBundle implements RekaBundle {
@@ -30,10 +30,10 @@ public class JsonBundle implements RekaBundle {
 		setup.use(path("json"), () -> new UseJson());
 	}
 	
-	public static class UseJson extends UseConfigurer {
+	public static class UseJson extends ModuleConfigurer {
 
 		@Override
-		public void setup(UseInit init) {
+		public void setup(ModuleInit init) {
 			init.operation(Path.path("parse"), () -> new JsonParseConfigurer());
 		}
 		

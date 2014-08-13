@@ -7,7 +7,7 @@ public class RhinoBundle implements RekaBundle {
 
 	@Override
 	public void setup(BundleSetup setup) {
-		setup.use(path("rhino"), () -> new UseRhino());
+		setup.use(path("rhino"), () -> new RhinoModule());
 	}
 
 }

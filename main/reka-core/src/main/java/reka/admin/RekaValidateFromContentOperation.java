@@ -27,7 +27,7 @@ public class RekaValidateFromContentOperation implements RoutingOperation {
 	@Override
 	public MutableData call(MutableData data, RouteCollector router) {
 		try {
-			String configString = UseReka.getConfigStringFromData(data, in);
+			String configString = RekaModule.getConfigStringFromData(data, in);
 			manager.validate(StringSource.from(configString));
 			router.routeTo("ok");
 			return data;

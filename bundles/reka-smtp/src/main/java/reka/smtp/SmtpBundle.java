@@ -41,8 +41,8 @@ import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.RekaBundle;
-import reka.core.bundle.UseConfigurer;
-import reka.core.bundle.UseInit;
+import reka.core.bundle.ModuleConfigurer;
+import reka.core.bundle.ModuleInit;
 import reka.core.data.memory.MutableMemoryData;
 import reka.core.util.StringWithVars;
 
@@ -55,7 +55,7 @@ public class SmtpBundle implements RekaBundle {
 		setup.use(path("smtp/server"), () -> new UseSMTPServerConfigurer());
 	}
 	
-	public static class UseSMTPServerConfigurer extends UseConfigurer {
+	public static class UseSMTPServerConfigurer extends ModuleConfigurer {
 
 		private ConfigBody emailHandler;
 		private int port = 25;
@@ -79,7 +79,7 @@ public class SmtpBundle implements RekaBundle {
 		}
 		
 		@Override
-		public void setup(UseInit use) {
+		public void setup(ModuleInit use) {
 			if (emailHandler != null) {
 				use.trigger("email", emailHandler, registration -> {
 					
@@ -121,7 +121,7 @@ public class SmtpBundle implements RekaBundle {
 		
 	}
 	
-	public static class UseSMTPConfigurer extends UseConfigurer {
+	public static class UseSMTPConfigurer extends ModuleConfigurer {
 		
 		private String host, username, password;
 		private int port = 25;
@@ -147,7 +147,7 @@ public class SmtpBundle implements RekaBundle {
 		}
 
 		@Override
-		public void setup(UseInit init) {
+		public void setup(ModuleInit init) {
 			init.operation(path("send"), () -> new SMTPSendConfigurer(host, port, username, password));
 		}
 		

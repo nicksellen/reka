@@ -11,21 +11,21 @@ import reka.api.Path;
 import reka.api.data.MutableData;
 import reka.api.flow.FlowSegment;
 import reka.api.run.SyncOperation;
-import reka.core.bundle.UseConfigurer;
-import reka.core.bundle.UseInit;
+import reka.core.bundle.ModuleConfigurer;
+import reka.core.bundle.ModuleInit;
 import reka.http.server.HttpServerManager;
 import reka.http.server.HttpSettings;
 
-public class UseHttpAdmin extends UseConfigurer {
+public class HttpAdminModule extends ModuleConfigurer {
 
 	private final HttpServerManager server;
 	
-	public UseHttpAdmin(HttpServerManager server) {
+	public HttpAdminModule(HttpServerManager server) {
 		this.server = server;
 	}
 	
 	@Override
-	public void setup(UseInit use) {
+	public void setup(ModuleInit use) {
 		use.operation(path("list"), () -> new ListConfigurer());
 	}
 	

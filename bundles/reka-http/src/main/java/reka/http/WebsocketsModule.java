@@ -21,13 +21,13 @@ import reka.api.run.SyncOperation;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.UseConfigurer;
-import reka.core.bundle.UseInit;
+import reka.core.bundle.ModuleConfigurer;
+import reka.core.bundle.ModuleInit;
 import reka.core.util.StringWithVars;
 import reka.http.server.HttpServerManager;
 import reka.http.server.HttpSettings;
 
-public class UseWebsockets extends UseConfigurer {
+public class WebsocketsModule extends ModuleConfigurer {
 	
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	
@@ -36,7 +36,7 @@ public class UseWebsockets extends UseConfigurer {
 	// TODO: have a better way to pass data around
 	private final AtomicReference<HttpSettings> httpSettingsRef = new AtomicReference<>();
 	
-	public UseWebsockets(HttpServerManager server) {
+	public WebsocketsModule(HttpServerManager server) {
 		this.server = server;
 	}
 	
@@ -64,7 +64,7 @@ public class UseWebsockets extends UseConfigurer {
 	}
 
 	@Override
-	public void setup(UseInit init) {
+	public void setup(ModuleInit init) {
 		init.operation(path("send"), () -> new WebsocketSendConfigurer());
 		init.operation(path("broadcast"), () -> new WebsocketBroadcastConfigurer());
 		

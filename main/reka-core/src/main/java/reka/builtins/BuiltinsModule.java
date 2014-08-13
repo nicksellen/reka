@@ -54,8 +54,8 @@ import reka.config.configurer.Configurer.ErrorCollector;
 import reka.config.configurer.ErrorReporter;
 import reka.config.configurer.annotations.Conf;
 import reka.core.builder.FlowSegments;
-import reka.core.bundle.UseConfigurer;
-import reka.core.bundle.UseInit;
+import reka.core.bundle.ModuleConfigurer;
+import reka.core.bundle.ModuleInit;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.core.data.memory.MutableMemoryData;
@@ -68,12 +68,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 
-public class UseBuiltins extends UseConfigurer {
+public class BuiltinsModule extends ModuleConfigurer {
 	
-	private static final Logger log = LoggerFactory.getLogger(UseBuiltins.class);
+	private static final Logger log = LoggerFactory.getLogger(BuiltinsModule.class);
 
 	@Override
-	public void setup(UseInit init) {
+	public void setup(ModuleInit init) {
 		
 		init.operation(path("put"), () -> new PutConfigurer());
 		init.operation(path("putv"), () -> new PutWithVarsConfigurer());

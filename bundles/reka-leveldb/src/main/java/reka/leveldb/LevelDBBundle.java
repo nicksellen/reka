@@ -7,7 +7,7 @@ public class LevelDBBundle implements RekaBundle {
 
 	@Override
 	public void setup(BundleSetup setup) {
-		setup.use(path("leveldb"), () -> new UseLevelDB());
+		setup.use(path("leveldb"), () -> new LevelDBModule());
 	}
 
 }

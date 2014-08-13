@@ -6,15 +6,15 @@ import org.postgresql.Driver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.core.bundle.UseConfigurer;
-import reka.core.bundle.UseInit;
+import reka.core.bundle.ModuleConfigurer;
+import reka.core.bundle.ModuleInit;
 
-public class UsePostgres extends UseConfigurer {
+public class PostgresModule extends ModuleConfigurer {
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	
 	@Override
-	public void setup(UseInit init) {
+	public void setup(ModuleInit init) {
 		try {
 			Class.forName(Driver.class.getName());
 			log.info("loading postgres driver {}", Driver.class.getName());

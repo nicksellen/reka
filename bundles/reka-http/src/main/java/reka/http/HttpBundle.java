@@ -11,9 +11,9 @@ public class HttpBundle implements RekaBundle {
 	
 	@Override
 	public void setup(BundleSetup setup) {
-		setup.use(path("http"), () -> new UseHTTP(server));
-		setup.use(path("websockets"), () -> new UseWebsockets(server));
-		setup.use(slashes("admin/http"), () -> new UseHttpAdmin(server));
+		setup.use(path("http"), () -> new HttpModule(server));
+		setup.use(path("websockets"), () -> new WebsocketsModule(server));
+		setup.use(slashes("admin/http"), () -> new HttpAdminModule(server));
 	}
 
 }

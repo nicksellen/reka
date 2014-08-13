@@ -16,11 +16,11 @@ public interface RekaBundle {
 	
 	public static class BundleSetup {
 		
-		private final List<Entry<Path,Supplier<UseConfigurer>>> uses = new ArrayList<>();
+		private final List<Entry<Path,Supplier<ModuleConfigurer>>> uses = new ArrayList<>();
 		private final List<ConfigConverter> converters = new ArrayList<>();
 		private final List<RekaBundle> moreBundles = new ArrayList<>();
 		
-		public BundleSetup use(Path name, Supplier<UseConfigurer> supplier) {
+		public BundleSetup use(Path name, Supplier<ModuleConfigurer> supplier) {
 			uses.add(createEntry(name, supplier));
 			return this;
 		}
@@ -42,7 +42,7 @@ public interface RekaBundle {
 			return this;
 		}
 		
-		protected List<Entry<Path,Supplier<UseConfigurer>>> uses() {
+		protected List<Entry<Path,Supplier<ModuleConfigurer>>> uses() {
 			return uses;
 		}
 		

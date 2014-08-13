@@ -7,10 +7,10 @@ import java.util.List;
 
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.UseConfigurer;
-import reka.core.bundle.UseInit;
+import reka.core.bundle.ModuleConfigurer;
+import reka.core.bundle.ModuleInit;
 
-public class UseCommand extends UseConfigurer {
+public class CommandModule extends ModuleConfigurer {
 
 	private final List<String> args = new ArrayList<>();
 	private String exec;
@@ -34,7 +34,7 @@ public class UseCommand extends UseConfigurer {
 	}
 	
 	@Override
-	public void setup(UseInit init) {
+	public void setup(ModuleInit init) {
 		init.operation(root(), () -> new RunCommandConfigurer(exec, args));
 	}
 

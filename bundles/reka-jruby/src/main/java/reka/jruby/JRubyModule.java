@@ -12,10 +12,10 @@ import org.jruby.embed.ScriptingContainer;
 import reka.api.Path;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.UseConfigurer;
-import reka.core.bundle.UseInit;
+import reka.core.bundle.ModuleConfigurer;
+import reka.core.bundle.ModuleInit;
 
-public class UseJRuby extends UseConfigurer {
+public class JRubyModule extends ModuleConfigurer {
 
 	private String script;
 	
@@ -34,11 +34,11 @@ public class UseJRuby extends UseConfigurer {
 	}
 	
 	@Override
-	public void setup(UseInit init) {
+	public void setup(ModuleInit init) {
 		
 		Path runtimePath = init.path().add("runtime");
 		
-		init.run("initialize runtime", (data) -> {
+		init.init("initialize runtime", (data) -> {
 			ScriptingContainer container = new ScriptingContainer(
 					LocalContextScope.SINGLETHREAD,
 					LocalVariableBehavior.TRANSIENT);

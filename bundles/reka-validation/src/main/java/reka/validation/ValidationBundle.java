@@ -7,7 +7,7 @@ public class ValidationBundle implements RekaBundle {
 
 	@Override
 	public void setup(BundleSetup setup) {
-		setup.use(path("validator"), () -> new UseValidator());
+		setup.use(path("validator"), () -> new ValidatorModule());
 	}
 
 }

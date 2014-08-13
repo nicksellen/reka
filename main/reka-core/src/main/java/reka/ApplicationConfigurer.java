@@ -34,10 +34,10 @@ import reka.core.builder.Flows;
 import reka.core.builder.FlowsBuilder;
 import reka.core.bundle.BundleManager;
 import reka.core.bundle.Registration;
-import reka.core.bundle.UseConfigurer;
-import reka.core.bundle.UseConfigurer.UsesInitializer;
-import reka.core.bundle.UseInit.Registration2;
-import reka.core.bundle.UseInit.Trigger;
+import reka.core.bundle.ModuleConfigurer;
+import reka.core.bundle.ModuleConfigurer.UsesInitializer;
+import reka.core.bundle.ModuleInit.TriggerRegistration;
+import reka.core.bundle.ModuleInit.Trigger;
 import reka.core.config.MultiConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.core.data.memory.MutableMemoryData;
@@ -51,7 +51,7 @@ public class ApplicationConfigurer implements ErrorReporter {
     private final MutableData meta = MutableMemoryData.create();
     
     public ApplicationConfigurer(BundleManager bundles) {
-        rootUse = new UseRoot();
+        rootUse = new RootModule();
 		rootUse.mappings(bundles.uses());
     }
 
@@ -59,7 +59,7 @@ public class ApplicationConfigurer implements ErrorReporter {
     
     private final List<Config> flowConfigs = new ArrayList<>();
     
-    private final UseConfigurer rootUse;
+    private final ModuleConfigurer rootUse;
     
     @Conf.At("name")
     public void name(String val) {
@@ -94,7 +94,7 @@ public class ApplicationConfigurer implements ErrorReporter {
     }
     
     public Collection<FlowVisualizer> visualize() {
-    	UsesInitializer initializer = UseConfigurer.process(rootUse);
+    	UsesInitializer initializer = ModuleConfigurer.process(rootUse);
     	
     	MultiConfigurerProvider provider = new MultiConfigurerProvider(initializer.providers());
     	Map<Path,Supplier<FlowSegment>> configuredFlows = new HashMap<>();
@@ -116,7 +116,7 @@ public class ApplicationConfigurer implements ErrorReporter {
     }
     
     public void checkValid() {
-    	UsesInitializer initializer = UseConfigurer.process(rootUse);
+    	UsesInitializer initializer = ModuleConfigurer.process(rootUse);
     	MultiConfigurerProvider configurerProvider = new MultiConfigurerProvider(initializer.providers());
     	initializer.triggers().forEach(trigger -> trigger.supplier().apply(configurerProvider).get());
     	flowConfigs.forEach((config) -> configure(new SequenceConfigurer(configurerProvider), config).get());
@@ -153,7 +153,7 @@ public class ApplicationConfigurer implements ErrorReporter {
     	
     	return safelyCompletable(future, () -> {
     	
-	    	UsesInitializer initializer = UseConfigurer.process(rootUse);
+	    	UsesInitializer initializer = ModuleConfigurer.process(rootUse);
 	    	
 	    	ApplicationBuilder applicationBuilder = new ApplicationBuilder();
 	    	
@@ -203,15 +203,14 @@ public class ApplicationConfigurer implements ErrorReporter {
 			    		
 						Flows flows = flowsBuilder.build(data); // constructs all the operations
 						
-						applicationBuilder.setFlows(flows);
+						applicationBuilder.flows(flows);
 						
 						Registration registration = new Registration(flows);
 						
 						for (TriggerSetup t : triggerSetups) {
-							Registration2 registration2 = new Registration2(applicationVersion, flows.flow(t.flowName()), identity);
-							t.trigger().consumer().accept(registration2);
-							applicationBuilder.register(registration2);
-							
+							TriggerRegistration tr = new TriggerRegistration(applicationVersion, flows.flow(t.flowName()), identity);
+							t.trigger().consumer().accept(tr);
+							applicationBuilder.register(tr);
 						}
 						
 						registration.resource(new SimpleDeployedResource() {

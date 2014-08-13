@@ -7,7 +7,7 @@ public class JadeBundle implements RekaBundle {
 
 	@Override
 	public void setup(BundleSetup setup) {
-		setup.use(path("jade"), () -> new UseJade());
+		setup.use(path("jade"), () -> new JadeModule());
 	}
 
 }

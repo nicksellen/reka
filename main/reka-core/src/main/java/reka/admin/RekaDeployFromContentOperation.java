@@ -38,7 +38,7 @@ public class RekaDeployFromContentOperation implements AsyncOperation {
 		
 		String identity = UUID.randomUUID().toString();
 		
-		String configString = UseReka.getConfigStringFromData(data, in);
+		String configString = RekaModule.getConfigStringFromData(data, in);
 		
 		manager.deploy(identity, StringSource.from(configString), new EverythingSubscriber() {
 

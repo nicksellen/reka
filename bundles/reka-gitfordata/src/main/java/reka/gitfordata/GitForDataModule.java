@@ -33,14 +33,14 @@ import reka.api.data.versioned.VersionedData.DataVersion;
 import reka.api.flow.FlowSegment;
 import reka.api.run.SyncOperation;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.UseConfigurer;
-import reka.core.bundle.UseInit;
+import reka.core.bundle.ModuleConfigurer;
+import reka.core.bundle.ModuleInit;
 import reka.core.util.StringWithVars;
 import reka.leveldb.LevelDBStorage;
 
-public class UseGitForData extends UseConfigurer {
+public class GitForDataModule extends ModuleConfigurer {
 	
-	private static final Logger log = LoggerFactory.getLogger(UseGitForData.class);
+	private static final Logger log = LoggerFactory.getLogger(GitForDataModule.class);
 	
 	private Path branchLocation = dots("default");
 	
@@ -57,12 +57,12 @@ public class UseGitForData extends UseConfigurer {
 	}
 	
 	@Override
-	public void setup(UseInit init) {
+	public void setup(ModuleInit init) {
 
 		Path repoPath = Path.path("stuff").add(init.path()).add("repo");
 		Path branchPath = Path.path("stuff").add(init.path()).add("branch");
 		
-		init.run("prepare repo", (data) -> {
+		init.init("prepare repo", (data) -> {
 			
 			DataStorage meta, objects;
 			

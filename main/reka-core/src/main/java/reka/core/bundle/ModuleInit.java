@@ -31,52 +31,52 @@ import reka.core.builder.FlowSegments;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 
-public class UseInit {
+public class ModuleInit {
 	
-	public static interface UseExecutor extends Supplier<FlowSegment> {
-		UseExecutor run(String name, SyncOperation operation);		
-		UseExecutor runAsync(String name, AsyncOperation operation);
-		UseExecutor sequential(Consumer<UseExecutor> seq);
-		UseExecutor sequential(String label, Consumer<UseExecutor> seq);
-		UseExecutor parallel(Consumer<UseExecutor> par);
-		UseExecutor parallel(String label, Consumer<UseExecutor> par);
+	public static interface ModuleExecutor extends Supplier<FlowSegment> {
+		ModuleExecutor run(String name, SyncOperation operation);		
+		ModuleExecutor runAsync(String name, AsyncOperation operation);
+		ModuleExecutor sequential(Consumer<ModuleExecutor> seq);
+		ModuleExecutor sequential(String label, Consumer<ModuleExecutor> seq);
+		ModuleExecutor parallel(Consumer<ModuleExecutor> par);
+		ModuleExecutor parallel(String label, Consumer<ModuleExecutor> par);
 	}
 	
-	private abstract static class AbstractExecutor implements UseExecutor {
+	private abstract static class AbstractExecutor implements ModuleExecutor {
 		
 		private final List<Supplier<FlowSegment>> segments = new ArrayList<>();
 
 		@Override
-		public UseExecutor run(String name, SyncOperation operation) {
+		public ModuleExecutor run(String name, SyncOperation operation) {
 			segments.add(() -> sync(name, () -> operation));
 			return this;
 		}
 
 		@Override
-		public UseExecutor runAsync(String name, AsyncOperation operation) {
+		public ModuleExecutor runAsync(String name, AsyncOperation operation) {
 			segments.add(() -> async(name, () -> operation));
 			return this;
 		}
 
 		@Override
-		public UseExecutor sequential(Consumer<UseExecutor> seq) {
-			UseExecutor e = new SequentialExecutor();
+		public ModuleExecutor sequential(Consumer<ModuleExecutor> seq) {
+			ModuleExecutor e = new SequentialExecutor();
 			seq.accept(e);
 			segments.add(e);
 			return this;
 		}
 
 		@Override
-		public UseExecutor sequential(String label, Consumer<UseExecutor> seq) {
-			UseExecutor e = new SequentialExecutor();
+		public ModuleExecutor sequential(String label, Consumer<ModuleExecutor> seq) {
+			ModuleExecutor e = new SequentialExecutor();
 			seq.accept(e);
 			segments.add(() -> FlowSegments.label(label, e.get()));
 			return this;
 		}
 
 		@Override
-		public UseExecutor parallel(Consumer<UseExecutor> par) {
-			UseExecutor e = new ParallelExecutor();
+		public ModuleExecutor parallel(Consumer<ModuleExecutor> par) {
+			ModuleExecutor e = new ParallelExecutor();
 			par.accept(e);
 			segments.add(e);
 			return this;
@@ -84,8 +84,8 @@ public class UseInit {
 		
 
 		@Override
-		public UseExecutor parallel(String label, Consumer<UseExecutor> par) {
-			UseExecutor e = new ParallelExecutor();
+		public ModuleExecutor parallel(String label, Consumer<ModuleExecutor> par) {
+			ModuleExecutor e = new ParallelExecutor();
 			par.accept(e);
 			segments.add(() -> FlowSegments.label(label, e.get()));
 			return this;
@@ -126,7 +126,7 @@ public class UseInit {
 	private final List<Trigger> triggers = new ArrayList<>();
 	private final Map<Path,Function<ConfigurerProvider,Supplier<FlowSegment>>> providers = new HashMap<>();
 	
-	public UseInit(Path path) {
+	public ModuleInit(Path path) {
 		this.path = path;
 	}
 	
@@ -134,19 +134,19 @@ public class UseInit {
 		return path;
 	}
 	
-	public UseInit run(String name, SyncOperation operation) {
+	public ModuleInit init(String name, SyncOperation operation) {
 		segments.add(() -> sync(name, () -> operation));
 		return this;
 	}
 	
-	public UseInit parallel(Consumer<UseExecutor> parallel) {
-		UseExecutor e = new ParallelExecutor();
+	public ModuleInit initParallel(Consumer<ModuleExecutor> parallel) {
+		ModuleExecutor e = new ParallelExecutor();
 		parallel.accept(e);
 		segments.add(e);
 		return this;
 	}
 	
-	public UseInit runAsync(String name, AsyncOperation operation) {
+	public ModuleInit initAsync(String name, AsyncOperation operation) {
 		segments.add(() -> async(name, () -> operation));
 		return this;
 	}
@@ -155,17 +155,17 @@ public class UseInit {
 		shutdownHandlers.add(handler);
 	}
 	
-	public UseInit operation(Path name, Supplier<Supplier<FlowSegment>> supplier) {
+	public ModuleInit operation(Path name, Supplier<Supplier<FlowSegment>> supplier) {
 		providers.put(path.add(name), (provider) -> supplier.get());
 		return this;
 	}
 	
-	public UseInit operation(Path name, Function<ConfigurerProvider,Supplier<FlowSegment>> provider) {
+	public ModuleInit operation(Path name, Function<ConfigurerProvider,Supplier<FlowSegment>> provider) {
 		providers.put(path.add(name), provider);
 		return this;
 	}
 
-	public UseInit operation(Iterable<Path> names, Supplier<Supplier<FlowSegment>> supplier) {
+	public ModuleInit operation(Iterable<Path> names, Supplier<Supplier<FlowSegment>> supplier) {
 		Function<ConfigurerProvider,Supplier<FlowSegment>> provider = (p) -> supplier.get();
 		for (Path name : names) {
 			operation(name, provider);
@@ -173,14 +173,14 @@ public class UseInit {
 		return this;
 	}
 
-	public UseInit operation(Iterable<Path> names, Function<ConfigurerProvider,Supplier<FlowSegment>> provider) {
+	public ModuleInit operation(Iterable<Path> names, Function<ConfigurerProvider,Supplier<FlowSegment>> provider) {
 		for (Path name : names) {
 			operation(name, provider);
 		}
 		return this;
 	}
 	
-	public static class Registration2 {
+	public static class TriggerRegistration {
 		
 		private final int applicationVersion;
 		private final Flow flow;
@@ -188,10 +188,14 @@ public class UseInit {
 		private final List<DeployedResource> resources = new ArrayList<>();
 		private final List<PortAndProtocol> network = new ArrayList<>();
 		 
-		public Registration2(int applicationVersion, Flow flow, String identity) {
+		public TriggerRegistration(int applicationVersion, Flow flow, String identity) {
 			this.applicationVersion = applicationVersion;
 			this.flow = flow;
 			this.identity = identity;
+		}
+
+		public String applicationIdentity() {
+			return identity;
 		}
 		
 		public int applicationVersion() {
@@ -202,11 +206,7 @@ public class UseInit {
 			return flow;
 		}
 		
-		public String identity() {
-			return identity;
-		}
-		
-		public Registration2 resource(DeployedResource r) {
+		public TriggerRegistration resource(DeployedResource r) {
 			resources.add(r);
 			return this;
 		}
@@ -220,7 +220,7 @@ public class UseInit {
 			});
 		}
 		
-		public Registration2 network(int port, String protocol, Data details) {
+		public TriggerRegistration network(int port, String protocol, Data details) {
 			network.add(new PortAndProtocol(port, protocol, details));
 			return this;
 		}
@@ -239,11 +239,11 @@ public class UseInit {
 		
 		private final Path name;
 		private final Function<ConfigurerProvider, Supplier<FlowSegment>> supplier;
-		private final Consumer<Registration2> consumer;
+		private final Consumer<TriggerRegistration> consumer;
 		
 		public Trigger(Path name,
 				Function<ConfigurerProvider, Supplier<FlowSegment>> supplier,
-				Consumer<Registration2> consumer) {
+				Consumer<TriggerRegistration> consumer) {
 			this.name = name;
 			this.supplier = supplier;
 			this.consumer = consumer;
@@ -257,17 +257,17 @@ public class UseInit {
 			return supplier;
 		}
 		
-		public Consumer<Registration2> consumer() {
+		public Consumer<TriggerRegistration> consumer() {
 			return consumer;
 		}
 		
 	}
 	
-	public UseInit trigger(String name, ConfigBody body, Consumer<Registration2> c) {
+	public ModuleInit trigger(String name, ConfigBody body, Consumer<TriggerRegistration> c) {
 		return trigger(name,  (provider) -> configure(new SequenceConfigurer(provider), body), c);
 	}
 	
-	public UseInit trigger(String name, Function<ConfigurerProvider, Supplier<FlowSegment>> supplier, Consumer<Registration2> c) {
+	public ModuleInit trigger(String name, Function<ConfigurerProvider, Supplier<FlowSegment>> supplier, Consumer<TriggerRegistration> c) {
 		triggers.add(new Trigger(path.add(name), supplier, c));
 		return this;
 	}

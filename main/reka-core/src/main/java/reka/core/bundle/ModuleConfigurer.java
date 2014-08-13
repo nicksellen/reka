@@ -29,7 +29,7 @@ import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.builder.FlowVisualizer;
 import reka.core.builder.SingleFlow;
-import reka.core.bundle.UseInit.Trigger;
+import reka.core.bundle.ModuleInit.Trigger;
 import reka.core.config.ConfigurerProvider;
 import reka.core.runtime.NoFlow;
 import reka.core.runtime.NoFlowVisualizer;
@@ -37,7 +37,7 @@ import reka.core.runtime.NoFlowVisualizer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-public abstract class UseConfigurer {
+public abstract class ModuleConfigurer {
 	
 	public static class UsesInitializer {
 		
@@ -82,24 +82,24 @@ public abstract class UseConfigurer {
 		
 	}
 	
-	public static UsesInitializer process(UseConfigurer root) {
+	public static UsesInitializer process(ModuleConfigurer root) {
 		return Utils.process(root);
 	}
 	
 	private static class Utils {
 		
-		public static UsesInitializer process(UseConfigurer root) {
+		public static UsesInitializer process(ModuleConfigurer root) {
 			
-			Set<UseConfigurer> all = collect(root, new HashSet<>());
-			Set<UseConfigurer> toplevel = findTopLevel(all);
-			Map<String,UseConfigurer> rootsMap = map(root.uses);
+			Set<ModuleConfigurer> all = collect(root, new HashSet<>());
+			Set<ModuleConfigurer> toplevel = findTopLevel(all);
+			Map<String,ModuleConfigurer> rootsMap = map(root.uses);
 			resolveNamedDependencies(all, rootsMap);
 			
 			Map<Path,Function<ConfigurerProvider,Supplier<FlowSegment>>> providersCollector = new HashMap<>();
 			List<Trigger> triggerCollector = new ArrayList<>();
 			List<Runnable> shutdownHandlers = new ArrayList<>();
 			
-			Map<UseConfigurer,FlowSegment> segments = makeSegments(all, providersCollector, triggerCollector, shutdownHandlers);
+			Map<ModuleConfigurer,FlowSegment> segments = makeSegments(all, providersCollector, triggerCollector, shutdownHandlers);
 			
 			Optional<FlowSegment> segment = buildSegment(toplevel, segments);
 			
@@ -115,15 +115,15 @@ public abstract class UseConfigurer {
 			return new UsesInitializer(flow, visualizer, providersCollector, triggerCollector, shutdownHandlers);
 		}
 		
-		private static Map<UseConfigurer, FlowSegment> makeSegments(Collection<UseConfigurer> all, 
+		private static Map<ModuleConfigurer, FlowSegment> makeSegments(Collection<ModuleConfigurer> all, 
 				Map<Path,Function<ConfigurerProvider,Supplier<FlowSegment>>> providersCollector,
 				List<Trigger> triggerCollector,
 				List<Runnable> shutdownHandlers) {
 			
-			Map<UseConfigurer,FlowSegment> map = new HashMap<>();
-			for (UseConfigurer use : all) {
+			Map<ModuleConfigurer,FlowSegment> map = new HashMap<>();
+			for (ModuleConfigurer use : all) {
 				
-				UseInit init = new UseInit(use.fullPath());
+				ModuleInit init = new ModuleInit(use.fullPath());
 				use.setup(init);
 				
 				init.buildFlowSegment().ifPresent(segment -> {
@@ -138,10 +138,10 @@ public abstract class UseConfigurer {
 			return map;
 		}
 		
-		private static Optional<FlowSegment> buildSegment(Set<UseConfigurer> uses, Map<UseConfigurer, FlowSegment> built) {
+		private static Optional<FlowSegment> buildSegment(Set<ModuleConfigurer> uses, Map<ModuleConfigurer, FlowSegment> built) {
 			
 			List<FlowSegment> segments = new ArrayList<>();
-			for (UseConfigurer use : uses) {
+			for (ModuleConfigurer use : uses) {
 				buildSegment(use, built).ifPresent(segment -> segments.add(segment));
 			}
 			
@@ -149,7 +149,7 @@ public abstract class UseConfigurer {
 			
 		}
 		
-		private static Optional<FlowSegment> buildSegment(UseConfigurer use, Map<UseConfigurer, FlowSegment> built) {
+		private static Optional<FlowSegment> buildSegment(ModuleConfigurer use, Map<ModuleConfigurer, FlowSegment> built) {
 			if (use.isRoot()) return Optional.empty();
 			
 			List<FlowSegment> sequence = new ArrayList<>();
@@ -166,10 +166,10 @@ public abstract class UseConfigurer {
 			return sequence.isEmpty() ? Optional.empty() : Optional.of(seq(sequence));
 		}
 		
-		private static void resolveNamedDependencies(Set<UseConfigurer> all, Map<String, UseConfigurer> allMap) {
-			for (UseConfigurer use : all) {
+		private static void resolveNamedDependencies(Set<ModuleConfigurer> all, Map<String, ModuleConfigurer> allMap) {
+			for (ModuleConfigurer use : all) {
 				for (String depname : use.usesNames) {
-					UseConfigurer dep = allMap.get(depname);
+					ModuleConfigurer dep = allMap.get(depname);
 					checkNotNull(dep, "missing dependency: [%s] uses [%s]", use.name(), depname);
 					dep.usedBy.add(use);
 					use.uses.add(dep);
@@ -177,9 +177,9 @@ public abstract class UseConfigurer {
 			}
 		}
 
-		private static Set<UseConfigurer> findTopLevel(Collection<UseConfigurer> uses) {
-			Set<UseConfigurer> roots = new HashSet<>();
-			for (UseConfigurer use : uses) {
+		private static Set<ModuleConfigurer> findTopLevel(Collection<ModuleConfigurer> uses) {
+			Set<ModuleConfigurer> roots = new HashSet<>();
+			for (ModuleConfigurer use : uses) {
 				if (use.uses.isEmpty()) {
 					roots.add(use);
 				}
@@ -187,17 +187,17 @@ public abstract class UseConfigurer {
 			return roots;
 		}
 		
-		private static Set<UseConfigurer> collect(UseConfigurer use, Set<UseConfigurer> collector) {
+		private static Set<ModuleConfigurer> collect(ModuleConfigurer use, Set<ModuleConfigurer> collector) {
 			collector.add(use);
-			for (UseConfigurer child : use.uses) {
+			for (ModuleConfigurer child : use.uses) {
 				collect(child, collector);
 			}
 			return collector;
 		}
 		
-		public static Map<String,UseConfigurer> map(Collection<UseConfigurer> uses) {
-			Map<String,UseConfigurer> map = new HashMap<>();
-			for (UseConfigurer use : uses) {
+		public static Map<String,ModuleConfigurer> map(Collection<ModuleConfigurer> uses) {
+			Map<String,ModuleConfigurer> map = new HashMap<>();
+			for (ModuleConfigurer use : uses) {
 				map.put(use.name(), use);
 			}
 			return map;
@@ -205,7 +205,7 @@ public abstract class UseConfigurer {
 		
 	}
 	
-	private List<Entry<Path, Supplier<UseConfigurer>>> mappings = new ArrayList<>();
+	private List<Entry<Path, Supplier<ModuleConfigurer>>> mappings = new ArrayList<>();
 	
 	private String type;
 	private String name;
@@ -217,10 +217,10 @@ public abstract class UseConfigurer {
 	
 	private final List<String> usesNames = new ArrayList<>();
 	
-	private final Set<UseConfigurer> usedBy = new HashSet<>();
-	private final Set<UseConfigurer> uses = new HashSet<>();
+	private final Set<ModuleConfigurer> usedBy = new HashSet<>();
+	private final Set<ModuleConfigurer> uses = new HashSet<>();
 
-	public UseConfigurer mappings(List<Entry<Path, Supplier<UseConfigurer>>> mappings) {
+	public ModuleConfigurer mappings(List<Entry<Path, Supplier<ModuleConfigurer>>> mappings) {
 		this.mappings = mappings;
 		
 		if (isRoot()) {
@@ -231,7 +231,7 @@ public abstract class UseConfigurer {
 	}
 
 	private void findRootConfigurers() {
-		for (Entry<Path, Supplier<UseConfigurer>> e : mappings) {
+		for (Entry<Path, Supplier<ModuleConfigurer>> e : mappings) {
 			// all the ones with a root path need to be added automatically
 			// we don't need to explicitly load these...
 			if (e.getKey().isEmpty()) {
@@ -240,30 +240,30 @@ public abstract class UseConfigurer {
 		}
 	}
 
-	public abstract void setup(UseInit use);
+	public abstract void setup(ModuleInit use);
 	
 	public boolean isRoot() {
 		return isRoot;
 	}
 	
-	public UseConfigurer isRoot(boolean val) {
+	public ModuleConfigurer isRoot(boolean val) {
 		isRoot = val;
 		return this;
 	}
 	
-	public UseConfigurer usePath(Path path) {
+	public ModuleConfigurer usePath(Path path) {
 		this.usePath = path;
 		return this;
 	}
 
 	@Conf.Key
-	public UseConfigurer type(String val) {
+	public ModuleConfigurer type(String val) {
 		type = val;
 		return this;
 	}
 	
 	@Conf.Val
-	public UseConfigurer name(String val) {
+	public ModuleConfigurer name(String val) {
 		name = val;
 		return this;
 	}
@@ -290,9 +290,9 @@ public abstract class UseConfigurer {
 	
 	public void useThisConfig(Config config) {
 		checkConfig(mappings != null, "'%s' is not a valid module (try one of %s)", config.key(), mappingNames());
-		Supplier<UseConfigurer> supplier = mappingFor(slashes(config.key()));
+		Supplier<ModuleConfigurer> supplier = mappingFor(slashes(config.key()));
 		checkConfig(supplier != null, "'%s' is not a valid module (try one of %s)", config.key(), mappingNames());
-		UseConfigurer child = supplier.get();
+		ModuleConfigurer child = supplier.get();
 		child.mappings(mappings);
 		child.parentPath(usePath);
 		configure(child, config);
@@ -317,8 +317,8 @@ public abstract class UseConfigurer {
 		parentPath = val;
 	}
 
-	private Supplier<UseConfigurer> mappingFor(Path path) {
-		for (Entry<Path,Supplier<UseConfigurer>> e : mappings) {
+	private Supplier<ModuleConfigurer> mappingFor(Path path) {
+		for (Entry<Path,Supplier<ModuleConfigurer>> e : mappings) {
 			if (e.getKey().equals(path)) {
 				return e.getValue();
 			}
@@ -328,7 +328,7 @@ public abstract class UseConfigurer {
 	
 	private Collection<String> mappingNames() {
 		List<String> result = new ArrayList<>();
-		for (Entry<Path,Supplier<UseConfigurer>> e : mappings) {
+		for (Entry<Path,Supplier<ModuleConfigurer>> e : mappings) {
 			if (!e.getKey().isEmpty()) {
 				result.add(e.getKey().slashes());
 			}

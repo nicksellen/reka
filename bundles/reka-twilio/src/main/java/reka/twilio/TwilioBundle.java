@@ -20,8 +20,8 @@ import reka.api.flow.FlowSegment;
 import reka.api.run.SyncOperation;
 import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.RekaBundle;
-import reka.core.bundle.UseConfigurer;
-import reka.core.bundle.UseInit;
+import reka.core.bundle.ModuleConfigurer;
+import reka.core.bundle.ModuleInit;
 import reka.core.util.StringWithVars;
 
 import com.twilio.sdk.TwilioRestClient;
@@ -37,7 +37,7 @@ public class TwilioBundle implements RekaBundle {
 		setup.use(path("twilio"), () -> new UseTwilioConfigurer());
 	}
 	
-	public static class UseTwilioConfigurer extends UseConfigurer {
+	public static class UseTwilioConfigurer extends ModuleConfigurer {
 		
 		private String sid;
 		private String token;
@@ -59,7 +59,7 @@ public class TwilioBundle implements RekaBundle {
 		}
 
 		@Override
-		public void setup(UseInit init) {
+		public void setup(ModuleInit init) {
 			init.operation(path("send"), () -> new TwilioSendConfigurer(sid, token, defaultFrom));
 		}
 		

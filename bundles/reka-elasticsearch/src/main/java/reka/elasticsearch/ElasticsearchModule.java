@@ -29,15 +29,15 @@ import reka.api.data.MutableData;
 import reka.api.run.AsyncOperation;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.UseConfigurer;
-import reka.core.bundle.UseInit;
+import reka.core.bundle.ModuleConfigurer;
+import reka.core.bundle.ModuleInit;
 
 import com.google.common.base.Function;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 
-public class UseElasticsearch extends UseConfigurer {
+public class ElasticsearchModule extends ModuleConfigurer {
 	
 	private final List<String> indices = new ArrayList<>();
 	
@@ -49,7 +49,7 @@ public class UseElasticsearch extends UseConfigurer {
 	}
 
 	@Override
-	public void setup(UseInit use) {
+	public void setup(ModuleInit use) {
 		
 		AtomicReference<Client> clientRef = new AtomicReference<>();
 		
@@ -59,7 +59,7 @@ public class UseElasticsearch extends UseConfigurer {
 		
 		Function<Data,Client> clientFn = data -> data.getContent(clientPath).orElseThrow(() -> runtime("waaaah!")).valueAs(Client.class);
 		
-		use.run("start node", (data) -> {
+		use.init("start node", (data) -> {
 
 			Settings settings = ImmutableSettings.settingsBuilder()
 					  .classLoader(Settings.class.getClassLoader())
@@ -85,12 +85,12 @@ public class UseElasticsearch extends UseConfigurer {
 			
 		});
 		
-		use.runAsync("wait for it to go yellow", withClient(clientPath, (client) -> {
+		use.initAsync("wait for it to go yellow", withClient(clientPath, (client) -> {
 			return client.admin().cluster().prepareHealth().setWaitForYellowStatus();
 		}));
 
 		
-		use.runAsync("list indices", (data) -> {
+		use.initAsync("list indices", (data) -> {
 			
 			SettableFuture<MutableData> future = SettableFuture.create();
 			
@@ -115,7 +115,7 @@ public class UseElasticsearch extends UseConfigurer {
 			return future;
 		});
 		
-		use.parallel((run) -> {
+		use.initParallel((run) -> {
 			
 			for (String index : indices) {
 				

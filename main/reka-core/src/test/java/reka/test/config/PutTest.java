@@ -25,7 +25,7 @@ import reka.api.run.AsyncOperation;
 import reka.api.run.OperationSupplier;
 import reka.api.run.RoutingOperation;
 import reka.api.run.SyncOperation;
-import reka.builtins.UseBuiltins;
+import reka.builtins.BuiltinsModule;
 import reka.config.Config;
 import reka.config.NavigableConfig;
 import reka.config.configurer.Configurer.InvalidConfigurationException;
@@ -84,7 +84,7 @@ public class PutTest {
 	}
 	
 	private Data configurePutWith(String path) {
-		return configureThenCall(new UseBuiltins.PutConfigurer(), root.at(path).get(), MutableMemoryData.create());
+		return configureThenCall(new BuiltinsModule.PutConfigurer(), root.at(path).get(), MutableMemoryData.create());
 	}
 	
 	private static Data configureThenCall(Supplier<FlowSegment> s, Config config, MutableData input) {

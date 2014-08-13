@@ -8,7 +8,7 @@ public class H2Bundle implements RekaBundle {
 
 	@Override
 	public void setup(BundleSetup setup) {
-		setup.use(path("h2"), () -> new UseH2());
+		setup.use(path("h2"), () -> new H2Module());
 	}
 
 }
