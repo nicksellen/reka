@@ -1,0 +1,8 @@
+#NOTE: This is an Aether internal implementation file, its format can be changed without prior notice.
+#Tue Aug 12 15:06:30 PDT 2014
+netty-tcnative-1.1.30.Fork2-openssl-1.0.1-sources.jar>=
+netty-tcnative-1.1.30.Fork2-openssl-1.0.1-linux-x86_64.jar>=
+netty-tcnative-1.1.30.Fork2-openssl-1.0.1.pom>repo=
+netty-tcnative-1.1.30.Fork2-openssl-1.0.1.jar>repo=
+netty-tcnative-1.1.30.Fork2-openssl-1.0.1.jar>=
+netty-tcnative-1.1.30.Fork2-openssl-1.0.1.pom>=
