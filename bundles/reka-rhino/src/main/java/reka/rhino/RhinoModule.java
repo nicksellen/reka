@@ -7,6 +7,10 @@ import static reka.api.content.Contents.nonSerializableContent;
 import static reka.rhino.RhinoHelper.compileJavascript;
 import static reka.rhino.RhinoHelper.runJavascriptInScope;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Script;
 import org.mozilla.javascript.ScriptableObject;
@@ -25,33 +29,41 @@ public class RhinoModule extends ModuleConfigurer {
 	
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	
-	private Script script;
+	private final List<Script> scripts = new ArrayList<>();
+	
+	private Integer optimization;
 
 	@Conf.Config
 	public void script1(Config config) {
 		if (config.hasDocument()) {
-			script = compileJavascript(config.documentContentAsString());
+			scripts.add(compileJavascript(config.documentContentAsString()));
 		}
 	}
 	
-	@Conf.At("script")
+	@Conf.At("optimization")
+	public void optimization(BigDecimal val) {
+		optimization = val.intValue();
+	}
+	
+	@Conf.Each("script")
 	public void script2(Config config) {
 		if (config.hasDocument()) {
-			script = compileJavascript(config.documentContentAsString());
+			scripts.add(compileJavascript(config.documentContentAsString(), optimization));
 		} else if (config.hasData()) {
-			script = compileJavascript(new String(config.data(), Charsets.UTF_8));
+			scripts.add(compileJavascript(new String(config.data(), Charsets.UTF_8), optimization));
 		} else if (config.hasValue()) {
-			script = compileJavascript(config.valueAsString());
+			scripts.add(compileJavascript(config.valueAsString(), optimization));
 		}
 	}
 
 	@Override
-	public void setup(ModuleInit init) {
+	public void setup(ModuleInit module) {
 		
-		Path scopePath = init.path().add("scope");
+		Path scopePath = module.path().add("scope");
 		
-		init.init("create js scope", (data) -> {
+		module.init("create js scope", (data) -> {
 			Context context = Context.enter();
+			if (optimization != null) context.setOptimizationLevel(optimization);
 			try {
 				ScriptableObject scope = context.initStandardObjects(null, false);
 				data.put(scopePath, nonSerializableContent(scope));
@@ -64,18 +76,20 @@ public class RhinoModule extends ModuleConfigurer {
 			
 			return data;
 		});
+
+		log.info("setting up {} script(s)", scripts.size());
 		
-		if (script != null) {
-			init.init("run initial javascript", (data) -> {
+		for (Script script : scripts) {
+			module.init("run initial javascript", (data) -> {
 				log.debug("running initial js");
 				ScriptableObject scope = data.getContent(scopePath).get().valueAs(ScriptableObject.class);
-				runJavascriptInScope(scope, script);
+				runJavascriptInScope(scope, script, optimization);
 				log.debug("returning data from js init/run: {}", data.toPrettyJson());
 				return data;
 			});
 		}
 		
-		init.operation(asList(root(), path("run")), () -> new RhinoConfigurer(scopePath));
+		module.operation(asList(root(), path("run")), () -> new RhinoConfigurer(scopePath));
 		
 	}
 

@@ -38,6 +38,16 @@ public class RhinoHelper {
 		}
 	}
 	
+	public static Script compileJavascript(String script, Integer optimizationLevel) {
+		Context context = Context.enter();
+		if (optimizationLevel != null) context.setOptimizationLevel(optimizationLevel);
+		try {
+			return context.compileString(script, "", 1, null);
+		} finally {
+			Context.exit();
+		}
+	}
+	
 	public static Script compileJavascript(String script) {
 		Context context = Context.enter();
 		try {
@@ -59,8 +69,9 @@ public class RhinoHelper {
 		}
 	}
 	
-	public static Object runJavascriptInScope(ScriptableObject scope, Script script) {
+	public static Object runJavascriptInScope(ScriptableObject scope, Script script, Integer optimizationLevel) {
 		Context context = Context.enter();
+		if (optimizationLevel != null) context.setOptimizationLevel(optimizationLevel);
 		try {
 			ScriptableObject.putProperty(scope, "exports", new NativeObject());
 			script.exec(context, scope);
