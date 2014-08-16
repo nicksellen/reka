@@ -1,5 +1,4 @@
 **/target
-**/*.jar
 **/dependency-reduced-pom.xml
 **/.reka
 **/.classpath
@@ -8,3 +7,5 @@
 **/*.log
 **/*.iml
 */**/.gitignore
+bundles/clojure-env/build
+docker/**/*.jar
