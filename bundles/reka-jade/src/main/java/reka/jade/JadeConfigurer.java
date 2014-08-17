@@ -2,6 +2,7 @@ package reka.jade;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static reka.api.Path.dots;
+import static reka.core.builder.FlowSegments.dataop;
 import static reka.core.builder.FlowSegments.sync;
 import static reka.util.Util.unchecked;
 
@@ -78,7 +79,7 @@ public class JadeConfigurer implements Supplier<FlowSegment> {
 	@Override
 	public FlowSegment get() {
 		if (out == null) out = Path.Response.CONTENT;
-	    return sync("render", () -> new Jade(template, in, out));
+	    return dataop("render", () -> new Jade(template, in, out));
 	}
 	
 }

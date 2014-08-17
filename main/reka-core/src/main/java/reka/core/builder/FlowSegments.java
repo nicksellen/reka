@@ -21,6 +21,8 @@ import reka.api.flow.FlowNode;
 import reka.api.flow.FlowSegment;
 import reka.api.run.AsyncOperation;
 import reka.api.run.AsyncOperationSupplier;
+import reka.api.run.DataOperation;
+import reka.api.run.DataOperationSupplier;
 import reka.api.run.RouterOperationSupplier;
 import reka.api.run.RoutingOperation;
 import reka.api.run.SyncOperation;
@@ -200,6 +202,14 @@ public class FlowSegments extends AbstractFlowNode {
 	
 	public static FlowNode sync(String name, SyncOperationSupplier<?> supplier) {
 		return new OperationFlowNode(name, supplier);
+	}
+	
+	public static FlowNode dataop(String name, DataOperationSupplier<?> supplier) {
+		return new OperationFlowNode(name, supplier);
+	}
+	
+	public static FlowNode dataop(String name, Supplier<DataOperation> supplier) {
+		return dataop(name, data -> supplier.get());
 	}
 	
 	public static FlowNode background(String name, Supplier<SyncOperation> supplier) {

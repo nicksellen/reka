@@ -10,6 +10,7 @@ public interface MutableData extends Data, DataMutation<MutableData> {
 	MutableData mutableAt(Path path);
 
 	default MutableData merge(Data other) {
+		if (this == other) return this;
 		other.forEachContent((path, content) -> put(path, content));
 		return this;
 	}

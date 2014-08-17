@@ -1,5 +1,3 @@
 @include(bundles.reka)
 
-//app @include(apps/reka-ui/main.reka)
-//app @include(apps/reka-api/reka-api.reka)
-app @include(apps/reka-newapi/main.reka)
+app @include(reka-api/main.reka)

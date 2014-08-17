@@ -1,9 +1,9 @@
 package reka.api.run;
 
+import java.util.Optional;
+
 import reka.api.data.Data;
 import reka.api.flow.FlowOperation;
-
-import com.google.common.base.Optional;
 
 public interface OperationSupplier<T extends FlowOperation> {
 	
@@ -14,8 +14,10 @@ public interface OperationSupplier<T extends FlowOperation> {
 			return Optional.of(((AsyncOperationSupplier<? extends FlowOperation>) supplier).apply(initializationData));
 		} else if (supplier instanceof RouterOperationSupplier) {
 			return Optional.of(((RouterOperationSupplier<? extends FlowOperation>) supplier).apply(initializationData));
+		} else if (supplier instanceof DataOperationSupplier) {
+			return Optional.of(((DataOperationSupplier<? extends FlowOperation>) supplier).apply(initializationData));
 		} else {
-			return Optional.absent();
+			return Optional.empty();
 		}
 	}
 	

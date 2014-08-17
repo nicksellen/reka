@@ -17,11 +17,12 @@ import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.flow.FlowSegment;
+import reka.api.run.DataOperation;
 import reka.api.run.SyncOperation;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.RekaBundle;
 import reka.core.bundle.ModuleConfigurer;
 import reka.core.bundle.ModuleInit;
+import reka.core.bundle.RekaBundle;
 import reka.core.util.StringWithVars;
 
 import com.twilio.sdk.TwilioRestClient;
@@ -34,10 +35,10 @@ public class TwilioBundle implements RekaBundle {
 	private static final Logger log = LoggerFactory.getLogger(TwilioBundle.class);
 
 	public void setup(BundleSetup setup) {
-		setup.use(path("twilio"), () -> new UseTwilioConfigurer());
+		setup.use(path("twilio"), () -> new TwilioModule());
 	}
 	
-	public static class UseTwilioConfigurer extends ModuleConfigurer {
+	public static class TwilioModule extends ModuleConfigurer {
 		
 		private String sid;
 		private String token;
@@ -59,8 +60,8 @@ public class TwilioBundle implements RekaBundle {
 		}
 
 		@Override
-		public void setup(ModuleInit init) {
-			init.operation(path("send"), () -> new TwilioSendConfigurer(sid, token, defaultFrom));
+		public void setup(ModuleInit module) {
+			module.operation(path("send"), () -> new TwilioSendConfigurer(sid, token, defaultFrom));
 		}
 		
 	}
@@ -101,6 +102,60 @@ public class TwilioBundle implements RekaBundle {
 		@Override
 		public FlowSegment get() {
 			return sync("send sms", () -> new TwilioSendOperation(sid, token, defaultFrom, msgFn, toFn, out));
+		}
+		
+	}
+	
+	public static class TwilioSendOperation2 implements DataOperation {
+
+		private final String sid;
+		private final String token;
+		private final String defaultFrom;
+		private final Function<Data,String> msgFn;
+		private final Function<Data,String> toFn;
+		private final Path out;
+		
+		public TwilioSendOperation2(String sid, String token, String defaultFrom, Function<Data,String> msgFn, Function<Data,String> toFn, Path out) {
+			this.sid = sid;
+			this.token = token;
+			this.defaultFrom = defaultFrom;
+			this.msgFn = msgFn;
+			this.toFn = toFn;
+			this.out = out;
+		}
+		
+		@Override
+		public void run(MutableData data, OperationContext ctx) {
+			TwilioRestClient client = new TwilioRestClient(sid, token);
+			 
+		    Map<String, String> params = new HashMap<String, String>();
+		    params.put("Body", msgFn.apply(data));
+		    params.put("To", toFn.apply(data));
+		    params.put("From", defaultFrom);
+		 
+		    SmsFactory messageFactory = client.getAccount().getSmsFactory();
+		    
+			try {
+				Sms message = messageFactory.create(params);
+				
+				data.putMap(out, map -> {
+					//map.putString("price", message.getPrice());
+					map.putString("sid", message.getAccountSid());
+					map.putString("body", message.getBody());
+					//map.putString("date-sent", message.getDateSent().toString());
+					map.putString("direction", message.getDirection());
+					map.putString("to", message.getTo());
+					map.putString("from", message.getFrom());
+					map.putString("status", message.getStatus());
+				});
+				
+			    log.debug(message.getSid());
+			} catch (TwilioRestException e) {
+				throw unchecked(e);
+			}
+			
+			ctx.end();
+			
 		}
 		
 	}

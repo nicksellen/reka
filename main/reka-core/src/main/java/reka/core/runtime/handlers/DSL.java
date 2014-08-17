@@ -7,6 +7,7 @@ import java.util.Collection;
 
 import reka.api.flow.FlowOperation;
 import reka.api.run.AsyncOperation;
+import reka.api.run.DataOperation;
 import reka.api.run.RoutingOperation;
 import reka.api.run.Subscriber;
 import reka.api.run.SyncOperation;
@@ -25,6 +26,8 @@ public class DSL {
 			return syncOperation((SyncOperation) operation, next);
 		} else if (operation instanceof AsyncOperation) {
 			return asyncOperation((AsyncOperation) operation, next, error);
+		} else if (operation instanceof DataOperation) {
+			return new DataOperationAction((DataOperation) operation, next, error);
 		} else if (operation instanceof NoOp) {
 			return next; // NoOp does nothing so skip to the next immediately...
 		} else {

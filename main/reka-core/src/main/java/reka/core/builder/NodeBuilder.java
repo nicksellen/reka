@@ -14,6 +14,7 @@ import static reka.util.Util.unwrap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import reka.api.data.Data;
 import reka.api.flow.FlowNode;
@@ -36,7 +37,6 @@ import reka.core.runtime.handlers.HaltedHandler;
 import reka.core.runtime.handlers.RuntimeNode;
 import reka.core.runtime.handlers.stateful.StatefulControl;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
@@ -164,7 +164,7 @@ class NodeBuilder {
 			halted = haltedHandlers(asList(halted, NOTIFY_SUBSCRIBER_ON_HALTED));
 		}
 		
-		Optional<FlowOperation> o = Optional.absent();
+		Optional<FlowOperation> o = Optional.empty();
 		
 		if (node.hasOperationSupplier()) {
 			o = OperationSupplier.supply(node.operationSupplier(), factory.initializationData());
@@ -173,7 +173,7 @@ class NodeBuilder {
 			throw new IllegalStateException(format("node [%s] must have supplier or embedded flow reference", name()));
 		}
 		
-		FlowOperation operation = o.orNull();
+		FlowOperation operation = o.orElse(null);
 		
 		if (operation instanceof RoutingOperation) {
 			action = routing((RoutingOperation) operation, children);
@@ -183,7 +183,7 @@ class NodeBuilder {
 			
 			if (operation != null) {
 				if (operation instanceof SyncOperation && node.shouldUseAnotherThread()) {
-					operation = new SyncToAsync((SyncOperation) operation, executor);
+					operation = ((SyncOperation) operation).toAsync(executor);
 				}
 				action = op(operation, next, error);
 				

@@ -52,7 +52,7 @@ public class ModularNodeTest {
 					  })), DoNothing.INSTANCE, DoNothing.INSTANCE);
 		
 		Node parent = new RuntimeNode(1, "parent", syncOperation((data) ->
-					data.put(dots("example.from.parent"), utf8("hello from parent")),
+					data.putString(dots("example.from.parent"), "hello from parent"),
 					actionHandlers(asList(new NodeChild(child, false, "some child").node()))), DoNothing.INSTANCE, DoNothing.INSTANCE);
 		
 		parent.call(MutableMemoryData.create(), 

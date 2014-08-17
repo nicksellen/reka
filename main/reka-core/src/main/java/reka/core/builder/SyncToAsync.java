@@ -1,7 +1,5 @@
 package reka.core.builder;
 
-import java.util.concurrent.Callable;
-
 import reka.api.data.MutableData;
 import reka.api.run.AsyncOperation;
 import reka.api.run.SyncOperation;
@@ -21,14 +19,7 @@ public class SyncToAsync implements AsyncOperation {
 
 	@Override
 	public ListenableFuture<MutableData> call(MutableData data) {
-		return executor.submit(new Callable<MutableData>(){
-
-			@Override
-			public MutableData call() throws Exception {
-				return operation.call(data);
-			}
-			
-		});
+		return executor.submit(() -> operation.call(data));
 	}
 
 }
