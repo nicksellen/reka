@@ -33,11 +33,11 @@ import reka.core.builder.FlowVisualizer;
 import reka.core.builder.Flows;
 import reka.core.builder.FlowsBuilder;
 import reka.core.bundle.BundleManager;
-import reka.core.bundle.Registration;
 import reka.core.bundle.ModuleConfigurer;
 import reka.core.bundle.ModuleConfigurer.UsesInitializer;
-import reka.core.bundle.ModuleInit.TriggerRegistration;
 import reka.core.bundle.ModuleInit.Trigger;
+import reka.core.bundle.ModuleInit.TriggerRegistration;
+import reka.core.bundle.Registration;
 import reka.core.config.MultiConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.core.data.memory.MutableMemoryData;
@@ -52,10 +52,8 @@ public class ApplicationConfigurer implements ErrorReporter {
     
     public ApplicationConfigurer(BundleManager bundles) {
         rootUse = new RootModule();
-		rootUse.mappings(bundles.uses());
+		rootUse.mappings(bundles.modules());
     }
-
-    private final FlowsBuilder flowsBuilder = new FlowsBuilder();
     
     private final List<Config> flowConfigs = new ArrayList<>();
     
@@ -78,6 +76,11 @@ public class ApplicationConfigurer implements ErrorReporter {
     	rootUse.useThisConfig(config);
     }
     
+    @Conf.Each("use")
+    public void use(Config config) {
+    	rootUse.use(config);
+    }
+    
     @Conf.Each("def")
     public void def(Config config) {
     	checkConfig(config.hasValue(), "you must provide a value/name");
@@ -94,6 +97,7 @@ public class ApplicationConfigurer implements ErrorReporter {
     }
     
     public Collection<FlowVisualizer> visualize() {
+        FlowsBuilder flowsBuilder = new FlowsBuilder();
     	UsesInitializer initializer = ModuleConfigurer.process(rootUse);
     	
     	MultiConfigurerProvider provider = new MultiConfigurerProvider(initializer.providers());
@@ -152,7 +156,8 @@ public class ApplicationConfigurer implements ErrorReporter {
     	CompletableFuture<Application> future = new CompletableFuture<>();
     	
     	return safelyCompletable(future, () -> {
-    	
+    		
+    		FlowsBuilder flowsBuilder = new FlowsBuilder();
 	    	UsesInitializer initializer = ModuleConfigurer.process(rootUse);
 	    	
 	    	ApplicationBuilder applicationBuilder = new ApplicationBuilder();
@@ -169,15 +174,6 @@ public class ApplicationConfigurer implements ErrorReporter {
 	    	List<TriggerSetup> triggerSetups = new ArrayList<>();
 	    	
 	    	initializer.triggers().forEach(trigger -> {
-	    		/*
-	    		Path baseFlowName = applicationName.add("trigger").add(trigger.name());
-	    		Path flowName = baseFlowName;
-	    		int num = 1;
-	    		while (flowsBuilder.roots().contains(flowName)) {
-	    			flowName = baseFlowName.add(num);
-	    			num++;
-	    		}
-	    		*/
 	    		Path flowName = applicationName.add(UUID.randomUUID().toString()).add(trigger.name());
 	    		TriggerSetup setup = new TriggerSetup(trigger).flowName(flowName);
 	    		flowsBuilder.add(setup.flowName(), trigger.supplier().apply(configurerProvider).get());
@@ -201,7 +197,7 @@ public class ApplicationConfigurer implements ErrorReporter {
 					
 			    	try {
 			    		
-						Flows flows = flowsBuilder.build(data); // constructs all the operations
+						Flows flows = flowsBuilder.buildAll(data); // constructs all the operations
 						
 						applicationBuilder.flows(flows);
 						

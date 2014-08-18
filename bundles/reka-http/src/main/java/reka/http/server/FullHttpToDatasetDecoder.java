@@ -84,6 +84,7 @@ public class FullHttpToDatasetDecoder extends MessageToMessageDecoder<FullHttpRe
 		*/
 		
 		data.putString(Request.PATH, QueryStringDecoder.decodeComponent(qs.path()))
+			.putString(Request.PATH_BASE, "")
 			.putString(Request.HOST, host);
 		
 		String cookieHeader = request.headers().get(com.google.common.net.HttpHeaders.COOKIE);

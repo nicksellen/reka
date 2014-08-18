@@ -1,6 +1,5 @@
 package reka.core.data.memory;
 
-import static com.google.common.base.Preconditions.checkState;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toSet;
 import static java.util.stream.IntStream.range;
@@ -540,8 +539,7 @@ public class MutableMemoryData implements MutableDataProvider<Object> {
 		}
 		
 		if (append) {
-			Object obj2 = putOrAppend(obj, es[es.length - 1], o);
-			checkState(obj == obj2, "object changed, but we didn't do anything with it, obj: %s, path: %s, o: %s", obj, p.dots(), o);
+			putOrAppend(obj, es[es.length - 1], o);
 		} else {
 			put(obj, es[es.length - 1], o);
 		}

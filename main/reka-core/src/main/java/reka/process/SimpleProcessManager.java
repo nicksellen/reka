@@ -29,7 +29,11 @@ public class SimpleProcessManager implements ProcessManager {
 	@SuppressWarnings("unused")
 	private final ProcessBuilder builder;
 	private final Process process;
+
+	@SuppressWarnings("unused")
 	private final boolean noreply;
+
+	@SuppressWarnings("unused")
 	private final AtomicReference<Consumer<String>> trigger;
 	
 	private final OutputStream stdin;

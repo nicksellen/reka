@@ -3,7 +3,6 @@ package reka.jade;
 import static com.google.common.base.Preconditions.checkArgument;
 import static reka.api.Path.dots;
 import static reka.core.builder.FlowSegments.dataop;
-import static reka.core.builder.FlowSegments.sync;
 import static reka.util.Util.unchecked;
 
 import java.io.IOException;

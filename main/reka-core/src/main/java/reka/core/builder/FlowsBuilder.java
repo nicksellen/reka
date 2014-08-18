@@ -36,7 +36,7 @@ public class FlowsBuilder {
 	public static Flow createFlow(Path name, FlowSegment segment, Data initializationData) {
 		FlowsBuilder b = new FlowsBuilder();
 		b.add(name, segment);
-		return b.build(initializationData).flow(name);
+		return b.buildAll(initializationData).flow(name);
 	}
 	
 	public static FlowVisualizer createVisualizer(Path name, FlowSegment segment) {
@@ -108,7 +108,7 @@ public class FlowsBuilder {
 		return roots.keySet();
 	}
 	
-	public Flows build(Data initializationData) {
+	public Flows buildAll(Data initializationData) {
 		
 		for (FlowInfo root : roots.values()) {
 			createFlow(root, true, initializationData);

@@ -352,6 +352,7 @@ public class Path implements Iterable<Path.PathElement>, Comparable<Path>, Hasha
 	public static final class Request {
 		public static final Path METHOD 	= REQUEST.add("method");
 		public static final Path PATH 		= REQUEST.add("path");
+		public static final Path PATH_BASE	= REQUEST.add("path-base");
 		public static final Path PARAMS 	= REQUEST.add("params");
 		public static final Path DATA 		= REQUEST.add("data");
 		public static final Path UPLOADS 	= REQUEST.add("uploads");

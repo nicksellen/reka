@@ -42,7 +42,7 @@ public interface RekaBundle {
 			return this;
 		}
 		
-		protected List<Entry<Path,Supplier<ModuleConfigurer>>> uses() {
+		protected List<Entry<Path,Supplier<ModuleConfigurer>>> modules() {
 			return uses;
 		}
 		

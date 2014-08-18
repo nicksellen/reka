@@ -1,6 +1,5 @@
 package reka.api.run;
 
-import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.flow.FlowOperation;
 

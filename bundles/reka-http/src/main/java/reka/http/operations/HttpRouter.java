@@ -107,7 +107,7 @@ public class HttpRouter implements RoutingOperation {
 	private static final Map<Class<? extends Route>,Integer> orderings = new HashMap<>();
 	
 	static {
-		orderings.put(PrefixRoute.class, 10);
+		orderings.put(MountRoute.class, 10);
 		orderings.put(StaticRoute.class, 20);
 		orderings.put(RegexRoute.class, 30);
 	}
@@ -119,8 +119,8 @@ public class HttpRouter implements RoutingOperation {
 			if (a.getClass().equals(b.getClass())) {
 				if (a instanceof StaticRoute) {
 					return compareStaticRoutes((StaticRoute) a, (StaticRoute) b);
-				} else if (a instanceof PrefixRoute) {
-					return comparePrefixRoutes((PrefixRoute) a, (PrefixRoute) b);
+				} else if (a instanceof MountRoute) {
+					return compareMountRoutes((MountRoute) a, (MountRoute) b);
 				} else if (a instanceof RegexRoute) {
 					return compareRegexRoutes((RegexRoute) a, (RegexRoute) b);
 				} else {
@@ -140,7 +140,7 @@ public class HttpRouter implements RoutingOperation {
 			}
 		}
 
-		private int comparePrefixRoutes(PrefixRoute a, PrefixRoute b) {
+		private int compareMountRoutes(MountRoute a, MountRoute b) {
 			return a.prefix.compareTo(b.prefix);
 		}
 		
@@ -161,12 +161,12 @@ public class HttpRouter implements RoutingOperation {
 	};
 	
 	
-	public static final class PrefixRoute implements Route {
+	public static final class MountRoute implements Route {
 		
 		private final String prefix;
 		private final String prefixWithTrailingSlash;
 		
-		public PrefixRoute(String prefix) {
+		public MountRoute(String prefix) {
 			if (prefix.endsWith("/")) prefix = prefix.substring(0, prefix.length() - 1);
 			this.prefix = prefix;
 			this.prefixWithTrailingSlash = prefix + '/';
@@ -178,8 +178,18 @@ public class HttpRouter implements RoutingOperation {
 		}
 
 		@Override
-		public boolean matches(HttpMethod method, String path, MutableData datah) {
-			return path.equals(prefix) || path.startsWith(prefixWithTrailingSlash);
+		public boolean matches(HttpMethod method, String path, MutableData data) {
+			if (path.equals(prefix)) {
+				data.putString(Request.PATH_BASE, prefix)
+					.putString(Request.PATH, "/");
+				return true;
+			} else if (path.startsWith(prefixWithTrailingSlash)) {
+				data.putString(Request.PATH_BASE, prefix)
+					.putString(Request.PATH, path.substring(prefix.length()));
+				return true;
+			} else {
+				return false;
+			}
 		}
 
 		@Override

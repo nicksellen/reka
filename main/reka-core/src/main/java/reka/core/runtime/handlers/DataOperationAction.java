@@ -21,10 +21,6 @@ public class DataOperationAction implements ActionHandler {
 	public void call(MutableData data, FlowContext context) {
 		op.run(data, new OperationContext() {
 			
-			public void emit(MutableData data) {
-				next.call(data, context);	
-			}
-			
 			@Override
 			public void end() {
 				next.call(data, context);

@@ -6,7 +6,11 @@ import static reka.api.Path.path;
 import static reka.config.configurer.Configurer.configure;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import static reka.util.Util.runtime;
+import static reka.util.Util.unchecked;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -17,6 +21,8 @@ import java.util.regex.Pattern;
 import reka.DeployedResource;
 import reka.api.flow.FlowSegment;
 import reka.config.Config;
+import reka.config.configurer.Configurer.ErrorCollector;
+import reka.config.configurer.ErrorReporter;
 import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.ModuleConfigurer;
 import reka.core.bundle.ModuleInit;
@@ -29,30 +35,32 @@ import reka.http.configurers.HttpRequestConfigurer;
 import reka.http.configurers.HttpRouterConfigurer;
 import reka.http.server.HttpServerManager;
 import reka.http.server.HttpSettings;
+import reka.http.server.HttpSettings.SslSettings;
 import reka.http.server.HttpSettings.Type;
 
-public class HttpModule extends ModuleConfigurer {
-
-	// listen 8080
-	// listen localhost:500
-	// listen boo.com
+public class HttpsModule extends ModuleConfigurer implements ErrorReporter {
 	
 	private final Pattern listenPortOnly = Pattern.compile("^[0-9]+$");
 	private final Pattern listenHostAndPort = Pattern.compile("^(.+):([0-9]+)$");
 	
 	public class HostAndPort {
+		
 		private final String host;
 		private final int port;
+		
 		public HostAndPort(String host, int port) {
 			this.host = host;
 			this.port = port;
 		}
+		
 		public String host() {
 			return host;
 		}
+		
 		public int port() {
 			return port;
 		}
+		
 	}
 
 	private final HttpServerManager server;
@@ -60,14 +68,17 @@ public class HttpModule extends ModuleConfigurer {
 	private final List<HostAndPort> listens = new ArrayList<>();
 	private final List<Function<ConfigurerProvider,Supplier<FlowSegment>>> requestHandlers = new ArrayList<>();
 	
-	public HttpModule(HttpServerManager server) {
+	private byte[] crt;
+	private byte[] key;
+	
+	public HttpsModule(HttpServerManager server) {
 		this.server = server;
 	}
 	
 	@Conf.Each("listen")
 	public void listen(String val) {
 		String host = null;
-		int port = -1;
+		int port = 443;
 		if (listenPortOnly.matcher(val).matches()) {
 			port = Integer.valueOf(val);
 		} else {
@@ -81,6 +92,29 @@ public class HttpModule extends ModuleConfigurer {
 		}
 		listens.add(new HostAndPort(host, port));
 	}
+	
+	@Conf.At("crt")
+	public void crt(Config val) {
+		checkConfig(val.hasDocument(), "must have document!");
+		crt = val.documentContent();
+	}
+	
+	@Conf.At("key")
+	public void key(Config val) {
+		checkConfig(val.hasDocument(), "must have document!");
+		key = val.documentContent();
+	}
+	
+	private static File byteToFile(byte[] bytes) {
+		try {
+			java.nio.file.Path tmp = Files.createTempFile("reka.", "");
+			Files.write(tmp, bytes);
+			return tmp.toFile();
+		} catch (IOException e) {
+			throw unchecked(e);
+		}
+	}
+	
 
 	@Conf.Each("on")
 	public void on(Config config) {
@@ -96,6 +130,8 @@ public class HttpModule extends ModuleConfigurer {
 
 	@Override
 	public void setup(ModuleInit http) {
+		
+		SslSettings sslSettings = new SslSettings(byteToFile(crt), byteToFile(key));
 		
 		http.operation(path("router"), (provider) -> new HttpRouterConfigurer(provider));
 		http.operation(path("redirect"), () -> new HttpRedirectConfigurer());
@@ -113,7 +149,7 @@ public class HttpModule extends ModuleConfigurer {
 					
 					String identity = format("%s/%s/%s", registration.applicationIdentity(), host, port);
 				
-					HttpSettings settings = HttpSettings.http(port, host, Type.HTTP, registration.applicationVersion());
+					HttpSettings settings = HttpSettings.https(port, host, Type.HTTP, sslSettings, registration.applicationVersion());
 					
 					server.deployHttp(identity, registration.flow(), settings);
 					
@@ -137,7 +173,7 @@ public class HttpModule extends ModuleConfigurer {
 						
 					});
 					
-					registration.network(port, settings.isSsl() ? "https" : "http", MutableMemoryData.create((details) -> {
+					registration.network(port, "https", MutableMemoryData.create((details) -> {
 						details.putString("host", host);
 						details.putString("run", registration.flow().name().last().toString());
 					}).immutable());
@@ -146,6 +182,12 @@ public class HttpModule extends ModuleConfigurer {
 			});
 		}
 		
+	}
+
+	@Override
+	public void errors(ErrorCollector errors) {
+		errors.checkConfigPresent(key, "key is required");
+		errors.checkConfigPresent(crt, "crt is required");
 	}
 
 }

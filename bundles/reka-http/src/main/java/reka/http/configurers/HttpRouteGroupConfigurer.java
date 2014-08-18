@@ -70,8 +70,9 @@ public class HttpRouteGroupConfigurer {
 	
 	@Conf.Each("prefixed")
 	@Conf.Each("within")
-	public void prefixed(Config config) {
-		addRoute(new HttpRouter.PrefixRoute(config.valueAsString()), config);
+	@Conf.Each("mount")
+	public void mount(Config config) {
+		addRoute(new HttpRouter.MountRoute(config.valueAsString()), config);
 	}
 
 	@Conf.At("then")

@@ -48,7 +48,7 @@ public class Reka {
 		
 		bundleManager.add(new RekaSystemBundle(manager));
 		
-		Stream<String> bundlesNames = bundleManager.useKeys().stream().map(reka.api.Path::slashes);
+		Stream<String> bundlesNames = bundleManager.modulesKeys().stream().map(reka.api.Path::slashes);
 		log.info("available bundles {}", bundlesNames.filter(s -> !s.isEmpty()).collect(toList()));
 		
 		log.info("starting reka");

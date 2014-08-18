@@ -240,7 +240,7 @@ public abstract class ModuleConfigurer {
 		}
 	}
 
-	public abstract void setup(ModuleInit use);
+	public abstract void setup(ModuleInit module);
 	
 	public boolean isRoot() {
 		return isRoot;
