@@ -51,13 +51,13 @@ public class ApplicationConfigurer implements ErrorReporter {
     private final MutableData meta = MutableMemoryData.create();
     
     public ApplicationConfigurer(BundleManager bundles) {
-        rootUse = new RootModule();
-		rootUse.mappings(bundles.modules());
+        use = new RootModule();
+		use.modules(bundles.modules());
     }
     
     private final List<Config> flowConfigs = new ArrayList<>();
     
-    private final ModuleConfigurer rootUse;
+    private final ModuleConfigurer use;
     
     @Conf.At("name")
     public void name(String val) {
@@ -73,12 +73,12 @@ public class ApplicationConfigurer implements ErrorReporter {
     @Conf.EachUnmatched
     public void useModule(Config config) {
     	log.info("setting up module {} {}", config.key(), config.hasValue() ? config.valueAsString() : "<unnamed>");
-    	rootUse.useThisConfig(config);
+    	use.useThisConfig(config);
     }
     
     @Conf.Each("use")
     public void use(Config config) {
-    	rootUse.use(config);
+    	use.use(config);
     }
     
     @Conf.Each("def")
@@ -98,7 +98,7 @@ public class ApplicationConfigurer implements ErrorReporter {
     
     public Collection<FlowVisualizer> visualize() {
         FlowsBuilder flowsBuilder = new FlowsBuilder();
-    	UsesInitializer initializer = ModuleConfigurer.process(rootUse);
+    	UsesInitializer initializer = ModuleConfigurer.process(use);
     	
     	MultiConfigurerProvider provider = new MultiConfigurerProvider(initializer.providers());
     	Map<Path,Supplier<FlowSegment>> configuredFlows = new HashMap<>();
@@ -120,7 +120,7 @@ public class ApplicationConfigurer implements ErrorReporter {
     }
     
     public void checkValid() {
-    	UsesInitializer initializer = ModuleConfigurer.process(rootUse);
+    	UsesInitializer initializer = ModuleConfigurer.process(use);
     	MultiConfigurerProvider configurerProvider = new MultiConfigurerProvider(initializer.providers());
     	initializer.triggers().forEach(trigger -> trigger.supplier().apply(configurerProvider).get());
     	flowConfigs.forEach((config) -> configure(new SequenceConfigurer(configurerProvider), config).get());
@@ -158,7 +158,7 @@ public class ApplicationConfigurer implements ErrorReporter {
     	return safelyCompletable(future, () -> {
     		
     		FlowsBuilder flowsBuilder = new FlowsBuilder();
-	    	UsesInitializer initializer = ModuleConfigurer.process(rootUse);
+	    	UsesInitializer initializer = ModuleConfigurer.process(use);
 	    	
 	    	ApplicationBuilder applicationBuilder = new ApplicationBuilder();
 	    	

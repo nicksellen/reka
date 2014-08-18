@@ -121,13 +121,13 @@ public abstract class ModuleConfigurer {
 				List<Runnable> shutdownHandlers) {
 			
 			Map<ModuleConfigurer,FlowSegment> map = new HashMap<>();
-			for (ModuleConfigurer use : all) {
+			for (ModuleConfigurer module : all) {
 				
-				ModuleInit init = new ModuleInit(use.fullPath());
-				use.setup(init);
+				ModuleInit init = new ModuleInit(module.fullPath());
+				module.setup(init);
 				
 				init.buildFlowSegment().ifPresent(segment -> {
-					map.put(use, segment);
+					map.put(module, segment);
 				});
 				
 				providersCollector.putAll(init.providers());
@@ -139,14 +139,11 @@ public abstract class ModuleConfigurer {
 		}
 		
 		private static Optional<FlowSegment> buildSegment(Set<ModuleConfigurer> uses, Map<ModuleConfigurer, FlowSegment> built) {
-			
 			List<FlowSegment> segments = new ArrayList<>();
 			for (ModuleConfigurer use : uses) {
 				buildSegment(use, built).ifPresent(segment -> segments.add(segment));
 			}
-			
 			return segments.isEmpty() ? Optional.empty() : Optional.of(par(segments));
-			
 		}
 		
 		private static Optional<FlowSegment> buildSegment(ModuleConfigurer use, Map<ModuleConfigurer, FlowSegment> built) {
@@ -168,7 +165,7 @@ public abstract class ModuleConfigurer {
 		
 		private static void resolveNamedDependencies(Set<ModuleConfigurer> all, Map<String, ModuleConfigurer> allMap) {
 			for (ModuleConfigurer use : all) {
-				for (String depname : use.usesNames) {
+				for (String depname : use.modulesNames) {
 					ModuleConfigurer dep = allMap.get(depname);
 					checkNotNull(dep, "missing dependency: [%s] uses [%s]", use.name(), depname);
 					dep.usedBy.add(use);
@@ -205,7 +202,7 @@ public abstract class ModuleConfigurer {
 		
 	}
 	
-	private List<Entry<Path, Supplier<ModuleConfigurer>>> mappings = new ArrayList<>();
+	private List<Entry<Path, Supplier<ModuleConfigurer>>> modules = new ArrayList<>();
 	
 	private String type;
 	private String name;
@@ -213,15 +210,15 @@ public abstract class ModuleConfigurer {
 	private boolean isRoot;
 	
 	private Path parentPath = Path.root();
-	private Path usePath = Path.root();
+	private Path modulePath = Path.root();
 	
-	private final List<String> usesNames = new ArrayList<>();
+	private final List<String> modulesNames = new ArrayList<>();
 	
 	private final Set<ModuleConfigurer> usedBy = new HashSet<>();
 	private final Set<ModuleConfigurer> uses = new HashSet<>();
 
-	public ModuleConfigurer mappings(List<Entry<Path, Supplier<ModuleConfigurer>>> mappings) {
-		this.mappings = mappings;
+	public ModuleConfigurer modules(List<Entry<Path, Supplier<ModuleConfigurer>>> modules) {
+		this.modules = modules;
 		
 		if (isRoot()) {
 			findRootConfigurers();
@@ -231,7 +228,7 @@ public abstract class ModuleConfigurer {
 	}
 
 	private void findRootConfigurers() {
-		for (Entry<Path, Supplier<ModuleConfigurer>> e : mappings) {
+		for (Entry<Path, Supplier<ModuleConfigurer>> e : modules) {
 			// all the ones with a root path need to be added automatically
 			// we don't need to explicitly load these...
 			if (e.getKey().isEmpty()) {
@@ -251,8 +248,8 @@ public abstract class ModuleConfigurer {
 		return this;
 	}
 	
-	public ModuleConfigurer usePath(Path path) {
-		this.usePath = path;
+	public ModuleConfigurer modulePath(Path path) {
+		this.modulePath = path;
 		return this;
 	}
 
@@ -289,12 +286,12 @@ public abstract class ModuleConfigurer {
 	}
 	
 	public void useThisConfig(Config config) {
-		checkConfig(mappings != null, "'%s' is not a valid module (try one of %s)", config.key(), mappingNames());
+		checkConfig(modules != null, "'%s' is not a valid module (try one of %s)", config.key(), mappingNames());
 		Supplier<ModuleConfigurer> supplier = mappingFor(slashes(config.key()));
 		checkConfig(supplier != null, "'%s' is not a valid module (try one of %s)", config.key(), mappingNames());
 		ModuleConfigurer child = supplier.get();
-		child.mappings(mappings);
-		child.parentPath(usePath);
+		child.modules(modules);
+		child.parentPath(modulePath);
 		configure(child, config);
 		uses.add(child);
 		child.usedBy.add(this);
@@ -307,7 +304,7 @@ public abstract class ModuleConfigurer {
 				useThisConfig(childConfig);
 			}
 		} else if (config.hasValue()) {
-			usesNames.add(config.valueAsString());
+			modulesNames.add(config.valueAsString());
 		} else {
 			invalidConfig("must have body or value (referencing another dependency)");
 		}
@@ -318,7 +315,7 @@ public abstract class ModuleConfigurer {
 	}
 
 	private Supplier<ModuleConfigurer> mappingFor(Path path) {
-		for (Entry<Path,Supplier<ModuleConfigurer>> e : mappings) {
+		for (Entry<Path,Supplier<ModuleConfigurer>> e : modules) {
 			if (e.getKey().equals(path)) {
 				return e.getValue();
 			}
@@ -328,7 +325,7 @@ public abstract class ModuleConfigurer {
 	
 	private Collection<String> mappingNames() {
 		List<String> result = new ArrayList<>();
-		for (Entry<Path,Supplier<ModuleConfigurer>> e : mappings) {
+		for (Entry<Path,Supplier<ModuleConfigurer>> e : modules) {
 			if (!e.getKey().isEmpty()) {
 				result.add(e.getKey().slashes());
 			}
@@ -338,7 +335,7 @@ public abstract class ModuleConfigurer {
 	
 	@Override
 	public String toString() {
-		return format("%s(\n    name %s\n    params %s)", type, name(), usesNames);
+		return format("%s(\n    name %s\n    params %s)", type, name(), modulesNames);
 	}
 
 }
