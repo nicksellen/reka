@@ -1,10 +1,10 @@
 package reka.jruby;
 
-import static org.jruby.javasupport.JavaEmbedUtils.rubyToJava;
+import static java.lang.String.format;
 
 import java.util.Map;
+import java.util.UUID;
 
-import org.jruby.embed.EmbedEvalUnit;
 import org.jruby.embed.ScriptingContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,17 +18,25 @@ public class JRubyRunOperation implements SyncOperation {
 	
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	
-	private final EmbedEvalUnit script;
+	private final ScriptingContainer ruby;
+	//private final EmbedEvalUnit script;
 	private final Path out;
 	
+	private final String methodName;
+	
 	public JRubyRunOperation(ScriptingContainer ruby, String script, Path out) {
-		this.script = ruby.parse(script);
+		this.ruby = ruby;
+		String uniqueName = "reka_" + UUID.randomUUID().toString().replaceAll("[^a-zA-Z0-9]", "");
+		this.methodName = uniqueName;
+		ruby.runScriptlet(format("def %s(data)\ndata = DataWrapper.new(data)\n%s\nend\n", methodName, script));
 		this.out = out;
 	}
 
 	@Override
 	public MutableData call(MutableData data) {
-		Object result = rubyToJava(script.run());
+		
+		Object result = ruby.callMethod(null, methodName, data, Object.class);
+		
 		if (result == null) {
 			log.debug("jruby return null\n");
 		} else if (result instanceof String) {

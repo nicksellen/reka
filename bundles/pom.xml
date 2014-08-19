@@ -10,23 +10,14 @@
   <packaging>pom</packaging>
 
   <modules>
-    <module>reka-chronicle</module>
-    <module>clojure-env</module>
-    <module>reka-clojure</module>
     <module>reka-command</module>
-    <module>reka-elasticsearch</module>
-    <module>reka-git</module>
-    <module>reka-gitfordata</module>
-    <module>reka-hazelcast</module>
     <module>reka-http</module>
     <module>reka-jade</module>
     <module>reka-jdbc</module>
     <module>reka-jruby</module>
-    <module>reka-leveldb</module>
     <module>reka-mustache</module>
     <module>reka-rhino</module>
     <module>reka-smtp</module>
     <module>reka-twilio</module>
-    <module>reka-validation</module>
   </modules>
 </project>

@@ -1,6 +1,8 @@
 package reka.api.data;
 
 import static com.google.common.base.Preconditions.checkState;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 import static reka.api.Path.path;
 import static reka.api.Path.root;
 import static reka.api.data.DataUtils.dataIsEqual;
@@ -194,11 +196,13 @@ public interface Data extends Iterable<Entry<PathElement,Data>>, JsonProvider, O
 	}
 	
 	default Map<String,Object> viewAsMap() {
+		if (!isPresent()) return emptyMap();
 		checkState(isMap(), "not a map");
 		return new DataMapView(this);
 	}
 	
 	default List<Object> viewAsList() {
+		if (!isPresent()) return emptyList();
 		checkState(isMap(), "not a list");
 		return new DataListView(this);
 	}

@@ -27,7 +27,6 @@ copy:
 
 	@echo "Copying built jars into local dir"
 	@cp ../bundles/reka-*/target/reka-*.jar config/bundles/
-	@rm config/bundles/reka-chronicle*
 
 	@cp ../main/reka-main/target/reka-main-*.jar reka-main.jar
 
