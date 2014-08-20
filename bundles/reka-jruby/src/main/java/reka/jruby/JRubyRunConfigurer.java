@@ -42,7 +42,7 @@ public class JRubyRunConfigurer implements Supplier<FlowSegment> {
 	public FlowSegment get() {
 		
 		return sync("run", (data) -> new JRubyRunOperation(
-				data.getContent(runtimePath).get().valueAs(ScriptingContainer.class), script, out));
+				data.getContent(runtimePath).get().valueAs(RubyEnv.class), script, out));
 	}
 	
 }

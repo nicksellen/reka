@@ -1,3 +1,5 @@
+require 'rubygems'
+
 gem 'bundler', '>= 0'
 
 require 'bundler'

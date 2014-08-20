@@ -18,24 +18,23 @@ public class JRubyRunOperation implements SyncOperation {
 	
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	
-	private final ScriptingContainer ruby;
-	//private final EmbedEvalUnit script;
+	private final ScriptingContainer container;
 	private final Path out;
 	
 	private final String methodName;
 	
-	public JRubyRunOperation(ScriptingContainer ruby, String script, Path out) {
-		this.ruby = ruby;
+	public JRubyRunOperation(RubyEnv ruby, String script, Path out) {
+		this.container = ruby.container();
 		String uniqueName = "reka_" + UUID.randomUUID().toString().replaceAll("[^a-zA-Z0-9]", "");
 		this.methodName = uniqueName;
-		ruby.runScriptlet(format("def %s(data)\ndata = DataWrapper.new(data)\n%s\nend\n", methodName, script));
+		ruby.exec(format("def %s(data)\ndata = DataWrapper.new(data)\n%s\nend\n", methodName, script));
 		this.out = out;
 	}
 
 	@Override
 	public MutableData call(MutableData data) {
 		
-		Object result = ruby.callMethod(null, methodName, data, Object.class);
+		Object result = container.callMethod(null, methodName, data, Object.class);
 		
 		if (result == null) {
 			log.debug("jruby return null\n");
