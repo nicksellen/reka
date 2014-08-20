@@ -5,8 +5,6 @@ import static reka.core.builder.FlowSegments.sync;
 
 import java.util.function.Supplier;
 
-import org.jruby.embed.ScriptingContainer;
-
 import reka.api.Path;
 import reka.api.flow.FlowSegment;
 import reka.config.Config;

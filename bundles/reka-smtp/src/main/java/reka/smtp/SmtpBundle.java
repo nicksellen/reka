@@ -40,9 +40,9 @@ import reka.api.run.SyncOperation;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.RekaBundle;
 import reka.core.bundle.ModuleConfigurer;
 import reka.core.bundle.ModuleInit;
+import reka.core.bundle.RekaBundle;
 import reka.core.data.memory.MutableMemoryData;
 import reka.core.util.StringWithVars;
 
