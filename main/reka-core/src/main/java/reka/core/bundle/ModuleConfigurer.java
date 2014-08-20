@@ -289,12 +289,15 @@ public abstract class ModuleConfigurer {
 		checkConfig(modules != null, "'%s' is not a valid module (try one of %s)", config.key(), mappingNames());
 		Supplier<ModuleConfigurer> supplier = mappingFor(slashes(config.key()));
 		checkConfig(supplier != null, "'%s' is not a valid module (try one of %s)", config.key(), mappingNames());
-		ModuleConfigurer child = supplier.get();
-		child.modules(modules);
-		child.parentPath(modulePath);
-		configure(child, config);
-		uses.add(child);
-		child.usedBy.add(this);
+		configureModule(supplier.get(), config);
+	}
+	
+	protected void configureModule(ModuleConfigurer module, Config config) {
+		module.modules(modules);
+		module.parentPath(modulePath);
+		configure(module, config);
+		uses.add(module);
+		module.usedBy.add(this);
 	}
 	
 	@Conf.Each("use")

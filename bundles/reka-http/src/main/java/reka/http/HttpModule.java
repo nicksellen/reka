@@ -93,6 +93,11 @@ public class HttpModule extends ModuleConfigurer {
 			throw runtime("unknown trigger %s", config.valueAsString());
 		}
 	}
+	
+	@Conf.At("sessions")
+	public void sessions(Config config) {
+		configureModule(new HttpSessionsModule(), config);
+	}
 
 	@Override
 	public void setup(ModuleInit http) {

@@ -6,7 +6,7 @@ runlocal: copy
 	@rm -rf data
 
 	@REKA_ENV=development java \
-		-jar reka-main.jar \
+		-jar reka.jar \
 		config/main.reka
 
 runlocalnolog: copy
@@ -15,7 +15,7 @@ runlocalnolog: copy
 
 	@REKA_ENV=development java \
 		-Dlog4j.configurationFile=../main/reka-main/log4j2-errors-only.xml \
-		-jar reka-main.jar \
+		-jar reka.jar \
 		config/main.reka
 
 copy: 
@@ -28,7 +28,7 @@ copy:
 	@echo "Copying built jars into local dir"
 	@cp ../bundles/reka-*/target/reka-*.jar config/bundles/
 
-	@cp ../main/reka-main/target/reka-main-*.jar reka-main.jar
+	@cp ../main/reka-main/target/reka-main-*.jar reka.jar
 
 	@echo "Making bundles.reka"
 
