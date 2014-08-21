@@ -32,7 +32,7 @@ public class Main {
 			return;
 		}
 		
-		File file = new File(args[0]);
+		File file = new File(args[0]).getAbsoluteFile();
 		
 		if (!file.exists()) {
 		log.error("configuration file {} is missing", args[0]);

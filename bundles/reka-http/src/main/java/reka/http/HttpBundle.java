@@ -14,8 +14,8 @@ public class HttpBundle implements RekaBundle {
 		setup.use(path("http"), () -> new HttpModule(server));
 		setup.use(path("https"), () -> new HttpsModule(server));
 		setup.use(slashes("http/sessions"), () -> new HttpSessionsModule());
-		setup.use(path("websockets"), () -> new WebsocketsModule(server));
-		setup.use(slashes("admin/http"), () -> new HttpAdminModule(server));
+		//setup.use(path("websockets"), () -> new WebsocketsModule(server));
+		//setup.use(slashes("admin/http"), () -> new HttpAdminModule(server));
 	}
 
 }

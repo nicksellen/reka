@@ -67,7 +67,7 @@ public class HttpContentConfigurer implements Supplier<FlowSegment> {
 				contentType = utf8(ct);
 			}
 		}
-		return sync("http-content", () -> new HttpContentWithETag(content, contentType));
+		return sync("http/content", () -> new HttpContentWithETag(content, contentType));
 	}
 
 }
