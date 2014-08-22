@@ -20,16 +20,17 @@ public class HttpOrWebsocket extends MessageToMessageDecoder<FullHttpRequest> {
 	private static final ChannelHandler DATASET_DECODER = new FullHttpToDatasetDecoder();
 	private static final WebSocketServerProtocolHandshakeHandler handshaker = new WebSocketServerProtocolHandshakeHandler();
 
-	
 	private final ChannelHandler http;
 	private final WebsocketHandler websockets;
+	private final boolean ssl;
 	
 	private static final String WS_HEADER = "Upgrade";
 	private static final String WS_HEADER_VALUE = "websocket";
 	
-	public HttpOrWebsocket(ChannelHandler http, WebsocketHandler websockets) {
+	public HttpOrWebsocket(ChannelHandler http, WebsocketHandler websockets, boolean ssl) {
 		this.http = http;
 		this.websockets = websockets;
+		this.ssl = ssl;
 	}
 
 	private static final Splitter hostSplitter = Splitter.on(":").limit(2);
@@ -55,7 +56,7 @@ public class HttpOrWebsocket extends MessageToMessageDecoder<FullHttpRequest> {
 		} else {
 			
 			ctx.pipeline()
-				.addLast(DATASET_DECODER, new DataToHttpEncoder(), http)
+				.addLast(DATASET_DECODER, new DataToHttpEncoder(ssl), http)
 				.remove(this);
 			
 		}

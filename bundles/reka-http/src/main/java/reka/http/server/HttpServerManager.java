@@ -56,7 +56,7 @@ public class HttpServerManager {
 		PortHandler(int port, SslSettings sslSettings) {
 			this.port = port;
 			this.sslSettings = sslSettings;
-			httpOrWebsocketHandler = new HttpOrWebsocket(httpHandler, websocketHandler);
+			httpOrWebsocketHandler = new HttpOrWebsocket(httpHandler, websocketHandler, sslSettings != null);
 
 			if (sslSettings != null) {
 				initializer = new HttpsHandler(httpOrWebsocketHandler, sslSettings.certChainFile(), sslSettings.keyFile());

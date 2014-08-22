@@ -571,6 +571,8 @@ public interface Content extends Hashable, JsonProvider {
 	
 	public static class BinaryContentConverter implements ContentConverter<BinaryContent> {
 
+		private final boolean writeContent = false;
+		
 		@Override
 		public BinaryContent in(DataInput in) throws IOException {
 			String contentType = in.readUTF();
@@ -605,17 +607,21 @@ public interface Content extends Hashable, JsonProvider {
 			if (content.contentType != null) {
 				json.writeStringField("content-type", content.contentType);
 			}
-			json.writeFieldName("content");
-			switch (content.encoding()) {
-			case NONE: 
-				json.writeString(BaseEncoding.base64().encode(content.bytes()));
-				break;
-			case BASE64: 
-				// it's already base64, don't need to do anything
-				json.writeString(new String(content.bytes(), Charsets.UTF_8));
-				break;
-			default:
-				throw Util.runtime("don't know how to write %s encoded content to json", content.encoding());
+			if (writeContent) {
+				json.writeFieldName("content");
+				switch (content.encoding()) {
+				case NONE: 
+					json.writeString(BaseEncoding.base64().encode(content.bytes()));
+					break;
+				case BASE64: 
+					// it's already base64, don't need to do anything
+					json.writeString(new String(content.bytes(), Charsets.UTF_8));
+					break;
+				default:
+					throw Util.runtime("don't know how to write %s encoded content to json", content.encoding());
+				}
+			} else {
+				json.writeBooleanField("stub", true);
 			}
 			json.writeEndObject();
 		}

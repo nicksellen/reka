@@ -19,6 +19,7 @@ import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.handler.codec.http.ServerCookieEncoder;
+import io.netty.handler.stream.ChunkedFile;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -49,6 +50,11 @@ public class DataToHttpEncoder extends MessageToMessageEncoder<Data> {
 	private static final String APPLICATION_JSON = "application/json";
 
 	private final Logger logger = LoggerFactory.getLogger("http-encoder");
+	private final boolean ssl;
+	
+	public DataToHttpEncoder(boolean ssl) {
+		this.ssl = ssl;
+	}
 	
 	@Override
 	protected void encode(ChannelHandlerContext context, Data data, List<Object> out) throws Exception {
@@ -178,12 +184,16 @@ public class DataToHttpEncoder extends MessageToMessageEncoder<Data> {
 			out.add(response);
 			
 			if (file != null) {
-				try {
-					// TODO: handle the 'Range:' header here... :)
-					out.add(new DefaultFileRegion(new FileInputStream(file).getChannel(), 0, file.length()));
-					out.add(LastHttpContent.EMPTY_LAST_CONTENT);
-				} catch (FileNotFoundException e) {
-					throw unchecked(e); // not very good...
+				if (ssl) {
+					out.add(new ChunkedFile(file));
+				} else {
+					try {
+						// TODO: handle the 'Range:' header here... :)
+						out.add(new DefaultFileRegion(new FileInputStream(file).getChannel(), 0, file.length()));
+						out.add(LastHttpContent.EMPTY_LAST_CONTENT);
+					} catch (FileNotFoundException e) {
+						throw unchecked(e); // not very good...
+					}
 				}
 			} else if (buffer == null) {
 				out.add(LastHttpContent.EMPTY_LAST_CONTENT);
