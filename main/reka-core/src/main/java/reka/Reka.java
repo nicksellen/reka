@@ -44,7 +44,7 @@ public class Reka {
 		if (!datadir.isDirectory() && !datadir.mkdirs()) throw runtime("couldn't create datadir %s", datadir); 
 		
 		BundleManager bundleManager = new BundleManager(bundles);
-		ApplicationManager manager  = new ApplicationManager(datadir, bundleManager);
+		ApplicationManager manager  = new ApplicationManager(datadir, bundleManager, false);
 		
 		bundleManager.add(new RekaSystemBundle(manager));
 		

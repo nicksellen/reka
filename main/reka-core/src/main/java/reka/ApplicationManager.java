@@ -54,18 +54,22 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 	
 	private final BundleManager bundles;
 	
+	private final boolean useState;
+	
 	private final Map<String,Application> applications = new HashMap<>();
 	private final Map<String,Source> applicationSource = new HashMap<>();
 	private final Map<String,AtomicInteger> versions = new HashMap<>();
 	
 	private final Set<String> deployedFilenames = new HashSet<>();
 	
-	public ApplicationManager(File datadir, BundleManager bundles) {
+	public ApplicationManager(File datadir, BundleManager bundles, boolean useState) {
+		this.useState = useState;
 		this.bundles = bundles;
 		stateFilePath = datadir.toPath().resolve(".reka").toAbsolutePath();
 	}
 	
 	public void restore() {
+		if (!useState) return;
 		if (!stateFilePath.toFile().exists()) return;
 		
 		List<String> lines;
@@ -353,8 +357,9 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 			lock.unlock(stamp);
 		}
 	}
-
+	
 	private void saveState() {
+		if (!useState) return;
 		try {
 			StringBuilder content = new StringBuilder();
 			for (Entry<String, Source> entry : applicationSource.entrySet()) {

@@ -53,13 +53,19 @@ build:
 run: 
 	@docker run -d \
 		--name reka \
-		--privileged \
 		-e "CONTAINER=docker" \
 		-p 80:80 \
 		-p 443:443 \
 		-p 15099:15099 \
 		-p 15100:15100 \
 		${image}
+
+dockerenv: copy build stop run
+	@docker run \
+		-t \
+		-e "CONTAINER=docker" \
+		${image}
+		env
 
 relaunch: copy build stop run
 
