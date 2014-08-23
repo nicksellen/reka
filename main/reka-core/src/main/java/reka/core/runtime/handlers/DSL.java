@@ -64,6 +64,7 @@ public class DSL {
 	}
 	
 	public static ActionHandler actionHandlers(Collection<? extends ActionHandler> handlers) {
+		
 		handlers = handlers.stream().filter((f) -> !f.equals(DoNothing.INSTANCE)).collect(toList());
 		switch (handlers.size()) {
 		case 0: return DoNothing.INSTANCE;

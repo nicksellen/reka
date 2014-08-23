@@ -67,7 +67,7 @@ public class HttpModule extends ModuleConfigurer {
 	@Conf.Each("listen")
 	public void listen(String val) {
 		String host = null;
-		int port = -1;
+		int port = 80;
 		if (listenPortOnly.matcher(val).matches()) {
 			port = Integer.valueOf(val);
 		} else {

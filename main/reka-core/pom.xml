@@ -67,7 +67,6 @@
 			<artifactId>jbcrypt</artifactId>
 			<version>0.3m</version>
 		</dependency>
-
 	</dependencies>
 
 	<build>
