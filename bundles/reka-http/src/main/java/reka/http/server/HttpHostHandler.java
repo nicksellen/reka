@@ -38,11 +38,11 @@ import reka.api.run.EverythingSubscriber;
 import reka.core.data.memory.MutableMemoryData;
 
 @ChannelHandler.Sharable
-public class HttpVhostHandler extends SimpleChannelInboundHandler<MutableData> {
+public class HttpHostHandler extends SimpleChannelInboundHandler<MutableData> {
 	
 	private static final Path CLOSE_CHANNEL = dots("options.close");
 	
-	private static final Logger log = LoggerFactory.getLogger(HttpVhostHandler.class);
+	private static final Logger log = LoggerFactory.getLogger(HttpHostHandler.class);
 	
 	private final ConcurrentMap<String,List<Entry<Flow,Consumer<Flow>>>> paused = new ConcurrentHashMap<>();
 	
@@ -52,7 +52,7 @@ public class HttpVhostHandler extends SimpleChannelInboundHandler<MutableData> {
 		return flows.isEmpty();
 	}
 	
-	public HttpVhostHandler add(String host, Flow flow) {
+	public HttpHostHandler add(String host, Flow flow) {
 		flows.put(host, flow);
 		List<Entry<Flow,Consumer<Flow>>> waiting = paused.remove(host);
 		if (waiting != null) {
@@ -135,13 +135,34 @@ public class HttpVhostHandler extends SimpleChannelInboundHandler<MutableData> {
 		}
 
 		@Override
-		public void error(Data data, Throwable incoming) {
-			
-			Throwable t = unwrap(incoming);
+		public void error(Data data, Throwable error) {
+			boolean acceptsHtml = data.getString(Request.Headers.ACCEPT).orElse("").contains("text/html");
+			if (acceptsHtml) {
+				context.writeAndFlush(htmlErrorMessage(data, error)).addListener(ChannelFutureListener.CLOSE);
+			} else {
+				context.writeAndFlush(jsonErrorMessage(data, error)).addListener(ChannelFutureListener.CLOSE);
+			}
+		}
+		
+		private static Data jsonErrorMessage(Data data, Throwable error) {
+			Throwable t = unwrap(error);
 			StringWriter stackTrace = new StringWriter();
 			t.printStackTrace(new PrintWriter(stackTrace));
-			
-			MutableData responseData = MutableMemoryData.create()
+			return MutableMemoryData.create()
+						.put(Response.CONTENT.add("data"), data)
+						.putString(Response.CONTENT.add("message"), rootExceptionMessage(t))
+						//.putString(Response.CONTENT.add("stacktrace"), stackTrace.toString())
+					.putString(Response.Headers.CONTENT_TYPE, "application/json")
+					.putInt(Response.STATUS, 500);
+
+		}
+
+
+		private static Data htmlErrorMessage(Data data, Throwable error) {
+			Throwable t = unwrap(error);
+			StringWriter stackTrace = new StringWriter();
+			t.printStackTrace(new PrintWriter(stackTrace));
+			return MutableMemoryData.create()
 					.putString(Response.CONTENT, 
                             "<html><body>" +
                                     "<h1>Oh noes!</h1>" +
@@ -159,9 +180,7 @@ public class HttpVhostHandler extends SimpleChannelInboundHandler<MutableData> {
                                     "</body></html>")
 					.putString(Response.Headers.CONTENT_TYPE, "text/html")
 					.putInt(Response.STATUS, 500);
-			
-			context.writeAndFlush(responseData).addListener(ChannelFutureListener.CLOSE);
-			
+
 		}
 		
 	}

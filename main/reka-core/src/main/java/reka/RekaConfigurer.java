@@ -68,9 +68,12 @@ public class RekaConfigurer {
 	}
 	
 	private void unpackBundle(String jarpath) {
-		log.info("loading bundle from {}", jarpath);
+		log.info("loading bundles from {}", jarpath);
+		loadBundle(bundleBasedir.resolve(jarpath).toFile());
+	}
+	
+	private void loadBundle(File file) {
 		try {
-			File file = bundleBasedir.resolve(jarpath).toFile();
 			checkArgument(file.exists(), "[%s] does not exist", file.getAbsolutePath());
 			try (ZipFile zip = new ZipFile(file)) {
 				ZipEntry entry = zip.getEntry("META-INF/MANIFEST.MF");

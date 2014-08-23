@@ -203,10 +203,8 @@ public class Configurer {
 		
 		@Override
 		public String toString() {
-			return format("%s : %d errors -> \n - %s", 
-					"invalid configuration", 
-					errors.size(), 
-					errors.stream().map(ConfigurationError::toStringWithOriginalStacktrace).collect(joining("\n - ")));
+			return format("invalid configuration:\n - %s",
+					errors.stream().map(ConfigurationError::message).collect(joining("\n - ")));
 		}
 		
 		@Override

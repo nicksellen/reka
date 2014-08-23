@@ -1,7 +1,6 @@
 package reka;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static java.util.stream.Collectors.toList;
 import static reka.util.Util.runtime;
 
 import java.io.File;
@@ -49,7 +48,10 @@ public class Reka {
 		bundleManager.add(new RekaSystemBundle(manager));
 		
 		Stream<String> bundlesNames = bundleManager.modulesKeys().stream().map(reka.api.Path::slashes);
-		log.info("available bundles {}", bundlesNames.filter(s -> !s.isEmpty()).collect(toList()));
+		
+		bundlesNames.filter(s -> !s.isEmpty()).forEach(m -> {
+			log.info("module available {}", m);
+		});
 		
 		log.info("starting reka");
 

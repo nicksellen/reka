@@ -19,7 +19,6 @@ public class ErrorHandlers implements ErrorHandler {
 			try {
 				handler.error(data, context, t);
 			} catch (Throwable t2) {
-				t2.printStackTrace();
 				// the show must go on...
 			}
 		}		

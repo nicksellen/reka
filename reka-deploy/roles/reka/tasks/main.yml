@@ -6,15 +6,22 @@
 - apt: pkg=graphviz state=present
 - shell: ln -s /usr/bin/dot /usr/local/bin/dot
 
-- name: send libs
+- name: send lib
   synchronize: src=roles/reka/files/lib/ dest=/var/apps/reka/lib/
   notify:
     - restart reka
   tags:
     - deploy
 
-- name: send config
-  synchronize: src=roles/reka/files/config/ dest=/var/apps/reka/config/
+- name: send etc
+  synchronize: src=roles/reka/files/etc/ dest=/var/apps/reka/etc/
+  notify:
+    - restart reka
+  tags:
+    - deploy
+
+- name: send bin
+  synchronize: src=roles/reka/files/bin/ dest=/var/apps/reka/bin/
   notify:
     - restart reka
   tags:

@@ -46,7 +46,7 @@ public class HttpServerManager {
 		
 		private final int port;
 		private final SslSettings sslSettings;
-		private final HttpVhostHandler httpHandler = new HttpVhostHandler();;
+		private final HttpHostHandler httpHandler = new HttpHostHandler();;
 		private final WebsocketHandler websocketHandler = new WebsocketHandler();
 		private final HttpOrWebsocket httpOrWebsocketHandler;
 		private final ChannelInitializer<SocketChannel> initializer;

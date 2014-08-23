@@ -161,8 +161,6 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 						if (app != null) {
 							applications.put(identity, app);
 							log.info("deployed [{}] listening on {}", app.fullName(), app.ports().stream().map(Object::toString).collect(joining(", ")));
-						} else if (ex != null) {
-							ex.printStackTrace();
 						}
 						saveState();
 					} finally {
@@ -263,7 +261,6 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 								log.info("deployed [{}] listening on {}", app.fullName(), app.ports().stream().map(Object::toString).collect(joining(", ")));
 							} else if (ex != null) {
 								log.info("exception whilst deploying!");
-								ex.printStackTrace();
 								subscriber.error(Data.NONE, ex);
 								if (previous != null) {
 									previous.resume();

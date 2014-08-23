@@ -1,9 +1,9 @@
-bundle bundles/reka-command-0.1.0.jar
 bundle bundles/reka-twilio-0.1.0.jar
 bundle bundles/reka-rhino-0.1.0.jar
-bundle bundles/reka-jruby-0.1.0.jar
 bundle bundles/reka-jdbc-0.1.0.jar
+bundle bundles/reka-mustache-0.1.0.jar
+bundle bundles/reka-jruby-0.1.0.jar
+bundle bundles/reka-jade-0.1.0.jar
+bundle bundles/reka-command-0.1.0.jar
 bundle bundles/reka-http-0.1.0.jar
 bundle bundles/reka-smtp-0.1.0.jar
-bundle bundles/reka-jade-0.1.0.jar
-bundle bundles/reka-mustache-0.1.0.jar
