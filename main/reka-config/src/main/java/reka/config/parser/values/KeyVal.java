@@ -13,7 +13,7 @@ public class KeyVal {
 	private final String key;
 	private final String subkey;
 
-	private final static Splitter s = Splitter.on(":");
+	private final static Splitter s = Splitter.on(":").limit(2);
 	
 	public static KeyVal parse(String value) {
 		Iterator<String> it = s.split(value).iterator();

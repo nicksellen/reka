@@ -19,6 +19,7 @@ public class HttpSessionsModule extends ModuleConfigurer {
 		});
 		module.operation(path("put"), () -> new SessionPutConfigurer(storePath));
 		module.operation(path("get"), () -> new SessionGetConfigurer(storePath));
+		module.operation(path("remove"), () -> new SessionRemoveConfigurer(storePath));
 	}
 
 }
