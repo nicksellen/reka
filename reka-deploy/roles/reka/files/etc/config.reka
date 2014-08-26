@@ -1,7 +1,0 @@
-bundle ../lib/bundles/reka-command-0.1.0.jar
-bundle ../lib/bundles/reka-http-0.1.0.jar
-bundle ../lib/bundles/reka-jade-0.1.0.jar
-bundle ../lib/bundles/reka-jdbc-0.1.0.jar
-bundle ../lib/bundles/reka-mustache-0.1.0.jar
-bundle ../lib/bundles/reka-smtp-0.1.0.jar
-app @include(apps/api.reka)

@@ -1,27 +1,20 @@
-- file: dest=/var/apps/reka state=directory
-- file: dest=/var/apps/reka/lib state=directory
-- file: dest=/var/apps/reka/config state=directory
+- file: dest=/var/apps/ state=directory
 
 - apt: pkg=libapr1 state=present
 - apt: pkg=graphviz state=present
-- shell: ln -s /usr/bin/dot /usr/local/bin/dot
+- shell: ln -f -s /usr/bin/dot /usr/local/bin/dot
 
-- name: send lib
-  synchronize: src=roles/reka/files/lib/ dest=/var/apps/reka/lib/
-  notify:
-    - restart reka
+- get_url: url=https://s3-eu-west-1.amazonaws.com/reka/reka.tar.gz dest=/var/apps/reka.tar.gz
   tags:
     - deploy
 
-- name: send etc
-  synchronize: src=roles/reka/files/etc/ dest=/var/apps/reka/etc/
-  notify:
-    - restart reka
+#- unarchive: src=/var/apps/reka.tar.gz dest=/var/apps/
+- shell: cd /var/apps/ && tar zxvf reka.tar.gz
   tags:
     - deploy
 
-- name: send bin
-  synchronize: src=roles/reka/files/bin/ dest=/var/apps/reka/bin/
+- name: send api.reka
+  template: src=api.reka.j2 dest=/var/apps/reka/etc/apps/api.reka
   notify:
     - restart reka
   tags:

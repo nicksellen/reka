@@ -7,14 +7,7 @@ filesystem fs {
 }
 
 http {
-  @env CONTAINER {
-    when docker {
-      listen api.reka
-    }
-    otherwise {
-      listen localhost:5101
-    }
-  }
+  listen api.reka.io
   on request {
     run main
   }
@@ -54,9 +47,12 @@ def main {
             identity :appid
             filename :tmpdir/main.reka
           }
-          put response {
+          reka/get app {
+            app :appid
+          }
+          putv response {
             status 200
-            content running
+            content running ':app.name' as [:appid]
           }
         }
         when dir {
