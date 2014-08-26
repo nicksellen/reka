@@ -54,9 +54,12 @@ def main {
             identity :appid
             filename :tmpdir/main.reka
           }
-          put response {
+          reka/get app {
+            app :appid
+          }
+          putv response {
             status 200
-            content running
+            content running ':app.name' as [:appid]
           }
         }
         when dir {

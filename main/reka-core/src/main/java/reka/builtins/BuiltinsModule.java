@@ -771,12 +771,21 @@ public class BuiltinsModule extends ModuleConfigurer {
 	
 	public static class PutDataWithVarsOperation implements SyncOperation {
 
-		private final LoadingCache<Content,StringWithVars> cache = CacheBuilder.newBuilder()
-			.build(new CacheLoader<Content, StringWithVars>(){
+		private final LoadingCache<Content,Function<Data,Content>> cache = CacheBuilder.newBuilder()
+			.build(new CacheLoader<Content, Function<Data,Content>>(){
 	
 				@Override
-				public StringWithVars load(Content content) throws Exception {
-					return StringWithVars.compile(content.asUTF8());
+				public Function<Data,Content> load(Content content) throws Exception {
+					try {
+						String val = content.asUTF8();
+						if (StringWithVars.hasVars(val)) {
+							return StringWithVars.compile(content.asUTF8()).andThen(s -> utf8(s));
+						} else {
+							return (data) -> content;
+						}
+					} catch (Throwable t) {
+						return (data) -> content;
+					}
 				}
 				
 			});
@@ -794,7 +803,7 @@ public class BuiltinsModule extends ModuleConfigurer {
 			// TODO: fix this up, do it BEFORE runtime as much as we can
 			dataValue.forEachContent((path, content) -> {
 				try {
-					data.putString(out.add(path), cache.get(content).apply(data));
+					data.put(out.add(path), cache.get(content).apply(data));
 				} catch (Exception e) {
 					throw unchecked(e);
 				}

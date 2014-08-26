@@ -153,7 +153,7 @@ public interface Content extends Hashable, JsonProvider {
 		public int asInt() { throw unsupported(); }
 		
 		@Override
-		public String asUTF8() { throw unsupported(); }
+		public String asUTF8() { return toString(); }
 		
 		@Override
 		public double asDouble() { throw unsupported(); }

@@ -56,6 +56,10 @@ class StringWithColonVariables implements Function<Data,String>, StringWithVars 
 		return build(input);
 	}
 	
+	public static boolean hasVars(String input) {
+		return pattern.matcher(input).find();
+	}
+	
 	private final List<Variable> entries;
 	private final String base;
 	private final String original;
