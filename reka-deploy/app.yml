@@ -1,6 +1,0 @@
-- hosts: 
-    - app
-  roles:
-    - { role: common, tags: ['common'] }
-    - java8
-    - reka

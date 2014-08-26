@@ -1,4 +1,0 @@
-- hosts: 
-  - app
-
-- include: app.yml
