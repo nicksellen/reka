@@ -188,7 +188,7 @@ public class HttpRouterConfigurer extends HttpRouteGroupConfigurer implements Su
 	public FlowSegment get() {
 		return sequential(seq -> {
 			
-			seq.routerNode("http/router", (data) -> new HttpRouter(buildGroupRoutes(), missingRouteName));
+			seq.routerNode("http/router", (data) -> new HttpRouter(buildGroupRoutes(), missing != null ? missingRouteName : null));
 			
 			seq.parallel(par -> {
 				
