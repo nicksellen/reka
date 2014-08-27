@@ -121,7 +121,7 @@ public final class IncludeConverter implements ConfigConverter {
 		
 		if (source.supportsNestedFile()) {
 			try {
-				out.doc(key, val, contentType, Files.toByteArray(source.nestedFile(location)));
+				out.doc(key, val, contentType, Files.toByteArray(source.nestedFile(location).toFile()));
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
@@ -162,7 +162,7 @@ public final class IncludeConverter implements ConfigConverter {
 		Source nestedSource;
 		
 		if (source.supportsNestedFile()) {
-			File nestedFile = source.nestedFile(location);
+			File nestedFile = source.nestedFile(location).toFile();
 			File constraint = source.isConstrained() ? source.constraint() : nestedFile.getParentFile();
 			nestedSource = FileSource.from(nestedFile, constraint, source);
 		} else if (source.supportsNestedData()) {

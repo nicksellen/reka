@@ -1,6 +1,8 @@
 package reka.config;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.util.Collection;
 
 public interface Source {
 
@@ -15,7 +17,8 @@ public interface Source {
     File constraint();
 
     boolean supportsNestedFile();
-    File nestedFile(String location);
+    Path nestedFile(String location);
+	Collection<Path> nestedFiles(String location);
     
     boolean supportsNestedData();
     byte[] nestedData(String location);

@@ -14,7 +14,8 @@ public class BuiltinsBundle implements RekaBundle {
 	public void setup(BundleSetup setup) {
 		setup.use(root(), () -> new BuiltinsModule());
 		setup.use(path("timer"), () -> new TimerModule());
-		setup.converter(new CommentConverter()); 
+		setup.converter(new CommentConverter());
+		setup.converter(new EachConverter()); 
 		setup.converter(new IncludeConverter());
 		setup.converter(new MarkdownConverter());
 		setup.converter(new DocConverter());

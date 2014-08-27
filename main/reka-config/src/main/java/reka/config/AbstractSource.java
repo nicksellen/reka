@@ -1,6 +1,7 @@
 package reka.config;
 
 import java.io.File;
+import java.nio.file.Path;
 
 public abstract class AbstractSource implements Source {
     
@@ -30,7 +31,7 @@ public abstract class AbstractSource implements Source {
 	}
 
 	@Override
-	public File nestedFile(String location) {
+	public Path nestedFile(String location) {
 		return null;
 	}
 

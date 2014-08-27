@@ -313,11 +313,15 @@ public class BuiltinsModule extends ModuleConfigurer {
 	
 	public static class PrintlnConfigurer implements Supplier<FlowSegment> {
 
-		private Function<Data,String> msg;
+		private Function<Data,String> msg = (data) -> "";
 		
-		@Conf.Val
-		public void msg(String val) {
-			msg = StringWithVars.compile(val);
+		@Conf.Config
+		public void msg(Config config) {
+			if (config.hasDocument()) {
+				msg = StringWithVars.compile(config.documentContentAsString());
+			} else if (config.hasValue()) {
+				msg = StringWithVars.compile(config.valueAsString());
+			}
 		}
 		
 		@Override

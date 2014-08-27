@@ -4,6 +4,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.util.Collection;
 
 import reka.config.AbstractSource;
 import reka.config.Source;
@@ -75,8 +77,13 @@ public class ConvertedSource extends AbstractSource {
     }
 
     @Override
-    public File nestedFile(String location) {
+    public Path nestedFile(String location) {
     	return parent.nestedFile(location);
+    }
+    
+    @Override
+    public Collection<Path> nestedFiles(String location) {
+    	return parent.nestedFiles(location);
     }
 
 }

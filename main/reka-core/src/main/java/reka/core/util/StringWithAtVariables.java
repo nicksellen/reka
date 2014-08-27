@@ -16,9 +16,9 @@ import reka.core.data.memory.MutableMemoryData;
 
 import com.google.common.collect.ImmutableList;
 
-final class StringWithColonVariables implements Function<Data,String>, StringWithVars {
+final class StringWithAtVariables implements Function<Data,String>, StringWithVars {
 	
-	private static final Pattern pattern = Pattern.compile(":\\{?([a-zA-Z0-9-_\\.\\[\\]]+\\b)\\}?");
+	private static final Pattern pattern = Pattern.compile("@\\{([a-zA-Z0-9-_\\.\\[\\]]+\\b)\\}");
 	
 	public static void main(String[] args) throws Exception {
 		
@@ -91,13 +91,13 @@ final class StringWithColonVariables implements Function<Data,String>, StringWit
 		ImmutableList<Variable> entries = entriesBuilder.build();
 		
 		if (entries.size() > 0) {
-			return new StringWithColonVariables(original, sb.toString(), entries);
+			return new StringWithAtVariables(original, sb.toString(), entries);
 		} else {
 			return new StringWithoutVariables(original);
 		}
 	}
 	
-	private StringWithColonVariables(String original, String base, List<Variable> entries) {
+	private StringWithAtVariables(String original, String base, List<Variable> entries) {
 		this.original = original;
 		this.base = base;
 		this.entries = entries;

@@ -2,6 +2,7 @@ package reka.http.configurers;
 
 import static reka.api.Path.dots;
 import static reka.config.configurer.Configurer.configure;
+import static reka.core.builder.FlowSegments.namedInput;
 import static reka.core.builder.FlowSegments.sequential;
 import io.netty.handler.codec.http.HttpMethod;
 
@@ -37,7 +38,7 @@ public class HttpRouterConfigurer extends HttpRouteGroupConfigurer implements Su
     
 	static final Logger logger = LoggerFactory.getLogger("http-router-builder");
 
-	private String missingRouteName;
+	private static final String missingRouteName = "notfound";
 	
 	private Supplier<FlowSegment> missing;
 	
@@ -57,6 +58,7 @@ public class HttpRouterConfigurer extends HttpRouteGroupConfigurer implements Su
 	private static final Pattern PATH_VAR = Pattern.compile("(?:\\:(?:([a-zA-Z0-9_\\-]+\\*?\\??)|(\\{[a-zA-Z0-9_\\-\\.]+\\}\\*?\\??)))");
 
 	@Conf.At("missing")
+	@Conf.At("otherwise")
 	public void missing(Config config) {
 		missing = configure(new SequenceConfigurer(provider), config);
 	}
@@ -186,14 +188,14 @@ public class HttpRouterConfigurer extends HttpRouteGroupConfigurer implements Su
 	public FlowSegment get() {
 		return sequential(seq -> {
 			
-			seq.routerNode("http-router", (data) -> new HttpRouter(buildGroupRoutes(), missingRouteName));
+			seq.routerNode("http/router", (data) -> new HttpRouter(buildGroupRoutes(), missingRouteName));
 			
 			seq.parallel(par -> {
 				
 				par.add(buildGroupSegment());
 				
 				if (missing != null) {
-					par.add(missing.get());
+					par.add(namedInput(missingRouteName, missing.get()));
 				}
 				
 			});

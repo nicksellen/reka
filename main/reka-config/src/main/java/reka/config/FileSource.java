@@ -6,8 +6,16 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.file.FileSystems;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.PathMatcher;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,7 +93,7 @@ public class FileSource extends AbstractSource {
     }
 
     @Override
-    public File nestedFile(String location) {
+    public Path nestedFile(String location) {
     	
 		Path other = file.toPath().getParent().resolve(location);
 		if (isConstrained()) {
@@ -95,17 +103,54 @@ public class FileSource extends AbstractSource {
 			}
 		}
     	
-        return file.toPath().getParent().resolve(location).toFile();
+        return file.toPath().getParent().resolve(location);
+    }
+    
+    @Override
+    public Collection<Path> nestedFiles(String location) {
+    	
+    	Path base = file.toPath().getParent();
+    	
+    	String glob = "glob:" + base.resolve(location).toAbsolutePath();
+    	
+    	log.info("finding files within {} that match {}", base.toAbsolutePath(), glob);
+    	
+    	PathMatcher matcher = FileSystems.getDefault().getPathMatcher(glob);
+    	
+    	List<Path> files = new ArrayList<>();
+    	
+    	try {
+			Files.walkFileTree(base, new SimpleFileVisitor<Path>() {
+				@Override
+				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+					if (matcher.matches(file)) files.add(base.relativize(file));
+					return FileVisitResult.CONTINUE;
+				}
+				@Override
+				public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
+					if (matcher.matches(dir)) {
+						addAll(dir, files, base);
+						return FileVisitResult.SKIP_SUBTREE;
+					} else {
+						return FileVisitResult.CONTINUE;
+					}
+				}
+			});
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+    	
+    	return files;
     }
 
-    @Override
+	@Override
     public boolean supportsNestedData() {
         return true;
     }
 
     @Override
     public byte[] nestedData(String location) {
-    	try (FileInputStream fis = new FileInputStream(nestedFile(location))) {
+    	try (FileInputStream fis = new FileInputStream(nestedFile(location).toFile())) {
     		return ByteStreams.toByteArray(fis);
     	} catch (IOException e) {
     		throw new RuntimeException(e);
@@ -125,6 +170,21 @@ public class FileSource extends AbstractSource {
 	@Override
 	public File constraint() {
 		return constrainTo;
+	}
+	
+	private static void addAll(Path dir, List<Path> files, Path base) {
+	   try {
+   			// grab everything inside here!
+			Files.walkFileTree(dir, new SimpleFileVisitor<Path>(){
+				@Override
+			    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+					files.add(base.relativize(file));
+			        return FileVisitResult.CONTINUE;
+			    }
+			});
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 }

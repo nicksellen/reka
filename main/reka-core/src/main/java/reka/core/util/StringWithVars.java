@@ -16,6 +16,14 @@ public interface StringWithVars extends Function<Data,String> {
 		return StringWithColonVariables.hasVars(input);
 	}
 	
+	static StringWithVars compileWithAtVars(String input) {
+		return StringWithAtVariables.compile(input);
+	}
+	
+	static boolean hasAtVars(String input) {
+		return StringWithAtVariables.hasVars(input);
+	}
+	
 	List<Variable> vars();
 	boolean hasVariables();
 	String withPlaceholder(String val);

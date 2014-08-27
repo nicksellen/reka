@@ -35,6 +35,9 @@ dist:
 	@cd dist && tar zcvf reka.tar.gz reka
 	@echo made dist/reka.tar.gz
 
+run: dist
+	@dist/reka/bin/reka-server
+
 s3: dist
 	@aws s3 \
 		cp dist/reka.tar.gz s3://reka/reka.tar.gz	\
