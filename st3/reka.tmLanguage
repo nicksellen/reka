@@ -35,7 +35,7 @@
 				</dict>
 				<dict>
 					<key>include</key>
-					<string>#rekaInclude</string>
+					<string>#rekaAt</string>
 				</dict>
 				<dict>
 					<key>include</key>
@@ -103,10 +103,6 @@
 				</dict>
 				<dict>
 					<key>include</key>
-					<string>#docHandlebars</string>
-				</dict>
-				<dict>
-					<key>include</key>
 					<string>#docXML</string>
 				</dict>
 				<dict>
@@ -120,6 +116,10 @@
 				<dict>
 					<key>include</key>
 					<string>#docRuby</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#docShell</string>
 				</dict>
 				<dict>
 					<key>include</key>
@@ -209,32 +209,6 @@
 				</dict>
 			</array>
 		</dict>
-		<key>docHandlebars</key>
-		<dict>
-			<key>begin</key>
-			<string>\s*&lt;&lt;\-\s+(text\/x\-handlebars\-template|handlebars|hbs)\s*$</string>
-			<key>beginCaptures</key>
-			<dict>
-				<key>1</key>
-				<dict>
-					<key>name</key>
-					<string>support.constant.reka</string>
-				</dict>
-			</dict>
-			<key>contentName</key>
-			<string>source.handlebars.embedded.reka</string>
-			<key>end</key>
-			<string>^\s*\-\-\-\-*\s*$</string>
-			<key>name</key>
-			<string>punctuation.reka</string>
-			<key>patterns</key>
-			<array>
-				<dict>
-					<key>include</key>
-					<string>text.html.handlebars</string>
-				</dict>
-			</array>
-		</dict>
 		<key>docInComment</key>
 		<dict>
 			<key>begin</key>
@@ -320,7 +294,7 @@
 		<key>docRuby</key>
 		<dict>
 			<key>begin</key>
-			<string>\s*&lt;&lt;\-\s+(text\/ruby|ruby|rb)\s*$</string>
+			<string>\s*&lt;&lt;\-\s+(text\/ruby|ruby|rb|gemfile)\s*$</string>
 			<key>beginCaptures</key>
 			<dict>
 				<key>1</key>
@@ -366,6 +340,32 @@
 				<dict>
 					<key>include</key>
 					<string>source.sql</string>
+				</dict>
+			</array>
+		</dict>
+		<key>docShell</key>
+		<dict>
+			<key>begin</key>
+			<string>\s*&lt;&lt;\-\s+(bash)\s*$</string>
+			<key>beginCaptures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>support.constant.reka</string>
+				</dict>
+			</dict>
+			<key>contentName</key>
+			<string>source.shell.embedded.reka</string>
+			<key>end</key>
+			<string>^\s*\-\-\-\-*\s*$</string>
+			<key>name</key>
+			<string>punctuation.reka</string>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>include</key>
+					<string>source.shell</string>
 				</dict>
 			</array>
 		</dict>
@@ -458,7 +458,7 @@
 				</dict>
 				<dict>
 					<key>include</key>
-					<string>#rekaInclude</string>
+					<string>#rekaAt</string>
 				</dict>
 				<dict>
 					<key>include</key>
@@ -556,30 +556,57 @@
 				</dict>
 			</array>
 		</dict>
-		<key>rekaInclude</key>
+		<key>rekaAt</key>
 		<dict>
-			<key>captures</key>
+			<key>begin</key>
+			<string>(@)([a-zA-Z0-9\-_]+)(?:(\()([^\)]*)(\)))?\s?</string>
+			<key>beginCaptures</key>
 			<dict>
 				<key>1</key>
 				<dict>
 					<key>name</key>
-					<string>punctuation</string>
+					<string>support.constant.reka</string>
 				</dict>
 				<key>2</key>
 				<dict>
 					<key>name</key>
-					<string>variable.parameter</string>
+					<string>support.constant.reka</string>
 				</dict>
 				<key>3</key>
 				<dict>
 					<key>name</key>
-					<string>punctuation</string>
+					<string>support.constant.reka</string>
+				</dict>
+				<key>4</key>
+				<dict>
+					<key>name</key>
+					<string>variable.parameter</string>
+				</dict>
+				<key>5</key>
+				<dict>
+					<key>name</key>
+					<string>support.constant.reka</string>
 				</dict>
 			</dict>
-			<key>match</key>
-			<string>@include(?:(\()([^\)]*)(\)))?</string>
+			<key>end</key>
+			<string>$</string>
 			<key>name</key>
-			<string>support.constant.reka</string>
+			<string>at.reka</string>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>include</key>
+					<string>#doc</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#nested</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#val</string>
+				</dict>
+			</array>
 		</dict>
 		<key>val</key>
 		<dict>

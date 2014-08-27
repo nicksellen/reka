@@ -28,7 +28,7 @@ repository:
       - include: '#leadingSpace'
       - include: '#invalid'
       - include: '#comment'
-      - include: '#rekaInclude'
+      - include: '#rekaAt'
       - include: '#entry'
 
   leadingSpace:
@@ -39,6 +39,28 @@ repository:
     captures:
       "0":
         name: invalid.reka
+
+  rekaAt:
+    name: at.reka
+    begin: "(@)([a-zA-Z0-9\\-_]+)(?:(\\()([^\\)]*)(\\)))?\\s?"
+    beginCaptures:
+      "1":
+        name: support.constant.reka
+      "2":
+        name: support.constant.reka
+      "3":
+        name: support.constant.reka
+      "4":
+        name: variable.parameter
+      "5":
+        name: support.constant.reka      
+
+    patterns:
+      - include: '#doc'
+      - include: '#nested'
+      - include: '#val'
+
+    end: "$"
 
   entry:
     name: entry.reka
@@ -65,32 +87,21 @@ repository:
     patterns:
       - include: '#doc'
       - include: '#nested'
-      - include: '#rekaInclude'
+      - include: '#rekaAt'
       - include: '#val'
 
     end: "$"
-
-  rekaInclude:
-    name: support.constant.reka
-    match: "@include(?:(\\()([^\\)]*)(\\)))?"
-    captures:
-      "1":
-        name: punctuation
-      "2":
-        name: variable.parameter
-      "3":
-        name: punctuation
 
   doc:
     patterns:
       - include: '#docHTML'
       - include: '#docCSS'
       - include: '#docJade'
-      - include: '#docHandlebars'
       - include: '#docXML'
       - include: '#docJS'
       - include: '#docSQL'
       - include: '#docRuby'
+      - include: '#docShell'
       - include: '#docClojure'
       - include: '#docOther'
 
@@ -120,19 +131,6 @@ repository:
 
     end: "^\\s*\\-\\-\\-\\-*\\s*$"
     contentName: source.jade.embedded.reka
-
-  docHandlebars:
-    name: punctuation.reka
-    begin: "\\s*<<\\-\\s+(text\\/x\\-handlebars\\-template|handlebars|hbs)\\s*$"
-    beginCaptures:
-      "1":
-        name: support.constant.reka
-
-    patterns:
-      - include: text.html.handlebars
-
-    end: "^\\s*\\-\\-\\-\\-*\\s*$"
-    contentName: source.handlebars.embedded.reka
 
   docXML:
     name: punctuation.reka
@@ -201,7 +199,7 @@ repository:
 
   docRuby:
     name: punctuation.reka
-    begin: "\\s*<<\\-\\s+(text\\/ruby|ruby|rb)\\s*$"
+    begin: "\\s*<<\\-\\s+(text\\/ruby|ruby|rb|gemfile)\\s*$"
     beginCaptures:
       "1":
         name: support.constant.reka
@@ -211,6 +209,19 @@ repository:
 
     end: "^\\s*\\-\\-\\-\\-*\\s*$"
     contentName: source.ruby.embedded.reka
+
+  docShell:
+    name: punctuation.reka
+    begin: "\\s*<<\\-\\s+(bash)\\s*$"
+    beginCaptures:
+      "1":
+        name: support.constant.reka
+
+    patterns:
+      - include: source.shell
+
+    end: "^\\s*\\-\\-\\-\\-*\\s*$"
+    contentName: source.shell.embedded.reka
 
   docOther:
     name: punctuation.reka
