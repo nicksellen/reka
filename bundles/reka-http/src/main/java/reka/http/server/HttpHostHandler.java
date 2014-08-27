@@ -126,11 +126,7 @@ public class HttpHostHandler extends SimpleChannelInboundHandler<MutableData> {
 				.put(Response.Headers.CONTENT_TYPE, utf8("text/plain"))
 				.put(Response.STATUS, integer(500));
 			
-			ChannelFuture writeFuture = context.writeAndFlush(data);
-			
-			if (data.existsAt(CLOSE_CHANNEL)) {
-				writeFuture.addListener(ChannelFutureListener.CLOSE);
-			}
+			context.writeAndFlush(data).addListener(ChannelFutureListener.CLOSE);
 			
 		}
 

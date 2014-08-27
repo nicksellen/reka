@@ -186,6 +186,7 @@ public class DataToHttpEncoder extends MessageToMessageEncoder<Data> {
 			if (file != null) {
 				if (ssl) {
 					out.add(new ChunkedFile(file));
+						out.add(LastHttpContent.EMPTY_LAST_CONTENT);
 				} else {
 					try {
 						// TODO: handle the 'Range:' header here... :)
