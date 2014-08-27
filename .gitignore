@@ -10,3 +10,5 @@
 bundles/clojure-env/build
 docker/**/*.jar
 dist
+.java-home
+build

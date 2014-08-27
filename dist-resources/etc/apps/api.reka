@@ -1,0 +1,90 @@
+name newapi
+
+reka
+
+filesystem fs {
+  dir /
+}
+
+http {
+  @env CONTAINER {
+    when docker {
+      listen api.reka
+    }
+    otherwise {
+      listen localhost:5101
+    }
+  }
+  on request {
+    run main
+  }
+}
+
+def main {
+  http/router {
+    GET / {
+      put response.content {
+        message nowt much to see here try /apps
+      }
+    }
+    GET /apps {
+      reka/list response.content
+    }
+    GET /apps/:appid* {
+      reka/get response.content {
+        app :appid
+      }
+    }
+    GET /apps/:appid*/flows/:flow*.:format {
+      reka/visualize {
+        app :appid
+        flow :flow
+        format :format
+      }
+    }
+    POST /apps/:appid* {
+      fs/mktmpdir tmpdir
+      unzip {
+        data request.content
+        out :tmpdir
+      }
+      fs/type :tmpdir/main.reka {
+        when file {
+          reka/deploy {
+            identity :appid
+            filename :tmpdir/main.reka
+          }
+          reka/get app {
+            app :appid
+          }
+          putv response {
+            status 200
+            content running ':app.name' as [:appid]
+          }
+        }
+        when dir {
+          putv response {
+            status 400
+            content main.reka should be a file
+          }            
+        }
+        when missing {
+          putv response {
+            status 400
+            content missing main.reka
+          }            
+        }
+      }
+      fs/rm :tmpdir 
+    }
+    named undeploy app {
+      DELETE /apps/:appid* {
+        reka/undeploy :appid
+        putv response {
+          status 200
+          content removed
+        }
+      }
+    }
+  }
+}
