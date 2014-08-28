@@ -1,12 +1,14 @@
 package reka.http;
 
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
 import static reka.api.Path.path;
 import static reka.config.configurer.Configurer.configure;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import static reka.core.builder.FlowSegments.parallel;
 import static reka.core.builder.FlowSegments.sync;
 import static reka.util.Util.runtime;
+import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -77,6 +79,8 @@ public class WebsocketModule extends ModuleConfigurer {
 	private final List<ConfigBody> onConnect = new ArrayList<>();
 	private final List<ConfigBody> onDisconnect = new ArrayList<>();
 	private final List<ConfigBody> onMessage = new ArrayList<>();
+	
+	private final List<WebsocketTopicConfigurer> topics = new ArrayList<>();
 
 	@Conf.Each("listen")
 	public void listen(String val) {
@@ -95,6 +99,11 @@ public class WebsocketModule extends ModuleConfigurer {
 			}
 		}
 		listens.add(new HostAndPort(host, port));
+	}
+	
+	@Conf.Each("topic")
+	public void topic(Config config) {
+		topics.add(configure(new WebsocketTopicConfigurer(IdentityKey.of(config.valueAsString())), config.body()));
 	}
 	
 	@Conf.Each("on")
@@ -132,6 +141,11 @@ public class WebsocketModule extends ModuleConfigurer {
 		module.operation(path("send"), () -> new WebsocketSendConfigurer());
 		module.operation(path("broadcast"), () -> new WebsocketBroadcastConfigurer());
 		
+		topics.forEach(topic -> {
+			module.operation(asList(path(topic.key().name()), path(topic.key().name(), "send")), () -> new WebsocketTopicSendConfigurer(topic.key()));
+			module.operation(path(topic.key().name(), "subscribe"), () -> new WebsocketTopicSubscribeConfigurer(topic.key()));
+		});
+		
 		Map<IdentityKey<Flow>,Function<ConfigurerProvider, Supplier<FlowSegment>>> triggers = new HashMap<>();
 		
 		IdentityKey<Flow> connect = IdentityKey.of("connect");
@@ -161,16 +175,20 @@ public class WebsocketModule extends ModuleConfigurer {
 			
 				HttpSettings settings = HttpSettings.http(port, host, Type.WEBSOCKET, registration.applicationVersion());
 				
-				server.deployWebsocket(identity, settings, handlers -> {
+				server.deployWebsocket(identity, settings, ws -> {
+					
+					topics.forEach(topic -> {
+						ws.topic(topic.key());
+					});
 					
 					if (registration.has(connect)) { 
-						handlers.connect(registration.get(connect));
+						ws.connect(registration.get(connect));
 					}
 					if (registration.has(disconnect)) {
-						handlers.disconnect(registration.get(disconnect));
+						ws.disconnect(registration.get(disconnect));
 					}
 					if (registration.has(message)) {
-						handlers.message(registration.get(message));
+						ws.message(registration.get(message));
 					}
 					
 				});
@@ -209,7 +227,6 @@ public class WebsocketModule extends ModuleConfigurer {
 		
 	}
 
-
 	public class WebsocketBroadcastConfigurer implements Supplier<FlowSegment> {
 		
 		private Function<Data,String> messageFn;
@@ -223,6 +240,52 @@ public class WebsocketModule extends ModuleConfigurer {
 		@Override
 		public FlowSegment get() {
 			return sync("broadcast", (store) -> new WebsocketBroadcastOperation(messageFn));
+		}
+		
+	}
+
+	public class WebsocketTopicSendConfigurer implements Supplier<FlowSegment> {
+		
+		private final IdentityKey<Object> key;
+		
+		private Function<Data,String> messageFn;
+		
+		public WebsocketTopicSendConfigurer(IdentityKey<Object> key) {
+			this.key = key;
+		}
+		
+		@Conf.Val
+		@Conf.At("message")
+		public void message(String val) {
+			messageFn = StringWithVars.compile(val);
+		}
+		
+		@Override
+		public FlowSegment get() {
+			return sync(format("%s/send", key.name()), (store) -> new WebsocketTopicSendOperation(key, messageFn));
+		}
+		
+	}
+
+	public class WebsocketTopicSubscribeConfigurer implements Supplier<FlowSegment> {
+		
+		private final IdentityKey<Object> key;
+		
+		private Function<Data,String> idFn;
+		
+		public WebsocketTopicSubscribeConfigurer(IdentityKey<Object> key) {
+			this.key = key;
+		}
+		
+		@Conf.Val
+		@Conf.At("id")
+		public void message(String val) {
+			idFn = StringWithVars.compile(val);
+		}
+		
+		@Override
+		public FlowSegment get() {
+			return sync(format("%s/subscribe", key.name()), () -> new WebsocketTopicSubscribeOperation(key, idFn));
 		}
 		
 	}
@@ -243,7 +306,13 @@ public class WebsocketModule extends ModuleConfigurer {
 		@Override
 		public MutableData call(MutableData data) {
 			log.debug("preparing send: {}:{}", settings.host(), settings.port());
-			server.websocketSend(settings, toFn.apply(data), messageFn.apply(data));
+			server.websocket(settings, ws -> {
+				ws.channel(toFn.apply(data)).ifPresent(channel -> {
+					if (channel.isOpen()) {
+						channel.writeAndFlush(new TextWebSocketFrame(messageFn.apply(data)));
+					}
+				});
+			});
 			return data;
 		}
 		
@@ -264,13 +333,79 @@ public class WebsocketModule extends ModuleConfigurer {
 		@Override
 		public MutableData call(MutableData data) {
 			log.debug("preparing broadcast: {}:{}", settings.host(), settings.port());
-			String message = messageFn.apply(data);
-			log.debug("running broadcast: [{}] {}:{}", message, settings.host(), settings.port());
-			server.websocketBroadcast(settings, message);
+			log.debug("running broadcast: {}:{}", settings.host(), settings.port());
+			server.websocket(settings, ws -> {
+				ws.channels.values().forEach(channel -> {
+					if (channel.isOpen()) {
+						channel.writeAndFlush(new TextWebSocketFrame(messageFn.apply(data)));
+					}
+				});
+			});
+			return data;
+		}
+		
+	}
+
+	public class WebsocketTopicSendOperation implements SyncOperation {
+
+		private final IdentityKey<Object> key;
+		private final Function<Data,String> messageFn;
+		private final HttpSettings settings;
+		
+		public WebsocketTopicSendOperation(IdentityKey<Object> key, Function<Data,String> messageFn) {
+			log.debug("creating broadcast operation");
+			this.key = key;
+			this.messageFn = messageFn;
+			this.settings = httpSettingsRef.get();
+			log.debug(".. with settings: {}:{}", settings.host(), settings.port());
+		}
+		
+		@Override
+		public MutableData call(MutableData data) {
+			log.debug("preparing broadcast: {}:{}", settings.host(), settings.port());
+			log.debug("running topic send: {}:{}", settings.host(), settings.port());
+			server.websocket(settings, ws -> {
+				ws.topic(key).ifPresent(topic -> {
+					topic.channels.forEach(channel -> {
+						if (channel.isOpen()) {
+							channel.writeAndFlush(new TextWebSocketFrame(messageFn.apply(data)));	
+						}
+					});
+				});
+			});
+			
 			return data;
 		}
 		
 	}
 	
+	public class WebsocketTopicSubscribeOperation implements SyncOperation {
+
+		private final IdentityKey<Object> key;
+		private final Function<Data,String> idFn;
+		private final HttpSettings settings;
+		
+		public WebsocketTopicSubscribeOperation(IdentityKey<Object> key, Function<Data,String> idFn) {
+			this.key = key;
+			this.idFn = idFn;
+			this.settings = httpSettingsRef.get();
+			log.debug(".. with settings: {}:{}", settings.host(), settings.port());
+		}
+		
+		@Override
+		public MutableData call(MutableData data) {
+			server.websocket(settings, ws -> {
+				ws.channel(idFn.apply(data)).ifPresent(channel -> {
+					if (channel.isOpen()) {
+						ws.topic(key).ifPresent(topic -> {
+							topic.channels.add(channel);
+						});
+					}
+				});
+			});
+			return data;
+		}
+		
+	}
 	
 }

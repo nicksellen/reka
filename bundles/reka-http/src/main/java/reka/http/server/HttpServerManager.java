@@ -19,9 +19,11 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import reka.api.IdentityKey;
 import reka.api.flow.Flow;
 import reka.http.server.HttpSettings.SslSettings;
 import reka.http.websockets.WebsocketHandler;
+import reka.http.websockets.WebsocketHandler.WebsocketHost;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -77,14 +79,6 @@ public class HttpServerManager {
 
 		public void httpResume(String host) {
 			httpHandler.resume(host);
-		}
-
-		public void websocketBroadcast(String host, String msg) {
-			websocketHandler.broadcast(host, msg);
-		}
-		
-		public void websocketSend(String host, String to, String msg) {
-			websocketHandler.send(host, to, msg);
 		}
 
 		public PortHandler websocketAdd(String host, WebsocketTriggers d) {
@@ -171,9 +165,16 @@ public class HttpServerManager {
 	
 	public static class WebsocketTriggers {
 		
+		private final List<IdentityKey<Object>> topicKeys = new ArrayList<>();
+		
 		private final List<Flow> onConnect = new ArrayList<>();
 		private final List<Flow> onDisconnect = new ArrayList<>();
 		private final List<Flow> onMessage = new ArrayList<>();
+		
+		public WebsocketTriggers topic(IdentityKey<Object> topicKey) {
+			topicKeys.add(topicKey);
+			return this;
+		}
 		
 		public WebsocketTriggers connect(Flow flow) {
 			onConnect.add(flow);
@@ -190,6 +191,10 @@ public class HttpServerManager {
 			return this;
 		}
 		
+		public List<IdentityKey<Object>> topicKeys() {
+			return topicKeys;
+		}
+		
 		public List<Flow> onConnect() {
 			return onConnect;
 		}
@@ -204,18 +209,10 @@ public class HttpServerManager {
 		
 	}
 	
-	// TODO: I don't like these here....!
-	
-	public void websocketBroadcast(HttpSettings settings, String msg) {
+	public void websocket(HttpSettings settings, Consumer<WebsocketHost> c) {
 		PortHandler handler = handlers.get(settings.port());
 		if (handler == null) return;
-		handler.websocketBroadcast(settings.host(), msg);
-	}
-	
-	public void websocketSend(HttpSettings settings, String to, String msg) {
-		PortHandler handler = handlers.get(settings.port());
-		if (handler == null) return;
-		handler.websocketSend(settings.host(), to, msg);
+		handler.websocketHandler.forHost(settings.host(), c);
 	}
 	
 	public void deployWebsocket(String identity, HttpSettings settings, Consumer<WebsocketTriggers> deploy) {
@@ -224,7 +221,6 @@ public class HttpServerManager {
 			WebsocketTriggers websocketTriggers = new WebsocketTriggers();
 			deploy.accept(websocketTriggers);
 			deploy(identity, settings, handler -> {
-				//handler.websocketReset(settings.host());
 				handler.websocketAdd(settings.host(), websocketTriggers);
 			});
 		}
