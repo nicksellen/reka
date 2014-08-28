@@ -20,7 +20,7 @@ import reka.config.processor.IncludeConverter;
 import reka.config.processor.MultiConverter;
 import reka.config.processor.Processor;
 import reka.core.bundle.ModuleConfigurer;
-import reka.core.bundle.ModuleInit;
+import reka.core.bundle.ModuleSetup;
 
 import com.google.common.base.Charsets;
 
@@ -35,14 +35,14 @@ public class RekaModule extends ModuleConfigurer {
 	}
 
 	@Override
-	public void setup(ModuleInit use) {
-		use.operation(path("list"), () -> new RekaListConfigurer(manager));
-		use.operation(path("get"), () -> new RekaDetailsConfigurer(manager));
-		use.operation(path("validate"), (provider) -> new RekaValidateConfigurer(provider, manager));
-		use.operation(path("deploy"), () -> new RekaDeployConfigurer(manager));
-		use.operation(path("undeploy"), () -> new RekaUndeployConfigurer(manager));
-		use.operation(path("redeploy"), () -> new RekaRedeployConfigurer(manager));
-		use.operation(path("visualize"), () -> new RekaVisualizeConfigurer(manager));
+	public void setup(ModuleSetup module) {
+		module.operation(path("list"), () -> new RekaListConfigurer(manager));
+		module.operation(path("get"), () -> new RekaDetailsConfigurer(manager));
+		module.operation(path("validate"), (provider) -> new RekaValidateConfigurer(provider, manager));
+		module.operation(path("deploy"), () -> new RekaDeployConfigurer(manager));
+		module.operation(path("undeploy"), () -> new RekaUndeployConfigurer(manager));
+		module.operation(path("redeploy"), () -> new RekaRedeployConfigurer(manager));
+		module.operation(path("visualize"), () -> new RekaVisualizeConfigurer(manager));
 	}
 	
 	static String getConfigStringFromData(Data data, Path in) {

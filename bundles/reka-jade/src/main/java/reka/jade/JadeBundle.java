@@ -6,8 +6,8 @@ import reka.core.bundle.RekaBundle;
 public class JadeBundle implements RekaBundle {
 
 	@Override
-	public void setup(BundleSetup setup) {
-		setup.use(path("jade"), () -> new JadeModule());
+	public void setup(BundleSetup bundle) {
+		bundle.module(path("jade"), () -> new JadeModule());
 	}
 
 }

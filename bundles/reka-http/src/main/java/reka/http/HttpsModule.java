@@ -25,7 +25,7 @@ import reka.config.configurer.Configurer.ErrorCollector;
 import reka.config.configurer.ErrorReporter;
 import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.ModuleConfigurer;
-import reka.core.bundle.ModuleInit;
+import reka.core.bundle.ModuleSetup;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.core.data.memory.MutableMemoryData;
@@ -129,7 +129,7 @@ public class HttpsModule extends ModuleConfigurer implements ErrorReporter {
 	}
 
 	@Override
-	public void setup(ModuleInit http) {
+	public void setup(ModuleSetup http) {
 		
 		SslSettings sslSettings = new SslSettings(byteToFile(crt), byteToFile(key));
 		
@@ -140,7 +140,7 @@ public class HttpsModule extends ModuleConfigurer implements ErrorReporter {
 		
 		for (Function<ConfigurerProvider, Supplier<FlowSegment>> h : requestHandlers) {
 			
-			http.trigger("request", h, registration -> {
+			http.trigger("https request", h, registration -> {
 				
 				for (HostAndPort listen : listens) {
 					
@@ -157,7 +157,7 @@ public class HttpsModule extends ModuleConfigurer implements ErrorReporter {
 						
 						@Override
 						public void undeploy(int version) {
-							server.undeploy(identity, version);	
+							server.undeployHttp(identity, version);	
 						}
 						
 						@Override

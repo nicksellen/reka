@@ -18,7 +18,7 @@ import reka.api.flow.Flow;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.ModuleConfigurer;
-import reka.core.bundle.ModuleInit;
+import reka.core.bundle.ModuleSetup;
 
 public class TimerModule extends ModuleConfigurer {
 	
@@ -48,9 +48,9 @@ public class TimerModule extends ModuleConfigurer {
 	}
 	
 	@Override
-	public void setup(ModuleInit use) {
+	public void setup(ModuleSetup module) {
 		every.forEach(config -> {
-			use.trigger(format("every %s", config.valueAsString()), config.body(), register -> {
+			module.trigger(format("every %s", config.valueAsString()), config.body(), register -> {
 				ScheduledFuture<?> f = executor.scheduleAtFixedRate(new TimerRun(register.flow()), 0, parseMs(config.valueAsString()), TimeUnit.MILLISECONDS);
 				register.undeploy(() -> {
 					f.cancel(false);

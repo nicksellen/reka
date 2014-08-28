@@ -202,8 +202,8 @@ public class FlowSegments extends AbstractFlowNode {
 	
 	public static FlowNode sync(String name, SyncOperationSupplier<?> supplier) {
 		return new OperationFlowNode(name, supplier);
-	}
 	
+	}
 	public static FlowNode dataop(String name, DataOperationSupplier<?> supplier) {
 		return new OperationFlowNode(name, supplier);
 	}

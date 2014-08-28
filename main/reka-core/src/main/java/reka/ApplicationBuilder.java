@@ -7,9 +7,10 @@ import reka.api.Path;
 import reka.api.data.Data;
 import reka.core.builder.FlowVisualizer;
 import reka.core.builder.Flows;
+import reka.core.bundle.ModuleSetup.MultiRegistration;
+import reka.core.bundle.ModuleSetup.SingleRegistration;
 import reka.core.bundle.PortAndProtocol;
 import reka.core.bundle.Registration;
-import reka.core.bundle.ModuleInit.TriggerRegistration;
 
 public class ApplicationBuilder {
 
@@ -47,7 +48,12 @@ public class ApplicationBuilder {
 		ports.addAll(registration.ports());
 	}
 	
-	public void register(TriggerRegistration registration) {
+	public void register(MultiRegistration registration) {
+		resources.addAll(registration.resources());
+		ports.addAll(registration.network());
+	}
+	
+	public void register(SingleRegistration registration) {
 		resources.addAll(registration.resources());
 		ports.addAll(registration.network());
 	}

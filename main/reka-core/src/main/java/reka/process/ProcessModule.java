@@ -29,7 +29,7 @@ import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.ModuleConfigurer;
-import reka.core.bundle.ModuleInit;
+import reka.core.bundle.ModuleSetup;
 import reka.core.data.memory.MutableMemoryData;
 import reka.core.util.StringWithVars;
 
@@ -85,7 +85,7 @@ public class ProcessModule extends ModuleConfigurer {
 	}
 
 	@Override
-	public void setup(ModuleInit module) {
+	public void setup(ModuleSetup module) {
 		
 		AtomicReference<ProcessManager> managerRef = new AtomicReference<>();
 		AtomicReference<Consumer<String>> triggerRef = new AtomicReference<>();

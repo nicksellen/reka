@@ -13,8 +13,8 @@ public class RekaSystemBundle implements RekaBundle {
 	}
 
 	@Override
-	public void setup(BundleSetup setup) {
-		setup.use(path("reka"), () -> new RekaModule(manager));
+	public void setup(BundleSetup bundle) {
+		bundle.module(path("reka"), () -> new RekaModule(manager));
 	}
 
 }

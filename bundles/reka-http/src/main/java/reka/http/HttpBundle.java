@@ -10,11 +10,11 @@ public class HttpBundle implements RekaBundle {
 	private final HttpServerManager server = new HttpServerManager();
 	
 	@Override
-	public void setup(BundleSetup setup) {
-		setup.use(path("http"), () -> new HttpModule(server));
-		setup.use(path("https"), () -> new HttpsModule(server));
-		setup.use(slashes("http/sessions"), () -> new HttpSessionsModule());
-		//setup.use(path("websockets"), () -> new WebsocketsModule(server));
+	public void setup(BundleSetup bundle) {
+		bundle.module(path("http"), () -> new HttpModule(server));
+		bundle.module(path("https"), () -> new HttpsModule(server));
+		bundle.module(slashes("http/sessions"), () -> new HttpSessionsModule());
+		bundle.module(path("websockets"), () -> new WebsocketsModule(server));
 		//setup.use(slashes("admin/http"), () -> new HttpAdminModule(server));
 	}
 

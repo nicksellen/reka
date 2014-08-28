@@ -8,7 +8,7 @@ import java.util.List;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.ModuleConfigurer;
-import reka.core.bundle.ModuleInit;
+import reka.core.bundle.ModuleSetup;
 
 public class CommandModule extends ModuleConfigurer {
 
@@ -34,8 +34,8 @@ public class CommandModule extends ModuleConfigurer {
 	}
 	
 	@Override
-	public void setup(ModuleInit init) {
-		init.operation(root(), () -> new RunCommandConfigurer(exec, args));
+	public void setup(ModuleSetup module) {
+		module.operation(root(), () -> new RunCommandConfigurer(exec, args));
 	}
 
 }

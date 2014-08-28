@@ -7,9 +7,6 @@ import java.nio.file.Path;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.config.Config;
@@ -22,13 +19,11 @@ import reka.core.util.StringWithVars;
 import com.google.common.base.Charsets;
 
 public final class EachConverter implements ConfigConverter {
-	
-	private final Logger log = LoggerFactory.getLogger(getClass());
 
 	private static final String KEY = "@each";
 	private static final Pattern KEY_INCLUDE = Pattern.compile("^" + KEY + "(?:\\(([^\\s\\(\\)]*)\\))?$");
 	
-	private static final Pattern EXTENSION = Pattern.compile("(.+)\\.([^\\.]+)$");
+	private static final Pattern EXTENSION = Pattern.compile("^(.+)\\.([^\\.]+)$");
 	
     @Override
     public void convert(Config config, Output out) {
@@ -37,10 +32,8 @@ public final class EachConverter implements ConfigConverter {
     		Matcher m = KEY_INCLUDE.matcher(config.key());
     		if (m.matches()) {
     			String path = m.group(1);
-    			log.info("include each file from {}", path);
     			checkConfig(config.source().supportsNestedFile(), "cannot use %s as we don't support nested files here", KEY);
     			for (Path file : config.source().nestedFiles(path)) {
-    				log.info("including file {}", file);
 
     				String basename = file.getFileName().toString();
     				
@@ -51,14 +44,13 @@ public final class EachConverter implements ConfigConverter {
     						.putString("path", file.toString());
     				    				
     				Matcher matcher = EXTENSION.matcher(basename);
-    				if (matcher.find()) {
+    				if (matcher.matches()) {
     					data.putString("filename", matcher.group(1));
     					data.putString("extension", matcher.group(2));
     				} else{
     					data.putString("filename", basename);
     					data.putString("extension", "");
     				}
-    				
     				out.add(new Processor(new VarReplaceConverter(data.immutable())).process(config.body()));
     			}
     			

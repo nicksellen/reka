@@ -11,15 +11,15 @@ import reka.core.bundle.RekaBundle;
 public class BuiltinsBundle implements RekaBundle {
 
 	@Override
-	public void setup(BundleSetup setup) {
-		setup.use(root(), () -> new BuiltinsModule());
-		setup.use(path("timer"), () -> new TimerModule());
-		setup.converter(new CommentConverter());
-		setup.converter(new EachConverter()); 
-		setup.converter(new IncludeConverter());
-		setup.converter(new MarkdownConverter());
-		setup.converter(new DocConverter());
-		setup.converter(new EnvConverter());
+	public void setup(BundleSetup bundle) {
+		bundle.module(root(), () -> new BuiltinsModule());
+		bundle.module(path("timer"), () -> new TimerModule());
+		bundle.converter(new CommentConverter());
+		bundle.converter(new EachConverter()); 
+		bundle.converter(new IncludeConverter());
+		bundle.converter(new MarkdownConverter());
+		bundle.converter(new DocConverter());
+		bundle.converter(new EnvConverter());
 	}
 
 }

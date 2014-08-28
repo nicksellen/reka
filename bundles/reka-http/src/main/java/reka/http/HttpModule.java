@@ -19,7 +19,7 @@ import reka.api.flow.FlowSegment;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.ModuleConfigurer;
-import reka.core.bundle.ModuleInit;
+import reka.core.bundle.ModuleSetup;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.core.data.memory.MutableMemoryData;
@@ -100,7 +100,7 @@ public class HttpModule extends ModuleConfigurer {
 	}
 
 	@Override
-	public void setup(ModuleInit http) {
+	public void setup(ModuleSetup http) {
 		
 		http.operation(path("router"), (provider) -> new HttpRouterConfigurer(provider));
 		http.operation(path("redirect"), () -> new HttpRedirectConfigurer());
@@ -109,7 +109,7 @@ public class HttpModule extends ModuleConfigurer {
 		
 		for (Function<ConfigurerProvider, Supplier<FlowSegment>> h : requestHandlers) {
 			
-			http.trigger("request", h, registration -> {
+			http.trigger("http request", h, registration -> {
 				
 				for (HostAndPort listen : listens) {
 					
@@ -126,7 +126,7 @@ public class HttpModule extends ModuleConfigurer {
 						
 						@Override
 						public void undeploy(int version) {
-							server.undeploy(identity, version);	
+							server.undeployHttp(identity, version);	
 						}
 						
 						@Override

@@ -7,8 +7,8 @@ import reka.core.bundle.RekaBundle;
 public class H2Bundle implements RekaBundle {
 
 	@Override
-	public void setup(BundleSetup setup) {
-		setup.use(path("h2"), () -> new H2Module());
+	public void setup(BundleSetup bundle) {
+		bundle.module(path("h2"), () -> new H2Module());
 	}
 
 }

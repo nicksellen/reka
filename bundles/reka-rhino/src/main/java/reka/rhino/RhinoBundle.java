@@ -6,8 +6,8 @@ import reka.core.bundle.RekaBundle;
 public class RhinoBundle implements RekaBundle {
 
 	@Override
-	public void setup(BundleSetup setup) {
-		setup.use(path("rhino"), () -> new RhinoModule());
+	public void setup(BundleSetup bundle) {
+		bundle.module(path("rhino"), () -> new RhinoModule());
 	}
 
 }

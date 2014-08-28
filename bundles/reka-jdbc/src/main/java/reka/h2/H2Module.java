@@ -5,12 +5,12 @@ import static reka.util.Util.unchecked;
 import org.h2.Driver;
 
 import reka.core.bundle.ModuleConfigurer;
-import reka.core.bundle.ModuleInit;
+import reka.core.bundle.ModuleSetup;
 
 public class H2Module extends ModuleConfigurer {
 
 	@Override
-	public void setup(ModuleInit init) {
+	public void setup(ModuleSetup module) {
 		
 		try {
 			Class.forName(Driver.class.getName());

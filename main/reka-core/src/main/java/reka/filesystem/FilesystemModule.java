@@ -8,7 +8,7 @@ import java.nio.file.Path;
 
 import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.ModuleConfigurer;
-import reka.core.bundle.ModuleInit;
+import reka.core.bundle.ModuleSetup;
 import reka.filesystem.FilesystemBundle.FilesystemDeleteConfigurer;
 import reka.filesystem.FilesystemBundle.FilesystemListConfigurer;
 import reka.filesystem.FilesystemBundle.FilesystemMktmpDirConfigurer;
@@ -25,14 +25,14 @@ public class FilesystemModule extends ModuleConfigurer {
 	}
 
 	@Override
-	public void setup(ModuleInit init) {
-		init.operation(path("write"), () -> new FilesystemWriteConfigurer(basedir));
-		init.operation(path("read"), () -> new FilesystemReadConfigurer(basedir));
-		init.operation(asList(path("list"), path("ls")), () -> new FilesystemListConfigurer(basedir));
-		init.operation(asList(path("mktmpdir")), () -> new FilesystemMktmpDirConfigurer());
-		init.operation(asList(path("delete"), path("rm")), () -> new FilesystemDeleteConfigurer(basedir));
-		init.operation(asList(path("resolve"), path("expand"), path("full-path")), () -> new FilesystemResolveConfigurer(basedir));
-		init.operation(asList(path("type"), path("switch")), (provider) -> new FilesystemTypeConfigurer(provider, basedir));
+	public void setup(ModuleSetup module) {
+		module.operation(path("write"), () -> new FilesystemWriteConfigurer(basedir));
+		module.operation(path("read"), () -> new FilesystemReadConfigurer(basedir));
+		module.operation(asList(path("list"), path("ls")), () -> new FilesystemListConfigurer(basedir));
+		module.operation(asList(path("mktmpdir")), () -> new FilesystemMktmpDirConfigurer());
+		module.operation(asList(path("delete"), path("rm")), () -> new FilesystemDeleteConfigurer(basedir));
+		module.operation(asList(path("resolve"), path("expand"), path("full-path")), () -> new FilesystemResolveConfigurer(basedir));
+		module.operation(asList(path("type"), path("switch")), (provider) -> new FilesystemTypeConfigurer(provider, basedir));
 	}
 	
 }

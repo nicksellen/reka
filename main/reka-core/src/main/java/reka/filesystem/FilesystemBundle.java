@@ -25,8 +25,8 @@ import reka.core.util.StringWithVars;
 public class FilesystemBundle implements RekaBundle {
 
 	@Override
-	public void setup(BundleSetup setup) {
-		setup.use(path("filesystem"), () -> new FilesystemModule());
+	public void setup(BundleSetup bundle) {
+		bundle.module(path("filesystem"), () -> new FilesystemModule());
 	}
 	
 	public static class FilesystemReadConfigurer implements Supplier<FlowSegment> {

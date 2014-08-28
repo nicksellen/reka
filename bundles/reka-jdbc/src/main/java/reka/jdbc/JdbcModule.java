@@ -36,7 +36,7 @@ import reka.api.data.Data;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.ModuleConfigurer;
-import reka.core.bundle.ModuleInit;
+import reka.core.bundle.ModuleSetup;
 import reka.core.util.StringWithVars;
 import reka.core.util.StringWithVars.Variable;
 
@@ -108,7 +108,7 @@ public class JdbcModule extends ModuleConfigurer {
 	}
 
 	@Override
-	public void setup(ModuleInit use) {
+	public void setup(ModuleSetup use) {
 		
 		JdbcConfiguration config = new JdbcConfiguration(returnGeneratedKeys);
 		

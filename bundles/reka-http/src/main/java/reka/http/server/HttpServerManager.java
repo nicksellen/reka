@@ -65,10 +65,6 @@ public class HttpServerManager {
 			}
 		}
 		
-		public boolean isEmpty() {
-			return httpHandler.isEmpty();
-		}
-		
 		public PortHandler addHttp(String host, Flow flow) {
 			httpHandler.add(host, flow);
 			if (channel == null) start();
@@ -101,6 +97,13 @@ public class HttpServerManager {
 			return this;
 		}
 		
+		public PortHandler removeWebsocket(String host) {
+			if (websocketHandler.remove(host)) {
+				if (isEmpty()) stop();
+			}
+			return this;
+		}
+		
 		public boolean isSsl() {
 			return sslSettings != null;
 		}
@@ -111,11 +114,13 @@ public class HttpServerManager {
 		
 		public PortHandler remove(String host) {
 			if (httpHandler.remove(host)) {
-				if (httpHandler.isEmpty()) {
-					stop();
-				}
+				if (isEmpty()) stop();
 			}
 			return this;
+		}
+		
+		private boolean isEmpty() {
+			return httpHandler.isEmpty() && websocketHandler.isEmpty();
 		}
 		
 		private void stop() {
@@ -277,8 +282,9 @@ public class HttpServerManager {
 			
 		}
 	}
-	
-	public void undeploy(String identity, int undeployVersion) {
+
+
+	public void undeployHttp(String identity, int undeployVersion) {
 		log.debug("undeploying [{}]", identity);
 		
 		synchronized (lock) {
@@ -306,6 +312,12 @@ public class HttpServerManager {
 			}
 			
 		}
+	}
+	
+	public void undeployWebsocket(String identity, int undeployVersion) {
+		log.debug("undeploying websocket [{}]", identity);
+		// TODO
+		throw new UnsupportedOperationException("I didn't make this yet!");
 	}
 	
 	public void pause(String identity, int version) {

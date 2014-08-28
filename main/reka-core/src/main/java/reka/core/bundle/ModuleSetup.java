@@ -31,7 +31,7 @@ import reka.core.builder.FlowSegments;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 
-public class ModuleInit {
+public class ModuleSetup {
 	
 	public static interface ModuleExecutor extends Supplier<FlowSegment> {
 		ModuleExecutor run(String name, SyncOperation operation);		
@@ -123,10 +123,10 @@ public class ModuleInit {
 	private final Path path;
 	private final List<Supplier<FlowSegment>> segments = new ArrayList<>();
 	private final List<Runnable> shutdownHandlers = new ArrayList<>();
-	private final List<Trigger> triggers = new ArrayList<>();
+	private final List<TriggerCollection> triggers = new ArrayList<>();
 	private final Map<Path,Function<ConfigurerProvider,Supplier<FlowSegment>>> providers = new HashMap<>();
 	
-	public ModuleInit(Path path) {
+	public ModuleSetup(Path path) {
 		this.path = path;
 	}
 	
@@ -134,19 +134,19 @@ public class ModuleInit {
 		return path;
 	}
 	
-	public ModuleInit init(String name, SyncOperation operation) {
+	public ModuleSetup init(String name, SyncOperation operation) {
 		segments.add(() -> sync(name, () -> operation));
 		return this;
 	}
 	
-	public ModuleInit initParallel(Consumer<ModuleExecutor> parallel) {
+	public ModuleSetup initParallel(Consumer<ModuleExecutor> parallel) {
 		ModuleExecutor e = new ParallelExecutor();
 		parallel.accept(e);
 		segments.add(e);
 		return this;
 	}
 	
-	public ModuleInit initAsync(String name, AsyncOperation operation) {
+	public ModuleSetup initAsync(String name, AsyncOperation operation) {
 		segments.add(() -> async(name, () -> operation));
 		return this;
 	}
@@ -155,17 +155,17 @@ public class ModuleInit {
 		shutdownHandlers.add(handler);
 	}
 	
-	public ModuleInit operation(Path name, Supplier<Supplier<FlowSegment>> supplier) {
+	public ModuleSetup operation(Path name, Supplier<Supplier<FlowSegment>> supplier) {
 		providers.put(path.add(name), (provider) -> supplier.get());
 		return this;
 	}
 	
-	public ModuleInit operation(Path name, Function<ConfigurerProvider,Supplier<FlowSegment>> provider) {
+	public ModuleSetup operation(Path name, Function<ConfigurerProvider,Supplier<FlowSegment>> provider) {
 		providers.put(path.add(name), provider);
 		return this;
 	}
 
-	public ModuleInit operation(Iterable<Path> names, Supplier<Supplier<FlowSegment>> supplier) {
+	public ModuleSetup operation(Iterable<Path> names, Supplier<Supplier<FlowSegment>> supplier) {
 		Function<ConfigurerProvider,Supplier<FlowSegment>> provider = (p) -> supplier.get();
 		for (Path name : names) {
 			operation(name, provider);
@@ -173,42 +173,36 @@ public class ModuleInit {
 		return this;
 	}
 
-	public ModuleInit operation(Iterable<Path> names, Function<ConfigurerProvider,Supplier<FlowSegment>> provider) {
+	public ModuleSetup operation(Iterable<Path> names, Function<ConfigurerProvider,Supplier<FlowSegment>> provider) {
 		for (Path name : names) {
 			operation(name, provider);
 		}
 		return this;
 	}
-	
-	public static class TriggerRegistration {
-		
+
+	public static abstract class BaseRegistration {
+
 		private final int applicationVersion;
-		private final Flow flow;
 		private final String identity;
+
 		private final List<DeployedResource> resources = new ArrayList<>();
 		private final List<PortAndProtocol> network = new ArrayList<>();
-		 
-		public TriggerRegistration(int applicationVersion, Flow flow, String identity) {
+		
+		public BaseRegistration(int applicationVersion, String identity) {
 			this.applicationVersion = applicationVersion;
-			this.flow = flow;
 			this.identity = identity;
 		}
 
-		public String applicationIdentity() {
-			return identity;
-		}
-		
 		public int applicationVersion() {
 			return applicationVersion;
 		}
 		
-		public Flow flow() {
-			return flow;
+		public String applicationIdentity() {
+			return identity;
 		}
 		
-		public TriggerRegistration resource(DeployedResource r) {
+		public void resource(DeployedResource r) {
 			resources.add(r);
-			return this;
 		}
 
 		public void undeploy(Runnable r) {
@@ -220,9 +214,8 @@ public class ModuleInit {
 			});
 		}
 		
-		public TriggerRegistration network(int port, String protocol, Data details) {
+		public void network(int port, String protocol, Data details) {
 			network.add(new PortAndProtocol(port, protocol, details));
-			return this;
 		}
 		
 		public List<DeployedResource> resources() {
@@ -235,21 +228,75 @@ public class ModuleInit {
 		
 	}
 	
-	public static class Trigger {
+	public static class MultiRegistration extends BaseRegistration {
 		
-		private final Path name;
-		private final Function<ConfigurerProvider, Supplier<FlowSegment>> supplier;
-		private final Consumer<TriggerRegistration> consumer;
+		private final Map<String,Flow> map;
 		
-		public Trigger(Path name,
-				Function<ConfigurerProvider, Supplier<FlowSegment>> supplier,
-				Consumer<TriggerRegistration> consumer) {
-			this.name = name;
-			this.supplier = supplier;
+		public MultiRegistration(int applicationVersion, String identity, Map<String,Flow> map) {
+			super(applicationVersion, identity);
+			this.map = map;
+		}
+
+		public boolean has(String name) {
+			return map.containsKey(name);
+		}
+		
+		public Flow get(String name) {
+			return map.get(name);
+		}
+		
+		public SingleRegistration singleFor(String name) {
+			return new SingleRegistration(applicationVersion(), name, get(name));
+		}
+		
+	}
+	
+	public static class SingleRegistration extends BaseRegistration {
+
+		private final Flow flow;
+		
+		public SingleRegistration(int applicationVersion, String identity, Flow flow) {
+			super(applicationVersion, identity);
+			this.flow = flow;
+		}
+		
+		public Flow flow() {
+			return flow;
+		}
+		
+	}
+	
+	public static class TriggerCollection {
+		
+		private final List<Trigger> triggers;
+		private final Consumer<MultiRegistration> consumer;
+		
+		public TriggerCollection(Collection<Trigger> triggers, Consumer<MultiRegistration> consumer) {
+			this.triggers = new ArrayList<>(triggers);
 			this.consumer = consumer;
 		}
 		
-		public Path name() {
+		public List<Trigger> get() {
+			return triggers;
+		}
+		
+		public Consumer<MultiRegistration> consumer() {
+			return consumer;
+		}
+		
+	}
+	
+	public static class Trigger {
+		
+		private final String name;
+		private final Function<ConfigurerProvider, Supplier<FlowSegment>> supplier;
+		
+		public Trigger(String name, Function<ConfigurerProvider, Supplier<FlowSegment>> supplier) {
+			this.name = name;
+			this.supplier = supplier;
+		}
+		
+		public String name() {
 			return name;
 		}
 		
@@ -257,35 +304,34 @@ public class ModuleInit {
 			return supplier;
 		}
 		
-		public Consumer<TriggerRegistration> consumer() {
-			return consumer;
-		}
-		
 	}
 	
-	public ModuleInit trigger(String name, ConfigBody body, Consumer<TriggerRegistration> c) {
+	public ModuleSetup trigger(String name, ConfigBody body, Consumer<SingleRegistration> c) {
 		return trigger(name,  (provider) -> configure(new SequenceConfigurer(provider), body), c);
 	}
 	
-	public ModuleInit trigger(String name, Function<ConfigurerProvider, Supplier<FlowSegment>> supplier, Consumer<TriggerRegistration> c) {
-		triggers.add(new Trigger(path.add(name), supplier, c));
+	public ModuleSetup trigger(String name, Function<ConfigurerProvider, Supplier<FlowSegment>> supplier, Consumer<SingleRegistration> c) {
+		Map<String,Function<ConfigurerProvider, Supplier<FlowSegment>>> suppliers = new HashMap<>();
+		suppliers.put(name, supplier);
+		return triggers(suppliers, m -> c.accept(m.singleFor(name)));
+	}
+	
+	public ModuleSetup triggers(Map<String,Function<ConfigurerProvider, Supplier<FlowSegment>>> suppliers, Consumer<MultiRegistration> cs) {
+		triggers.add(new TriggerCollection(suppliers.entrySet().stream().map(e -> new Trigger(e.getKey(), e.getValue())).collect(toList()), cs));
 		return this;
 	}
 	
 	public Optional<FlowSegment> buildFlowSegment() {
-		if (segments.isEmpty()) {
-			return Optional.empty();
-		} else {
-			List<FlowSegment> built = segments.stream().map(Supplier<FlowSegment>::get).collect(toList());
-			return Optional.of(label(path.slashes(), seq(built)));
-		}
+		if (segments.isEmpty()) return Optional.empty();
+		List<FlowSegment> built = segments.stream().map(Supplier<FlowSegment>::get).collect(toList());
+		return Optional.of(label(path.slashes(), seq(built)));
 	}
 	
 	public Map<Path,Function<ConfigurerProvider,Supplier<FlowSegment>>> providers() {
 		return providers;
 	}
 	
-	public List<Trigger> triggers() {
+	public List<TriggerCollection> triggers() {
 		return triggers;
 	}
 	

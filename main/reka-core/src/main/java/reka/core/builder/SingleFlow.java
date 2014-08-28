@@ -10,7 +10,7 @@ import reka.api.flow.FlowSegment;
 public class SingleFlow {
 	
 	public static Entry<Flow,FlowVisualizer> create(Path name, FlowSegment segment, Data initializationData) {
-		return new FlowsBuilder().add(name, segment).buildAll(initializationData).flowsAndVisualizers().entrySet().iterator().next();
+		return new FlowBuilders().add(name, segment).build(initializationData).flowsAndVisualizers().entrySet().iterator().next();
 	}
 
 }

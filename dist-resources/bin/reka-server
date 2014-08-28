@@ -20,4 +20,6 @@ check_java() {
 
 check_java
 
-$JAVA -jar $LIB/reka-server.jar $ETC/config.reka
+JAVA_OPTS="$JAVA_OPTS"
+
+$JAVA $JAVA_OPTS -jar $LIB/reka-server.jar $ETC/config.reka

@@ -9,7 +9,7 @@ import reka.api.Path;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.ModuleConfigurer;
-import reka.core.bundle.ModuleInit;
+import reka.core.bundle.ModuleSetup;
 
 public class JRubyModule extends ModuleConfigurer {
 	
@@ -37,7 +37,7 @@ public class JRubyModule extends ModuleConfigurer {
 	}
 	
 	@Override
-	public void setup(ModuleInit module) {
+	public void setup(ModuleSetup module) {
 		
 		Path runtimePath = module.path().add("runtime");
 		

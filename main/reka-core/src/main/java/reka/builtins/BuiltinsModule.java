@@ -55,7 +55,7 @@ import reka.config.configurer.ErrorReporter;
 import reka.config.configurer.annotations.Conf;
 import reka.core.builder.FlowSegments;
 import reka.core.bundle.ModuleConfigurer;
-import reka.core.bundle.ModuleInit;
+import reka.core.bundle.ModuleSetup;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.core.data.memory.MutableMemoryData;
@@ -73,29 +73,29 @@ public class BuiltinsModule extends ModuleConfigurer {
 	private static final Logger log = LoggerFactory.getLogger(BuiltinsModule.class);
 
 	@Override
-	public void setup(ModuleInit init) {
+	public void setup(ModuleSetup module) {
 		
-		init.operation(path("put"), () -> new PutConfigurer());
-		init.operation(path("putv"), () -> new PutWithVarsConfigurer());
-		init.operation(path("copy"), () -> new CopyConfigurer());
-    	init.operation(asList(path("run"), path("then")), (provider) -> new RunConfigurer(provider));
-    	init.operation(slashes("run/parallel"), (provider) -> new RunParallelConfigurer(provider));
-    	init.operation(path("log"), () -> new LogConfigurer());
-    	init.operation(path("label"), (provider) -> new LabelConfigurer(provider));
-    	init.operation(path("stringwithvariables"), () -> new StringWithVariablesConfigurer());
-    	init.operation(path("sleep"), () -> new SleepConfigurer());
-    	init.operation(path("halt!"), () -> new HaltConfigurer());
-    	init.operation(slashes("uuid/generate"), () -> new GenerateUUIDConfigurer());
-    	init.operation(path("println"), () -> new PrintlnConfigurer());
-    	init.operation(slashes("bcrypt/hashpw"), () -> new BCryptHashpwConfigurer());
-    	init.operation(path("bcrypt/checkpw"), (provider) -> new BCryptCheckpwConfigurer(provider));
-    	init.operation(path("throw"), () -> new ThrowConfigurer());
-    	init.operation(path("inspect"), () -> new InspectConfigurer());
-    	init.operation(path("random/string"), () -> new RandomStringConfigurer());
-    	init.operation(path("coerce"), () -> new Coercion.CoerceConfigurer());
-    	init.operation(slashes("coerce/int64"), () -> new Coercion.CoerceLongConfigurer());
-    	init.operation(slashes("coerce/bool"), () -> new Coercion.CoerceBooleanConfigurer());
-    	init.operation(path("unzip"), () -> new UnzipConfigurer());
+		module.operation(path("put"), () -> new PutConfigurer());
+		module.operation(path("putv"), () -> new PutWithVarsConfigurer());
+		module.operation(path("copy"), () -> new CopyConfigurer());
+    	module.operation(asList(path("run"), path("then")), (provider) -> new RunConfigurer(provider));
+    	module.operation(slashes("run/parallel"), (provider) -> new RunParallelConfigurer(provider));
+    	module.operation(path("log"), () -> new LogConfigurer());
+    	module.operation(path("label"), (provider) -> new LabelConfigurer(provider));
+    	module.operation(path("stringwithvariables"), () -> new StringWithVariablesConfigurer());
+    	module.operation(path("sleep"), () -> new SleepConfigurer());
+    	module.operation(path("halt!"), () -> new HaltConfigurer());
+    	module.operation(slashes("uuid/generate"), () -> new GenerateUUIDConfigurer());
+    	module.operation(path("println"), () -> new PrintlnConfigurer());
+    	module.operation(slashes("bcrypt/hashpw"), () -> new BCryptHashpwConfigurer());
+    	module.operation(path("bcrypt/checkpw"), (provider) -> new BCryptCheckpwConfigurer(provider));
+    	module.operation(path("throw"), () -> new ThrowConfigurer());
+    	module.operation(path("inspect"), () -> new InspectConfigurer());
+    	module.operation(path("random/string"), () -> new RandomStringConfigurer());
+    	module.operation(path("coerce"), () -> new Coercion.CoerceConfigurer());
+    	module.operation(slashes("coerce/int64"), () -> new Coercion.CoerceLongConfigurer());
+    	module.operation(slashes("coerce/bool"), () -> new Coercion.CoerceBooleanConfigurer());
+    	module.operation(path("unzip"), () -> new UnzipConfigurer());
 		
 	}
 	

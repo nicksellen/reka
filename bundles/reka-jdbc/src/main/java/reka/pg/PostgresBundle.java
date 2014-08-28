@@ -7,8 +7,8 @@ import reka.core.bundle.RekaBundle;
 public class PostgresBundle implements RekaBundle {
 
 	@Override
-	public void setup(BundleSetup setup) {
-		setup.use(path("postgres"), () -> new PostgresModule());
+	public void setup(BundleSetup bundle) {
+		bundle.module(path("postgres"), () -> new PostgresModule());
 	}
 
 }

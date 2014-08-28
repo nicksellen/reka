@@ -1,7 +1,7 @@
 package reka;
 
 import reka.core.bundle.ModuleConfigurer;
-import reka.core.bundle.ModuleInit;
+import reka.core.bundle.ModuleSetup;
 
 public class RootModule extends ModuleConfigurer {
 	
@@ -10,6 +10,6 @@ public class RootModule extends ModuleConfigurer {
 	}
 
 	@Override
-	public void setup(ModuleInit register) { }
+	public void setup(ModuleSetup module) { }
 
 }

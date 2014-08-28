@@ -4,7 +4,7 @@ import static reka.api.Path.path;
 import reka.api.Path;
 import reka.api.content.Contents;
 import reka.core.bundle.ModuleConfigurer;
-import reka.core.bundle.ModuleInit;
+import reka.core.bundle.ModuleSetup;
 
 
 public class HttpSessionsModule extends ModuleConfigurer {
@@ -12,7 +12,7 @@ public class HttpSessionsModule extends ModuleConfigurer {
 	public final static String COOKIENAME = "REKASESSID";
 
 	@Override
-	public void setup(ModuleInit module) {
+	public void setup(ModuleSetup module) {
 		Path storePath = module.path().add("store");
 		module.init("create session storage", (data) -> {
 			return data.put(storePath, Contents.nonSerializableContent(new SessionStore()));

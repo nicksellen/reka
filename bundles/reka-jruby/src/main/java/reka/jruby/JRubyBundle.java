@@ -5,15 +5,9 @@ import reka.core.bundle.RekaBundle;
 
 public class JRubyBundle implements RekaBundle {
 	
-	/*
-	 * need to add bundler/gems into the mix
-	 * 	useful: http://yokolet.blogspot.de/2010/10/gems-in-jar-with-redbridge.html
-	 * 
-	 */
-
 	@Override
-	public void setup(BundleSetup setup) {
-		setup.use(slashes("jruby"), () -> new JRubyModule());
+	public void setup(BundleSetup bundle) {
+		bundle.module(slashes("jruby"), () -> new JRubyModule());
 	}
 
 }

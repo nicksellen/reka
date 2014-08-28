@@ -12,7 +12,7 @@ import reka.config.processor.ConfigConverter;
 
 public interface RekaBundle {
 	
-	void setup(BundleSetup setup);
+	void setup(BundleSetup bundle);
 	
 	public static class BundleSetup {
 		
@@ -20,7 +20,7 @@ public interface RekaBundle {
 		private final List<ConfigConverter> converters = new ArrayList<>();
 		private final List<RekaBundle> moreBundles = new ArrayList<>();
 		
-		public BundleSetup use(Path name, Supplier<ModuleConfigurer> supplier) {
+		public BundleSetup module(Path name, Supplier<ModuleConfigurer> supplier) {
 			uses.add(createEntry(name, supplier));
 			return this;
 		}

@@ -12,7 +12,7 @@ import reka.api.data.MutableData;
 import reka.api.flow.FlowSegment;
 import reka.api.run.SyncOperation;
 import reka.core.bundle.ModuleConfigurer;
-import reka.core.bundle.ModuleInit;
+import reka.core.bundle.ModuleSetup;
 import reka.http.server.HttpServerManager;
 import reka.http.server.HttpSettings;
 
@@ -25,7 +25,7 @@ public class HttpAdminModule extends ModuleConfigurer {
 	}
 	
 	@Override
-	public void setup(ModuleInit use) {
+	public void setup(ModuleSetup use) {
 		use.operation(path("list"), () -> new ListConfigurer());
 	}
 	

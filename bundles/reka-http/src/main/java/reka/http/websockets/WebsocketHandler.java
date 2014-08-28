@@ -60,12 +60,27 @@ public class WebsocketHandler extends SimpleChannelInboundHandler<TextWebSocketF
 		return hosts.containsKey(host);
 	}
 	
+	public boolean isEmpty() {
+		return hosts.isEmpty();
+	}
+	
 	public void add(String host, WebsocketHandlers d) {
 		log.debug("adding ws host [{}]", host);
 		WebsocketHost h = hosts.computeIfAbsent(host, (val) -> new WebsocketHost());
 		h.onConnect.addAll(d.onConnect());
 		h.onDisconnect.addAll(d.onDisconnect());
 		h.onMessage.addAll(d.onMessage());
+	}
+	
+	public boolean remove(String host) {
+		log.debug("removing ws host [{}]", host);
+		WebsocketHost h = hosts.remove(host);
+		if (h != null) {
+			h.channels.forEach((id, ch) -> ch.disconnect());
+			return true;
+		} else {
+			return false;
+		}
 	}
 	
 	public void broadcast(String host, String msg) {

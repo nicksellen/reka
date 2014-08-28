@@ -29,7 +29,7 @@ import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.builder.FlowVisualizer;
 import reka.core.builder.SingleFlow;
-import reka.core.bundle.ModuleInit.Trigger;
+import reka.core.bundle.ModuleSetup.TriggerCollection;
 import reka.core.config.ConfigurerProvider;
 import reka.core.runtime.NoFlow;
 import reka.core.runtime.NoFlowVisualizer;
@@ -39,17 +39,17 @@ import com.google.common.collect.ImmutableMap;
 
 public abstract class ModuleConfigurer {
 	
-	public static class UsesInitializer {
+	public static class ModuleInitializer {
 		
 		private final Flow flow;
 		private final FlowVisualizer visualizer;
 		private final Map<Path,Function<ConfigurerProvider,Supplier<FlowSegment>>> providers;
-		private final List<Trigger> triggers;
+		private final List<TriggerCollection> triggers;
 		private final List<Runnable> shutdownHandlers;
 		
-		UsesInitializer(Flow initialize, FlowVisualizer visualizer, 
+		ModuleInitializer(Flow initialize, FlowVisualizer visualizer, 
 				Map<Path,Function<ConfigurerProvider,Supplier<FlowSegment>>> providers,
-				List<Trigger> triggers,
+				List<TriggerCollection> triggers,
 				List<Runnable> shutdownHandlers) {
 			
 			this.flow = initialize;
@@ -72,7 +72,7 @@ public abstract class ModuleConfigurer {
 			return providers;
 		}
 		
-		public List<Trigger> triggers() {
+		public List<TriggerCollection> triggers() {
 			return triggers;
 		}
 		
@@ -82,13 +82,13 @@ public abstract class ModuleConfigurer {
 		
 	}
 	
-	public static UsesInitializer process(ModuleConfigurer root) {
+	public static ModuleInitializer buildInitializer(ModuleConfigurer root) {
 		return Utils.process(root);
 	}
 	
 	private static class Utils {
 		
-		public static UsesInitializer process(ModuleConfigurer root) {
+		public static ModuleInitializer process(ModuleConfigurer root) {
 			
 			Set<ModuleConfigurer> all = collect(root, new HashSet<>());
 			Set<ModuleConfigurer> toplevel = findTopLevel(all);
@@ -96,7 +96,7 @@ public abstract class ModuleConfigurer {
 			resolveNamedDependencies(all, rootsMap);
 			
 			Map<Path,Function<ConfigurerProvider,Supplier<FlowSegment>>> providersCollector = new HashMap<>();
-			List<Trigger> triggerCollector = new ArrayList<>();
+			List<TriggerCollection> triggerCollector = new ArrayList<>();
 			List<Runnable> shutdownHandlers = new ArrayList<>();
 			
 			Map<ModuleConfigurer,FlowSegment> segments = makeSegments(all, providersCollector, triggerCollector, shutdownHandlers);
@@ -112,18 +112,18 @@ public abstract class ModuleConfigurer {
 				visualizer = entry.getValue();	
 			}
 			
-			return new UsesInitializer(flow, visualizer, providersCollector, triggerCollector, shutdownHandlers);
+			return new ModuleInitializer(flow, visualizer, providersCollector, triggerCollector, shutdownHandlers);
 		}
 		
 		private static Map<ModuleConfigurer, FlowSegment> makeSegments(Collection<ModuleConfigurer> all, 
 				Map<Path,Function<ConfigurerProvider,Supplier<FlowSegment>>> providersCollector,
-				List<Trigger> triggerCollector,
+				List<TriggerCollection> triggerCollector,
 				List<Runnable> shutdownHandlers) {
 			
 			Map<ModuleConfigurer,FlowSegment> map = new HashMap<>();
 			for (ModuleConfigurer module : all) {
 				
-				ModuleInit init = new ModuleInit(module.fullPath());
+				ModuleSetup init = new ModuleSetup(module.fullPath());
 				module.setup(init);
 				
 				init.buildFlowSegment().ifPresent(segment -> {
@@ -237,7 +237,7 @@ public abstract class ModuleConfigurer {
 		}
 	}
 
-	public abstract void setup(ModuleInit module);
+	public abstract void setup(ModuleSetup module);
 	
 	public boolean isRoot() {
 		return isRoot;

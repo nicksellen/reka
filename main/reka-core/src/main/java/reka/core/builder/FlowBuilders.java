@@ -27,20 +27,20 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
-public class FlowsBuilder {
+public class FlowBuilders {
 	
 	private final ListeningExecutorService executor = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
 	
 	private final Map<Path,FlowInfo> roots = new HashMap<>();
 	
 	public static Flow createFlow(Path name, FlowSegment segment, Data initializationData) {
-		FlowsBuilder b = new FlowsBuilder();
+		FlowBuilders b = new FlowBuilders();
 		b.add(name, segment);
-		return b.buildAll(initializationData).flow(name);
+		return b.build(initializationData).flow(name);
 	}
 	
 	public static FlowVisualizer createVisualizer(Path name, FlowSegment segment) {
-		FlowsBuilder b = new FlowsBuilder();
+		FlowBuilders b = new FlowBuilders();
 		b.add(name, segment);
 		return b.buildVisualizersMaps().get(name);
 	}
@@ -98,7 +98,7 @@ public class FlowsBuilder {
 		}
 	}
 	
-	public FlowsBuilder add(Path name, FlowSegment segment) {
+	public FlowBuilders add(Path name, FlowSegment segment) {
 		checkState(!roots.containsKey(name), "duplicate root names not allows [%s is already registered]", name);
 		roots.put(name, new FlowInfo(name, segment));
 		return this;
@@ -108,7 +108,7 @@ public class FlowsBuilder {
 		return roots.keySet();
 	}
 	
-	public Flows buildAll(Data initializationData) {
+	public Flows build(Data initializationData) {
 		
 		for (FlowInfo root : roots.values()) {
 			createFlow(root, true, initializationData);

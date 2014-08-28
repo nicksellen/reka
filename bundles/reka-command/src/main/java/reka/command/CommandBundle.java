@@ -6,8 +6,8 @@ import reka.core.bundle.RekaBundle;
 public class CommandBundle implements RekaBundle {
 
 	@Override
-	public void setup(BundleSetup setup) {
-		setup.use(path("command"), () -> new CommandModule());
+	public void setup(BundleSetup bundle) {
+		bundle.module(path("command"), () -> new CommandModule());
 	}
 
 }

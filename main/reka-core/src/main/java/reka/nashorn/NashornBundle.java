@@ -12,8 +12,8 @@ import reka.core.bundle.RekaBundle;
 public class NashornBundle implements RekaBundle {
 
 	@Override
-	public void setup(BundleSetup setup) {
-		setup.use(path("nashorn"), () -> new NashornModule());
+	public void setup(BundleSetup bundle) {
+		bundle.module(path("nashorn"), () -> new NashornModule());
 	}
 
 }

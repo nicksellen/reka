@@ -21,7 +21,7 @@ import reka.api.Path;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.ModuleConfigurer;
-import reka.core.bundle.ModuleInit;
+import reka.core.bundle.ModuleSetup;
 
 import com.google.common.base.Charsets;
 
@@ -57,7 +57,7 @@ public class RhinoModule extends ModuleConfigurer {
 	}
 
 	@Override
-	public void setup(ModuleInit module) {
+	public void setup(ModuleSetup module) {
 		
 		Path scopePath = module.path().add("scope");
 		

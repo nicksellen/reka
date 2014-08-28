@@ -12,7 +12,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
@@ -22,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
+import reka.api.flow.Flow;
 import reka.api.flow.FlowSegment;
 import reka.api.run.EverythingSubscriber;
 import reka.api.run.Subscriber;
@@ -29,14 +29,14 @@ import reka.config.Config;
 import reka.config.configurer.Configurer.ErrorCollector;
 import reka.config.configurer.ErrorReporter;
 import reka.config.configurer.annotations.Conf;
+import reka.core.builder.FlowBuilders;
 import reka.core.builder.FlowVisualizer;
 import reka.core.builder.Flows;
-import reka.core.builder.FlowsBuilder;
 import reka.core.bundle.BundleManager;
 import reka.core.bundle.ModuleConfigurer;
-import reka.core.bundle.ModuleConfigurer.UsesInitializer;
-import reka.core.bundle.ModuleInit.Trigger;
-import reka.core.bundle.ModuleInit.TriggerRegistration;
+import reka.core.bundle.ModuleConfigurer.ModuleInitializer;
+import reka.core.bundle.ModuleSetup.MultiRegistration;
+import reka.core.bundle.ModuleSetup.TriggerCollection;
 import reka.core.bundle.Registration;
 import reka.core.config.MultiConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
@@ -51,13 +51,13 @@ public class ApplicationConfigurer implements ErrorReporter {
     private final MutableData meta = MutableMemoryData.create();
     
     public ApplicationConfigurer(BundleManager bundles) {
-        use = new RootModule();
-		use.modules(bundles.modules());
+        rootModule = new RootModule();
+		rootModule.modules(bundles.modules());
     }
     
     private final List<Config> flowConfigs = new ArrayList<>();
     
-    private final ModuleConfigurer use;
+    private final ModuleConfigurer rootModule;
     
     @Conf.At("name")
     public void name(String val) {
@@ -73,12 +73,12 @@ public class ApplicationConfigurer implements ErrorReporter {
     @Conf.EachUnmatched
     public void useModule(Config config) {
     	log.info("setting up module {} {}", config.key(), config.hasValue() ? config.valueAsString() : "<unnamed>");
-    	use.useThisConfig(config);
+    	rootModule.useThisConfig(config);
     }
     
     @Conf.Each("use")
     public void use(Config config) {
-    	use.use(config);
+    	rootModule.use(config);
     }
     
     @Conf.Each("def")
@@ -97,8 +97,8 @@ public class ApplicationConfigurer implements ErrorReporter {
     }
     
     public Collection<FlowVisualizer> visualize() {
-        FlowsBuilder flowsBuilder = new FlowsBuilder();
-    	UsesInitializer initializer = ModuleConfigurer.process(use);
+        FlowBuilders flowsBuilder = new FlowBuilders();
+    	ModuleInitializer initializer = ModuleConfigurer.buildInitializer(rootModule);
     	
     	MultiConfigurerProvider provider = new MultiConfigurerProvider(initializer.providers());
     	Map<Path,Supplier<FlowSegment>> configuredFlows = new HashMap<>();
@@ -120,33 +120,22 @@ public class ApplicationConfigurer implements ErrorReporter {
     }
     
     public void checkValid() {
-    	UsesInitializer initializer = ModuleConfigurer.process(use);
+    	ModuleInitializer initializer = ModuleConfigurer.buildInitializer(rootModule);
     	MultiConfigurerProvider configurerProvider = new MultiConfigurerProvider(initializer.providers());
-    	initializer.triggers().forEach(trigger -> trigger.supplier().apply(configurerProvider).get());
+    	initializer.triggers().forEach(triggers -> triggers.get().forEach(trigger -> trigger.supplier().apply(configurerProvider).get()));
     	flowConfigs.forEach((config) -> configure(new SequenceConfigurer(configurerProvider), config).get());
     }
     
     public static class TriggerSetup {
 
-    	private final Trigger trigger;
+    	private final TriggerCollection triggers;
     	
-    	private Path flowName;
-    	
-		public TriggerSetup(Trigger trigger) {
-			this.trigger = trigger;
+		public TriggerSetup(TriggerCollection triggers) {
+			this.triggers = triggers;
 		}
 		
-		public Trigger trigger() {
-			return trigger;
-		}
-		
-		public TriggerSetup flowName(Path val) {
-			flowName = val;
-			return this;
-		}
-		
-		public Path flowName() {
-			return flowName;
+		public TriggerCollection triggers() {
+			return triggers;
 		}
     	
     }
@@ -157,8 +146,9 @@ public class ApplicationConfigurer implements ErrorReporter {
     	
     	return safelyCompletable(future, () -> {
     		
-    		FlowsBuilder flowsBuilder = new FlowsBuilder();
-	    	UsesInitializer initializer = ModuleConfigurer.process(use);
+    		FlowBuilders flowBuilders = new FlowBuilders();
+    		
+	    	ModuleInitializer initializer = ModuleConfigurer.buildInitializer(rootModule);
 	    	
 	    	ApplicationBuilder applicationBuilder = new ApplicationBuilder();
 	    	
@@ -171,17 +161,14 @@ public class ApplicationConfigurer implements ErrorReporter {
 	    	
 	    	MultiConfigurerProvider configurerProvider = new MultiConfigurerProvider(initializer.providers());
 	    	
-	    	List<TriggerSetup> triggerSetups = new ArrayList<>();
-	    	
-	    	initializer.triggers().forEach(trigger -> {
-	    		Path flowName = applicationName.add(UUID.randomUUID().toString()).add(trigger.name());
-	    		TriggerSetup setup = new TriggerSetup(trigger).flowName(flowName);
-	    		flowsBuilder.add(setup.flowName(), trigger.supplier().apply(configurerProvider).get());
-	    		triggerSetups.add(setup);
+	    	initializer.triggers().forEach(triggers -> {
+	    		triggers.get().forEach(trigger -> {
+	    			flowBuilders.add(applicationName.add(trigger.name()), trigger.supplier().apply(configurerProvider).get());
+	    		});
 	    	});
 	    	
 	    	flowConfigs.forEach((config) -> 
-				flowsBuilder.add(applicationName.add(config.valueAsString()), 
+				flowBuilders.add(applicationName.add(config.valueAsString()), 
 						configure(new SequenceConfigurer(configurerProvider), config).get()));
 	    	
 	    	// ok, run the app initializer
@@ -197,17 +184,21 @@ public class ApplicationConfigurer implements ErrorReporter {
 					
 			    	try {
 			    		
-						Flows flows = flowsBuilder.buildAll(data); // constructs all the operations
+						Flows flows = flowBuilders.build(data);
 						
 						applicationBuilder.flows(flows);
 						
 						Registration registration = new Registration(flows);
 						
-						for (TriggerSetup t : triggerSetups) {
-							TriggerRegistration tr = new TriggerRegistration(applicationVersion, flows.flow(t.flowName()), identity);
-							t.trigger().consumer().accept(tr);
-							applicationBuilder.register(tr);
-						}
+						initializer.triggers().forEach(triggers -> {
+							Map<String,Flow> m = new HashMap<>();
+							triggers.get().forEach(trigger -> {
+								m.put(trigger.name(), flows.flow(applicationName.add(trigger.name())));
+							});
+							MultiRegistration mr = new MultiRegistration(applicationVersion, identity, m);
+							triggers.consumer().accept(mr);
+							applicationBuilder.register(mr);
+				    	});
 						
 						registration.resource(new SimpleDeployedResource() {
 							

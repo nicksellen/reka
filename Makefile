@@ -52,6 +52,12 @@ dist: build
 run: dist
 	@dist/reka/bin/reka-server
 
+run-nolog: dist
+	@JAVA_OPTS=-Dlog4j.configurationFile=main/reka-main/log4j2-errors-only.xml dist/reka/bin/reka-server
+
+run-debug: dist
+	@JAVA_OPTS=-Dlog4j.configurationFile=main/reka-main/log4j2-debug.xml dist/reka/bin/reka-server
+
 upload-s3: dist
 	@aws s3 \
 		cp dist/reka.tar.gz s3://reka/reka.tar.gz	\

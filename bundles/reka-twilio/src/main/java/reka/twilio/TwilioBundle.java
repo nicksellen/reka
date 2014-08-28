@@ -21,7 +21,7 @@ import reka.api.run.DataOperation;
 import reka.api.run.SyncOperation;
 import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.ModuleConfigurer;
-import reka.core.bundle.ModuleInit;
+import reka.core.bundle.ModuleSetup;
 import reka.core.bundle.RekaBundle;
 import reka.core.util.StringWithVars;
 
@@ -34,8 +34,8 @@ public class TwilioBundle implements RekaBundle {
 	
 	private static final Logger log = LoggerFactory.getLogger(TwilioBundle.class);
 
-	public void setup(BundleSetup setup) {
-		setup.use(path("twilio"), () -> new TwilioModule());
+	public void setup(BundleSetup bundle) {
+		bundle.module(path("twilio"), () -> new TwilioModule());
 	}
 	
 	public static class TwilioModule extends ModuleConfigurer {
@@ -60,7 +60,7 @@ public class TwilioBundle implements RekaBundle {
 		}
 
 		@Override
-		public void setup(ModuleInit module) {
+		public void setup(ModuleSetup module) {
 			module.operation(path("send"), () -> new TwilioSendConfigurer(sid, token, defaultFrom));
 		}
 		
