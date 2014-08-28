@@ -18,6 +18,7 @@ import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import reka.api.IdentityKey;
 import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
@@ -163,7 +164,7 @@ public class ApplicationConfigurer implements ErrorReporter {
 	    	
 	    	initializer.triggers().forEach(triggers -> {
 	    		triggers.get().forEach(trigger -> {
-	    			flowBuilders.add(applicationName.add(trigger.name()), trigger.supplier().apply(configurerProvider).get());
+	    			flowBuilders.add(applicationName.add(trigger.key().name()), trigger.supplier().apply(configurerProvider).get());
 	    		});
 	    	});
 	    	
@@ -191,9 +192,9 @@ public class ApplicationConfigurer implements ErrorReporter {
 						Registration registration = new Registration(flows);
 						
 						initializer.triggers().forEach(triggers -> {
-							Map<String,Flow> m = new HashMap<>();
+							Map<IdentityKey<Flow>,Flow> m = new HashMap<>();
 							triggers.get().forEach(trigger -> {
-								m.put(trigger.name(), flows.flow(applicationName.add(trigger.name())));
+								m.put(trigger.key(), flows.flow(applicationName.add(trigger.key().name())));
 							});
 							MultiRegistration mr = new MultiRegistration(applicationVersion, identity, m);
 							triggers.consumer().accept(mr);

@@ -27,7 +27,7 @@ import reka.api.data.MutableData;
 import reka.api.flow.Flow;
 import reka.api.run.EverythingSubscriber;
 import reka.core.data.memory.MutableMemoryData;
-import reka.http.server.HttpServerManager.WebsocketHandlers;
+import reka.http.server.HttpServerManager.WebsocketTriggers;
 
 @ChannelHandler.Sharable
 public class WebsocketHandler extends SimpleChannelInboundHandler<TextWebSocketFrame> {
@@ -41,13 +41,10 @@ public class WebsocketHandler extends SimpleChannelInboundHandler<TextWebSocketF
 	private final ConcurrentMap<String,WebsocketHost> hosts = new ConcurrentHashMap<>();
 	
 	private static class WebsocketHost {
-		
 		private final Map<String,Channel> channels = new HashMap<>();
-		
 		private final List<Flow> onConnect = new ArrayList<>();
 		private final List<Flow> onDisconnect = new ArrayList<>();
 		private final List<Flow> onMessage = new ArrayList<>();
-		
 	}
 
 	public static interface WebsocketListener {
@@ -64,9 +61,12 @@ public class WebsocketHandler extends SimpleChannelInboundHandler<TextWebSocketF
 		return hosts.isEmpty();
 	}
 	
-	public void add(String host, WebsocketHandlers d) {
+	public void add(String host, WebsocketTriggers d) {
 		log.debug("adding ws host [{}]", host);
 		WebsocketHost h = hosts.computeIfAbsent(host, (val) -> new WebsocketHost());
+		h.onConnect.clear();
+		h.onDisconnect.clear();
+		h.onMessage.clear();
 		h.onConnect.addAll(d.onConnect());
 		h.onDisconnect.addAll(d.onDisconnect());
 		h.onMessage.addAll(d.onMessage());
@@ -80,6 +80,18 @@ public class WebsocketHandler extends SimpleChannelInboundHandler<TextWebSocketF
 			return true;
 		} else {
 			return false;
+		}
+	}
+	
+	public void reset(String host) {
+		log.debug("restting ws host [{}]", host);
+		WebsocketHost h = hosts.get(host);
+		if (h != null) {
+			//h.channels.forEach((id, ch) -> ch.disconnect());
+			//h.channels.clear();
+			h.onConnect.clear();
+			h.onDisconnect.clear();
+			h.onMessage.clear();
 		}
 	}
 	
@@ -125,7 +137,7 @@ public class WebsocketHandler extends SimpleChannelInboundHandler<TextWebSocketF
 
 					@Override
 					public void ok(MutableData data) {
-						Optional<Content> o = data.getContent("response");
+						Optional<Content> o = data.getContent("reply");
 						if (o.isPresent()) {
 							ctx.channel().writeAndFlush(new TextWebSocketFrame(o.get().asUTF8()));
 						}
@@ -150,31 +162,36 @@ public class WebsocketHandler extends SimpleChannelInboundHandler<TextWebSocketF
 		super.channelInactive(ctx);
 		String id = ctx.attr(idAttr).get();
 		String host = ctx.attr(hostAttr).get();
-		hosts.get(host).channels.remove(id);
 		log.debug("{} disconnected", id);
+		WebsocketHost wshost = hosts.get(host);
+		if (wshost != null) {
+			
+			wshost.channels.remove(id);
 		
-		for (Flow flow : hosts.get(host).onDisconnect) {
-			
-			MutableData data = MutableMemoryData.create();
-			
-			data.putString("host", host);
-			data.putString("id", id);
-			
-			flow.run(ctx.executor(), data, new EverythingSubscriber(){
-
-				@Override
-				public void ok(MutableData data) {
-				}
-
-				@Override
-				public void halted() {
-				}
-
-				@Override
-				public void error(Data data, Throwable t) {
-				}
+			for (Flow flow : wshost.onDisconnect) {
 				
-			});
+				MutableData data = MutableMemoryData.create();
+				
+				data.putString("host", host);
+				data.putString("id", id);
+				
+				flow.run(ctx.executor(), data, new EverythingSubscriber(){
+	
+					@Override
+					public void ok(MutableData data) {
+					}
+	
+					@Override
+					public void halted() {
+					}
+	
+					@Override
+					public void error(Data data, Throwable t) {
+					}
+					
+				});
+			}
+
 		}
 		
 	}

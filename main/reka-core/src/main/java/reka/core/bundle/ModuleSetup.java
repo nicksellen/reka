@@ -20,6 +20,7 @@ import java.util.function.Supplier;
 
 import reka.DeployedResource;
 import reka.SimpleDeployedResource;
+import reka.api.IdentityKey;
 import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.flow.Flow;
@@ -230,23 +231,23 @@ public class ModuleSetup {
 	
 	public static class MultiRegistration extends BaseRegistration {
 		
-		private final Map<String,Flow> map;
+		private final Map<IdentityKey<Flow>,Flow> map;
 		
-		public MultiRegistration(int applicationVersion, String identity, Map<String,Flow> map) {
+		public MultiRegistration(int applicationVersion, String identity, Map<IdentityKey<Flow>,Flow> map) {
 			super(applicationVersion, identity);
 			this.map = map;
 		}
 
-		public boolean has(String name) {
+		public boolean has(IdentityKey<Flow> name) {
 			return map.containsKey(name);
 		}
 		
-		public Flow get(String name) {
+		public Flow get(IdentityKey<Flow> name) {
 			return map.get(name);
 		}
 		
-		public SingleRegistration singleFor(String name) {
-			return new SingleRegistration(applicationVersion(), name, get(name));
+		public SingleRegistration singleFor(IdentityKey<Flow> name) {
+			return new SingleRegistration(applicationVersion(), applicationIdentity(), get(name));
 		}
 		
 	}
@@ -288,15 +289,15 @@ public class ModuleSetup {
 	
 	public static class Trigger {
 		
-		private final String name;
+		private final IdentityKey<Flow> name;
 		private final Function<ConfigurerProvider, Supplier<FlowSegment>> supplier;
 		
-		public Trigger(String name, Function<ConfigurerProvider, Supplier<FlowSegment>> supplier) {
+		public Trigger(IdentityKey<Flow> name, Function<ConfigurerProvider, Supplier<FlowSegment>> supplier) {
 			this.name = name;
 			this.supplier = supplier;
 		}
 		
-		public String name() {
+		public IdentityKey<Flow> key() {
 			return name;
 		}
 		
@@ -307,18 +308,26 @@ public class ModuleSetup {
 	}
 	
 	public ModuleSetup trigger(String name, ConfigBody body, Consumer<SingleRegistration> c) {
-		return trigger(name,  (provider) -> configure(new SequenceConfigurer(provider), body), c);
+		return trigger(IdentityKey.of(name), body, c);
 	}
-	
+
 	public ModuleSetup trigger(String name, Function<ConfigurerProvider, Supplier<FlowSegment>> supplier, Consumer<SingleRegistration> c) {
-		Map<String,Function<ConfigurerProvider, Supplier<FlowSegment>>> suppliers = new HashMap<>();
-		suppliers.put(name, supplier);
-		return triggers(suppliers, m -> c.accept(m.singleFor(name)));
+		return trigger(IdentityKey.of(name), supplier, c);
 	}
 	
-	public ModuleSetup triggers(Map<String,Function<ConfigurerProvider, Supplier<FlowSegment>>> suppliers, Consumer<MultiRegistration> cs) {
+	public ModuleSetup triggers(Map<IdentityKey<Flow>,Function<ConfigurerProvider, Supplier<FlowSegment>>> suppliers, Consumer<MultiRegistration> cs) {
 		triggers.add(new TriggerCollection(suppliers.entrySet().stream().map(e -> new Trigger(e.getKey(), e.getValue())).collect(toList()), cs));
 		return this;
+	}
+
+	private ModuleSetup trigger(IdentityKey<Flow> key, ConfigBody body, Consumer<SingleRegistration> c) {
+		return trigger(key,  (provider) -> configure(new SequenceConfigurer(provider), body), c);
+	}
+	
+	private ModuleSetup trigger(IdentityKey<Flow> key, Function<ConfigurerProvider, Supplier<FlowSegment>> supplier, Consumer<SingleRegistration> c) {
+		Map<IdentityKey<Flow>,Function<ConfigurerProvider, Supplier<FlowSegment>>> suppliers = new HashMap<>();
+		suppliers.put(key, supplier);
+		return triggers(suppliers, m -> c.accept(m.singleFor(key)));
 	}
 	
 	public Optional<FlowSegment> buildFlowSegment() {

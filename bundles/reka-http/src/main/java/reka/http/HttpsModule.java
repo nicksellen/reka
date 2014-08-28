@@ -147,7 +147,7 @@ public class HttpsModule extends ModuleConfigurer implements ErrorReporter {
 					final String host = listen.host() == null ? "*" : listen.host();
 					final int port = listen.port();
 					
-					String identity = format("%s/%s/%s", registration.applicationIdentity(), host, port);
+					String identity = format("%s/%s/%s/https", registration.applicationIdentity(), host, port);
 				
 					HttpSettings settings = HttpSettings.https(port, host, Type.HTTP, sslSettings, registration.applicationVersion());
 					
@@ -157,7 +157,7 @@ public class HttpsModule extends ModuleConfigurer implements ErrorReporter {
 						
 						@Override
 						public void undeploy(int version) {
-							server.undeployHttp(identity, version);	
+							server.undeploy(identity, version);	
 						}
 						
 						@Override

@@ -22,8 +22,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import reka.SimpleDeployedResource;
+import reka.api.IdentityKey;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
+import reka.api.flow.Flow;
 import reka.api.flow.FlowSegment;
 import reka.api.run.SyncOperation;
 import reka.config.Config;
@@ -38,7 +40,7 @@ import reka.http.server.HttpServerManager;
 import reka.http.server.HttpSettings;
 import reka.http.server.HttpSettings.Type;
 
-public class WebsocketsModule extends ModuleConfigurer {
+public class WebsocketModule extends ModuleConfigurer {
 	
 
 	private final Pattern listenPortOnly = Pattern.compile("^[0-9]+$");
@@ -68,14 +70,13 @@ public class WebsocketsModule extends ModuleConfigurer {
 	// TODO: have a better way to pass data around
 	private final AtomicReference<HttpSettings> httpSettingsRef = new AtomicReference<>();
 	
-	public WebsocketsModule(HttpServerManager server) {
+	public WebsocketModule(HttpServerManager server) {
 		this.server = server;
 	}
 	
 	private final List<ConfigBody> onConnect = new ArrayList<>();
 	private final List<ConfigBody> onDisconnect = new ArrayList<>();
 	private final List<ConfigBody> onMessage = new ArrayList<>();
-
 
 	@Conf.Each("listen")
 	public void listen(String val) {
@@ -131,16 +132,20 @@ public class WebsocketsModule extends ModuleConfigurer {
 		module.operation(path("send"), () -> new WebsocketSendConfigurer());
 		module.operation(path("broadcast"), () -> new WebsocketBroadcastConfigurer());
 		
-		Map<String,Function<ConfigurerProvider, Supplier<FlowSegment>>> triggers = new HashMap<>();
+		Map<IdentityKey<Flow>,Function<ConfigurerProvider, Supplier<FlowSegment>>> triggers = new HashMap<>();
+		
+		IdentityKey<Flow> connect = IdentityKey.of("connect");
+		IdentityKey<Flow> disconnect = IdentityKey.of("disconnect");
+		IdentityKey<Flow> message = IdentityKey.of("message");
 		
 		if (!onConnect.isEmpty()) {
-			triggers.put("connect", combine(onConnect));
+			triggers.put(connect, combine(onConnect));
 		}
 		if (!onDisconnect.isEmpty()) {
-			triggers.put("disconnect", combine(onDisconnect));
+			triggers.put(disconnect, combine(onDisconnect));
 		}
 		if (!onMessage.isEmpty()) {
-			triggers.put("message", combine(onMessage));
+			triggers.put(message, combine(onMessage));
 		}
 		
 		httpSettingsRef.set(HttpSettings.http(listens.get(0).port, listens.get(0).host, Type.WEBSOCKET, -1)); // FIXME: hackety hack
@@ -152,20 +157,20 @@ public class WebsocketsModule extends ModuleConfigurer {
 				final String host = listen.host() == null ? "*" : listen.host();
 				final int port = listen.port();
 				
-				String identity = format("%s/%s/%s", registration.applicationIdentity(), host, port);
+				String identity = format("%s/%s/%s/ws", registration.applicationIdentity(), host, port);
 			
 				HttpSettings settings = HttpSettings.http(port, host, Type.WEBSOCKET, registration.applicationVersion());
 				
 				server.deployWebsocket(identity, settings, handlers -> {
 					
-					if (registration.has("connect")) { 
-						handlers.connect(registration.get("connect"));
+					if (registration.has(connect)) { 
+						handlers.connect(registration.get(connect));
 					}
-					if (registration.has("disconnect")) {
-						handlers.disconnect(registration.get("disconnect"));
+					if (registration.has(disconnect)) {
+						handlers.disconnect(registration.get(disconnect));
 					}
-					if (registration.has("message")) {
-						handlers.message(registration.get("message"));
+					if (registration.has(message)) {
+						handlers.message(registration.get(message));
 					}
 					
 				});
@@ -174,106 +179,13 @@ public class WebsocketsModule extends ModuleConfigurer {
 					
 					@Override
 					public void undeploy(int version) {
-						server.undeployWebsocket(identity, version);
+						server.undeploy(identity, version);
 					}
 				});
 				
 			}
 		});
 	}
-	
-	/*
-
-	public class WebsocketsTriggerConfigurer implements TriggerConfigurer {
-
-		private final List<String> validEvents = asList("connect", "disconnect", "message");
-		
-		private String host;
-		private int port;
-		
-		private final List<Path> onConnect = new ArrayList<>();
-		private final List<Path> onDisconnect = new ArrayList<>();
-		private final List<Path> onMessage = new ArrayList<>();
-		
-		@Conf.Val
-		@Conf.At("listen")
-		public void listen(String listen) {
-			Iterator<String> split = Splitter.on(":").split(listen).iterator();
-			host = split.next();
-			if (split.hasNext()) {
-				port = Integer.parseInt(split.next());
-			}
-		}
-		
-		@Conf.Each("on")
-		public void on(Config config) {
-			
-			checkConfig(config.hasValue(), "must have a value");
-			
-			String event = config.valueAsString();
-			checkConfig(validEvents.contains(event), "event must be one of %s", validEvents);
-
-			checkConfig(config.hasBody(), "must have body");
-			
-			Optional<Config> o = config.body().at("run");
-			checkConfig(o.isPresent(), "body must contain a 'run' option");
-			
-			Config body = o.get();
-			checkConfig(body.hasValue(), "run must contain a value");
-			
-			Path run = Path.path(body.valueAsString());
-			
-			switch (event) {
-			case "connect": onConnect.add(run); break;
-			case "disconnect": onDisconnect.add(run); break;
-			case "message": onMessage.add(run); break;
-			}
-		}
-		
-		
-		@Override
-		public void setupTriggers(TriggerSetup trigger) {
-
-			HttpSettings settings = HttpSettings.http(port, host, Type.WEBSOCKET, trigger.applicationVersion());
-			
-			log.debug("setting http settings ref");
-			httpSettingsRef.set(settings);
-			
-			trigger.requiresFlows(onConnect);
-			trigger.requiresFlows(onDisconnect);
-			trigger.requiresFlows(onMessage);
-			
-			String identity = format("ws/%s/%s/%s", trigger.identity(), host, port);
-			
-			trigger.addRegistrationHandler(app -> {
-				
-				app.protocol(port, "ws", MutableMemoryData.create()
-						.putString("host", host)
-					.immutable());
-				
-				server.deployWebsocket(identity, settings, deploy -> {
-					
-					for (Path e : onConnect) {
-						deploy.connect(app.flows().flow(e));
-					}
-					
-					for (Path e : onDisconnect) {
-						deploy.disconnect(app.flows().flow(e));
-					}
-					
-					for (Path e : onMessage) {
-						deploy.message(app.flows().flow(e));
-					}
-					
-				});
-				
-			});
-			
-		}
-		
-	}
-	*/
-	
 
 	public class WebsocketSendConfigurer implements Supplier<FlowSegment> {
 
@@ -310,7 +222,7 @@ public class WebsocketsModule extends ModuleConfigurer {
 		
 		@Override
 		public FlowSegment get() {
-			return sync("broadcast", () -> new WebsocketBroadcastOperation(messageFn));
+			return sync("broadcast", (store) -> new WebsocketBroadcastOperation(messageFn));
 		}
 		
 	}
@@ -331,7 +243,7 @@ public class WebsocketsModule extends ModuleConfigurer {
 		@Override
 		public MutableData call(MutableData data) {
 			log.debug("preparing send: {}:{}", settings.host(), settings.port());
-			server.sendWebsocket(settings, toFn.apply(data), messageFn.apply(data));
+			server.websocketSend(settings, toFn.apply(data), messageFn.apply(data));
 			return data;
 		}
 		
@@ -354,7 +266,7 @@ public class WebsocketsModule extends ModuleConfigurer {
 			log.debug("preparing broadcast: {}:{}", settings.host(), settings.port());
 			String message = messageFn.apply(data);
 			log.debug("running broadcast: [{}] {}:{}", message, settings.host(), settings.port());
-			server.broadcastWebsocket(settings, message);
+			server.websocketBroadcast(settings, message);
 			return data;
 		}
 		

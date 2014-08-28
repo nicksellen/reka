@@ -65,31 +65,29 @@ public class HttpServerManager {
 			}
 		}
 		
-		public PortHandler addHttp(String host, Flow flow) {
+		public PortHandler httpAdd(String host, Flow flow) {
 			httpHandler.add(host, flow);
 			if (channel == null) start();
 			return this;
 		}
 
-
-		public void pause(String host) {
+		public void httpPause(String host) {
 			httpHandler.pause(host);
 		}
 
-
-		public void resume(String host) {
+		public void httpResume(String host) {
 			httpHandler.resume(host);
 		}
 
-		public void broadcastWebsocket(String host, String msg) {
+		public void websocketBroadcast(String host, String msg) {
 			websocketHandler.broadcast(host, msg);
 		}
 		
-		public void sendWebsocket(String host, String to, String msg) {
+		public void websocketSend(String host, String to, String msg) {
 			websocketHandler.send(host, to, msg);
 		}
 
-		public PortHandler addWebsocket(String host, WebsocketHandlers d) {
+		public PortHandler websocketAdd(String host, WebsocketTriggers d) {
 			websocketHandler.add(host, d);
 			if (channel == null) {
 				start();
@@ -97,10 +95,15 @@ public class HttpServerManager {
 			return this;
 		}
 		
-		public PortHandler removeWebsocket(String host) {
+		public PortHandler websocketRemove(String host) {
 			if (websocketHandler.remove(host)) {
 				if (isEmpty()) stop();
 			}
+			return this;
+		}
+		
+		public PortHandler websocketReset(String host) {
+			websocketHandler.reset(host);
 			return this;
 		}
 		
@@ -112,7 +115,7 @@ public class HttpServerManager {
 			return sslSettings;
 		}
 		
-		public PortHandler remove(String host) {
+		public PortHandler httpRemove(String host) {
 			if (httpHandler.remove(host)) {
 				if (isEmpty()) stop();
 			}
@@ -166,23 +169,23 @@ public class HttpServerManager {
 		}
 	}
 	
-	public static class WebsocketHandlers {
+	public static class WebsocketTriggers {
 		
 		private final List<Flow> onConnect = new ArrayList<>();
 		private final List<Flow> onDisconnect = new ArrayList<>();
 		private final List<Flow> onMessage = new ArrayList<>();
 		
-		public WebsocketHandlers connect(Flow flow) {
+		public WebsocketTriggers connect(Flow flow) {
 			onConnect.add(flow);
 			return this;
 		}
 		
-		public WebsocketHandlers disconnect(Flow flow) {
+		public WebsocketTriggers disconnect(Flow flow) {
 			onDisconnect.add(flow);
 			return this;
 		}
 		
-		public WebsocketHandlers message(Flow flow) {
+		public WebsocketTriggers message(Flow flow) {
 			onMessage.add(flow);
 			return this;
 		}
@@ -203,33 +206,27 @@ public class HttpServerManager {
 	
 	// TODO: I don't like these here....!
 	
-	public void broadcastWebsocket(HttpSettings settings, String msg) {
+	public void websocketBroadcast(HttpSettings settings, String msg) {
 		PortHandler handler = handlers.get(settings.port());
 		if (handler == null) return;
-		handler.broadcastWebsocket(settings.host(), msg);
+		handler.websocketBroadcast(settings.host(), msg);
 	}
 	
-	public void sendWebsocket(HttpSettings settings, String to, String msg) {
+	public void websocketSend(HttpSettings settings, String to, String msg) {
 		PortHandler handler = handlers.get(settings.port());
 		if (handler == null) return;
-		handler.sendWebsocket(settings.host(), to, msg);
+		handler.websocketSend(settings.host(), to, msg);
 	}
 	
-	public void deployWebsocket(String identity, HttpSettings settings, Consumer<WebsocketHandlers> deploy) {
+	public void deployWebsocket(String identity, HttpSettings settings, Consumer<WebsocketTriggers> deploy) {
 		
 		synchronized (lock) {
-			WebsocketHandlers websocketHandlers = new WebsocketHandlers();
-			deploy.accept(websocketHandlers);
-			
-			@SuppressWarnings("unused")
-			HttpSettings previous = deployed.put(identity, settings);
-			
+			WebsocketTriggers websocketTriggers = new WebsocketTriggers();
+			deploy.accept(websocketTriggers);
 			deploy(identity, settings, handler -> {
-				handler.addWebsocket(settings.host(), websocketHandlers);
+				//handler.websocketReset(settings.host());
+				handler.websocketAdd(settings.host(), websocketTriggers);
 			});
-			
-			// TODO: add websocket removals...
-			
 		}
 		
 	}
@@ -237,18 +234,18 @@ public class HttpServerManager {
 	public void deployHttp(String identity, Flow flow, HttpSettings settings) {
 		log.debug("deploying [{}] with {} {}:{}", identity, flow.fullName(), settings.host(), settings.port());
 		deploy(identity, settings, handler -> {
-			handler.addHttp(settings.host(), flow);
+			handler.httpAdd(settings.host(), flow);
 		});
 	}
 
-	private void deploy(String identity, HttpSettings settings, Consumer<PortHandler> handler) {
+	private void deploy(String identity, HttpSettings settings, Consumer<PortHandler> consumer) {
 		
 		synchronized (lock) {
 			
 			HttpSettings previous = deployed.put(identity, settings);
 			
 			boolean removePrevious = false;
-			
+
 			if (previous != null) {
 				boolean hostChanged = !previous.host().equals(settings.host());
 				boolean portChanged = previous.port() != settings.port();
@@ -268,29 +265,32 @@ public class HttpServerManager {
 				handlers.put(settings.port(), portHandler);
 			}
 			
-			handler.accept(portHandler);
+			consumer.accept(portHandler);
 			
 			if (removePrevious) {
 				PortHandler h = handlers.get(previous.port());
 				if (h != null) {
-					h.remove(settings.host());
-					if (h.isEmpty()) {
-						handlers.remove(settings.port());
+					switch (settings.type()) {
+					case HTTP:
+						h.httpRemove(previous.host());	
+						break;
+					case WEBSOCKET:
+						h.websocketRemove(previous.host());
+						break;
 					}
+					if (h.isEmpty()) handlers.remove(previous.port());
 				}
 			}
 			
 		}
 	}
-
-
-	public void undeployHttp(String identity, int undeployVersion) {
-		log.debug("undeploying [{}]", identity);
+	
+	public void undeploy(String identity, int undeployVersion) {
 		
 		synchronized (lock) {
 			
 			HttpSettings settings = deployed.get(identity);
-		
+			
 			if (settings == null) {
 				log.debug("   it didn't seem to actually be deployed ({} were though)", deployed.keySet());
 				return;
@@ -305,19 +305,18 @@ public class HttpServerManager {
 			
 			PortHandler handler = handlers.get(settings.port());
 			if (handler != null) {
-				handler.remove(settings.host());
-				if (handler.isEmpty()) {
-					handlers.remove(settings.port());
+				switch (settings.type()) {
+				case HTTP:
+					handler.httpRemove(settings.host());	
+					break;
+				case WEBSOCKET:
+					handler.websocketRemove(settings.host());
+					break;
 				}
+				if (handler.isEmpty()) handlers.remove(settings.port());
 			}
 			
 		}
-	}
-	
-	public void undeployWebsocket(String identity, int undeployVersion) {
-		log.debug("undeploying websocket [{}]", identity);
-		// TODO
-		throw new UnsupportedOperationException("I didn't make this yet!");
 	}
 	
 	public void pause(String identity, int version) {
@@ -338,7 +337,7 @@ public class HttpServerManager {
 			PortHandler handler = handlers.get(settings.port());
 			if (handler != null) {
 				log.debug("pausing [{}]", identity);
-				handler.pause(settings.host());
+				handler.httpPause(settings.host());
 			}
 			
 		}
@@ -362,7 +361,7 @@ public class HttpServerManager {
 			PortHandler handler = handlers.get(settings.port());
 			if (handler != null) {
 				log.debug("resuming [{}]", identity);
-				handler.resume(settings.host());
+				handler.httpResume(settings.host());
 			}
 			
 		}
