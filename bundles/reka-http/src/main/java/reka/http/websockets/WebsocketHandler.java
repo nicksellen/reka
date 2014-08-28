@@ -9,11 +9,15 @@ import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
 import io.netty.util.AttributeKey;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Consumer;
@@ -58,7 +62,17 @@ public class WebsocketHandler extends SimpleChannelInboundHandler<TextWebSocketF
 	}
 	
 	public static class Topic {
-		public final List<Channel> channels = Collections.synchronizedList(new ArrayList<>());
+		
+		private final Map<Channel,Void> channels = Collections.synchronizedMap(new WeakHashMap<>());
+		
+		public Collection<Channel> channels() {
+			return channels.keySet();
+		}
+
+		public void register(Channel channel) {
+			channels.put(channel, null);
+		}
+		
 	}
 
 	public static interface WebsocketListener {
@@ -79,10 +93,25 @@ public class WebsocketHandler extends SimpleChannelInboundHandler<TextWebSocketF
 		log.debug("adding ws host [{}]", host);
 		WebsocketHost h = hosts.computeIfAbsent(host, (val) -> new WebsocketHost());
 		
-		h.topics.clear();
+		// we're keeping topics if they match by name
+		// this ensures the topics registration connections persist across deploys
+		
+		Map<IdentityKey<Object>, Topic> newtopics = new HashMap<>();
+		
 		d.topicKeys().forEach(key -> {
-			h.topics.put(key, new Topic());
+			Topic topic = null;
+			for (Entry<IdentityKey<Object>, Topic> e : h.topics.entrySet()) {
+				if (key.name().equals(e.getKey().name())) {
+					topic = e.getValue();
+				}
+			}
+			if (topic == null) topic = new Topic();
+			newtopics.put(key, topic);
 		});
+
+		h.topics.clear();
+		h.topics.putAll(newtopics);
+		
 		
 		h.onConnect.clear();
 		h.onConnect.addAll(d.onConnect());
@@ -133,7 +162,7 @@ public class WebsocketHandler extends SimpleChannelInboundHandler<TextWebSocketF
 		if (h == null || h.channels.isEmpty()) return;
 		Topic topic = h.topics.get(topicKey);
 		if (topic == null) return;
-		topic.channels.forEach(channel -> channel.writeAndFlush(new TextWebSocketFrame(msg)));
+		topic.channels().forEach(channel -> channel.writeAndFlush(new TextWebSocketFrame(msg)));
 	}
 	
 	public void forHost(String host, Consumer<WebsocketHost> c) {
@@ -148,7 +177,7 @@ public class WebsocketHandler extends SimpleChannelInboundHandler<TextWebSocketF
 		if (channel == null || !channel.isOpen()) return;
 		Topic topic = h.topics.get(topicKey);
 		if (topic == null) return;
-		topic.channels.add(channel);
+		topic.register(channel);
 	}
 
 	public void send(String host, String to, String msg) {

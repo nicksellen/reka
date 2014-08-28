@@ -366,7 +366,7 @@ public class WebsocketModule extends ModuleConfigurer {
 			log.debug("running topic send: {}:{}", settings.host(), settings.port());
 			server.websocket(settings, ws -> {
 				ws.topic(key).ifPresent(topic -> {
-					topic.channels.forEach(channel -> {
+					topic.channels().forEach(channel -> {
 						if (channel.isOpen()) {
 							channel.writeAndFlush(new TextWebSocketFrame(messageFn.apply(data)));	
 						}
@@ -398,7 +398,7 @@ public class WebsocketModule extends ModuleConfigurer {
 				ws.channel(idFn.apply(data)).ifPresent(channel -> {
 					if (channel.isOpen()) {
 						ws.topic(key).ifPresent(topic -> {
-							topic.channels.add(channel);
+							topic.register(channel);
 						});
 					}
 				});
