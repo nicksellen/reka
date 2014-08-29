@@ -18,7 +18,6 @@ import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import reka.DeployedResource;
 import reka.api.flow.FlowSegment;
 import reka.config.Config;
 import reka.config.configurer.Configurer.ErrorCollector;
@@ -153,29 +152,12 @@ public class HttpsModule extends ModuleConfigurer implements ErrorReporter {
 					
 					server.deployHttp(identity, registration.flow(), settings);
 					
-					registration.resource(new DeployedResource() {
-						
-						@Override
-						public void undeploy(int version) {
-							server.undeploy(identity, version);	
-						}
-						
-						@Override
-						public void pause(int version) {
-							server.pause(identity, version);
-						}
-
-						
-						@Override
-						public void resume(int version) {
-							server.resume(identity, version);
-						}
-						
-					});
-					
-					registration.network(port, "https", MutableMemoryData.create((details) -> {
+					registration.undeploy(version -> server.undeploy(identity, version));
+					registration.pause(version -> server.pause(identity, version));
+					registration.resume(version -> server.resume(identity, version));
+										
+					registration.network(port, "https", MutableMemoryData.create(details -> {
 						details.putString("host", host);
-						details.putString("run", registration.flow().name().last().toString());
 					}).immutable());
 				
 				}

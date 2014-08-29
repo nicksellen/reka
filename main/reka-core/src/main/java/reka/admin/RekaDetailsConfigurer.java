@@ -18,16 +18,17 @@ public class RekaDetailsConfigurer implements Supplier<FlowSegment> {
 	private final ApplicationManager manager;
 	
 	private Path out = dots("app");
-	private Function<Data,String> appFn;
+	private Function<Data,String> idFn;
 	
 	@Conf.Val
+	@Conf.At("out")
 	public void out(String val) {
 		out = dots(val);
 	}
 	
-	@Conf.At("app")
+	@Conf.At("id")
 	public void app(String val) {
-		appFn = StringWithVars.compile(val);
+		idFn = StringWithVars.compile(val);
 	}
 	
 	public RekaDetailsConfigurer(ApplicationManager manager) {
@@ -36,7 +37,7 @@ public class RekaDetailsConfigurer implements Supplier<FlowSegment> {
 	
 	@Override
 	public FlowSegment get() {
-		return sync("get app", (data) -> new RekaDetailsOperation(manager, appFn, out));
+		return sync("get app", (data) -> new RekaDetailsOperation(manager, idFn, out));
 	}
 
 }

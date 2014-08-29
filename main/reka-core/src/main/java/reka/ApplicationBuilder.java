@@ -2,20 +2,21 @@ package reka;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.IntConsumer;
 
 import reka.api.Path;
 import reka.api.data.Data;
 import reka.core.builder.FlowVisualizer;
 import reka.core.builder.Flows;
-import reka.core.bundle.ModuleSetup.MultiRegistration;
-import reka.core.bundle.ModuleSetup.SingleRegistration;
-import reka.core.bundle.PortAndProtocol;
-import reka.core.bundle.Registration;
+import reka.core.bundle.NetworkInfo;
 
 public class ApplicationBuilder {
 
-	private final List<PortAndProtocol> ports = new ArrayList<>();
-	private final List<DeployedResource> resources = new ArrayList<>();
+	private final List<NetworkInfo> network = new ArrayList<>();
+	
+	private final List<IntConsumer> undeployConsumers = new ArrayList<>();
+	private final List<IntConsumer> pauseConsumers = new ArrayList<>();
+	private final List<IntConsumer> resumeConsumers = new ArrayList<>();
 
 	private Path name;
 	private Data meta;
@@ -43,23 +44,24 @@ public class ApplicationBuilder {
 		this.visualizer = visualizer;
 	}
 
-	public void register(Registration registration) {
-		resources.addAll(registration.resources());
-		ports.addAll(registration.ports());
+	public List<NetworkInfo> network() {
+		return network;
 	}
 	
-	public void register(MultiRegistration registration) {
-		resources.addAll(registration.resources());
-		ports.addAll(registration.network());
+	public List<IntConsumer> undeployConsumers() {
+		return undeployConsumers;
 	}
 	
-	public void register(SingleRegistration registration) {
-		resources.addAll(registration.resources());
-		ports.addAll(registration.network());
+	public List<IntConsumer> pauseConsumers() {
+		return pauseConsumers;
+	}
+	
+	public List<IntConsumer> resumeConsumers() {
+		return resumeConsumers;
 	}
 
 	public Application build() {
-		return new Application(name, meta, version, flows, ports, visualizer, resources);
+		return new Application(name, meta, version, flows, network, visualizer, undeployConsumers, pauseConsumers, resumeConsumers);
 	}
 
 }

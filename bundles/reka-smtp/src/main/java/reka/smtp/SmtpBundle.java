@@ -30,7 +30,6 @@ import org.subethamail.smtp.helper.SimpleMessageListener;
 import org.subethamail.smtp.helper.SimpleMessageListenerAdapter;
 import org.subethamail.smtp.server.SMTPServer;
 
-import reka.DeployedResource;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.flow.Flow;
@@ -82,39 +81,15 @@ public class SmtpBundle implements RekaBundle {
 		public void setup(ModuleSetup use) {
 			if (emailHandler != null) {
 				use.trigger("email", emailHandler, registration -> {
-					
 					SMTPServer smtpServer = new SMTPServer(
 							new SimpleMessageListenerAdapter(
 								new EmailListener(registration.flow())));
-						
 					smtpServer.setPort(port);
-					
 					log.debug("starting smtp server on port {}", port);
-					
-					registration.network(port, "smtp", MutableMemoryData.create(details -> {
-						details.putString("run", registration.flow().name().last().toString());
-					}).immutable());
-					
+					registration.network(port, "smtp", Data.NONE);
 					smtpServer.start();
+					registration.undeploy(version -> smtpServer.stop());
 					
-					registration.resource(new DeployedResource() {
-						
-						@Override
-						public void undeploy(int version) {
-							smtpServer.stop();
-						}
-						
-						@Override
-						public void pause(int version) {
-							// no-op
-						}
-						
-						@Override
-						public void resume(int version) {
-							// no-op
-						}
-						
-					});
 				});
 			}
 		}

@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import reka.api.Path;
@@ -31,8 +30,6 @@ public class JsonBundle implements RekaBundle {
 	
 	private static final ObjectMapper jsonMapper = new ObjectMapper();
 
-	private static final JsonFactory jsonFactory = new JsonFactory();
-
 	@Override
 	public void setup(BundleSetup bundle) {
 		bundle.module(path("json"), () -> new UseJson());
@@ -43,6 +40,7 @@ public class JsonBundle implements RekaBundle {
 		@Override
 		public void setup(ModuleSetup module) {
 			module.operation(path("parse"), () -> new JsonParseConfigurer());
+			module.operation(path("stringify"), () -> new JsonStringifyConfigurer());
 		}
 		
 	}
@@ -76,6 +74,35 @@ public class JsonBundle implements RekaBundle {
 		
 	}
 	
+	public static class JsonStringifyConfigurer implements Supplier<FlowSegment>, ErrorReporter {
+		
+		private Function<Data,Path> inFn, outFn;
+		
+		@Conf.Val
+		@Conf.At("in")
+		public void in(String val) {
+			inFn = StringWithVars.compile(val).andThen(s -> dots(s));
+			if (outFn == null) outFn = inFn;
+		}
+
+		@Conf.At("out")
+		public void out(String val) {
+			outFn = StringWithVars.compile(val).andThen(s -> dots(s));
+		}
+
+		@Override
+		public void errors(ErrorCollector errors) {
+			errors.checkConfigPresent(inFn, "in is required");
+			errors.checkConfigPresent(outFn, "out is required");
+		}
+
+		@Override
+		public FlowSegment get() {
+			return sync("json/stringify", () -> new JsonStringifyOperation(inFn, outFn));
+		}
+		
+	}
+	
 	public static class JsonParseOperation implements SyncOperation {
 		
 		private final Function<Data,Path> inFn, outFn;
@@ -97,6 +124,23 @@ public class JsonBundle implements RekaBundle {
 					throw unchecked(e);
 				}
 			}
+			return data;
+		}
+		
+	}
+	
+	public static class JsonStringifyOperation implements SyncOperation {
+		
+		private final Function<Data,Path> inFn, outFn;
+		
+		public JsonStringifyOperation(Function<Data,Path> inFn, Function<Data,Path> outFn) {
+			this.inFn = inFn;
+			this.outFn = outFn;
+		}
+
+		@Override
+		public MutableData call(MutableData data) {
+			data.putString(outFn.apply(data), data.at(inFn.apply(data)).toJson());
 			return data;
 		}
 		

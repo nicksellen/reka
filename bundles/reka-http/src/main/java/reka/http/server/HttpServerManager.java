@@ -96,11 +96,6 @@ public class HttpServerManager {
 			return this;
 		}
 		
-		public PortHandler websocketReset(String host) {
-			websocketHandler.reset(host);
-			return this;
-		}
-		
 		public boolean isSsl() {
 			return sslSettings != null;
 		}

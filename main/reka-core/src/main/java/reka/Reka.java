@@ -87,7 +87,7 @@ public class Reka {
 			if (name.isPresent()) {
 				identity = name.get().valueAsString();
 			}
-			manager.deployTransient(identity, config);
+			manager.deployConfig(identity, config);
 		}
 	}
 	

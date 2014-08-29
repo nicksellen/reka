@@ -9,7 +9,9 @@ import static reka.config.configurer.Configurer.configure;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -28,6 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import reka.api.Path;
 import reka.api.data.Data;
+import reka.api.flow.Flow;
 import reka.api.run.EverythingSubscriber;
 import reka.api.run.Subscriber;
 import reka.config.ConfigBody;
@@ -37,6 +40,7 @@ import reka.config.Source;
 import reka.config.parser.ConfigParser;
 import reka.core.builder.FlowVisualizer;
 import reka.core.bundle.BundleManager;
+import reka.core.data.memory.MutableMemoryData;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
@@ -62,10 +66,29 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 	
 	private final Set<String> deployedFilenames = new HashSet<>();
 	
+	private final List<Flow> deployListeners = Collections.synchronizedList(new ArrayList<>());
+	private final List<Flow> undeployListeners = Collections.synchronizedList(new ArrayList<>());
+	
 	public ApplicationManager(File datadir, BundleManager bundles, boolean useState) {
 		this.useState = useState;
 		this.bundles = bundles;
 		stateFilePath = datadir.toPath().resolve(".reka").toAbsolutePath();
+	}
+	
+	public void addDeployListener(Flow flow) {
+		deployListeners.add(flow);
+	}
+	
+	public void removeDeployListener(Flow flow) {
+		deployListeners.remove(flow);
+	}
+	
+	public void addUndeployListener(Flow flow) {
+		undeployListeners.add(flow);
+	}
+
+	public void removeUndeployListener(Flow flow) {
+		undeployListeners.remove(flow);
 	}
 	
 	public void restore() {
@@ -106,6 +129,13 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 			if (app == null) return;
 			app.undeploy();
 			log.info("undeployed [{}]", app.fullName());
+			
+			undeployListeners.forEach(flow -> {
+				if (!app.flows().all().contains(flow)) {
+					flow.prepare().data(MutableMemoryData.create().putString("id", identity)).run();
+				}
+			});
+			
 			if (source != null && source.isFile()) {
 				deployedFilenames.remove(source.file().getAbsolutePath());
 			}
@@ -133,13 +163,12 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 		deploySource(identity, false, source, true, EverythingSubscriber.DO_NOTHING);
 	}
 	
-	public void deployTransient(String identity, ConfigBody incomingConfig) {
+	public void deployConfig(String identity, ConfigBody incomingConfig) {
 		
 		long stamp = lock.writeLock();
 		
 		try {
 			Application previous = applications.remove(identity);
-			
 			
 			executor.execute(() -> {
 				
@@ -160,7 +189,14 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 					try {
 						if (app != null) {
 							applications.put(identity, app);
-							log.info("deployed [{}] listening on {}", app.fullName(), app.ports().stream().map(Object::toString).collect(joining(", ")));
+							log.info("deployed [{}] listening on {}", app.fullName(), app.network().stream().map(Object::toString).collect(joining(", ")));
+							
+							deployListeners.forEach(flow -> {
+								if (!app.flows().all().contains(flow)) {
+									flow.prepare().data(MutableMemoryData.create().putString("id", identity)).run();
+								}
+							});
+							
 						}
 						saveState();
 					} finally {
@@ -198,14 +234,6 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 		long stamp = lock.writeLock();
 		
 		try {
-			
-			/*
-			if (!redeploy && applications.containsKey(identity)) {
-				subscriber.error(Data.NONE, runtime("we already have a deployment of %s", identity));
-				lock.unlock(stamp);
-				return;
-			}
-			*/
 			
 			Application previous = applications.get(identity);
 			
@@ -258,7 +286,14 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 									previous.undeploy();
 								}
 								
-								log.info("deployed [{}] listening on {}", app.fullName(), app.ports().stream().map(Object::toString).collect(joining(", ")));
+								log.info("deployed [{}] listening on {}", app.fullName(), app.network().stream().map(Object::toString).collect(joining(", ")));
+								
+								deployListeners.forEach(flow -> {
+									if (!app.flows().all().contains(flow)) {
+										flow.prepare().data(MutableMemoryData.create().putString("id", identity)).run();
+									}
+								});
+								
 							} else if (ex != null) {
 								log.info("exception whilst deploying!");
 								subscriber.error(Data.NONE, ex);

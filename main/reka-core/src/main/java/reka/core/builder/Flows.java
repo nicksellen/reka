@@ -28,7 +28,7 @@ public class Flows {
 		names.add(flow.name());
 	}
 	
-	public Collection<Flow> flows() {
+	public Collection<Flow> all() {
 		return flows.keySet();
 	}
 	

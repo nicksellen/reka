@@ -14,7 +14,7 @@ import reka.api.Path.PathElements;
 import reka.api.content.Contents;
 import reka.api.data.MutableData;
 import reka.api.run.SyncOperation;
-import reka.core.bundle.PortAndProtocol;
+import reka.core.bundle.NetworkInfo;
 
 public class RekaListOperation implements SyncOperation {
 	
@@ -34,21 +34,21 @@ public class RekaListOperation implements SyncOperation {
 			Application app = entry.getValue();
 			MutableData appdata = data.createMapAt(out.add(identity));
 			appdata.putString("name", app.name().slashes());
-			appdata.putBool("redeployable", manager.hasSourceFor(identity));
-			appdata.putBool("removable", manager.hasSourceFor(identity));
 			
-			MutableData portsdata = appdata.createListAt(path("ports"));
+			//appdata.putBool("redeployable", manager.hasSourceFor(identity));
+			//appdata.putBool("removable", manager.hasSourceFor(identity));
+			
+			MutableData portsdata = appdata.createListAt(path("network"));
 			int i = 0;
-			for (PortAndProtocol e : app.ports()) {
+			for (NetworkInfo e : app.network()) {
 				
 				Path base = path(PathElements.index(i));
 				
 				portsdata.put(base.add("port"), Contents.integer(e.port()));
 				portsdata.put(base.add("protocol"), Contents.utf8(e.protocol()));
 				
-				Path details = base.add("details");
 				e.details().forEachContent((path, content) -> {
-					portsdata.put(details.add(path), content);
+					portsdata.put(base.add(path), content);
 				});
 				
 				Optional<String> host = e.details().getString("host");

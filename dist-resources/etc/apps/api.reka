@@ -31,8 +31,9 @@ def main {
       reka/list response.content
     }
     GET /apps/:appid* {
-      reka/get response.content {
-        app :appid
+      reka/get {
+        out response.content
+        id :appid
       }
     }
     GET /apps/:appid*/flows/:flow*.:format {
@@ -54,8 +55,9 @@ def main {
             identity :appid
             filename :tmpdir/main.reka
           }
-          reka/get app {
-            app :appid
+          reka/get {
+            out app
+            id :appid
           }
           putv response {
             status 200

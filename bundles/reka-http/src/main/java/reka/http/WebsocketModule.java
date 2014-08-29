@@ -23,7 +23,6 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.SimpleDeployedResource;
 import reka.api.IdentityKey;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
@@ -162,6 +161,8 @@ public class WebsocketModule extends ModuleConfigurer {
 			triggers.put(message, combine(onMessage));
 		}
 		
+		if (listens.isEmpty()) return;
+		
 		httpSettingsRef.set(HttpSettings.http(listens.get(0).port, listens.get(0).host, Type.WEBSOCKET, -1)); // FIXME: hackety hack
 		
 		module.triggers(triggers, registration -> {
@@ -184,22 +185,18 @@ public class WebsocketModule extends ModuleConfigurer {
 					if (registration.has(connect)) { 
 						ws.connect(registration.get(connect));
 					}
+					
 					if (registration.has(disconnect)) {
 						ws.disconnect(registration.get(disconnect));
 					}
+					
 					if (registration.has(message)) {
 						ws.message(registration.get(message));
 					}
 					
 				});
 				
-				registration.resource(new SimpleDeployedResource() {
-					
-					@Override
-					public void undeploy(int version) {
-						server.undeploy(identity, version);
-					}
-				});
+				registration.undeploy(version -> server.undeploy(identity, version));
 				
 			}
 		});

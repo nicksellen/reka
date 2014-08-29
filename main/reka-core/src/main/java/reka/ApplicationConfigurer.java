@@ -36,9 +36,8 @@ import reka.core.builder.Flows;
 import reka.core.bundle.BundleManager;
 import reka.core.bundle.ModuleConfigurer;
 import reka.core.bundle.ModuleConfigurer.ModuleInitializer;
-import reka.core.bundle.ModuleSetup.MultiRegistration;
+import reka.core.bundle.ModuleSetup.MultiFlowRegistration;
 import reka.core.bundle.ModuleSetup.TriggerCollection;
-import reka.core.bundle.Registration;
 import reka.core.config.MultiConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.core.data.memory.MutableMemoryData;
@@ -189,35 +188,33 @@ public class ApplicationConfigurer implements ErrorReporter {
 						
 						applicationBuilder.flows(flows);
 						
-						Registration registration = new Registration(flows);
-						
 						initializer.triggers().forEach(triggers -> {
+							
 							Map<IdentityKey<Flow>,Flow> m = new HashMap<>();
+							
 							triggers.get().forEach(trigger -> {
 								m.put(trigger.key(), flows.flow(applicationName.add(trigger.key().name())));
 							});
-							MultiRegistration mr = new MultiRegistration(applicationVersion, identity, m);
+							
+							MultiFlowRegistration mr = new MultiFlowRegistration(applicationVersion, identity, m);
 							triggers.consumer().accept(mr);
-							applicationBuilder.register(mr);
+							
+							applicationBuilder.network().addAll(mr.network());
+							applicationBuilder.undeployConsumers().addAll(mr.undeployConsumers());
+							applicationBuilder.pauseConsumers().addAll(mr.pauseConsumers());
+							applicationBuilder.resumeConsumers().addAll(mr.resumeConsumers());
 				    	});
 						
-						registration.resource(new SimpleDeployedResource() {
-							
-							@Override
-							public void undeploy(int version) {
-								for (Runnable handler : shutdownHandlers) {
-									try {
-										handler.run();
-									} catch (Throwable t) {
-										t.printStackTrace();
-									}
+						applicationBuilder.undeployConsumers().add(version -> {
+							for (Runnable handler : shutdownHandlers) {
+								try {
+									handler.run();
+								} catch (Throwable t) {
+									t.printStackTrace();
 								}
 							}
-							
 						});
-						
-			    		applicationBuilder.register(registration);
-				    	
+			    		
 				    	future.complete(applicationBuilder.build());
 				    	
 				    	subscriber.ok(data);

@@ -16,10 +16,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.IntConsumer;
 import java.util.function.Supplier;
 
-import reka.DeployedResource;
-import reka.SimpleDeployedResource;
 import reka.api.IdentityKey;
 import reka.api.Path;
 import reka.api.data.Data;
@@ -181,17 +180,30 @@ public class ModuleSetup {
 		return this;
 	}
 
-	public static abstract class BaseRegistration {
+	private static abstract class BaseRegistration {
 
 		private final int applicationVersion;
 		private final String identity;
 
-		private final List<DeployedResource> resources = new ArrayList<>();
-		private final List<PortAndProtocol> network = new ArrayList<>();
+		private final List<NetworkInfo> network;
 		
-		public BaseRegistration(int applicationVersion, String identity) {
+		private final List<IntConsumer> undeployConsumers;
+		private final List<IntConsumer> pauseConsumers;
+		private final List<IntConsumer> resumeConsumers;
+		
+		public BaseRegistration(
+				int applicationVersion, 
+				String identity,
+				List<NetworkInfo> network,
+				List<IntConsumer> undeployConsumers,
+				List<IntConsumer> pauseConsumers,
+				List<IntConsumer> resumeConsumers) {
 			this.applicationVersion = applicationVersion;
 			this.identity = identity;
+			this.network = network;
+			this.undeployConsumers = undeployConsumers;
+			this.pauseConsumers = pauseConsumers;
+			this.resumeConsumers = resumeConsumers;
 		}
 
 		public int applicationVersion() {
@@ -202,39 +214,46 @@ public class ModuleSetup {
 			return identity;
 		}
 		
-		public void resource(DeployedResource r) {
-			resources.add(r);
+		public void undeploy(IntConsumer c) {
+			undeployConsumers.add(c);
+		}
+		
+		public void pause(IntConsumer c) {
+			pauseConsumers.add(c);
+		}
+		
+		public void resume(IntConsumer c) {
+			resumeConsumers.add	(c);
+		}
+		
+		public List<IntConsumer> undeployConsumers() {
+			return undeployConsumers;
+		}
+		
+		public List<IntConsumer> pauseConsumers() {
+			return pauseConsumers;
 		}
 
-		public void undeploy(Runnable r) {
-			resource(new SimpleDeployedResource() {
-				@Override
-				public void undeploy(int version) {
-					r.run();
-				}
-			});
+		public List<IntConsumer> resumeConsumers() {
+			return resumeConsumers;
 		}
 		
 		public void network(int port, String protocol, Data details) {
-			network.add(new PortAndProtocol(port, protocol, details));
+			network.add(new NetworkInfo(port, protocol, details));
 		}
 		
-		public List<DeployedResource> resources() {
-			return resources;
-		}
-		
-		public List<PortAndProtocol> network() {
+		public List<NetworkInfo> network() {
 			return network;
 		}
 		
 	}
 	
-	public static class MultiRegistration extends BaseRegistration {
+	public static class MultiFlowRegistration extends BaseRegistration {
 		
 		private final Map<IdentityKey<Flow>,Flow> map;
 		
-		public MultiRegistration(int applicationVersion, String identity, Map<IdentityKey<Flow>,Flow> map) {
-			super(applicationVersion, identity);
+		public MultiFlowRegistration(int applicationVersion, String identity, Map<IdentityKey<Flow>,Flow> map) {
+			super(applicationVersion, identity, new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
 			this.map = map;
 		}
 
@@ -246,18 +265,18 @@ public class ModuleSetup {
 			return map.get(name);
 		}
 		
-		public SingleRegistration singleFor(IdentityKey<Flow> name) {
-			return new SingleRegistration(applicationVersion(), applicationIdentity(), get(name));
+		public SingleFlowRegistration singleFor(IdentityKey<Flow> name) {
+			return new SingleFlowRegistration(this, get(name));
 		}
 		
 	}
 	
-	public static class SingleRegistration extends BaseRegistration {
+	public static class SingleFlowRegistration extends BaseRegistration {
 
 		private final Flow flow;
 		
-		public SingleRegistration(int applicationVersion, String identity, Flow flow) {
-			super(applicationVersion, identity);
+		private SingleFlowRegistration(BaseRegistration base, Flow flow) {
+			super(base.applicationVersion, base.identity, base.network, base.undeployConsumers, base.pauseConsumers, base.resumeConsumers);
 			this.flow = flow;
 		}
 		
@@ -270,9 +289,9 @@ public class ModuleSetup {
 	public static class TriggerCollection {
 		
 		private final List<Trigger> triggers;
-		private final Consumer<MultiRegistration> consumer;
+		private final Consumer<MultiFlowRegistration> consumer;
 		
-		public TriggerCollection(Collection<Trigger> triggers, Consumer<MultiRegistration> consumer) {
+		public TriggerCollection(Collection<Trigger> triggers, Consumer<MultiFlowRegistration> consumer) {
 			this.triggers = new ArrayList<>(triggers);
 			this.consumer = consumer;
 		}
@@ -281,7 +300,7 @@ public class ModuleSetup {
 			return triggers;
 		}
 		
-		public Consumer<MultiRegistration> consumer() {
+		public Consumer<MultiFlowRegistration> consumer() {
 			return consumer;
 		}
 		
@@ -307,24 +326,24 @@ public class ModuleSetup {
 		
 	}
 	
-	public ModuleSetup trigger(String name, ConfigBody body, Consumer<SingleRegistration> c) {
+	public ModuleSetup trigger(String name, ConfigBody body, Consumer<SingleFlowRegistration> c) {
 		return trigger(IdentityKey.of(name), body, c);
 	}
 
-	public ModuleSetup trigger(String name, Function<ConfigurerProvider, Supplier<FlowSegment>> supplier, Consumer<SingleRegistration> c) {
+	public ModuleSetup trigger(String name, Function<ConfigurerProvider, Supplier<FlowSegment>> supplier, Consumer<SingleFlowRegistration> c) {
 		return trigger(IdentityKey.of(name), supplier, c);
 	}
 	
-	public ModuleSetup triggers(Map<IdentityKey<Flow>,Function<ConfigurerProvider, Supplier<FlowSegment>>> suppliers, Consumer<MultiRegistration> cs) {
+	public ModuleSetup triggers(Map<IdentityKey<Flow>,Function<ConfigurerProvider, Supplier<FlowSegment>>> suppliers, Consumer<MultiFlowRegistration> cs) {
 		triggers.add(new TriggerCollection(suppliers.entrySet().stream().map(e -> new Trigger(e.getKey(), e.getValue())).collect(toList()), cs));
 		return this;
 	}
 
-	private ModuleSetup trigger(IdentityKey<Flow> key, ConfigBody body, Consumer<SingleRegistration> c) {
+	private ModuleSetup trigger(IdentityKey<Flow> key, ConfigBody body, Consumer<SingleFlowRegistration> c) {
 		return trigger(key,  (provider) -> configure(new SequenceConfigurer(provider), body), c);
 	}
 	
-	private ModuleSetup trigger(IdentityKey<Flow> key, Function<ConfigurerProvider, Supplier<FlowSegment>> supplier, Consumer<SingleRegistration> c) {
+	private ModuleSetup trigger(IdentityKey<Flow> key, Function<ConfigurerProvider, Supplier<FlowSegment>> supplier, Consumer<SingleFlowRegistration> c) {
 		Map<IdentityKey<Flow>,Function<ConfigurerProvider, Supplier<FlowSegment>>> suppliers = new HashMap<>();
 		suppliers.put(key, supplier);
 		return triggers(suppliers, m -> c.accept(m.singleFor(key)));

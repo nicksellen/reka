@@ -14,7 +14,6 @@ import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import reka.DeployedResource;
 import reka.api.flow.FlowSegment;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
@@ -100,16 +99,16 @@ public class HttpModule extends ModuleConfigurer {
 	}
 
 	@Override
-	public void setup(ModuleSetup http) {
+	public void setup(ModuleSetup module) {
 		
-		http.operation(path("router"), (provider) -> new HttpRouterConfigurer(provider));
-		http.operation(path("redirect"), () -> new HttpRedirectConfigurer());
-		http.operation(path("content"), () -> new HttpContentConfigurer());
-		http.operation(asList(path("request"), path("req")), () -> new HttpRequestConfigurer(server.group()));
+		module.operation(path("router"), (provider) -> new HttpRouterConfigurer(provider));
+		module.operation(path("redirect"), () -> new HttpRedirectConfigurer());
+		module.operation(path("content"), () -> new HttpContentConfigurer());
+		module.operation(asList(path("request"), path("req")), () -> new HttpRequestConfigurer(server.group()));
 		
 		for (Function<ConfigurerProvider, Supplier<FlowSegment>> h : requestHandlers) {
 			
-			http.trigger("http request", h, registration -> {
+			module.trigger("http request", h, registration -> {
 				
 				for (HostAndPort listen : listens) {
 					
@@ -122,29 +121,12 @@ public class HttpModule extends ModuleConfigurer {
 					
 					server.deployHttp(identity, registration.flow(), settings);
 					
-					registration.resource(new DeployedResource() {
-						
-						@Override
-						public void undeploy(int version) {
-							server.undeploy(identity, version);	
-						}
-						
-						@Override
-						public void pause(int version) {
-							server.pause(identity, version);
-						}
-
-						
-						@Override
-						public void resume(int version) {
-							server.resume(identity, version);
-						}
-						
-					});
+					registration.undeploy(version -> server.undeploy(identity, version));
+					registration.pause(version -> server.pause(identity, version));
+					registration.resume(version -> server.resume(identity, version));
 					
-					registration.network(port, settings.isSsl() ? "https" : "http", MutableMemoryData.create((details) -> {
+					registration.network(port, settings.isSsl() ? "https" : "http", MutableMemoryData.create(details -> {
 						details.putString("host", host);
-						details.putString("run", registration.flow().name().last().toString());
 					}).immutable());
 				
 				}

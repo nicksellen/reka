@@ -1,18 +1,16 @@
 package reka.core.bundle;
 
+import java.util.Optional;
+
 import reka.api.data.Data;
 
-public class PortAndProtocol {
+public class NetworkInfo {
 	
 	private final int port;
 	private final String protocol;
 	private final Data details;
 	
-	public PortAndProtocol(int port, String protocol) {
-		this(port, protocol, Data.NONE);
-	}
-	
-	public PortAndProtocol(int port, String protocol, Data details) {
+	public NetworkInfo(int port, String protocol, Data details) {
 		this.port = port;
 		this.protocol = protocol;
 		this.details = details;
@@ -33,11 +31,15 @@ public class PortAndProtocol {
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append(protocol).append('/').append(port);
-		if (details.isPresent()) {
-			sb.append(" ");
-			sb.append(details.toJson());
+		
+		Optional<String> host = details.getString("host");
+		
+		if (host.isPresent()) {
+			sb.append(protocol).append("://").append(host.get()).append(':').append(port);
+		} else {
+			sb.append(protocol).append(" on port ").append(port);
 		}
+		
 		return sb.toString(); 
 	}
 	
