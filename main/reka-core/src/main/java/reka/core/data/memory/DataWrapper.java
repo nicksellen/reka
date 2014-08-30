@@ -12,7 +12,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.BiConsumer;
 
 import org.codehaus.jackson.JsonGenerator;
@@ -103,7 +102,7 @@ public class DataWrapper<T> implements Data {
 	*/
 
 	@Override
-	public Set<PathElement> elements() {
+	public Collection<PathElement> elements() {
 		if (root == null) return Collections.emptySet();
 		return provider.elementsOf(root);
 	}

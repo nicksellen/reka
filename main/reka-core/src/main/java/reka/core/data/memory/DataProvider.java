@@ -7,7 +7,6 @@ import java.io.StringWriter;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.function.BiConsumer;
 
 import org.codehaus.jackson.JsonFactory;
@@ -49,7 +48,8 @@ public interface DataProvider<T> {
 	}
 	
 	int sizeOf(T obj);
-	Set<PathElement> elementsOf(T obj);
+	
+	Collection<PathElement> elementsOf(T obj);
 	Collection<T> valuesOf(T obj);
 	
 	void visitContent(T obj, Path path, BiConsumer<Path, Content> visitor);

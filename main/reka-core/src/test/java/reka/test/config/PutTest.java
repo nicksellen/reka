@@ -1,7 +1,8 @@
 package reka.test.config;
 
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static reka.api.Path.dots;
 import static reka.config.ConfigTestUtil.loadconfig;
 import static reka.config.configurer.Configurer.configure;
@@ -9,7 +10,7 @@ import static reka.util.Util.runtime;
 import static reka.util.Util.unchecked;
 
 import java.util.ArrayList;
-import java.util.Set;
+import java.util.Collection;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
 
@@ -75,7 +76,7 @@ public class PutTest {
 		Data data = configurePutWith("array-intent.put");
 		System.out.println(data.toPrettyJson());
 		assertTrue(data.at("people").isList());
-		Set<PathElement> es = data.at("people").elements();
+		Collection<PathElement> es = data.at("people").elements();
 		assertThat(es.size(), equalTo(4));
 		assertThat(data.at(dots("people[0]")).content().asUTF8(), equalTo("james"));
 		assertThat(data.at(dots("people[1]")).content().asUTF8(), equalTo("andrew"));

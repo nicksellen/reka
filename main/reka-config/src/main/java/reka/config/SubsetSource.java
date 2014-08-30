@@ -6,7 +6,7 @@ import static reka.config.SourceUtils.occurances;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.util.Collection;
+import java.util.List;
 
 public class SubsetSource extends AbstractSource {
 	
@@ -86,7 +86,7 @@ public class SubsetSource extends AbstractSource {
     }
     
     @Override
-    public Collection<Path> nestedFiles(String location) {
+    public List<Path> nestedFiles(String location) {
     	return parent.nestedFiles(location);
     }
     

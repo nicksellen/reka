@@ -70,7 +70,7 @@ public class RekaModule extends ModuleConfigurer {
 		module.operation(path("visualize"), () -> new RekaVisualizeConfigurer(manager));
 		
 		for (ConfigBody body : deployHandlers) {			
-			module.trigger("deploy", body, registration -> {
+			module.trigger("on deploy", body, registration -> {
 				Flow flow = registration.flow();
 				manager.addDeployListener(flow);
 				registration.undeploy(version -> { 
@@ -80,7 +80,7 @@ public class RekaModule extends ModuleConfigurer {
 		}		
 
 		for (ConfigBody body : undeployHandlers) {			
-			module.trigger("undeploy", body, registration -> {
+			module.trigger("on undeploy", body, registration -> {
 				Flow flow = registration.flow();
 				manager.addUndeployListener(flow);
 				registration.undeploy(version -> { 

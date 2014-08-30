@@ -21,7 +21,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.OptionalInt;
-import java.util.Set;
 import java.util.function.BiConsumer;
 
 import reka.api.Hashable;
@@ -89,11 +88,6 @@ public interface Data extends Iterable<Entry<PathElement,Data>>, JsonProvider, O
 	}
 	
 	void forEachContent(BiConsumer<Path,Content> visitor);
-	/*
-	default void forEachContent(BiConsumer<Path,Content> visitor) {
-		visitEachContent(this, visitor);
-	}
-	*/
 	
 	default Optional<Content> firstContent() {
 		return Optional.ofNullable(getFirstContent(this));
@@ -154,7 +148,7 @@ public interface Data extends Iterable<Entry<PathElement,Data>>, JsonProvider, O
 	
 	Iterator<Entry<PathElement,Data>> iterator();
 	
-	Set<PathElement> elements();
+	Collection<PathElement> elements();
 	Collection<Data> values();
 	int size();
 	

@@ -23,7 +23,7 @@ public class Graphviz {
 	}
 	
 	public static void writeDotTo(String dot, String output, String format) {
-		String cmd = "/usr/local/bin/dot";
+		String cmd = "/usr/bin/dot";
 		
 		try {
 			File f = File.createTempFile("dot", "dot");

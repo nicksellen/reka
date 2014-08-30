@@ -12,33 +12,23 @@ import de.neuland.jade4j.template.JadeTemplate;
 public class Jade implements DataOperation {
 	
 	private final JadeTemplate template;
-	private final Path inputPath;
-	private final Path outputPath;
+	private final Path in;
+	private final Path out;
 	private final boolean mainResponse;
 
-	public Jade(JadeTemplate template, Path inputPath, Path outputPath) {
+	public Jade(JadeTemplate template, Path in, Path out) {
 		this.template = template;
-		this.inputPath = inputPath;
-		this.outputPath = outputPath;
-		this.mainResponse = outputPath.equals(Response.CONTENT);
+		this.in = in;
+		this.out = out;
+		this.mainResponse = out.equals(Response.CONTENT);
 	}
-
-	/*
-	@Override
-	public MutableData call(MutableData data) {
-		if (mainResponse) data.putString(Response.Headers.CONTENT_TYPE, "text/html");
-		StringWriter writer = new StringWriter();
-        template.process(new JadeModel(data.at(inputPath).viewAsMap()), writer);
-	    return data.putString(outputPath, writer.toString());
-	}
-	*/
 
 	@Override
 	public void run(MutableData data, OperationContext ctx) {
 		if (mainResponse) data.putString(Response.Headers.CONTENT_TYPE, "text/html");
 		StringWriter writer = new StringWriter();
-        template.process(new JadeModel(data.at(inputPath).viewAsMap()), writer);
-	    data.putString(outputPath, writer.toString());
+        template.process(new JadeModel(data.at(in).viewAsMap()), writer);
+	    data.putString(out, writer.toString());
 	    ctx.end();
 	}
 	

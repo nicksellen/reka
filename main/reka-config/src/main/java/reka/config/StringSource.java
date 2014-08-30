@@ -2,7 +2,7 @@ package reka.config;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.util.Collection;
+import java.util.List;
 
 public class StringSource extends AbstractSource {
     
@@ -43,7 +43,7 @@ public class StringSource extends AbstractSource {
     }
     
     @Override
-    public Collection<Path> nestedFiles(String location) {
+    public List<Path> nestedFiles(String location) {
         throw new UnsupportedOperationException();
     }
 

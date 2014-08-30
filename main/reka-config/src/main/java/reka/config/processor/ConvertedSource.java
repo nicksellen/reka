@@ -5,7 +5,7 @@ import static java.lang.String.format;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.util.Collection;
+import java.util.List;
 
 import reka.config.AbstractSource;
 import reka.config.Source;
@@ -82,7 +82,7 @@ public class ConvertedSource extends AbstractSource {
     }
     
     @Override
-    public Collection<Path> nestedFiles(String location) {
+    public List<Path> nestedFiles(String location) {
     	return parent.nestedFiles(location);
     }
 

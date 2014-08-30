@@ -91,7 +91,7 @@ public class ProcessModule extends ModuleConfigurer {
 		AtomicReference<Consumer<String>> triggerRef = new AtomicReference<>();
 		
 		if (onLine != null) {
-			module.trigger("line", onLine, registration -> {
+			module.trigger("on line", onLine, registration -> {
 				triggerRef.set(line -> {
 					registration.flow()
 						.prepare()

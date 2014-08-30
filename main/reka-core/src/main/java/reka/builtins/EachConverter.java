@@ -1,9 +1,10 @@
 package reka.builtins;
 
-import static java.lang.String.format;
+import static java.util.Collections.reverseOrder;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 
 import java.nio.file.Path;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -20,8 +21,7 @@ import com.google.common.base.Charsets;
 
 public final class EachConverter implements ConfigConverter {
 
-	private static final String KEY = "@each";
-	private static final Pattern KEY_INCLUDE = Pattern.compile("^" + KEY + "(?:\\(([^\\s\\(\\)]*)\\))?$");
+	private static final Pattern KEY_INCLUDE = Pattern.compile("^@(reverse\\-)?each(?:\\(([^\\s\\(\\)]*)\\))?$");
 	
 	private static final Pattern EXTENSION = Pattern.compile("^(.+)\\.([^\\.]+)$");
 	
@@ -31,9 +31,15 @@ public final class EachConverter implements ConfigConverter {
     	if (config.hasKey() && config.hasBody()) {
     		Matcher m = KEY_INCLUDE.matcher(config.key());
     		if (m.matches()) {
-    			String path = m.group(1);
-    			checkConfig(config.source().supportsNestedFile(), "cannot use %s as we don't support nested files here", KEY);
-    			for (Path file : config.source().nestedFiles(path)) {
+    			boolean reverse = m.group(1) != null;
+    			String path = m.group(2);
+    			checkConfig(config.source().supportsNestedFile(), "cannot use each as we don't support nested files here");
+    			
+    			List<Path> files = config.source().nestedFiles(path);
+    			
+    			if (reverse) files.sort(reverseOrder());
+    			
+    			for (Path file : files) {
 
     				String basename = file.getFileName().toString();
     				
@@ -51,15 +57,13 @@ public final class EachConverter implements ConfigConverter {
     					data.putString("filename", basename);
     					data.putString("extension", "");
     				}
+    				
     				out.add(new Processor(new VarReplaceConverter(data.immutable())).process(config.body()));
+    				
     			}
     			
     			return;
     		}
-    	}
-    	
-    	if (config.hasValue() && config.valueAsString().contains(KEY)) {
-    		throw new RuntimeException(format("we failed to process the %s val [%s] in [%s]", KEY, config.valueAsString(), config));
     	}
 
 		out.add(config);
@@ -85,7 +89,7 @@ public final class EachConverter implements ConfigConverter {
 			if (config.hasDocument()) {
 				String docType = replaceVars(config.documentType());
 				byte[] docContent = replaceVars(new String(config.documentContentAsString())).getBytes(Charsets.UTF_8);
-				out.doc(new KeyVal(key, subkey), docType, docContent);
+				out.doc(new KeyVal(key, subkey), value, docType, docContent);
 			} else if (config.hasBody()) {
 				out.obj(new KeyVal(key, subkey), value, config.body());
 			} else if (config.hasValue()){

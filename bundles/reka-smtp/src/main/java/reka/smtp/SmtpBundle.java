@@ -80,7 +80,7 @@ public class SmtpBundle implements RekaBundle {
 		@Override
 		public void setup(ModuleSetup use) {
 			if (emailHandler != null) {
-				use.trigger("email", emailHandler, registration -> {
+				use.trigger("on email", emailHandler, registration -> {
 					SMTPServer smtpServer = new SMTPServer(
 							new SimpleMessageListenerAdapter(
 								new EmailListener(registration.flow())));

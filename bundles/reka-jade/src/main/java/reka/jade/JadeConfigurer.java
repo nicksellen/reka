@@ -78,7 +78,7 @@ public class JadeConfigurer implements Supplier<FlowSegment> {
 	@Override
 	public FlowSegment get() {
 		if (out == null) out = Path.Response.CONTENT;
-	    return dataop("render", () -> new Jade(template, in, out));
+	    return dataop("jade", () -> new Jade(template, in, out));
 	}
 	
 }

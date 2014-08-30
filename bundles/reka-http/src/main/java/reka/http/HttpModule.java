@@ -5,10 +5,12 @@ import static java.util.Arrays.asList;
 import static reka.api.Path.path;
 import static reka.config.configurer.Configurer.configure;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
+import static reka.util.Util.createEntry;
 import static reka.util.Util.runtime;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
@@ -38,6 +40,9 @@ public class HttpModule extends ModuleConfigurer {
 	
 	private final Pattern listenPortOnly = Pattern.compile("^[0-9]+$");
 	private final Pattern listenHostAndPort = Pattern.compile("^(.+):([0-9]+)$");
+	
+	@SuppressWarnings("unused") // haven't implemented this yet
+	private BasicAuthConfigurer auth;
 	
 	public class HostAndPort {
 		private final String host;
@@ -80,6 +85,33 @@ public class HttpModule extends ModuleConfigurer {
 		}
 		listens.add(new HostAndPort(host, port));
 	}
+	
+	@Conf.At("auth")
+	public void auth(Config config) {
+		checkConfig(config.hasValue(), "must have a value");
+		switch (config.valueAsString()) {
+		case "basic":
+			auth = configure(new BasicAuthConfigurer(), config.body());
+			break;
+		default:
+			throw runtime("unknown auth method %s", config.valueAsString());
+		}
+	}
+	
+	public static class BasicAuthConfigurer {
+		
+		private final List<Entry<String,String>> accounts = new ArrayList<>();
+		
+		@Conf.Config
+		public void accounts(Config config) {
+			for (Config c : config.body()) {
+				String username = c.key();
+				String password = c.valueAsString();
+				accounts.add(createEntry(username, password));
+			}
+		}
+		
+	}
 
 	@Conf.Each("on")
 	public void on(Config config) {
@@ -104,11 +136,11 @@ public class HttpModule extends ModuleConfigurer {
 		module.operation(path("router"), (provider) -> new HttpRouterConfigurer(provider));
 		module.operation(path("redirect"), () -> new HttpRedirectConfigurer());
 		module.operation(path("content"), () -> new HttpContentConfigurer());
-		module.operation(asList(path("request"), path("req")), () -> new HttpRequestConfigurer(server.group()));
+		module.operation(asList(path("request"), path("req")), () -> new HttpRequestConfigurer(server.nettyEventGroup()));
 		
 		for (Function<ConfigurerProvider, Supplier<FlowSegment>> h : requestHandlers) {
 			
-			module.trigger("http request", h, registration -> {
+			module.trigger("on http request", h, registration -> {
 				
 				for (HostAndPort listen : listens) {
 					

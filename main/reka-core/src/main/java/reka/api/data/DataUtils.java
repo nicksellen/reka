@@ -8,6 +8,8 @@ import static reka.util.Util.unchecked;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.BiConsumer;
@@ -108,8 +110,8 @@ final class DataUtils {
 			return false;
 		}
 		
-		Set<PathElement> aElements = a.elements();
-		Set<PathElement> bElements = b.elements();
+		Collection<PathElement> aElements = a.elements();
+		Collection<PathElement> bElements = b.elements();
 		
 		if (!aElements.equals(bElements)) {
 			return false;
@@ -146,8 +148,8 @@ final class DataUtils {
 			visitor.accept(base, DiffPathType.ADDED);
 		}
 		
-		Set<PathElement> aElements = a.elements();
-		Set<PathElement> bElements = b.elements();
+		Set<PathElement> aElements = new HashSet<>(a.elements());
+		Set<PathElement> bElements = new HashSet<>(b.elements());
 		
 		if (aElements.isEmpty() && bElements.isEmpty()) return;
 		
@@ -185,8 +187,8 @@ final class DataUtils {
 			visitor.accept(base, DiffContentType.ADDED, null, b.getContent(root()).get());
 		}
 		
-		Set<PathElement> aElements = a.elements();
-		Set<PathElement> bElements = b.elements();
+		Set<PathElement> aElements = new HashSet<>(a.elements());
+		Set<PathElement> bElements = new HashSet<>(b.elements());
 		
 		if (aElements.isEmpty() && bElements.isEmpty()) return;
 		

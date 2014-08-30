@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.locks.StampedLock;
 import java.util.function.BiConsumer;
@@ -161,7 +160,7 @@ public class AtomicMutableMemoryData implements AtomicMutableData {
 	}
 
 	@Override
-	public Set<PathElement> elements() {
+	public Collection<PathElement> elements() {
 		long stamp = lock.readLock();
 		try {
 			return data.elements();

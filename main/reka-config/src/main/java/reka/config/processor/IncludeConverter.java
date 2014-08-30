@@ -48,7 +48,7 @@ public final class IncludeConverter implements ConfigConverter {
     			return;
     		}
     		
-    	}
+    	} 
     	
     	if (config.hasValue()) {
     		Matcher m = VAL_INCLUDE.matcher(config.valueAsString());

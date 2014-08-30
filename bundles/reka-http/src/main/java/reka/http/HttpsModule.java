@@ -135,11 +135,11 @@ public class HttpsModule extends ModuleConfigurer implements ErrorReporter {
 		http.operation(path("router"), (provider) -> new HttpRouterConfigurer(provider));
 		http.operation(path("redirect"), () -> new HttpRedirectConfigurer());
 		http.operation(path("content"), () -> new HttpContentConfigurer());
-		http.operation(asList(path("request"), path("req")), () -> new HttpRequestConfigurer(server.group()));
+		http.operation(asList(path("request"), path("req")), () -> new HttpRequestConfigurer(server.nettyEventGroup()));
 		
 		for (Function<ConfigurerProvider, Supplier<FlowSegment>> h : requestHandlers) {
 			
-			http.trigger("https request", h, registration -> {
+			http.trigger("on https request", h, registration -> {
 				
 				for (HostAndPort listen : listens) {
 					

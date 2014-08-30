@@ -1,7 +1,7 @@
 package reka.core.data.memory;
 
 import static java.lang.String.format;
-import static java.util.stream.Collectors.toSet;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.range;
 import static reka.api.Path.dots;
 import static reka.api.Path.root;
@@ -27,7 +27,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -203,7 +202,7 @@ public class MutableMemoryData implements MutableDataProvider<Object> {
 	
 	@Override
 	@SuppressWarnings("unchecked")
-	public Set<PathElement> elementsOf(Object obj) {
+	public Collection<PathElement> elementsOf(Object obj) {
 		if (obj instanceof Map) {
 			return mapElements((Map<String,Object>) obj);
 		} else if (obj instanceof List) {
@@ -213,12 +212,12 @@ public class MutableMemoryData implements MutableDataProvider<Object> {
 		}
 	}
 	
-	private Set<PathElement> mapElements(Map<String,Object> m) {
-		return m.keySet().stream().map(PathElements::name).collect(toSet());
+	private Collection<PathElement> mapElements(Map<String,Object> m) {
+		return m.keySet().stream().map(PathElements::name).collect(toList());
 	}
 	
-	private Set<PathElement> listElements(List<Object> l) {
-		return range(0, l.size()).mapToObj(PathElements::index).collect(toSet());
+	private Collection<PathElement> listElements(List<Object> l) {
+		return range(0, l.size()).mapToObj(PathElements::index).collect(toList());
 	}
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })

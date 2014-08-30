@@ -14,7 +14,6 @@ import java.nio.file.PathMatcher;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -107,7 +106,7 @@ public class FileSource extends AbstractSource {
     }
     
     @Override
-    public Collection<Path> nestedFiles(String location) {
+    public List<Path> nestedFiles(String location) {
     	
     	Path base = file.toPath().getParent();
     	
@@ -139,6 +138,8 @@ public class FileSource extends AbstractSource {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
+    	
+    	files.sort((a, b) -> a.compareTo(b));
     	
     	return files;
     }

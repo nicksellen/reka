@@ -33,15 +33,15 @@ public class HttpServerManager {
 	
 	private static final Logger logger = LoggerFactory.getLogger(HttpServerManager.class.getSimpleName());
 
-	private final NioEventLoopGroup group = new NioEventLoopGroup();
+	private final NioEventLoopGroup nettyEventGroup = new NioEventLoopGroup();
 	
 	private final Map<Integer,PortHandler> handlers = new HashMap<>();
 		
 	private final Object lock = new Object();
 	private final Map<String,HttpSettings> deployed = new HashMap<>();
 	
-	public NioEventLoopGroup group() {
-		return group;
+	public NioEventLoopGroup nettyEventGroup() {
+		return nettyEventGroup;
 	}
 	
 	private class PortHandler {
@@ -131,7 +131,7 @@ public class HttpServerManager {
 			
 			ServerBootstrap bootstrap = new ServerBootstrap()
 				.localAddress(port)
-				.group(group)
+				.group(nettyEventGroup)
 				.channel(NioServerSocketChannel.class)
 				.option(ChannelOption.TCP_NODELAY, true)
 				.option(ChannelOption.SO_REUSEADDR, true)

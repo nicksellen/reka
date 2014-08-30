@@ -61,6 +61,7 @@ import reka.core.config.SequenceConfigurer;
 import reka.core.data.memory.MutableMemoryData;
 import reka.core.util.StringWithVars;
 
+import com.google.common.base.Splitter;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -96,6 +97,68 @@ public class BuiltinsModule extends ModuleConfigurer {
     	module.operation(slashes("coerce/int64"), () -> new Coercion.CoerceLongConfigurer());
     	module.operation(slashes("coerce/bool"), () -> new Coercion.CoerceBooleanConfigurer());
     	module.operation(path("unzip"), () -> new UnzipConfigurer());
+    	module.operation(path("split"), () -> new SplitConfigurer());
+		
+	}
+	
+	public static class SplitConfigurer implements Supplier<FlowSegment>, ErrorReporter {
+		
+		private Function<Data,Path> inFn, outFn;
+		private String on = ",";
+		
+		@Conf.Val
+		@Conf.At("in")
+		public void in(String val) {
+			inFn = StringWithVars.compile(val).andThen(s -> dots(s));
+			if (outFn == null) outFn = inFn;
+		}
+
+		@Conf.At("out")
+		public void out(String val) {
+			outFn = StringWithVars.compile(val).andThen(s -> dots(s));
+		}
+		
+		@Conf.At("on")
+		public void on(String val) {
+			on = val;
+		}
+
+		@Override
+		public void errors(ErrorCollector errors) {
+			errors.checkConfigPresent(inFn, "in is required");
+			errors.checkConfigPresent(outFn, "out is required");
+		}
+
+		@Override
+		public FlowSegment get() {
+			return sync("split", () -> new SplitOperation(inFn, outFn, Splitter.on(on)));
+		}
+		
+	}
+	
+	public static class SplitOperation implements SyncOperation {
+		
+		private final Splitter splitter;
+		private final Function<Data,Path> inFn, outFn;
+		
+		public SplitOperation(Function<Data,Path> inFn, Function<Data,Path> outFn, Splitter splitter) {
+			this.inFn = inFn;
+			this.outFn = outFn;
+			this.splitter = splitter;
+		}
+
+		@Override
+		public MutableData call(MutableData data) {
+			Data val = data.at(inFn.apply(data));
+			if (val.isContent()) {
+				data.putList(outFn.apply(data), list -> {
+					for (String s : splitter.split(val.content().asUTF8())) {
+						list.addString(s);
+					}
+				});
+			}
+			return data;
+		}
 		
 	}
 	
@@ -402,7 +465,7 @@ public class BuiltinsModule extends ModuleConfigurer {
 	
 	public static class SleepOperation implements AsyncOperation {
 
-		
+		// shared for all sleep operations
 		private static final ScheduledExecutorService e = Executors.newScheduledThreadPool(1);
 		
 		private final long ms;
