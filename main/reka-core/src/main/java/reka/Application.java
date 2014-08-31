@@ -1,5 +1,7 @@
 package reka;
 
+import static java.util.Comparator.naturalOrder;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -84,6 +86,7 @@ public class Application {
 		for (Flow flow : flows.all()) {
 			names.add(flow.name());
 		}
+		names.sort(naturalOrder());
 		return names;
 	}
 	

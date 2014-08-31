@@ -35,12 +35,19 @@ public class NetworkInfo {
 		Optional<String> host = details.getString("host");
 		
 		if (host.isPresent()) {
-			sb.append(protocol).append("://").append(host.get()).append(':').append(port);
+			sb.append(protocol).append("://").append(host.get());
+			if (!isDefaultPort()) sb.append(':').append(port);
 		} else {
 			sb.append(protocol).append(" on port ").append(port);
 		}
 		
 		return sb.toString(); 
+	}
+	
+	private boolean isDefaultPort() {
+		return ("https".equals(protocol) && port == 443) || 
+			   ("http".equals(protocol) && port == 80) || 
+			   ("smtp".equals(protocol) && port == 25);
 	}
 	
 }
