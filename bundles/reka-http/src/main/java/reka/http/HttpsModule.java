@@ -139,7 +139,7 @@ public class HttpsModule extends ModuleConfigurer implements ErrorReporter {
 		
 		for (Function<ConfigurerProvider, Supplier<FlowSegment>> h : requestHandlers) {
 			
-			http.trigger("on https request", h, registration -> {
+			http.trigger("on request", h, registration -> {
 				
 				for (HostAndPort listen : listens) {
 					

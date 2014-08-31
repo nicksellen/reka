@@ -37,6 +37,7 @@ import reka.core.bundle.BundleManager;
 import reka.core.bundle.ModuleConfigurer;
 import reka.core.bundle.ModuleConfigurer.ModuleInitializer;
 import reka.core.bundle.ModuleSetup.MultiFlowRegistration;
+import reka.core.bundle.ModuleSetup.Trigger;
 import reka.core.bundle.ModuleSetup.TriggerCollection;
 import reka.core.config.MultiConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
@@ -140,6 +141,10 @@ public class ApplicationConfigurer implements ErrorReporter {
     	
     }
     
+    private Path triggerPath(Trigger trigger) {
+    	return applicationName.add(trigger.base()).add(trigger.key().name());
+    }
+    
     public CompletableFuture<Application> build(String identity, int applicationVersion, Application previous, final Subscriber s) {
 
     	CompletableFuture<Application> future = new CompletableFuture<>();
@@ -163,7 +168,7 @@ public class ApplicationConfigurer implements ErrorReporter {
 	    	
 	    	initializer.triggers().forEach(triggers -> {
 	    		triggers.get().forEach(trigger -> {
-	    			flowBuilders.add(applicationName.add(trigger.key().name()), trigger.supplier().apply(configurerProvider).get());
+	    			flowBuilders.add(triggerPath(trigger), trigger.supplier().apply(configurerProvider).get());
 	    		});
 	    	});
 	    	
@@ -193,7 +198,7 @@ public class ApplicationConfigurer implements ErrorReporter {
 							Map<IdentityKey<Flow>,Flow> m = new HashMap<>();
 							
 							triggers.get().forEach(trigger -> {
-								m.put(trigger.key(), flows.flow(applicationName.add(trigger.key().name())));
+								m.put(trigger.key(), flows.flow(triggerPath(trigger)));
 							});
 							
 							MultiFlowRegistration mr = new MultiFlowRegistration(applicationVersion, identity, m);

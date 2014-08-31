@@ -140,7 +140,7 @@ public class HttpModule extends ModuleConfigurer {
 		
 		for (Function<ConfigurerProvider, Supplier<FlowSegment>> h : requestHandlers) {
 			
-			module.trigger("on http request", h, registration -> {
+			module.trigger("on request", h, registration -> {
 				
 				for (HostAndPort listen : listens) {
 					

@@ -118,8 +118,8 @@ public class MutableDataWrapper<T> extends DataWrapper<T> implements Data, Mutab
 	public MutableData putMap(Path path, Consumer<MapMutation> consumer) {
 		BatchMutateMap mutation = new BatchMutateMap(provider.createMap());
 		consumer.accept(mutation);
-		for (String key : mutation.removed) {
-			 provider.remove(root, path.add(key));
+		for (Path p : mutation.removed) {
+			 provider.remove(root, path.add(p));
 		}
 		root = provider.put(root, path, mutation.map);
 		return this;
@@ -193,7 +193,7 @@ public class MutableDataWrapper<T> extends DataWrapper<T> implements Data, Mutab
 	
 	private final class BatchMutateMap implements MapMutation {
 		
-		private final List<String> removed = new ArrayList<>();
+		private final List<Path> removed = new ArrayList<>();
 		
 		private volatile T map;
 		
@@ -202,38 +202,38 @@ public class MutableDataWrapper<T> extends DataWrapper<T> implements Data, Mutab
 		}
 
 		@Override
-		public MapMutation remove(String key) {
-			removed.add(key);
+		public MapMutation remove(Path path) {
+			removed.add(path);
 			return this;
 		}
 
 		@Override
-		public MapMutation put(String key, Data data) {
+		public MapMutation put(Path path, Data data) {
 			MutableDataWrapper<T> other = otherOrNull(data);
 			checkArgument(other != null, "we only support putting MemoryData in (for now)");
-			provider.put(map, path(key), other.root);
+			provider.put(map, path, other.root);
 			return this;
 		}
 
 		@Override
-		public MapMutation put(String key, Content content) {
-			provider.putContent(map, path(key), content);
+		public MapMutation put(Path path, Content content) {
+			provider.putContent(map, path, content);
 			return this;
 		}
 
 		@Override
-		public MapMutation putList(String key,Consumer<ListMutation> consumer) {
+		public MapMutation putList(Path path,Consumer<ListMutation> consumer) {
 			BatchMutateList mutation = new BatchMutateList(provider.createList());
 			consumer.accept(mutation);
-			provider.put(map, path(key), mutation.list);
+			provider.put(map, path, mutation.list);
 			return this;
 		}
 
 		@Override
-		public MapMutation putMap(String key, Consumer<MapMutation> consumer) {
+		public MapMutation putMap(Path path, Consumer<MapMutation> consumer) {
 			BatchMutateMap mutation = new BatchMutateMap(provider.createMap());
 			consumer.accept(mutation);
-			provider.put(map, path(key), mutation.map);
+			provider.put(map, path, mutation.map);
 			return this;
 		}
 	}

@@ -307,13 +307,19 @@ public class ModuleSetup {
 	}
 	
 	public static class Trigger {
-		
+
+		private final Path base;
 		private final IdentityKey<Flow> name;
 		private final Function<ConfigurerProvider, Supplier<FlowSegment>> supplier;
 		
-		public Trigger(IdentityKey<Flow> name, Function<ConfigurerProvider, Supplier<FlowSegment>> supplier) {
+		public Trigger(Path base, IdentityKey<Flow> name, Function<ConfigurerProvider, Supplier<FlowSegment>> supplier) {
+			this.base = base;
 			this.name = name;
 			this.supplier = supplier;
+		}
+
+		public Path base() {
+			return base;
 		}
 		
 		public IdentityKey<Flow> key() {
@@ -335,7 +341,7 @@ public class ModuleSetup {
 	}
 	
 	public ModuleSetup triggers(Map<IdentityKey<Flow>,Function<ConfigurerProvider, Supplier<FlowSegment>>> suppliers, Consumer<MultiFlowRegistration> cs) {
-		triggers.add(new TriggerCollection(suppliers.entrySet().stream().map(e -> new Trigger(e.getKey(), e.getValue())).collect(toList()), cs));
+		triggers.add(new TriggerCollection(suppliers.entrySet().stream().map(e -> new Trigger(path, e.getKey(), e.getValue())).collect(toList()), cs));
 		return this;
 	}
 

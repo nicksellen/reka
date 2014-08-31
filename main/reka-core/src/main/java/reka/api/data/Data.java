@@ -22,6 +22,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import reka.api.Hashable;
 import reka.api.JsonProvider;
@@ -102,6 +103,14 @@ public interface Data extends Iterable<Entry<PathElement,Data>>, JsonProvider, O
 	boolean isMap();
 	boolean isList();
 	boolean isContent();
+	
+	default void ifPresent(Consumer<Data> consumer) {
+		if (isPresent()) consumer.accept(this);
+	}
+	
+	default void ifContent(Consumer<Content> consumer) {
+		if (isContent()) consumer.accept(this.content());
+	}
 	
 	default Data at(PathElement element) {
 		return at(path(element));

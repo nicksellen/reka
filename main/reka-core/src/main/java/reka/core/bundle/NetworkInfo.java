@@ -44,7 +44,7 @@ public class NetworkInfo {
 		return sb.toString(); 
 	}
 	
-	private boolean isDefaultPort() {
+	public boolean isDefaultPort() {
 		return ("https".equals(protocol) && port == 443) || 
 			   ("http".equals(protocol) && port == 80) || 
 			   ("smtp".equals(protocol) && port == 25);
