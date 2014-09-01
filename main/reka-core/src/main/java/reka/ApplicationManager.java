@@ -130,11 +130,7 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 			app.undeploy();
 			log.info("undeployed [{}]", app.fullName());
 			
-			undeployListeners.forEach(flow -> {
-				if (!app.flows().all().contains(flow)) {
-					flow.prepare().data(MutableMemoryData.create().putString("id", identity)).run();
-				}
-			});
+			notifyUndeployListeners(identity, app);
 			
 			if (source != null && source.isFile()) {
 				deployedFilenames.remove(source.file().getAbsolutePath());
@@ -145,6 +141,20 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 		}
 	}
 
+	private void notifyDeployListeners(String identity, Application app) {
+		deployListeners.forEach(flow -> {
+			flow.prepare().data(MutableMemoryData.create().putString("id", identity)).run();
+		});
+	}
+	
+	private void notifyUndeployListeners(String identity, Application app) {
+		undeployListeners.forEach(flow -> {
+			if (!app.flows().all().contains(flow)) { // don't notify the app itself, it's been undeployed...
+				flow.prepare().data(MutableMemoryData.create().putString("id", identity)).run();
+			}
+		});
+	}
+	
 	public void redeploy(String identity) {
 		redeploy(identity, EverythingSubscriber.DO_NOTHING);
 	}
@@ -190,13 +200,7 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 						if (app != null) {
 							applications.put(identity, app);
 							log.info("deployed [{}] listening on {}", app.fullName(), app.network().stream().map(Object::toString).collect(joining(", ")));
-							
-							deployListeners.forEach(flow -> {
-								if (!app.flows().all().contains(flow)) {
-									flow.prepare().data(MutableMemoryData.create().putString("id", identity)).run();
-								}
-							});
-							
+							notifyDeployListeners(identity, app);							
 						}
 						saveState();
 					} finally {
@@ -288,11 +292,7 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 								
 								log.info("deployed [{}] listening on {}", app.fullName(), app.network().stream().map(Object::toString).collect(joining(", ")));
 								
-								deployListeners.forEach(flow -> {
-									if (!app.flows().all().contains(flow)) {
-										flow.prepare().data(MutableMemoryData.create().putString("id", identity)).run();
-									}
-								});
+								notifyDeployListeners(identity, app);						
 								
 							} else if (ex != null) {
 								log.info("exception whilst deploying!");

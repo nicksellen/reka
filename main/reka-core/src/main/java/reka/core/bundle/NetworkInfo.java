@@ -4,7 +4,7 @@ import java.util.Optional;
 
 import reka.api.data.Data;
 
-public class NetworkInfo {
+public class NetworkInfo implements Comparable<NetworkInfo> {
 	
 	private final int port;
 	private final String protocol;
@@ -48,6 +48,17 @@ public class NetworkInfo {
 		return ("https".equals(protocol) && port == 443) || 
 			   ("http".equals(protocol) && port == 80) || 
 			   ("smtp".equals(protocol) && port == 25);
+	}
+
+	@Override
+	public int compareTo(NetworkInfo o) {
+		if (!protocol.equals(o.protocol)) {
+			return protocol.compareTo(o.protocol);
+		} else if (port != o.port) {
+			return Integer.compare(port, o.port);
+		} else {
+			return 0;
+		}
 	}
 	
 }

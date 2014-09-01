@@ -1,5 +1,6 @@
 package reka.core.builder;
 
+import static java.util.Comparator.naturalOrder;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.stream.Collectors.toSet;
 
@@ -20,16 +21,19 @@ public class Flows {
 	private final Map<Path,FlowVisualizer> visualizersByName = new HashMap<>();
 	
 	private final List<Path> names = new ArrayList<>();
+	private final List<Flow> all = new ArrayList<>();
 
 	public void add(Flow flow, FlowVisualizer visualizer) {
 		flows.put(flow, visualizer);
 		flowsByName.put(flow.name(), flow);
 		visualizersByName.put(flow.name(), visualizer);
 		names.add(flow.name());
+		all.addAll(flows.keySet());
+		all.sort(naturalOrder());
 	}
 	
 	public Collection<Flow> all() {
-		return flows.keySet();
+		return all;
 	}
 	
 	public Map<Flow,FlowVisualizer> flowsAndVisualizers() {

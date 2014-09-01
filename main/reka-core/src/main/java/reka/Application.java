@@ -51,6 +51,7 @@ public class Application {
 		this.undeployConsumers.addAll(undeployConsumers);
 		this.pauseConsumers.addAll(pauseConsumers);
 		this.resumeConsumers.addAll(resumeConsumers);
+		this.network.sort(naturalOrder());
 	}
 		
 	public Path name() {

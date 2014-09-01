@@ -1,6 +1,5 @@
 package reka.http.operations;
 
-import static java.lang.String.format;
 import static reka.api.content.Contents.binary;
 import static reka.api.content.Contents.integer;
 import static reka.api.content.Contents.utf8;
@@ -45,7 +44,7 @@ public class HttpContentWithETag implements SyncOperation {
 			
 			if (contentBytes.length > PUT_IN_FILE_THRESHOLD) {
 				try {
-					File f = Files.createTempFile("reka.", format(".%s", contentType.asUTF8().replaceAll("[^a-zA-Z0-9_\\-]", "__"))).toFile();
+					File f = Files.createTempFile("reka.", "httpcontent").toFile();
 					f.deleteOnExit();
 					Files.write(f.toPath(), content.asBytes());
 					content = binary(contentType.asUTF8(), f);

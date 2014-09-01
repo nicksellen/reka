@@ -8,6 +8,7 @@ public class AdminUtils {
 	public static MutableData putAppDetails(MutableData data, Application app) {
 		
 		data.putString("name", app.name().slashes());
+		data.putInt("version", app.version());
 		
 		app.meta().ifPresent(meta -> data.put("meta", meta));
 		

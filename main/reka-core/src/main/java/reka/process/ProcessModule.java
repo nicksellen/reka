@@ -64,6 +64,7 @@ public class ProcessModule extends ModuleConfigurer {
 		try {
 			File file = Files.createTempFile("reka", "externalscript").toFile();
 			Files.write(file.toPath(), config.documentContent());
+			file.deleteOnExit();
 			file.setExecutable(true, true);
 			command = new String[] { file.getAbsolutePath() };
 		} catch (IOException e) {

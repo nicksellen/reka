@@ -108,7 +108,9 @@ public class HttpsModule extends ModuleConfigurer implements ErrorReporter {
 		try {
 			java.nio.file.Path tmp = Files.createTempFile("reka.", "");
 			Files.write(tmp, bytes);
-			return tmp.toFile();
+			File f = tmp.toFile();
+			f.deleteOnExit();
+			return f;
 		} catch (IOException e) {
 			throw unchecked(e);
 		}

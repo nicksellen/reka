@@ -10,7 +10,7 @@ import reka.api.run.Subscriber;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
-public interface Flow {
+public interface Flow extends Comparable<Flow> {
 	
     long id();
     Path name();
@@ -28,5 +28,16 @@ public interface Flow {
 
     default void run(ExecutorService executor, MutableData data, EverythingSubscriber subscriber) {
     	run(MoreExecutors.listeningDecorator(executor), data, subscriber);
+    }
+    
+    @Override
+    default int compareTo(Flow o) {
+    	if (id() != o.id()) {
+    		return Long.compare(id(), o.id());
+    	} else if (!name().equals(o.name())) {
+    		return name().compareTo(o.name());
+    	} else {
+    		return 0;
+    	}
     }
 }

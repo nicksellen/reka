@@ -14,12 +14,16 @@ public class BuiltinsBundle implements RekaBundle {
 	public void setup(BundleSetup bundle) {
 		bundle.module(root(), () -> new BuiltinsModule());
 		bundle.module(path("timer"), () -> new TimerModule());
+		
+		// the ordering of these is very important! be careful :)
+		
 		bundle.converter(new CommentConverter());
+		bundle.converter(new EnvConverter());
 		bundle.converter(new EachConverter()); 
 		bundle.converter(new IncludeConverter());
 		bundle.converter(new MarkdownConverter());
 		bundle.converter(new DocConverter());
-		bundle.converter(new EnvConverter());
+		
 	}
 
 }
