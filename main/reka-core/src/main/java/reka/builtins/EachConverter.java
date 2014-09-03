@@ -43,10 +43,12 @@ public final class EachConverter implements ConfigConverter {
 
     				String basename = file.getFileName().toString();
     				
+    				Path parent = file.getParent();
+    				
     				MutableData data = MutableMemoryData.create()
     						.putString("basename", basename)
     						.putString("absolute", file.toAbsolutePath().toString())
-    						.putString("dirname", file.getParent().toString())
+    						.putString("dirname", parent != null ? parent.toString() : "")
     						.putString("path", file.toString());
     				    				
     				Matcher matcher = EXTENSION.matcher(basename);

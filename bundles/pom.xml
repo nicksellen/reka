@@ -19,5 +19,6 @@
     <module>reka-rhino</module>
     <module>reka-smtp</module>
     <module>reka-twilio</module>
+    <module>reka-less</module>
   </modules>
 </project>

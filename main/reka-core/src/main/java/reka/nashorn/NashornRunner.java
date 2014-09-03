@@ -58,7 +58,7 @@ public class NashornRunner {
 			Field f = engine.getClass().getDeclaredField("global");
 			f.setAccessible(true);
 			global = (jdk.nashorn.internal.objects.Global) f.get(engine);
-			//g.seal();
+			//global.seal();
 			global.freeze(); // prevents any changes to global
 			
 		} catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
@@ -82,9 +82,13 @@ public class NashornRunner {
 		ScriptContext context = new SimpleScriptContext();
 		Bindings bindings = context.getBindings(ScriptContext.ENGINE_SCOPE);
 		
+		/*
 		data.forEach((k, v) -> {
 			bindings.put(k, v);
 		});
+		*/
+		
+		bindings.putAll(data);
 		
 		try {
 			compiledScript.eval(context);
