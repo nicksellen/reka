@@ -46,8 +46,8 @@ dist: build
 		echo "bundle ../lib/bundles/$$bundle" >> $(dist_dir)/etc/config.reka; \
 	done
 	@echo "app @include(apps/api.reka)" >> $(dist_dir)/etc/config.reka
-	@cd dist && tar zcvf reka.tar.gz reka
-	@echo made dist/reka.tar.gz
+	@cd dist && tar zcvf reka-server.tar.gz reka
+	@echo made dist/reka-server.tar.gz
 
 run: dist
 	@dist/reka/bin/reka-server
@@ -58,9 +58,15 @@ run-nolog: dist
 run-debug: dist
 	@JAVA_OPTS=-Dlog4j.configurationFile=main/reka-main/log4j2-debug.xml dist/reka/bin/reka-server
 
-upload-s3: dist
+upload-s3-eu: dist
 	@aws s3 \
-		cp dist/reka.tar.gz s3://reka/reka.tar.gz	\
+		cp dist/reka-server.tar.gz s3://reka/reka-server.tar.gz	\
+		--grants \
+			read=uri=http://acs.amazonaws.com/groups/global/AllUsers
+
+upload-s3-us: dist
+	@aws s3 \
+		cp dist/reka-server.tar.gz s3://reka.us/reka-server.tar.gz	\
 		--grants \
 			read=uri=http://acs.amazonaws.com/groups/global/AllUsers
 

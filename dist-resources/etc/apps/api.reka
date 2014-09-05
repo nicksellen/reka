@@ -61,7 +61,10 @@ def main {
           }
           putv response {
             status 200
-            content running ':app.name' as [:appid]
+            content :app
+            headers {
+              Content-Type application/json
+            }
           }
         }
         when dir {
