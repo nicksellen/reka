@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.util.Arrays.asList;
+import static reka.api.Path.path;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,8 +13,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
+import reka.api.IdentityStore;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.flow.FlowConnection;
@@ -202,8 +205,12 @@ public class FlowSegments extends AbstractFlowNode {
 	
 	public static FlowNode sync(String name, SyncOperationSupplier<?> supplier) {
 		return new OperationFlowNode(name, supplier);
-	
 	}
+	
+	public static FlowNode storeSync(String name, Function<IdentityStore,SyncOperation> supplier) {
+		return sync(name, data -> supplier.apply(data.getContent(path("store")).get().valueAs(IdentityStore.class)));
+	}
+	
 	public static FlowNode dataop(String name, DataOperationSupplier<?> supplier) {
 		return new OperationFlowNode(name, supplier);
 	}

@@ -52,7 +52,6 @@ public class LessModule extends ModuleConfigurer {
 		private final Path path;
 		
 		public ConfigResource(Path path, Map<Path,String> resources) {
-			System.out.printf("less resources [%s]\n", path);
 			this.path = path;
 			this.resources = resources;
 		}
@@ -116,7 +115,6 @@ public class LessModule extends ModuleConfigurer {
 							resources.put(slashes(key), child.documentContentAsString());
 						}
 					}
-					System.out.printf("creating less resource with %s\n", resources.keySet());
 					content = utf8(compiler.compile(new LessSource(new ConfigResource(root(), resources))));
 				}
 			} catch (LessException | IOException e) {

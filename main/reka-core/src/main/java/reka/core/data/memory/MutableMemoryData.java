@@ -343,7 +343,7 @@ public class MutableMemoryData implements MutableDataProvider<Object> {
 		} else if (o == null) {
 			json.writeNull();
 		} else {
-			throw runtime("can't write %s (%s) to json [%s]", o, o != null ? o.getClass() : "null", o != null ? o.toString() : "");
+			throw runtime("can't write %s (%s) to json", o, o != null ? o.getClass() : "null");
 		}
 	}
 	

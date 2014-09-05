@@ -1,10 +1,11 @@
 package reka.nashorn;
 
 import static reka.api.Path.dots;
-import static reka.core.builder.FlowSegments.sync;
+import static reka.core.builder.FlowSegments.storeSync;
 
 import java.util.function.Supplier;
 
+import reka.api.IdentityKey;
 import reka.api.Path;
 import reka.api.flow.FlowSegment;
 import reka.config.Config;
@@ -12,13 +13,13 @@ import reka.config.configurer.annotations.Conf;
 
 public class NashornRunConfigurer implements Supplier<FlowSegment> {
 	
-	private final ThreadLocal<NashornRunner> runner;
+	private final IdentityKey<NashornRunner> runnerKey;
 	
 	private String script;
 	private Path out;
 	
-	public NashornRunConfigurer(ThreadLocal<NashornRunner> runner, Path defaultWriteTo) {
-		this.runner = runner;
+	public NashornRunConfigurer(IdentityKey<NashornRunner> runnerKey, Path defaultWriteTo) {
+		this.runnerKey = runnerKey;
 		this.out = defaultWriteTo;
 	}
 
@@ -38,7 +39,7 @@ public class NashornRunConfigurer implements Supplier<FlowSegment> {
 
 	@Override
 	public FlowSegment get() {
-		return sync("run", (data) -> new NashornRunOperation(runner, script, out));
+		return storeSync("run", (store) -> new NashornRunOperation(store.get(runnerKey).get(), script, out));
 	}
 
 }

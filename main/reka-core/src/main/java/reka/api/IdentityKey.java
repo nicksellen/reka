@@ -6,7 +6,7 @@ public final class IdentityKey<T> {
 
 	private final String name;
 	
-	public static <T> IdentityKey<T> of(String name) {
+	public static <T> IdentityKey<T> named(String name) {
 		return new IdentityKey<>(name);
 	}
 	
@@ -21,7 +21,7 @@ public final class IdentityKey<T> {
 	public static void main(String[] args) {
 		IdentityStore store = new ConcurrentIdentityStore();
 		
-		IdentityKey<UUID> key = IdentityKey.of("name");
+		IdentityKey<UUID> key = IdentityKey.named("name");
 		store.put(key, UUID.randomUUID());
 		UUID value = store.get(key).get();
 		

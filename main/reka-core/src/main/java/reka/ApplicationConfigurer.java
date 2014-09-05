@@ -18,8 +18,10 @@ import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import reka.api.ConcurrentIdentityStore;
 import reka.api.IdentityKey;
 import reka.api.Path;
+import reka.api.content.Contents;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.flow.Flow;
@@ -180,7 +182,11 @@ public class ApplicationConfigurer implements ErrorReporter {
 	
 	    	EverythingSubscriber subscriber = EverythingSubscriber.wrap(s);
 	    	
-	    	initializer.flow().run(new EverythingSubscriber() {
+	    	MutableData initdata = MutableMemoryData.create();
+	    	
+	    	initdata.put(path("store"), Contents.nonSerializableContent(new ConcurrentIdentityStore()));
+	    	
+	    	initializer.flow().prepare().data(initdata).complete(new EverythingSubscriber() {
 				
 				@Override
 				public void ok(MutableData data) {
@@ -247,7 +253,7 @@ public class ApplicationConfigurer implements ErrorReporter {
 					subscriber.error(data, t);
 					future.completeExceptionally(t);
 				}
-			});
+			}).run();
     	
     	});
     }

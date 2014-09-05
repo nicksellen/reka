@@ -110,9 +110,8 @@ public class HttpHostHandler extends SimpleChannelInboundHandler<MutableData> {
 		public void ok(MutableData data) {
 			ChannelFuture writeFuture = context.writeAndFlush(data);
 			long took = (System.nanoTime() - started) / 1000;
-			int status = data.getInt(Response.STATUS).orElse(-1);
-			String statusStr = status > -1 ? String.valueOf(status) + " " : "";
-			log.info("{} {} - {}{}µs", data.getString(Request.METHOD).orElse(""), data.getString(Request.PATH).orElse(""), statusStr, took);
+			String statusStr = data.getString(Response.STATUS).orElse("");
+			log.info("{} {} - {} {}µs", data.getString(Request.METHOD).orElse(""), data.getString(Request.PATH).orElse(""), statusStr, took);
 			if (data.existsAt(CLOSE_CHANNEL)) {
 				writeFuture.addListener(ChannelFutureListener.CLOSE);
 			}
@@ -223,8 +222,10 @@ public class HttpHostHandler extends SimpleChannelInboundHandler<MutableData> {
 		return allExceptionMessages(t).iterator().next();
 	}
 	
-	private static Collection<String> allExceptionMessages(Throwable t) {
+	private static Collection<String> allExceptionMessages(Throwable tOriginal) {
 		List<String> result = new ArrayList<>();
+		
+		Throwable t = tOriginal;
 		
 		while (t != null) {
 			if (t.getMessage() != null) {
@@ -237,6 +238,7 @@ public class HttpHostHandler extends SimpleChannelInboundHandler<MutableData> {
 		
 		if (result.isEmpty()) {
 			result.add("unknown error");
+			log.error("error without any messages", tOriginal);
 		}
 		
 		return result;

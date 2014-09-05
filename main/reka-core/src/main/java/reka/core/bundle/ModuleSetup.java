@@ -20,6 +20,7 @@ import java.util.function.IntConsumer;
 import java.util.function.Supplier;
 
 import reka.api.IdentityKey;
+import reka.api.IdentityStore;
 import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.flow.Flow;
@@ -134,6 +135,14 @@ public class ModuleSetup {
 		return path;
 	}
 	
+	public ModuleSetup storeInit(String name, Consumer<IdentityStore> c) {
+		return init(name, (data) -> {
+			IdentityStore store = data.getContent(Path.path("store")).get().valueAs(IdentityStore.class);
+			c.accept(store);
+			return data;
+		});
+	}
+	
 	public ModuleSetup init(String name, SyncOperation operation) {
 		segments.add(() -> sync(name, () -> operation));
 		return this;
@@ -173,6 +182,13 @@ public class ModuleSetup {
 		return this;
 	}
 
+	public ModuleSetup storeOperation(Iterable<Path> names, Function<ConfigurerProvider,Supplier<FlowSegment>> provider) {
+		for (Path name : names) {
+			operation(name, provider);
+		}
+		return this;
+	}
+	
 	public ModuleSetup operation(Iterable<Path> names, Function<ConfigurerProvider,Supplier<FlowSegment>> provider) {
 		for (Path name : names) {
 			operation(name, provider);
@@ -333,11 +349,11 @@ public class ModuleSetup {
 	}
 	
 	public ModuleSetup trigger(String name, ConfigBody body, Consumer<SingleFlowRegistration> c) {
-		return trigger(IdentityKey.of(name), body, c);
+		return trigger(IdentityKey.named(name), body, c);
 	}
 
 	public ModuleSetup trigger(String name, Function<ConfigurerProvider, Supplier<FlowSegment>> supplier, Consumer<SingleFlowRegistration> c) {
-		return trigger(IdentityKey.of(name), supplier, c);
+		return trigger(IdentityKey.named(name), supplier, c);
 	}
 	
 	public ModuleSetup triggers(Map<IdentityKey<Flow>,Function<ConfigurerProvider, Supplier<FlowSegment>>> suppliers, Consumer<MultiFlowRegistration> cs) {

@@ -6,7 +6,7 @@ import static reka.api.Path.dots;
 import static reka.api.Path.path;
 import static reka.api.Path.root;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
-import static reka.core.builder.FlowSegments.sync;
+import static reka.core.builder.FlowSegments.storeSync;
 import static reka.util.Util.runtime;
 
 import java.util.ArrayList;
@@ -17,12 +17,10 @@ import java.util.Map.Entry;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
-import com.google.common.collect.Iterables;
-
+import reka.api.IdentityKey;
 import reka.api.Path;
 import reka.api.data.Data;
+import reka.api.data.MutableData;
 import reka.api.flow.FlowSegment;
 import reka.builtins.BuiltinsModule.PutDataOperation;
 import reka.config.Config;
@@ -30,6 +28,10 @@ import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.ModuleConfigurer;
 import reka.core.bundle.ModuleSetup;
 import reka.core.data.memory.MutableMemoryData;
+
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
+import com.google.common.collect.Iterables;
 
 public class NashornModule extends ModuleConfigurer {
 	
@@ -90,55 +92,53 @@ public class NashornModule extends ModuleConfigurer {
 		ops.put(config.key(), config.documentContentAsString());
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public void setup(ModuleSetup module) {
-
-		ThreadLocal<NashornRunner> runner = new ThreadLocal<NashornRunner>(){
-
-			@Override
-			protected NashornRunner initialValue() {
-				return new NashornRunner(scripts);
-			}
-			
-		};
 		
-		module.operation(asList(path("run"), root()), () -> new NashornRunConfigurer(runner, root()));
+		IdentityKey<NashornRunner> runnerKey = IdentityKey.named("nashorn runner");
+		
+		module.operation(asList(path("run"), root()), (initdata) -> new NashornRunConfigurer(runnerKey, root()));
+		
+		module.storeInit("initialize runtime", (store) -> {
+			store.put(runnerKey, new PooledNashornRunner(scripts));
+		});
 		
 		for (Entry<String, String> op : ops.entrySet()) {
 			String opname = op.getKey();
 			String src = op.getValue();
-			Path dataPath = module.path().add(opname);
+			
+			IdentityKey<Data> dataKey = IdentityKey.named(opname);
 			
 			// run the js to calculate the data we need
 			
-			module.init(format("calculate data for %s", opname), (initdata) -> {
+			module.storeInit(format("calculate data for %s", opname), (store) -> {
 
-				NashornRunner js = runner.get();
-				
-				Path out = dataPath;
+				NashornRunner js = store.get(runnerKey).get();
 				
 				Map<String,Object> m = new HashMap<>();
 				m.put("data", Data.NONE);
 				m.put("out", new HashMap<>());
 				
+				MutableData data = MutableMemoryData.create();
 				Object outval = js.run(js.compile(src), m).get("out");
 				if (outval instanceof Map) {
-					Data outdata = MutableMemoryData.createFromMap((Map<String,Object>) outval);
-					outdata.forEachContent((path, content) -> {
-						initdata.put(out.add(path), content);
+					MutableMemoryData.createFromMap((Map<String,Object>) outval).forEachContent((path, content) -> {
+						data.put(path, content);
 					});
 				} else if (outval instanceof String) {
-					initdata.putString(out, (String) outval);
+					data.putString(root(), (String) outval);
 				} else {
 					throw runtime("not sure what to do with %s", outval);
 				}
 				
-				return initdata;
+				store.put(dataKey, data);
+				
 			});
 			
 			// define the operation that will insert this data
 			
-			module.operation(path(opname), () -> new PutJSDataConfigurer(dataPath));
+			module.operation(path(opname), () -> new PutJSDataConfigurer(dataKey));
 			
 		}
 		
@@ -146,12 +146,12 @@ public class NashornModule extends ModuleConfigurer {
 	
 	public static class PutJSDataConfigurer implements Supplier<FlowSegment> {
 		
-		private final Path initdataPath;
+		private final IdentityKey<Data> dataKey;
 		
 		private Path out = root();
 		
-		public PutJSDataConfigurer(Path initdataPath) {
-			this.initdataPath= initdataPath;
+		public PutJSDataConfigurer(IdentityKey<Data> dataKey) {
+			this.dataKey= dataKey;
 		}
 		
 		@Conf.Val
@@ -161,7 +161,7 @@ public class NashornModule extends ModuleConfigurer {
 
 		@Override
 		public FlowSegment get() {
-			return sync("jsdata", (initdata) -> new PutDataOperation(initdata.at(initdataPath), out));
+			return storeSync("jsdata", (store) -> new PutDataOperation(store.get(dataKey).get(), out));
 		}
 		
 	}

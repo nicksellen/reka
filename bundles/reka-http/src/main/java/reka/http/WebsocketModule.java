@@ -102,7 +102,7 @@ public class WebsocketModule extends ModuleConfigurer {
 	
 	@Conf.Each("topic")
 	public void topic(Config config) {
-		topics.add(configure(new WebsocketTopicConfigurer(IdentityKey.of(config.valueAsString())), config.body()));
+		topics.add(configure(new WebsocketTopicConfigurer(IdentityKey.named(config.valueAsString())), config.body()));
 	}
 	
 	@Conf.Each("on")
@@ -147,9 +147,9 @@ public class WebsocketModule extends ModuleConfigurer {
 		
 		Map<IdentityKey<Flow>,Function<ConfigurerProvider, Supplier<FlowSegment>>> triggers = new HashMap<>();
 		
-		IdentityKey<Flow> connect = IdentityKey.of("connect");
-		IdentityKey<Flow> disconnect = IdentityKey.of("disconnect");
-		IdentityKey<Flow> message = IdentityKey.of("message");
+		IdentityKey<Flow> connect = IdentityKey.named("connect");
+		IdentityKey<Flow> disconnect = IdentityKey.named("disconnect");
+		IdentityKey<Flow> message = IdentityKey.named("message");
 		
 		if (!onConnect.isEmpty()) {
 			triggers.put(connect, combine(onConnect));
