@@ -37,7 +37,7 @@ public class RekaDetailsConfigurer implements Supplier<FlowSegment> {
 	
 	@Override
 	public FlowSegment get() {
-		return sync("get app", (data) -> new RekaDetailsOperation(manager, idFn, out));
+		return sync("get app", () -> new RekaDetailsOperation(manager, idFn, out));
 	}
 
 }

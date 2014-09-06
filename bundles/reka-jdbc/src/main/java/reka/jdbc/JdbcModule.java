@@ -29,6 +29,7 @@ import org.flywaydb.core.Flyway;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import reka.api.IdentityKey;
 import reka.api.Path;
 import reka.api.content.Content;
 import reka.api.content.Contents;
@@ -44,6 +45,8 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 public class JdbcModule extends ModuleConfigurer {
+	
+	protected static final IdentityKey<JdbcConnectionProvider> POOL = IdentityKey.named("connection pool");
 
 	@SuppressWarnings("unused")
 	private final Logger log = LoggerFactory.getLogger(getClass());
@@ -108,7 +111,7 @@ public class JdbcModule extends ModuleConfigurer {
 	}
 
 	@Override
-	public void setup(ModuleSetup use) {
+	public void setup(ModuleSetup module) {
 		
 		JdbcConfiguration config = new JdbcConfiguration(returnGeneratedKeys);
 		
@@ -117,129 +120,124 @@ public class JdbcModule extends ModuleConfigurer {
 			if (username == null) username = "sa";
 			if (password == null) password = "sa";
 		}
+		
+		module.operation(asList(path("query"), path("q"), root()), () -> new JdbcQueryConfigurer(config));
+		module.operation(path("insert"), () -> new JdbcInsertConfigurer());
+		
+		module.init(seq -> {
+			
+			seq.storeRun("create connection pool", store -> {
+				store.put(POOL, new DBCP2ConnectionProvider(url, username, password));
+			});
 
-		JdbcConnectionProvider jdbc = new DBCP2ConnectionProvider(url, username, password);
-		
-		Path poolPath = use.path().add("pool");
-		
-		use.operation(asList(path("query"), path("q"), root()), () -> new JdbcQueryConfigurer(config, jdbc));
-		use.operation(path("insert"), () -> new JdbcInsertConfigurer(jdbc));
-
-		if (!migrations.isEmpty()) {
-		
-			use.init("run migrations", (data) -> {
-				
-				File tmpdir = Files.createTempDir();
-				
-				try {
-				
-					for (Entry<String, String> e : migrations.entrySet()) {
-						Pattern VERSION_BIT = Pattern.compile("^[\\._0-9]+");
-						String name = e.getKey();
-						Matcher m = VERSION_BIT.matcher(name);
-						m.find();
-						String num = m.group();
-						String rest = name.substring(m.end());
-						rest = rest.replaceFirst(" ", "__").replaceAll(" ", "_");
-						java.nio.file.Path tmp = tmpdir.toPath().resolve(format("V%s%s.sql", num, rest));
+			if (!migrations.isEmpty()) {
+				seq.storeRun("run migrations", store -> {
+					File tmpdir = Files.createTempDir();
+					try {
+					
+						for (Entry<String, String> e : migrations.entrySet()) {
+							Pattern VERSION_BIT = Pattern.compile("^[\\._0-9]+");
+							String name = e.getKey();
+							Matcher m = VERSION_BIT.matcher(name);
+							m.find();
+							String num = m.group();
+							String rest = name.substring(m.end());
+							rest = rest.replaceFirst(" ", "__").replaceAll(" ", "_");
+							java.nio.file.Path tmp = tmpdir.toPath().resolve(format("V%s%s.sql", num, rest));
+							try {
+								Files.write(e.getValue(), tmp.toFile(), Charsets.UTF_8);
+							} catch (Exception e2) {
+								throw unchecked(e2);
+							}
+						}
+						Flyway flyway = new Flyway();
+						flyway.setClassLoader(Flyway.class.getClassLoader());
+						flyway.setDataSource(store.get(POOL).dataSource());
+						flyway.setLocations(format("filesystem:%s", tmpdir.getAbsolutePath()));
+						flyway.migrate();
+					
+					} finally {
 						try {
-							Files.write(e.getValue(), tmp.toFile(), Charsets.UTF_8);
-						} catch (Exception e2) {
-							throw unchecked(e2);
+							FileUtils.deleteDirectory(tmpdir);
+						} catch (Exception e) {
+							e.printStackTrace();
 						}
 					}
-					
-					Flyway flyway = new Flyway();
-					flyway.setClassLoader(Flyway.class.getClassLoader());
-					flyway.setDataSource(jdbc.dataSource());
-					flyway.setLocations(format("filesystem:%s", tmpdir.getAbsolutePath()));
-					flyway.migrate();
+				});
+			}
+			
+			seq.storeRun("run sql", store -> {
+				try (Connection connection = store.get(POOL).getConnection()){
+		            Statement stmt = connection.createStatement();
+		            for (String sql : sqls) {
+		            	stmt.execute(sql);
+		            }
+		        } catch (SQLException e) {
+		        	throw unchecked(e);
+		        }
+			});
+			
+			seq.storeRun("seed data", store -> {
 				
-				} finally {
-					try {
-						FileUtils.deleteDirectory(tmpdir);
-					} catch (Exception e) {
-						e.printStackTrace();
+				try (Connection conn = store.get(POOL).getConnection()) {
+					for (Entry<String, List<Data>> e : seeds.entrySet()) {
+						String table = e.getKey();
+						List<Data> entries = e.getValue();
+						if (entries.isEmpty()) continue;
+						
+						for (Data entry : entries) {
+							
+							StringBuilder sb = new StringBuilder();
+							
+							List<String> fields = new ArrayList<>();
+							List<String> valuePlaceholders = new ArrayList<>();
+							
+							entry.forEachContent((path, content) -> {
+								String fieldname = path.dots(); 
+								fields.add(fieldname);
+								valuePlaceholders.add(format(":{%s}", fieldname));
+							});
+							
+							sb.append("insert into ").append(table)
+								.append("(").append(join(",", fields)).append(")")
+								.append("values")
+									.append("(").append(join(", ", valuePlaceholders)).append(")");
+						
+							StringWithVars query = StringWithVars.compile(sb.toString());
+							
+							PreparedStatement statement = conn.prepareStatement(query.withPlaceholder("?"));
+							
+							for (int i = 0; i < query.vars().size(); i++) {
+								Variable v = query.vars().get(i);
+								Optional<Content> content = entry.getContent(v.path());
+								Object value = null;
+								if (content.isPresent()) {
+									value = content.get().value();
+								} else if (v.defaultValue() != null) {
+									value = v.defaultValue();
+								}
+								statement.setObject(i + 1, value);
+							}
+							
+							statement.execute();
+						
+						}
 					}
+				} catch (SQLException e) {
+					throw unchecked(e);
 				}
-				
-				return data;
 			});
 		
-		}
-		
-		use.init("run sql", (data) -> {
-			data.put(poolPath, Contents.nonSerializableContent(jdbc));
-			try (Connection connection = jdbc.getConnection()){
-	            Statement stmt = connection.createStatement();
-	            for (String sql : sqls) {
-	            	stmt.execute(sql);
-	            }
-	        } catch (SQLException e) {
-	        	throw unchecked(e);
-	        }
-			return data;
 		});
 		
-		use.init("seed data", (data) -> {
-			
-			try (Connection conn = jdbc.getConnection()) {
-				for (Entry<String, List<Data>> e : seeds.entrySet()) {
-					String table = e.getKey();
-					List<Data> entries = e.getValue();
-					if (entries.isEmpty()) continue;
-					
-					for (Data entry : entries) {
-						
-						StringBuilder sb = new StringBuilder();
-						
-						List<String> fields = new ArrayList<>();
-						List<String> valuePlaceholders = new ArrayList<>();
-						
-						entry.forEachContent((path, content) -> {
-							String fieldname = path.dots(); 
-							fields.add(fieldname);
-							valuePlaceholders.add(format(":{%s}", fieldname));
-						});
-						
-						sb.append("insert into ").append(table)
-							.append("(").append(join(",", fields)).append(")")
-							.append("values")
-								.append("(").append(join(", ", valuePlaceholders)).append(")");
-					
-						StringWithVars query = StringWithVars.compile(sb.toString());
-						
-						PreparedStatement statement = conn.prepareStatement(query.withPlaceholder("?"));
-						
-						for (int i = 0; i < query.vars().size(); i++) {
-							Variable v = query.vars().get(i);
-							Optional<Content> content = entry.getContent(v.path());
-							Object value = null;
-							if (content.isPresent()) {
-								value = content.get().value();
-							} else if (v.defaultValue() != null) {
-								value = v.defaultValue();
-							}
-							statement.setObject(i + 1, value);
-						}
-						
-						statement.execute();
-					
-					}
+		module.shutdown("close connection pool", store -> {
+			store.lookup(POOL).ifPresent(jdbc -> { 
+				try {
+					jdbc.close();
+				} catch (Exception e) {
+					e.printStackTrace(); // whatever
 				}
-			} catch (SQLException e) {
-				throw unchecked(e);
-			}
-			
-			return data;
-		});
-		
-		use.shutdown("close connection pool", () -> {
-			try {
-				jdbc.close();
-			} catch (Exception e) {
-				e.printStackTrace(); // whatever
-			}
+			});
 		});
 		
 	}

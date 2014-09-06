@@ -5,6 +5,8 @@ import static java.util.Arrays.asList;
 import static reka.api.Path.root;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import static reka.core.builder.FlowSegments.async;
+import static reka.core.builder.FlowSegments.storeAsync;
+import static reka.core.builder.FlowSegments.storeSync;
 import static reka.core.builder.FlowSegments.sync;
 import static reka.util.Util.runtime;
 import static reka.util.Util.unchecked;
@@ -20,6 +22,7 @@ import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import reka.api.IdentityKey;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.flow.FlowSegment;
@@ -38,6 +41,9 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 
 public class ProcessModule extends ModuleConfigurer {
+	
+	protected static final IdentityKey<ProcessManager> PROCESS_MANAGER = IdentityKey.named("process manager");
+	protected static final IdentityKey<Consumer<String>> TRIGGER_CONSUMER = IdentityKey.named("trigger consumer");
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	
@@ -88,7 +94,6 @@ public class ProcessModule extends ModuleConfigurer {
 	@Override
 	public void setup(ModuleSetup module) {
 		
-		AtomicReference<ProcessManager> managerRef = new AtomicReference<>();
 		AtomicReference<Consumer<String>> triggerRef = new AtomicReference<>();
 		
 		if (onLine != null) {
@@ -102,35 +107,34 @@ public class ProcessModule extends ModuleConfigurer {
 			});
 		}
 		
-		module.init("start process", data -> {
-			try {
-				ProcessBuilder builder = new ProcessBuilder();
-				builder.command(command);
-				log.info("starting {}\n", asList(command));
-				builder.environment().clear();
-				managerRef.set(new MultiProcessManager(builder, Runtime.getRuntime().availableProcessors(), noreply, triggerRef));
-				return data;
-			} catch (Exception e) {
-				throw unchecked(e);
-			}
+		module.init(seq -> {
+			seq.storeRun("start process", store -> {
+				try {
+					ProcessBuilder builder = new ProcessBuilder();
+					builder.command(command);
+					log.info("starting {}\n", asList(command));
+					builder.environment().clear();
+					store.put(PROCESS_MANAGER, new MultiProcessManager(builder, Runtime.getRuntime().availableProcessors(), noreply, triggerRef));
+				} catch (Exception e) {
+					throw unchecked(e);
+				}
+			});
 		});
 		
-		module.shutdown("kill process", () -> {
-			managerRef.get().kill();
+		module.shutdown("kill process", store -> {
+			store.lookup(PROCESS_MANAGER).ifPresent(manager -> manager.kill());
 		});
 		
-		module.operation(root(), () -> new ProcessCallConfigurer(managerRef, noreply));
+		module.operation(root(), () -> new ProcessCallConfigurer(noreply));
 	}
 	
 	public static class ProcessCallConfigurer implements Supplier<FlowSegment> {
 
-		private final AtomicReference<ProcessManager> managerRef;
 		private final boolean noreply;
 		
 		private Function<Data,String> lineFn = (data) -> data.toJson();
 		
-		public ProcessCallConfigurer(AtomicReference<ProcessManager> manager, boolean noreply) {
-			this.managerRef = manager;
+		public ProcessCallConfigurer(boolean noreply) {
 			this.noreply = noreply;
 		}
 		
@@ -142,9 +146,9 @@ public class ProcessModule extends ModuleConfigurer {
 		@Override
 		public FlowSegment get() {
 			if (noreply) {
-				return sync("call (noreply)", () -> new ProcessCallNoreplyOperation(managerRef.get(), lineFn));
+				return storeSync("call (noreply)", store -> new ProcessCallNoreplyOperation(store.get(PROCESS_MANAGER), lineFn));
 			} else {
-				return async("call", () -> new ProcessCallOperation(managerRef.get(), lineFn));
+				return storeAsync("call", store -> new ProcessCallOperation(store.get(PROCESS_MANAGER), lineFn));
 			}
 		}
 		

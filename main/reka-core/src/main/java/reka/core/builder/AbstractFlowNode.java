@@ -6,14 +6,15 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.flow.FlowConnection;
 import reka.api.flow.FlowDependency;
 import reka.api.flow.FlowNode;
+import reka.api.flow.FlowOperation;
 import reka.api.flow.FlowSegment;
-import reka.api.run.OperationSupplier;
 import reka.core.data.memory.MutableMemoryData;
 
 import com.google.common.collect.ImmutableList;
@@ -23,7 +24,7 @@ public class AbstractFlowNode implements FlowNode {
 	private final MutableData meta = MutableMemoryData.create();
 	
 	private String name;
-	private OperationSupplier<?> supplier;
+	private Supplier<? extends FlowOperation> supplier;
 	private FlowDependency embeddedFlowNode;
 	private boolean subscribeable = false;
 	private boolean isStart = false;
@@ -55,7 +56,7 @@ public class AbstractFlowNode implements FlowNode {
 		return this;
 	}
 	
-	protected AbstractFlowNode supplier(OperationSupplier<?> supplier) {
+	protected AbstractFlowNode supplier(Supplier<? extends FlowOperation> supplier) {
 		this.supplier = supplier;
 		return this;
 	}
@@ -75,7 +76,7 @@ public class AbstractFlowNode implements FlowNode {
 	}
 	
 	@Override
-	public OperationSupplier<?> operationSupplier() {
+	public Supplier<? extends FlowOperation> operationSupplier() {
 		return supplier;
 	}
 	

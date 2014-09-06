@@ -18,23 +18,13 @@ public class MultiProcessManager implements ProcessManager {
 	
 	public MultiProcessManager(ProcessBuilder builder, int count, boolean noreply, AtomicReference<Consumer<String>> trigger) {
 		this.builder = builder;
-		
 		for (int i = 0; i < count; i++) {
 			all.add(new SimpleProcessManager(this.builder, q, noreply, trigger));
 		}
-		
-		/*
-		this.manager = ThreadLocal.withInitial(() -> {
-			SimpleProcessManager m = new SimpleProcessManager(this.builder, q);
-			all.add(m);
-			return m;
-		});
-		*/ 
 	}
 	
 	@Override
 	public void run(String input, Consumer<String> consumer) {
-		//manager.get().run(input, consumer);
 		q.offer(createEntry(input, consumer));
 	}
 

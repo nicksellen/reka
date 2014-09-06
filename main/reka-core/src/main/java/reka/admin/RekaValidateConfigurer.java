@@ -71,9 +71,9 @@ public class RekaValidateConfigurer implements Supplier<FlowSegment> {
 		FlowSegment router;
 		
 		if (in != null) {
-			router = router("validate", (data) -> new RekaValidateFromContentOperation(manager, in));
+			router = router("validate", () -> new RekaValidateFromContentOperation(manager, in));
 		} else if (filenameFn != null) {
-			router = router("validate", (data) -> new RekaValidateFromFileOperation(manager, filenameFn));
+			router = router("validate", () -> new RekaValidateFromFileOperation(manager, filenameFn));
 		} else {
 			throw runtime("must specify either 'in' or 'filename'");
 		}

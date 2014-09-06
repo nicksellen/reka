@@ -3,15 +3,16 @@ package reka.jruby;
 import static java.util.Arrays.asList;
 import static reka.api.Path.path;
 import static reka.api.Path.root;
-import static reka.api.content.Contents.nonSerializableContent;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
-import reka.api.Path;
+import reka.api.IdentityKey;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.ModuleConfigurer;
 import reka.core.bundle.ModuleSetup;
 
 public class JRubyModule extends ModuleConfigurer {
+	
+	protected static final IdentityKey<RubyEnv> RUBY_ENV = IdentityKey.named("ruby env");
 	
 	private String script;
 	private String gemFile;
@@ -38,17 +39,14 @@ public class JRubyModule extends ModuleConfigurer {
 	
 	@Override
 	public void setup(ModuleSetup module) {
-		
-		Path runtimePath = module.path().add("runtime");
-		
-		module.init("initialize runtime", (data) -> {
-			RubyEnv env = RubyEnv.create(gemFile);
-			env.exec(script);
-			data.put(runtimePath, nonSerializableContent(env));
-			return data;
+		module.init(seq -> {
+			seq.storeRun("initialize runtime", store -> {
+				RubyEnv env = RubyEnv.create(gemFile);
+				env.exec(script);
+				store.put(RUBY_ENV, env);
+			});
 		});
-		
-		module.operation(asList(path("run"), root()), () -> new JRubyRunConfigurer(runtimePath, module.path()));
+		module.operation(asList(path("run"), root()), () -> new JRubyRunConfigurer(module.path()));
 	}
 	
 }

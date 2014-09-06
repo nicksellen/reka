@@ -2,6 +2,7 @@ package reka.core.builder;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static java.util.Collections.emptyMap;
 import static reka.core.builder.FlowConnector.connectSegments;
 import static reka.core.builder.FlowSegments.seq;
 import static reka.core.builder.FlowSegments.startNode;
@@ -9,11 +10,13 @@ import static reka.core.builder.FlowSegments.subscribeableEndNode;
 import static reka.util.Util.runtime;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.Executors;
 
+import reka.api.IdentityStore;
 import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.flow.Flow;
@@ -33,10 +36,10 @@ public class FlowBuilders {
 	
 	private final Map<Path,FlowInfo> roots = new HashMap<>();
 	
-	public static Flow createFlow(Path name, FlowSegment segment, Data initializationData) {
+	public static Flow createFlow(Path name, FlowSegment segment, Map<Integer,IdentityStore> stores) {
 		FlowBuilders b = new FlowBuilders();
 		b.add(name, segment);
-		return b.build(initializationData).flow(name);
+		return b.build(stores).flow(name);
 	}
 	
 	public static FlowVisualizer createVisualizer(Path name, FlowSegment segment) {
@@ -108,10 +111,10 @@ public class FlowBuilders {
 		return roots.keySet();
 	}
 	
-	public Flows build(Data initializationData) {
+	public Flows build(Map<Integer,IdentityStore> stores) {
 		
 		for (FlowInfo root : roots.values()) {
-			createFlow(root, true, initializationData);
+			createFlow(root, true, stores);
 		}
 		
 		Flows flows = new Flows();
@@ -130,7 +133,7 @@ public class FlowBuilders {
 	private Map<Path,FlowVisualizer> buildVisualizersMaps() {
 		
 		for (FlowInfo root : roots.values()) {
-			createFlow(root, false, Data.NONE); // TODO should this be none?
+			createFlow(root, false, emptyMap()); // TODO should this be an empty map?
 		}
 		
 		Map<Path,FlowVisualizer> visualizers = new HashMap<>();
@@ -156,7 +159,7 @@ public class FlowBuilders {
 	
 	private final Map<Path,FlowConnector> connectors = new HashMap<>();
 	
-	private void createFlow(FlowInfo info, boolean buildFlow, Data initializationData) {
+	private void createFlow(FlowInfo info, boolean buildFlow, Map<Integer,IdentityStore> stores) {
 		
 		FlowConnector connections = connectSegments(info.segment());
 		
@@ -174,7 +177,7 @@ public class FlowBuilders {
 					}
 				}
 				checkNotNull(nested, "flow [%s] is required by [%s] but was not defined, we did have %s though", name, info.name(), roots.keySet());
-				if (nested.flow() == null) createFlow(nested, buildFlow, initializationData);
+				if (nested.flow() == null) createFlow(nested, buildFlow, stores);
 			}
 		}
 		
@@ -189,12 +192,7 @@ public class FlowBuilders {
 		
 		for (FlowNode node : connections.nodes()) {
 		    int id = nextId++;
-		    
-		    if (node.hasEmbeddedFlow()) {
-		    	// TODO: maybe import all the embedded flow nodes into here to just create one graph
-		    }
-		    
-		    NodeBuilder builder = new NodeBuilder(id, node.label(), node, executor);
+		    NodeBuilder builder = new NodeBuilder(id, node.label(), node, executor, stores);
 			idToNodeBuilder.put(id, builder);
 			flowNodeToId.put(node, id);
 			idToName.put(id, builder.name());
@@ -231,7 +229,7 @@ public class FlowBuilders {
 		if (buildFlow) {
 			configure(new ConfigurationNodePath(NodeChildBuilder.create(headBuilder)));
 			Map<Path,Flow> dependencies = makeMapOfBuiltFlows();
-	        NodeFactory factory = new NodeFactory(idToNodeBuilder, dependencies, initializationData);        
+	        NodeFactory factory = new NodeFactory(idToNodeBuilder, dependencies, stores);        
 	        Node headNode = factory.get(flowNodeToId.get(info.start()));
 	        info.flow(new DefaultFlow(info.name(), headNode));
 		}
@@ -247,12 +245,7 @@ public class FlowBuilders {
 		
 		NodeChildBuilder current = path.last();
 		
-		boolean isTail = current.node().children().isEmpty();
 		boolean hasMultipleParents = current.node().parentCount() > 1;
-
-		if (isTail && trigger != null) {
-			//log.debug("[{}] no children with trigger [{}]", current.node().name(), trigger.name());
-		}
 		
 		if (trigger == null) {
 			
@@ -261,9 +254,6 @@ public class FlowBuilders {
 			}
 			
 		} else {
-
-			// is it really intended behaviour _not_ to increment the counter
-			// if we have a trigger and the node is optional?
 			
 			if (hasMultipleParents) {
 				current.node().incrementInitialCounter();	

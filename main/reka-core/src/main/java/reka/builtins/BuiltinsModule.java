@@ -200,7 +200,7 @@ public class BuiltinsModule extends ModuleConfigurer {
 		public FlowSegment get() {
 			
 			return sequential(seq -> {
-				seq.routerNode("bcrypt/checkpw", (data) -> new BCryptCheckpwOperation(readPwFrom, readHashFrom));
+				seq.routerNode("bcrypt/checkpw", () -> new BCryptCheckpwOperation(readPwFrom, readHashFrom));
 				seq.parallel(par -> {
 					par.add("ok", ok.get());
 					par.add("fail", fail.get());
@@ -538,7 +538,7 @@ public class BuiltinsModule extends ModuleConfigurer {
 		
 		@Override
 		public FlowSegment get() {
-			return sync("stringwithvariables", (data) -> new DataContentFunctionOperation(template, out));
+			return sync("stringwithvariables", () -> new DataContentFunctionOperation(template, out));
 		}
 		
 	}

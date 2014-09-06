@@ -1,7 +1,8 @@
 package reka.jruby;
 
 import static reka.api.Path.dots;
-import static reka.core.builder.FlowSegments.sync;
+import static reka.core.builder.FlowSegments.storeSync;
+import static reka.jruby.JRubyModule.RUBY_ENV;
 
 import java.util.function.Supplier;
 
@@ -12,13 +13,10 @@ import reka.config.configurer.annotations.Conf;
 
 public class JRubyRunConfigurer implements Supplier<FlowSegment> {
 	
-	private final Path runtimePath;
-	
 	private String script;
 	private Path out;
 	
-	public JRubyRunConfigurer(Path runtimePath, Path defaultWriteTo) {
-		this.runtimePath = runtimePath;
+	public JRubyRunConfigurer(Path defaultWriteTo) {
 		this.out = defaultWriteTo;
 	}
 	
@@ -38,9 +36,7 @@ public class JRubyRunConfigurer implements Supplier<FlowSegment> {
 
 	@Override
 	public FlowSegment get() {
-		
-		return sync("run", (data) -> new JRubyRunOperation(
-				data.getContent(runtimePath).get().valueAs(RubyEnv.class), script, out));
+		return storeSync("run", store -> new JRubyRunOperation(store.get(RUBY_ENV), script, out));
 	}
 	
 }

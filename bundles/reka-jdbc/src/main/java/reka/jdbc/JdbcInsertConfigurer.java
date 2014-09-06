@@ -1,7 +1,8 @@
 package reka.jdbc;
 
-import static reka.core.builder.FlowSegments.sync;
+import static reka.core.builder.FlowSegments.storeSync;
 import static reka.core.config.ConfigUtils.configToData;
+import static reka.jdbc.JdbcModule.POOL;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,12 +21,7 @@ public class JdbcInsertConfigurer implements Supplier<FlowSegment> {
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
 	private final List<Data> values = new ArrayList<>();
-	private final JdbcConnectionProvider jdbc;
 	private String table;
-	
-	public JdbcInsertConfigurer(JdbcConnectionProvider jdbc) {
-		this.jdbc = jdbc;
-	}
 
 	@Conf.Val
 	public void table(String val) {
@@ -41,7 +37,7 @@ public class JdbcInsertConfigurer implements Supplier<FlowSegment> {
 	@Override
 	public FlowSegment get() {
 		log.debug("building jdbc insert with values [{}]", values);
-		return sync("insert", () -> new JdbcInsert(jdbc, table, values));
+		return storeSync("insert", store -> new JdbcInsert(store.get(POOL), table, values));
 	}
 
 }

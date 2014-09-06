@@ -35,9 +35,7 @@ public class SequenceConfigurer implements Supplier<FlowSegment> {
     public void each(Config config) {
         Optional<Supplier<FlowSegment>> configurer = provider.provide(config.key(), provider);
         checkConfig(configurer.isPresent(), "no configurer for [%s]", config.key());
-        configurer.ifPresent(c -> {
-        	configurers.add(createEntry(config, configure(c, config)));
-        });
+        configurers.add(createEntry(config, configure(configurer.get(), config)));
     }
 
     @Override

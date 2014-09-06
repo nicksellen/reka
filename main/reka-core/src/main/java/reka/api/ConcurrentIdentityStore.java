@@ -15,9 +15,15 @@ public class ConcurrentIdentityStore implements IdentityStore {
 		map.put(identityHashCode(key), value);
 	}
 	
-	@Override
 	@SuppressWarnings("unchecked")
-	public <T> Optional<T> get(IdentityKey<T> key) {
+	@Override
+	public <T> T get(IdentityKey<T> key) {
+		return (T) map.get(identityHashCode(key));
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public <T> Optional<T> lookup(IdentityKey<T> key) {
 		return Optional.ofNullable((T) map.get(identityHashCode(key)));
 	}
 	

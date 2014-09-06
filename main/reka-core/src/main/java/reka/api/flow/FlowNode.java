@@ -1,11 +1,11 @@
 package reka.api.flow;
 
-import reka.api.run.OperationSupplier;
+import java.util.function.Supplier;
 
 public interface FlowNode extends FlowSegment {
-
+	
 	boolean hasOperationSupplier();
-    OperationSupplier<?> operationSupplier();
+    Supplier<? extends FlowOperation> operationSupplier();
     
 	boolean hasEmbeddedFlow();
 	FlowDependency embeddedFlowNode();

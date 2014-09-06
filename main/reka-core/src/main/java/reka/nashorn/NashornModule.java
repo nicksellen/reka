@@ -34,6 +34,8 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 
 public class NashornModule extends ModuleConfigurer {
+
+	protected static final IdentityKey<NashornRunner> RUNNER = IdentityKey.named("nashorn runner");
 	
 	private final List<String> scripts = new ArrayList<>();
 	private final Map<String,String> ops = new HashMap<>();
@@ -96,62 +98,63 @@ public class NashornModule extends ModuleConfigurer {
 	@Override
 	public void setup(ModuleSetup module) {
 		
-		IdentityKey<NashornRunner> runnerKey = IdentityKey.named("nashorn runner");
+		module.operation(asList(path("run"), root()), (initdata) -> new NashornRunConfigurer(root()));
 		
-		module.operation(asList(path("run"), root()), (initdata) -> new NashornRunConfigurer(runnerKey, root()));
+		module.init(run -> {
 		
-		module.storeInit("initialize runtime", (store) -> {
-			store.put(runnerKey, new PooledNashornRunner(scripts));
-		});
-		
-		for (Entry<String, String> op : ops.entrySet()) {
-			String opname = op.getKey();
-			String src = op.getValue();
-			
-			IdentityKey<Data> dataKey = IdentityKey.named(opname);
-			
-			// run the js to calculate the data we need
-			
-			module.storeInit(format("calculate data for %s", opname), (store) -> {
-
-				NashornRunner js = store.get(runnerKey).get();
-				
-				Map<String,Object> m = new HashMap<>();
-				m.put("data", Data.NONE);
-				m.put("out", new HashMap<>());
-				
-				MutableData data = MutableMemoryData.create();
-				Object outval = js.run(js.compile(src), m).get("out");
-				if (outval instanceof Map) {
-					MutableMemoryData.createFromMap((Map<String,Object>) outval).forEachContent((path, content) -> {
-						data.put(path, content);
-					});
-				} else if (outval instanceof String) {
-					data.putString(root(), (String) outval);
-				} else {
-					throw runtime("not sure what to do with %s", outval);
-				}
-				
-				store.put(dataKey, data);
-				
+			run.storeRun("initialize runtime", store -> {
+				store.put(RUNNER, new PooledNashornRunner(scripts));
 			});
-			
-			// define the operation that will insert this data
-			
-			module.operation(path(opname), () -> new PutJSDataConfigurer(dataKey));
-			
-		}
+
+			for (Entry<String, String> op : ops.entrySet()) {
+				
+				String opname = op.getKey();
+				String src = op.getValue();
+				
+				IdentityKey<Data> dataKey = IdentityKey.named(opname);
+				
+				// run the js to calculate the data we need
+				
+				run.storeRun(format("calculate data for %s", opname), store -> {
+	
+					NashornRunner js = store.get(RUNNER);
+					
+					Map<String,Object> m = new HashMap<>();
+					m.put("data", Data.NONE);
+					m.put("out", new HashMap<>());
+					
+					MutableData data = MutableMemoryData.create();
+					Object outval = js.run(js.compile(src), m).get("out");
+					if (outval instanceof Map) {
+						MutableMemoryData.createFromMap((Map<String,Object>) outval).forEachContent((path, content) -> {
+							data.put(path, content);
+						});
+					} else if (outval instanceof String) {
+						data.putString(root(), (String) outval);
+					} else {
+						throw runtime("not sure what to do with %s", outval);
+					}
+					
+					store.put(dataKey, data);
+					
+				});
+				
+				// the operation that will insert this data
+				module.operation(path(opname), () -> new PutJSDataConfigurer(dataKey));
+			}
+		
+		});
 		
 	}
 	
 	public static class PutJSDataConfigurer implements Supplier<FlowSegment> {
 		
-		private final IdentityKey<Data> dataKey;
+		private final IdentityKey<Data> key;
 		
 		private Path out = root();
 		
-		public PutJSDataConfigurer(IdentityKey<Data> dataKey) {
-			this.dataKey= dataKey;
+		public PutJSDataConfigurer(IdentityKey<Data> key) {
+			this.key = key;
 		}
 		
 		@Conf.Val
@@ -161,7 +164,7 @@ public class NashornModule extends ModuleConfigurer {
 
 		@Override
 		public FlowSegment get() {
-			return storeSync("jsdata", (store) -> new PutDataOperation(store.get(dataKey).get(), out));
+			return storeSync("jsdata", store -> new PutDataOperation(store.get(key), out));
 		}
 		
 	}

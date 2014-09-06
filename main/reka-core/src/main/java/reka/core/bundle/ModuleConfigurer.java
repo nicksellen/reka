@@ -21,8 +21,9 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import reka.api.ConcurrentIdentityStore;
+import reka.api.IdentityStore;
 import reka.api.Path;
-import reka.api.data.Data;
 import reka.api.flow.Flow;
 import reka.api.flow.FlowSegment;
 import reka.config.Config;
@@ -93,13 +94,38 @@ public abstract class ModuleConfigurer {
 			Set<ModuleConfigurer> all = collect(root, new HashSet<>());
 			Set<ModuleConfigurer> toplevel = findTopLevel(all);
 			Map<String,ModuleConfigurer> rootsMap = map(root.uses);
+			
 			resolveNamedDependencies(all, rootsMap);
 			
 			Map<Path,Function<ConfigurerProvider,Supplier<FlowSegment>>> providersCollector = new HashMap<>();
 			List<TriggerCollection> triggerCollector = new ArrayList<>();
 			List<Runnable> shutdownHandlers = new ArrayList<>();
+			Map<ModuleConfigurer,FlowSegment> segments = new HashMap<>();
+			Map<Integer,IdentityStore> stores = new HashMap<>();
 			
-			Map<ModuleConfigurer,FlowSegment> segments = makeSegments(all, providersCollector, triggerCollector, shutdownHandlers);
+			int id = 0;
+			for (ModuleConfigurer module : all) {
+				
+				IdentityStore store = new ConcurrentIdentityStore();
+				stores.put(id, store);
+				
+				ModuleSetup init = new ModuleSetup(id, module.fullPath(), store);
+				module.setup(init);
+				
+				init.buildFlowSegment().ifPresent(segment -> {
+					segments.put(module, segment);
+				});
+				
+				providersCollector.putAll(init.providers());
+				
+				triggerCollector.addAll(init.triggers());
+				
+				init.shutdownHandlers().forEach(h -> {
+					shutdownHandlers.add(() -> h.accept(store));
+				});
+				
+				id++;
+			}
 			
 			Optional<FlowSegment> segment = buildSegment(toplevel, segments);
 			
@@ -107,35 +133,12 @@ public abstract class ModuleConfigurer {
 			FlowVisualizer visualizer = new NoFlowVisualizer();
 			
 			if (segment.isPresent()) {
-				Entry<Flow, FlowVisualizer> entry = SingleFlow.create(Path.path("initialize"), segment.get(), Data.NONE);
+				Entry<Flow, FlowVisualizer> entry = SingleFlow.create(Path.path("initialize"), segment.get(), stores);
 				flow = entry.getKey();
 				visualizer = entry.getValue();	
 			}
 			
 			return new ModuleInitializer(flow, visualizer, providersCollector, triggerCollector, shutdownHandlers);
-		}
-		
-		private static Map<ModuleConfigurer, FlowSegment> makeSegments(Collection<ModuleConfigurer> all, 
-				Map<Path,Function<ConfigurerProvider,Supplier<FlowSegment>>> providersCollector,
-				List<TriggerCollection> triggerCollector,
-				List<Runnable> shutdownHandlers) {
-			
-			Map<ModuleConfigurer,FlowSegment> map = new HashMap<>();
-			for (ModuleConfigurer module : all) {
-				
-				ModuleSetup init = new ModuleSetup(module.fullPath());
-				module.setup(init);
-				
-				init.buildFlowSegment().ifPresent(segment -> {
-					map.put(module, segment);
-				});
-				
-				providersCollector.putAll(init.providers());
-				triggerCollector.addAll(init.triggers());
-				shutdownHandlers.addAll(init.shutdownHandlers());
-				
-			}
-			return map;
 		}
 		
 		private static Optional<FlowSegment> buildSegment(Set<ModuleConfigurer> uses, Map<ModuleConfigurer, FlowSegment> built) {

@@ -12,7 +12,6 @@ public interface FlowSegment {
     Collection<FlowConnection> connections();
 	Collection<FlowSegment> segments();
 	boolean isNode();
-	//boolean isEmpty();
 
     // all optional (well, should be)
     String inputName();

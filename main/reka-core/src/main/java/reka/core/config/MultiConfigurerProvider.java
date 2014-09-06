@@ -22,12 +22,12 @@ public class MultiConfigurerProvider implements ConfigurerProvider {
 	}
 	
 	@Override
-	public Optional<Supplier<FlowSegment>> provide(String type, ConfigurerProvider provider) {
+	public Optional<Supplier<FlowSegment>> provide(String type, ConfigurerProvider parentProvider) {
 		Path typePath = slashes(type);
 		Function<ConfigurerProvider, Supplier<FlowSegment>> p = providers.get(typePath);
-		String typesWeCanMake = provider.types().stream().map(Path::slashes).collect(joining(", "));
+		String typesWeCanMake = parentProvider.types().stream().map(Path::slashes).collect(joining(", "));
 		checkNotNull(p, "don't know how to make a [%s] (we can make [%s])", typePath.slashes(), typesWeCanMake);
-		return Optional.ofNullable(p.apply(provider));
+		return Optional.ofNullable(p.apply(parentProvider));
 	}
 
 	@Override

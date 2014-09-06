@@ -2,13 +2,13 @@ package reka.rhino;
 
 import static reka.api.Path.dots;
 import static reka.api.Path.root;
-import static reka.core.builder.FlowSegments.sync;
+import static reka.core.builder.FlowSegments.storeSync;
 import static reka.rhino.RhinoHelper.compileJavascript;
+import static reka.rhino.RhinoModule.SCOPE;
 
 import java.util.function.Supplier;
 
 import org.mozilla.javascript.Script;
-import org.mozilla.javascript.ScriptableObject;
 
 import reka.api.Path;
 import reka.api.flow.FlowSegment;
@@ -17,14 +17,8 @@ import reka.config.configurer.annotations.Conf;
 
 public class RhinoConfigurer implements Supplier<FlowSegment> {
 	
-	private final Path scopePath;
-	
 	private Script script;
 	private Path out = root();
-	
-	public RhinoConfigurer(Path scopePath) {
-		this.scopePath = scopePath;
-	}
 	
 	@Conf.Config
 	@Conf.At("script")
@@ -46,12 +40,7 @@ public class RhinoConfigurer implements Supplier<FlowSegment> {
 	
 	@Override
 	public FlowSegment get() {
-		return sync("run(javascript)", (data) -> {
-			return new RhinoWithScope(
-					data.getContent(scopePath).get().valueAs(ScriptableObject.class), 
-					script, 
-					out);
-		});
+		return storeSync("run", store -> new RhinoWithScope(store.get(SCOPE), script, out));
 	}
 
 }

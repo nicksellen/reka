@@ -23,7 +23,7 @@ public final class IdentityKey<T> {
 		
 		IdentityKey<UUID> key = IdentityKey.named("name");
 		store.put(key, UUID.randomUUID());
-		UUID value = store.get(key).get();
+		UUID value = store.get(key);
 		
 		System.out.printf("uuid is %s\n", value.toString());
 		

@@ -45,9 +45,9 @@ public class RekaDeployConfigurer implements Supplier<FlowSegment> {
 	@Override
 	public FlowSegment get() {
 		if (in != null) {
-			return async("deploy", (data) -> new RekaDeployFromContentOperation(manager, in));
+			return async("deploy", () -> new RekaDeployFromContentOperation(manager, in));
 		} else if (filenameFn != null) {
-			return async("deploy", (data) -> new RekaDeployFromFileOperation(manager, filenameFn, identityFn));
+			return async("deploy", () -> new RekaDeployFromFileOperation(manager, filenameFn, identityFn));
 		} else {
 			throw runtime("must specify either 'in' or 'filename'");
 		}

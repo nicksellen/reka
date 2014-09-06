@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntConsumer;
@@ -23,6 +24,7 @@ import reka.api.IdentityKey;
 import reka.api.IdentityStore;
 import reka.api.Path;
 import reka.api.data.Data;
+import reka.api.data.MutableData;
 import reka.api.flow.Flow;
 import reka.api.flow.FlowSegment;
 import reka.api.run.AsyncOperation;
@@ -32,20 +34,30 @@ import reka.core.builder.FlowSegments;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 
+import com.google.common.util.concurrent.SettableFuture;
+
 public class ModuleSetup {
 	
 	public static interface ModuleExecutor extends Supplier<FlowSegment> {
 		ModuleExecutor run(String name, SyncOperation operation);		
+		ModuleExecutor storeRun(String name, Consumer<IdentityStore> c);
 		ModuleExecutor runAsync(String name, AsyncOperation operation);
+		ModuleExecutor storeRunAsync(String name, BiConsumer<IdentityStore, DoneCallback> c);
 		ModuleExecutor sequential(Consumer<ModuleExecutor> seq);
 		ModuleExecutor sequential(String label, Consumer<ModuleExecutor> seq);
 		ModuleExecutor parallel(Consumer<ModuleExecutor> par);
 		ModuleExecutor parallel(String label, Consumer<ModuleExecutor> par);
+		<T> ModuleExecutor eachParallel(Iterable<T> it, BiConsumer<T, ModuleExecutor> seq);
 	}
 	
 	private abstract static class AbstractExecutor implements ModuleExecutor {
 		
+		private final IdentityStore store;
 		private final List<Supplier<FlowSegment>> segments = new ArrayList<>();
+		
+		public AbstractExecutor(IdentityStore store) {
+			this.store = store;
+		}
 
 		@Override
 		public ModuleExecutor run(String name, SyncOperation operation) {
@@ -58,10 +70,39 @@ public class ModuleSetup {
 			segments.add(() -> async(name, () -> operation));
 			return this;
 		}
+		
+		@Override
+		public ModuleExecutor storeRun(String name, Consumer<IdentityStore> c) {
+			return run(name, (data) -> {
+				c.accept(store);
+				return data;
+			});
+		}
+		
+		@Override
+		public <T> ModuleExecutor eachParallel(Iterable<T> it, BiConsumer<T, ModuleExecutor> c) {
+			ModuleExecutor e = new ParallelExecutor(store);
+			for (T v : it) {
+				e.sequential(s -> {
+					c.accept(v, s);
+				});
+			}
+			segments.add(e);
+			return this;
+		}
+		
+		@Override
+		public ModuleExecutor storeRunAsync(String name, BiConsumer<IdentityStore, DoneCallback> c) {
+			return runAsync(name, (data) -> {
+				SettableFuture<MutableData> future = SettableFuture.create();
+				c.accept(store, () -> future.set(data));
+				return future;
+			});
+		}
 
 		@Override
 		public ModuleExecutor sequential(Consumer<ModuleExecutor> seq) {
-			ModuleExecutor e = new SequentialExecutor();
+			ModuleExecutor e = new SequentialExecutor(store);
 			seq.accept(e);
 			segments.add(e);
 			return this;
@@ -69,7 +110,7 @@ public class ModuleSetup {
 
 		@Override
 		public ModuleExecutor sequential(String label, Consumer<ModuleExecutor> seq) {
-			ModuleExecutor e = new SequentialExecutor();
+			ModuleExecutor e = new SequentialExecutor(store);
 			seq.accept(e);
 			segments.add(() -> FlowSegments.label(label, e.get()));
 			return this;
@@ -77,7 +118,7 @@ public class ModuleSetup {
 
 		@Override
 		public ModuleExecutor parallel(Consumer<ModuleExecutor> par) {
-			ModuleExecutor e = new ParallelExecutor();
+			ModuleExecutor e = new ParallelExecutor(store);
 			par.accept(e);
 			segments.add(e);
 			return this;
@@ -86,7 +127,7 @@ public class ModuleSetup {
 
 		@Override
 		public ModuleExecutor parallel(String label, Consumer<ModuleExecutor> par) {
-			ModuleExecutor e = new ParallelExecutor();
+			ModuleExecutor e = new ParallelExecutor(store);
 			par.accept(e);
 			segments.add(() -> FlowSegments.label(label, e.get()));
 			return this;
@@ -104,6 +145,10 @@ public class ModuleSetup {
 	
 	private static class SequentialExecutor extends AbstractExecutor {
 
+		public SequentialExecutor(IdentityStore store) {
+			super(store);
+		}
+
 		@Override
 		FlowSegment build(Collection<FlowSegment> segments) {
 			return FlowSegments.seq(segments);
@@ -114,6 +159,10 @@ public class ModuleSetup {
 	
 	private static class ParallelExecutor extends AbstractExecutor {
 
+		public ParallelExecutor(IdentityStore store) {
+			super(store);
+		}
+
 		@Override
 		FlowSegment build(Collection<FlowSegment> segments) {
 			return par(segments);
@@ -121,51 +170,72 @@ public class ModuleSetup {
 		
 	}
 
+	private final int moduleId;
 	private final Path path;
+	private final IdentityStore store;
 	private final List<Supplier<FlowSegment>> segments = new ArrayList<>();
-	private final List<Runnable> shutdownHandlers = new ArrayList<>();
+	private final List<Consumer<IdentityStore>> shutdownHandlers = new ArrayList<>();
 	private final List<TriggerCollection> triggers = new ArrayList<>();
 	private final Map<Path,Function<ConfigurerProvider,Supplier<FlowSegment>>> providers = new HashMap<>();
 	
-	public ModuleSetup(Path path) {
+	public ModuleSetup(int moduleId, Path path, IdentityStore store) {
+		this.moduleId = moduleId;
 		this.path = path;
+		this.store = store;
 	}
 	
 	public Path path() {
 		return path;
 	}
 	
-	public ModuleSetup storeInit(String name, Consumer<IdentityStore> c) {
-		return init(name, (data) -> {
-			IdentityStore store = data.getContent(Path.path("store")).get().valueAs(IdentityStore.class);
-			c.accept(store);
-			return data;
-		});
+	public static interface DoneCallback extends Runnable {
+		void done();
+		default void run() {
+			done();
+		}
 	}
 	
-	public ModuleSetup init(String name, SyncOperation operation) {
-		segments.add(() -> sync(name, () -> operation));
-		return this;
-	}
-	
-	public ModuleSetup initParallel(Consumer<ModuleExecutor> parallel) {
-		ModuleExecutor e = new ParallelExecutor();
-		parallel.accept(e);
+	public ModuleSetup init(Consumer<ModuleExecutor> seq) {
+		ModuleExecutor e = new SequentialExecutor(store);
+		seq.accept(e);
 		segments.add(e);
 		return this;
 	}
 	
-	public ModuleSetup initAsync(String name, AsyncOperation operation) {
-		segments.add(() -> async(name, () -> operation));
-		return this;
-	}
-
-	public void shutdown(String name, Runnable handler) {
+	public void shutdown(String name, Consumer<IdentityStore> handler) {
 		shutdownHandlers.add(handler);
 	}
 	
 	public ModuleSetup operation(Path name, Supplier<Supplier<FlowSegment>> supplier) {
-		providers.put(path.add(name), (provider) -> supplier.get());
+		providers.put(path.add(name), provider -> supplier.get());
+		return this;
+	}
+	
+	public static class OperationContext {
+		
+		private final ConfigurerProvider provider;
+		private final IdentityStore store;
+		
+		OperationContext(ConfigurerProvider provider, IdentityStore store) {
+			this.provider = provider;
+			this.store = store;
+		}
+		
+		public ConfigurerProvider provider() {
+			return provider;
+		}
+		
+		public IdentityStore store() {
+			return store;
+		}
+		
+	}
+	
+	public ModuleSetup operationWCtx(Path name, Function<OperationContext,Function<IdentityStore, FlowSegment>> a) {
+		operation(name, provider -> {
+			Function<IdentityStore,FlowSegment> idtoflow = a.apply(new OperationContext(provider, store));
+			return () -> idtoflow.apply(store);
+		});
 		return this;
 	}
 	
@@ -385,7 +455,7 @@ public class ModuleSetup {
 		return triggers;
 	}
 	
-	public List<Runnable> shutdownHandlers() {
+	public List<Consumer<IdentityStore>> shutdownHandlers() {
 		return shutdownHandlers;
 	}
 	

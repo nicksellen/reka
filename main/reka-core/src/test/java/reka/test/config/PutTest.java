@@ -23,7 +23,6 @@ import reka.api.flow.FlowNode;
 import reka.api.flow.FlowOperation;
 import reka.api.flow.FlowSegment;
 import reka.api.run.AsyncOperation;
-import reka.api.run.OperationSupplier;
 import reka.api.run.RoutingOperation;
 import reka.api.run.SyncOperation;
 import reka.builtins.BuiltinsModule;
@@ -92,8 +91,7 @@ public class PutTest {
 		
 		configure(s, config);
 		
-		OperationSupplier<?> supplier = firstNode(s.get()).operationSupplier();
-		FlowOperation op = (FlowOperation) OperationSupplier.supply(supplier, Data.NONE).get();
+		FlowOperation op = firstNode(s.get()).operationSupplier().get();
 		if (op instanceof SyncOperation) {
 			return callSync((SyncOperation) op, input);
 		} else if (op instanceof AsyncOperation) {

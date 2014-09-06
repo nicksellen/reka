@@ -176,7 +176,7 @@ public class FilesystemBundle implements RekaBundle {
 		@Override
 		public FlowSegment get() {
 			return sequential(seq -> {
-				seq.routerNode("file/type", (unused) -> new FilesystemType(basedir, pathFn));
+				seq.routerNode("file/type", () -> new FilesystemType(basedir, pathFn));
 				seq.parallel(par -> {
 					if (whenDir != null) par.add("dir", whenDir.get());
 					if (whenFile != null) par.add("file", whenFile.get());

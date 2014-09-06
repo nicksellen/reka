@@ -236,7 +236,7 @@ public class WebsocketModule extends ModuleConfigurer {
 		
 		@Override
 		public FlowSegment get() {
-			return sync("broadcast", (store) -> new WebsocketBroadcastOperation(messageFn));
+			return sync("broadcast", () -> new WebsocketBroadcastOperation(messageFn));
 		}
 		
 	}
@@ -259,7 +259,7 @@ public class WebsocketModule extends ModuleConfigurer {
 		
 		@Override
 		public FlowSegment get() {
-			return sync(format("%s/send", key.name()), (store) -> new WebsocketTopicSendOperation(key, messageFn));
+			return sync(format("%s/send", key.name()), () -> new WebsocketTopicSendOperation(key, messageFn));
 		}
 		
 	}

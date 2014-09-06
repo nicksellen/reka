@@ -3,7 +3,6 @@ package reka.rhino;
 import static java.util.Arrays.asList;
 import static reka.api.Path.path;
 import static reka.api.Path.root;
-import static reka.api.content.Contents.nonSerializableContent;
 import static reka.rhino.RhinoHelper.compileJavascript;
 import static reka.rhino.RhinoHelper.runJavascriptInScope;
 
@@ -17,7 +16,7 @@ import org.mozilla.javascript.ScriptableObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.api.Path;
+import reka.api.IdentityKey;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.ModuleConfigurer;
@@ -26,6 +25,8 @@ import reka.core.bundle.ModuleSetup;
 import com.google.common.base.Charsets;
 
 public class RhinoModule extends ModuleConfigurer {
+	
+	protected static final IdentityKey<ScriptableObject> SCOPE = IdentityKey.named("scope");
 	
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	
@@ -59,37 +60,29 @@ public class RhinoModule extends ModuleConfigurer {
 	@Override
 	public void setup(ModuleSetup module) {
 		
-		Path scopePath = module.path().add("scope");
+		module.init(seq -> {
 		
-		module.init("create js scope", (data) -> {
-			Context context = Context.enter();
-			if (optimization != null) context.setOptimizationLevel(optimization);
-			try {
-				ScriptableObject scope = context.initStandardObjects(null, false);
-				data.put(scopePath, nonSerializableContent(scope));
-				log.debug("put scope at [{}]", scopePath.slashes());
-			} finally {
-				Context.exit();
-			}
-			
-			log.debug("returning data from js init: {}", data.toPrettyJson());
-			
-			return data;
-		});
-
-		log.info("setting up {} script(s)", scripts.size());
-		
-		for (Script script : scripts) {
-			module.init("run initial javascript", (data) -> {
-				log.debug("running initial js");
-				ScriptableObject scope = data.getContent(scopePath).get().valueAs(ScriptableObject.class);
-				runJavascriptInScope(scope, script, optimization);
-				log.debug("returning data from js init/run: {}", data.toPrettyJson());
-				return data;
+			seq.storeRun("create js scope", store -> {
+				Context context = Context.enter();
+				if (optimization != null) context.setOptimizationLevel(optimization);
+				try {
+					store.put(SCOPE, context.initStandardObjects(null, false));
+				} finally {
+					Context.exit();
+				}
 			});
-		}
+	
+			log.info("setting up {} script(s)", scripts.size());
+			
+			for (Script script : scripts) {
+				seq.storeRun("run initial javascript", store -> {
+					log.debug("running initial js");
+					runJavascriptInScope(store.get(SCOPE), script, optimization);
+				});
+			}
+		});
 		
-		module.operation(asList(root(), path("run")), () -> new RhinoConfigurer(scopePath));
+		module.operation(asList(root(), path("run")), () -> new RhinoConfigurer());
 		
 	}
 

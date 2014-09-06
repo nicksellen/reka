@@ -18,10 +18,9 @@ import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.api.ConcurrentIdentityStore;
 import reka.api.IdentityKey;
+import reka.api.IdentityStore;
 import reka.api.Path;
-import reka.api.content.Contents;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.flow.Flow;
@@ -184,7 +183,9 @@ public class ApplicationConfigurer implements ErrorReporter {
 	    	
 	    	MutableData initdata = MutableMemoryData.create();
 	    	
-	    	initdata.put(path("store"), Contents.nonSerializableContent(new ConcurrentIdentityStore()));
+	    	//initdata.put(path("store"), Contents.nonSerializableContent(new ConcurrentIdentityStore()));
+	    	
+	    	Map<Integer,IdentityStore> stores = new HashMap<>(); // TODO: fill the stores
 	    	
 	    	initializer.flow().prepare().data(initdata).complete(new EverythingSubscriber() {
 				
@@ -195,7 +196,7 @@ public class ApplicationConfigurer implements ErrorReporter {
 					
 			    	try {
 			    		
-						Flows flows = flowBuilders.build(data);
+						Flows flows = flowBuilders.build(stores);
 						
 						applicationBuilder.flows(flows);
 						
@@ -214,6 +215,7 @@ public class ApplicationConfigurer implements ErrorReporter {
 							applicationBuilder.undeployConsumers().addAll(mr.undeployConsumers());
 							applicationBuilder.pauseConsumers().addAll(mr.pauseConsumers());
 							applicationBuilder.resumeConsumers().addAll(mr.resumeConsumers());
+							
 				    	});
 						
 						applicationBuilder.undeployConsumers().add(version -> {
