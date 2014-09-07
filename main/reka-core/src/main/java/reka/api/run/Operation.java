@@ -6,7 +6,7 @@ import reka.core.builder.SyncToAsync;
 
 import com.google.common.util.concurrent.ListeningExecutorService;
 
-public interface SyncOperation extends SimpleFlowOperation {
+public interface Operation extends SimpleFlowOperation {
 	public MutableData call(MutableData data);
 	default public AsyncOperation toAsync(ListeningExecutorService executor) {
 		return new SyncToAsync(this, executor);

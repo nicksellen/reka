@@ -5,11 +5,11 @@ import static reka.api.Path.path;
 import io.netty.channel.nio.NioEventLoopGroup;
 import reka.api.Path;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.OperationSetup;
+import reka.core.setup.OperationSetup;
 import reka.http.operations.HttpRequestOperation;
-import reka.nashorn.OperationsConfigurer;
+import reka.nashorn.OperationConfigurer;
 
-public class HttpRequestConfigurer implements OperationsConfigurer {
+public class HttpRequestConfigurer implements OperationConfigurer {
 	
 	private final NioEventLoopGroup group;
 	

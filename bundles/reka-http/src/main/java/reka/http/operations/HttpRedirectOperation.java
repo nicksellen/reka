@@ -9,9 +9,9 @@ import reka.api.Path.Response;
 import reka.api.content.Content;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 
-public class HttpRedirectOperation implements SyncOperation {
+public class HttpRedirectOperation implements Operation {
 
 	private final Function<Data,String> urlFn;
 	private final Content status;

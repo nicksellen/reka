@@ -12,7 +12,7 @@ import reka.api.data.Data;
 import reka.api.flow.Flow;
 import reka.core.builder.FlowVisualizer;
 import reka.core.builder.Flows;
-import reka.core.bundle.NetworkInfo;
+import reka.core.setup.NetworkInfo;
 
 public class Application {
  

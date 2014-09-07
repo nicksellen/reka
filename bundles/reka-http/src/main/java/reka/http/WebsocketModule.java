@@ -24,20 +24,20 @@ import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.flow.Flow;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.ModuleConfigurer;
-import reka.core.bundle.ModuleSetup;
-import reka.core.bundle.OperationSetup;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
+import reka.core.setup.ModuleSetup;
+import reka.core.setup.OperationSetup;
 import reka.core.util.StringWithVars;
 import reka.http.server.HttpServerManager;
 import reka.http.server.HttpSettings;
 import reka.http.server.HttpSettings.Type;
-import reka.nashorn.OperationsConfigurer;
+import reka.nashorn.OperationConfigurer;
 
 public class WebsocketModule extends ModuleConfigurer {
 	
@@ -122,7 +122,7 @@ public class WebsocketModule extends ModuleConfigurer {
 		}
 	}
 
-	private static Function<ConfigurerProvider,OperationsConfigurer> combine(List<ConfigBody> bodies) {
+	private static Function<ConfigurerProvider,OperationConfigurer> combine(List<ConfigBody> bodies) {
 		return provider -> {
 			return ops -> {
 				ops.parallel(par -> {
@@ -146,7 +146,7 @@ public class WebsocketModule extends ModuleConfigurer {
 			module.operation(base.add("subscribe"), provider -> new WebsocketTopicSubscribeConfigurer(topic.key()));
 		});
 		
-		Map<IdentityKey<Flow>,Function<ConfigurerProvider, OperationsConfigurer>> triggers = new HashMap<>();
+		Map<IdentityKey<Flow>,Function<ConfigurerProvider, OperationConfigurer>> triggers = new HashMap<>();
 		
 		IdentityKey<Flow> connect = IdentityKey.named("connect");
 		IdentityKey<Flow> disconnect = IdentityKey.named("disconnect");
@@ -203,7 +203,7 @@ public class WebsocketModule extends ModuleConfigurer {
 		});
 	}
 
-	public class WebsocketSendConfigurer implements OperationsConfigurer {
+	public class WebsocketSendConfigurer implements OperationConfigurer {
 
 		private Function<Data,String> to;
 		private Function<Data,String> messageFn;
@@ -225,7 +225,7 @@ public class WebsocketModule extends ModuleConfigurer {
 		
 	}
 
-	public class WebsocketBroadcastConfigurer implements OperationsConfigurer {
+	public class WebsocketBroadcastConfigurer implements OperationConfigurer {
 		
 		private Function<Data,String> messageFn;
 		
@@ -242,7 +242,7 @@ public class WebsocketModule extends ModuleConfigurer {
 		
 	}
 
-	public class WebsocketTopicSendConfigurer implements OperationsConfigurer {
+	public class WebsocketTopicSendConfigurer implements OperationConfigurer {
 		
 		private final IdentityKey<Object> key;
 		
@@ -265,7 +265,7 @@ public class WebsocketModule extends ModuleConfigurer {
 		
 	}
 
-	public class WebsocketTopicSubscribeConfigurer implements OperationsConfigurer {
+	public class WebsocketTopicSubscribeConfigurer implements OperationConfigurer {
 		
 		private final IdentityKey<Object> key;
 		
@@ -288,7 +288,7 @@ public class WebsocketModule extends ModuleConfigurer {
 		
 	}
 	
-	public class WebsocketSendOperation implements SyncOperation {
+	public class WebsocketSendOperation implements Operation {
 
 		private final Function<Data,String> toFn;
 		private final Function<Data,String> messageFn;
@@ -316,7 +316,7 @@ public class WebsocketModule extends ModuleConfigurer {
 		
 	}
 	
-	public class WebsocketBroadcastOperation implements SyncOperation {
+	public class WebsocketBroadcastOperation implements Operation {
 
 		private final Function<Data,String> messageFn;
 		private final HttpSettings settings;
@@ -344,7 +344,7 @@ public class WebsocketModule extends ModuleConfigurer {
 		
 	}
 
-	public class WebsocketTopicSendOperation implements SyncOperation {
+	public class WebsocketTopicSendOperation implements Operation {
 
 		private final IdentityKey<Object> key;
 		private final Function<Data,String> messageFn;
@@ -377,7 +377,7 @@ public class WebsocketModule extends ModuleConfigurer {
 		
 	}
 	
-	public class WebsocketTopicSubscribeOperation implements SyncOperation {
+	public class WebsocketTopicSubscribeOperation implements Operation {
 
 		private final IdentityKey<Object> key;
 		private final Function<Data,String> idFn;

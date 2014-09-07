@@ -21,16 +21,16 @@ import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.flow.Flow;
 import reka.api.run.AsyncOperation;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.ModuleConfigurer;
-import reka.core.bundle.ModuleSetup;
-import reka.core.bundle.OperationSetup;
 import reka.core.data.memory.MutableMemoryData;
+import reka.core.setup.ModuleSetup;
+import reka.core.setup.OperationSetup;
 import reka.core.util.StringWithVars;
-import reka.nashorn.OperationsConfigurer;
+import reka.nashorn.OperationConfigurer;
 
 import com.google.common.base.Splitter;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -99,8 +99,8 @@ public class ProcessModule extends ModuleConfigurer {
 			});
 		}
 		
-		module.setupInitializer(seq -> {
-			seq.run("start process", store -> {
+		module.setupInitializer(init -> {
+			init.run("start process", store -> {
 				try {
 					ProcessBuilder builder = new ProcessBuilder();
 					builder.command(command);
@@ -120,7 +120,7 @@ public class ProcessModule extends ModuleConfigurer {
 		module.operation(root(), provider -> new ProcessCallConfigurer(noreply));
 	}
 	
-	public static class ProcessCallConfigurer implements OperationsConfigurer {
+	public static class ProcessCallConfigurer implements OperationConfigurer {
 
 		private final boolean noreply;
 		
@@ -146,7 +146,7 @@ public class ProcessModule extends ModuleConfigurer {
 		
 	}
 	
-	public static class ProcessCallNoreplyOperation implements SyncOperation {
+	public static class ProcessCallNoreplyOperation implements Operation {
 
 		private final ProcessManager manager;
 		private final Function<Data,String> lineFn;

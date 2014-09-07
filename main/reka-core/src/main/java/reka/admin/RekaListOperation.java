@@ -4,12 +4,12 @@ import reka.Application;
 import reka.ApplicationManager;
 import reka.api.Path;
 import reka.api.data.MutableData;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 import reka.core.data.memory.MutableMemoryData;
 
 
 
-public class RekaListOperation implements SyncOperation {
+public class RekaListOperation implements Operation {
 	
 	private final ApplicationManager manager;
 	private final Path out;

@@ -13,9 +13,9 @@ import java.util.function.Function;
 
 import reka.api.data.Data;
 import reka.api.data.MutableData;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 
-public class FilesystemDelete implements SyncOperation {
+public class FilesystemDelete implements Operation {
 	
 	private final java.nio.file.Path basedir;
 	private final Function<Data,String> filenameFn;

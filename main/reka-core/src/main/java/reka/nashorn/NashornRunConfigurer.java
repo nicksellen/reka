@@ -5,9 +5,9 @@ import static reka.nashorn.NashornModule.RUNNER;
 import reka.api.Path;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.OperationSetup;
+import reka.core.setup.OperationSetup;
 
-public class NashornRunConfigurer implements OperationsConfigurer {
+public class NashornRunConfigurer implements OperationConfigurer {
 	
 	private String script;
 	private Path out;

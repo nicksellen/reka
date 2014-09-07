@@ -7,9 +7,9 @@ import java.util.function.Function;
 
 import reka.api.data.Data;
 import reka.api.data.MutableData;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 
-public class FilesystemResolveOperation implements SyncOperation {
+public class FilesystemResolveOperation implements Operation {
 	
 	private final java.nio.file.Path basedir;
 	private final Function<Data,String> inFn, outFn;

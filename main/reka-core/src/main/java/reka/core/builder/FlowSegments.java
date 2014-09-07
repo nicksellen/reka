@@ -11,18 +11,12 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.flow.FlowConnection;
 import reka.api.flow.FlowNode;
 import reka.api.flow.FlowSegment;
-import reka.api.run.AsyncOperation;
-import reka.api.run.DataOperation;
-import reka.api.run.RoutingOperation;
-import reka.api.run.SyncOperation;
 import reka.core.config.NoOp;
 import reka.core.data.memory.MutableMemoryData;
 
@@ -31,91 +25,8 @@ import com.google.common.collect.Iterables;
 
 public class FlowSegments extends AbstractFlowNode {
 	
-	public static interface SegmentCollector {
-		void addLabel(String label);
-		void add(FlowSegment seg);
-		void add(String name, FlowSegment seg);
-		void add(String name, Collection<FlowSegment> segs);
-		void add(String name, Consumer<SegmentCollector> named);
-		void sequential(Consumer<SegmentCollector> seq);
-		void parallel(Consumer<SegmentCollector> par);
-		void routerNode(String name, Supplier<RoutingOperation> supplier);
-		void node(String name,Supplier<SyncOperation> supplier);
-		void asyncNode(String name, Supplier<AsyncOperation> supplier);
-	}
-	
-	private static class DefaultSegmentCollector implements SegmentCollector {
-		
-		private final Collection<FlowSegment> segments = new ArrayList<>();
-		private String label;
-		
-		@Override
-		public void addLabel(String label) {
-			this.label = label;
-		}
-		
-		@Override
-		public void add(FlowSegment segment) {
-			this.segments.add(segment);
-		}
-		
-		@Override
-		public void add(String name, FlowSegment segment) {
-			add(namedInput(name, segment));
-		}
-
-		@Override
-		public void add(String name, Collection<FlowSegment> segment) {
-			add(namedInput(name, FlowSegments.seq(segment)));
-		}
-				
-		@Override
-		public void add(String name, Consumer<SegmentCollector> coll) {
-			add(namedInput(name, new DefaultSegmentCollector().collectSequential(coll)));
-		}
-		
-		@Override
-		public void sequential(Consumer<SegmentCollector> seq) {
-			add(new DefaultSegmentCollector().collectSequential(seq));
-		}
-		
-		@Override
-		public void parallel(Consumer<SegmentCollector> par) {
-			add(new DefaultSegmentCollector().collectParallel(par));
-		}
-		
-		public void routerNode(String name, Supplier<RoutingOperation> supplier) {
-			add(OperationFlowNode.router(name, supplier));
-		}
-		
-		public void node(String name, Supplier<SyncOperation> supplier) {
-			add(OperationFlowNode.simple(name, supplier));
-		}
-		
-		public void asyncNode(String name, Supplier<AsyncOperation> supplier) {
-			add(OperationFlowNode.simple(name, supplier));
-		}
-		
-		private FlowSegment collectSequential(Consumer<SegmentCollector> consumer) {
-			consumer.accept(this);
-			FlowSegment main = seq(segments);
-			return label != null ? label(label, main) : main;
-		}
-
-		private FlowSegment collectParallel(Consumer<SegmentCollector> consumer) {
-			consumer.accept(this);
-			FlowSegment main = par(segments);
-			return label != null ? label(label, main) : main;
-		}
-		
-	}
-	
-	public static FlowSegment sequential(Consumer<SegmentCollector> seq) {
-		return new DefaultSegmentCollector().collectSequential(seq);
-	}
-
-	public static FlowSegment parallel(Consumer<SegmentCollector> par) {
-		return new DefaultSegmentCollector().collectParallel(par);
+	public static FlowNode noop(String name) {
+		return OperationFlowNode.simple(name, () -> NoOp.INSTANCE);
 	}
 	
 	public static FlowSegment seq(Collection<? extends FlowSegment> segments) {
@@ -125,35 +36,6 @@ public class FlowSegments extends AbstractFlowNode {
 	public static FlowSegment seq(FlowSegment first, FlowSegment... rest) {
 		return Sequential.of(first, rest);
 	}
-	
-	/*
-	public static FlowSegment tap(FlowSegment main, FlowSegment tap) {
-		return new TapFlowSegment(main, tap);
-	}
-	
-	public static FlowSegment passthrough(FlowSegment head, FlowSegment branch) {
-		return new AppendWithBypass(head, branch, new String[]{});
-	}
-	
-	public static FlowSegment afterWithBypass(FlowSegment head, FlowSegment branch, String... names) {
-		return new AppendWithBypass(head, branch, names);
-	}
-
-	public static FlowSegment beforeWithBypass(FlowSegment head, FlowSegment branch, String branchName, String bypassName) {
-		return new PrependWithBypass(head, branch, branchName, bypassName);
-	}
-	
-	public static FlowSegment halt(FlowSegment... items) {
-		FlowSegment[] ary = new FlowSegment[items.length + 1];
-		System.arraycopy(items, 0, ary, 0, items.length);
-		ary[ary.length - 1] = halt();
-		return Sequential.of(ary);
-	}
-	
-	public static FlowSegment halt() {
-		return new Halt();
-	}
-	*/
 	
 	public static FlowSegment halt() {
 		return new Halt();
@@ -168,36 +50,8 @@ public class FlowSegments extends AbstractFlowNode {
 		return new Parallel(items);
 	}
 	
-	public static FlowSegment select(FlowSegment... items) {
-		return par(items);
-	}
-	
 	public static FlowSegment embeddedFlow(String embeddedFlowName) {
 		return new EmbeddedFlowNode(embeddedFlowName, embeddedFlowName);
-	}
-
-	public static FlowNode noop(String name) {
-		return OperationFlowNode.simple(name, () -> NoOp.INSTANCE);
-	}
-	
-	public static FlowNode router(String name, Supplier<RoutingOperation> supplier) {
-		return OperationFlowNode.router(name, supplier);
-	}
-	
-	public static FlowNode sync(String name, Supplier<SyncOperation> supplier) {
-		return OperationFlowNode.simple(name, supplier);
-	}
-	
-	public static FlowNode dataop(String name, Supplier<DataOperation> supplier) {
-		return OperationFlowNode.simple(name, supplier);
-	}
-	
-	public static FlowNode background(String name, Supplier<SyncOperation> supplier) {
-		return OperationFlowNode.simple(name, supplier).shouldUseAnotherThread(true);
-	}
-	
-	public static FlowNode async(String name, Supplier<AsyncOperation> supplier) {
-		return OperationFlowNode.simple(name, supplier);
 	}
 
 	public static FlowNode startNode(String name) {

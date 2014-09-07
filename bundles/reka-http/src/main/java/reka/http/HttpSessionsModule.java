@@ -3,7 +3,7 @@ package reka.http;
 import static reka.api.Path.path;
 import reka.api.IdentityKey;
 import reka.core.bundle.ModuleConfigurer;
-import reka.core.bundle.ModuleSetup;
+import reka.core.setup.ModuleSetup;
 
 public class HttpSessionsModule extends ModuleConfigurer {
 	
@@ -13,8 +13,8 @@ public class HttpSessionsModule extends ModuleConfigurer {
 
 	@Override
 	public void setup(ModuleSetup module) {
-		module.setupInitializer(seq -> {
-			seq.run("create session storage", store -> {
+		module.setupInitializer(init -> {
+			init.run("create session storage", store -> {
 				store.put(SESSION_STORE, new SessionStore());
 			});
 		});

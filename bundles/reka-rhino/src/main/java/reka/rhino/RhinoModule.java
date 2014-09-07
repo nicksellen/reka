@@ -18,7 +18,7 @@ import reka.api.IdentityKey;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.ModuleConfigurer;
-import reka.core.bundle.ModuleSetup;
+import reka.core.setup.ModuleSetup;
 
 import com.google.common.base.Charsets;
 
@@ -58,9 +58,9 @@ public class RhinoModule extends ModuleConfigurer {
 	@Override
 	public void setup(ModuleSetup module) {
 		
-		module.setupInitializer(seq -> {
+		module.setupInitializer(init -> {
 		
-			seq.run("create js scope", store -> {
+			init.run("create js scope", store -> {
 				Context context = Context.enter();
 				if (optimization != null) context.setOptimizationLevel(optimization);
 				try {
@@ -73,7 +73,7 @@ public class RhinoModule extends ModuleConfigurer {
 			log.info("setting up {} script(s)", scripts.size());
 			
 			for (Script script : scripts) {
-				seq.run("run initial javascript", store -> {
+				init.run("run initial javascript", store -> {
 					log.debug("running initial js");
 					runJavascriptInScope(store.get(SCOPE), script, optimization);
 				});

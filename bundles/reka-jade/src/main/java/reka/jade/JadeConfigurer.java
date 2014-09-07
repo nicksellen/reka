@@ -11,8 +11,8 @@ import java.io.StringReader;
 import reka.api.Path;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.OperationSetup;
-import reka.nashorn.OperationsConfigurer;
+import reka.core.setup.OperationSetup;
+import reka.nashorn.OperationConfigurer;
 
 import com.google.common.base.Charsets;
 
@@ -21,7 +21,7 @@ import de.neuland.jade4j.exceptions.JadeException;
 import de.neuland.jade4j.template.JadeTemplate;
 import de.neuland.jade4j.template.TemplateLoader;
 
-public class JadeConfigurer implements OperationsConfigurer {
+public class JadeConfigurer implements OperationConfigurer {
 	
 	private JadeTemplate template;
 	

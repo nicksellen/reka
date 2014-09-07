@@ -14,12 +14,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import reka.api.data.MutableData;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 
-public class RunCommandOperation implements SyncOperation {
+public class RunCommandOperation implements Operation {
 	
 	private final Logger log = LoggerFactory.getLogger(getClass());
 

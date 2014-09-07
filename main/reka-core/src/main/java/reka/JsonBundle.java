@@ -13,17 +13,17 @@ import org.codehaus.jackson.map.ObjectMapper;
 import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 import reka.config.configurer.Configurer.ErrorCollector;
 import reka.config.configurer.ErrorReporter;
 import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.ModuleConfigurer;
-import reka.core.bundle.ModuleSetup;
-import reka.core.bundle.OperationSetup;
 import reka.core.bundle.RekaBundle;
 import reka.core.data.memory.MutableMemoryData;
+import reka.core.setup.ModuleSetup;
+import reka.core.setup.OperationSetup;
 import reka.core.util.StringWithVars;
-import reka.nashorn.OperationsConfigurer;
+import reka.nashorn.OperationConfigurer;
 
 public class JsonBundle implements RekaBundle {
 	
@@ -44,7 +44,7 @@ public class JsonBundle implements RekaBundle {
 		
 	}
 
-	public static class JsonParseConfigurer implements OperationsConfigurer, ErrorReporter {
+	public static class JsonParseConfigurer implements OperationConfigurer, ErrorReporter {
 		
 		private Function<Data,Path> inFn, outFn;
 		
@@ -73,7 +73,7 @@ public class JsonBundle implements RekaBundle {
 		
 	}
 	
-	public static class JsonStringifyConfigurer implements OperationsConfigurer, ErrorReporter {
+	public static class JsonStringifyConfigurer implements OperationConfigurer, ErrorReporter {
 		
 		private Function<Data,Path> inFn, outFn;
 		
@@ -102,7 +102,7 @@ public class JsonBundle implements RekaBundle {
 		
 	}
 	
-	public static class JsonParseOperation implements SyncOperation {
+	public static class JsonParseOperation implements Operation {
 		
 		private final Function<Data,Path> inFn, outFn;
 		
@@ -128,7 +128,7 @@ public class JsonBundle implements RekaBundle {
 		
 	}
 	
-	public static class JsonStringifyOperation implements SyncOperation {
+	public static class JsonStringifyOperation implements Operation {
 		
 		private final Function<Data,Path> inFn, outFn;
 		

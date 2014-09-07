@@ -37,12 +37,12 @@ import reka.core.builder.Flows;
 import reka.core.bundle.BundleManager;
 import reka.core.bundle.ModuleConfigurer;
 import reka.core.bundle.ModuleConfigurer.ModuleInitializer;
-import reka.core.bundle.ModuleSetup.MultiFlowRegistration;
-import reka.core.bundle.ModuleSetup.Trigger;
-import reka.core.bundle.ModuleSetup.TriggerCollection;
 import reka.core.config.MultiConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.core.data.memory.MutableMemoryData;
+import reka.core.setup.ModuleSetup.MultiFlowRegistration;
+import reka.core.setup.ModuleSetup.Trigger;
+import reka.core.setup.ModuleSetup.TriggerCollection;
 
 public class ApplicationConfigurer implements ErrorReporter {
 	
@@ -174,7 +174,6 @@ public class ApplicationConfigurer implements ErrorReporter {
 	    	
 	    	initializer.triggers().forEach(triggers -> {
 	    		triggers.get().forEach(trigger -> {
-	    			log.info("configuring trigger {}", trigger);
 	    			flowBuilders.add(triggerPath(trigger), 
 	    					trigger.supplier().apply(configurerProvider).bind(triggers.store()).get());
 	    		});
@@ -190,20 +189,16 @@ public class ApplicationConfigurer implements ErrorReporter {
 	    	
 	    	MutableData initdata = MutableMemoryData.create();
 	    	
-	    	//initdata.put(path("store"), Contents.nonSerializableContent(new ConcurrentIdentityStore()));
-	    	
-	    	Map<Integer,IdentityStore> stores = new HashMap<>(); // TODO: fill the stores
-	    	
 	    	initializer.flow().prepare().data(initdata).complete(new EverythingSubscriber() {
 				
 				@Override
 				public void ok(MutableData data) {
 					
-					log.debug("initialized with [{}]", data.toPrettyJson());
+					log.debug("initialized app");
 					
 			    	try {
 			    		
-						Flows flows = flowBuilders.build(stores);
+						Flows flows = flowBuilders.build();
 						
 						applicationBuilder.flows(flows);
 						

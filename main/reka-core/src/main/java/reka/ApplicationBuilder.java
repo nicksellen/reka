@@ -8,7 +8,7 @@ import reka.api.Path;
 import reka.api.data.Data;
 import reka.core.builder.FlowVisualizer;
 import reka.core.builder.Flows;
-import reka.core.bundle.NetworkInfo;
+import reka.core.setup.NetworkInfo;
 
 public class ApplicationBuilder {
 

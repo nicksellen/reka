@@ -12,9 +12,9 @@ import org.slf4j.LoggerFactory;
 import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 
-public class FilesystemList implements SyncOperation {
+public class FilesystemList implements Operation {
 	
 	public static final String DIRECTORY = "directory";
 	public static final String FILE = "file";

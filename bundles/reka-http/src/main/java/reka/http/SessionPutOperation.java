@@ -9,9 +9,9 @@ import reka.api.Path.Request;
 import reka.api.Path.Response;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 
-public class SessionPutOperation implements SyncOperation {
+public class SessionPutOperation implements Operation {
 	
 	private final SessionStore store;
 	

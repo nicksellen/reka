@@ -8,9 +8,9 @@ import reka.ApplicationManager;
 import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 
-public class RekaDetailsOperation implements SyncOperation {
+public class RekaDetailsOperation implements Operation {
 	
 	private final ApplicationManager manager;
 	private final Path out;

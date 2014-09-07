@@ -18,11 +18,11 @@ import reka.api.Path;
 import reka.api.content.Content;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 
 import com.google.common.base.Charsets;
 
-public class FilesystemWrite implements SyncOperation {
+public class FilesystemWrite implements Operation {
 	
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 

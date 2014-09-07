@@ -4,9 +4,9 @@ import java.util.function.Function;
 
 import reka.api.data.Data;
 import reka.api.data.MutableData;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 
-public class ThrowOperation implements SyncOperation {
+public class ThrowOperation implements Operation {
 	
 	private final Function<Data,String> msgFn;
 	

@@ -13,20 +13,20 @@ import java.util.function.Supplier;
 import reka.api.flow.FlowSegment;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.OperationSetup;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.NoOp;
 import reka.core.config.SequenceConfigurer;
+import reka.core.setup.OperationSetup;
 import reka.http.configurers.HttpRouterConfigurer.RouteBuilder;
 import reka.http.operations.HttpRouter;
 import reka.http.operations.HttpRouter.Route;
-import reka.nashorn.OperationsConfigurer;
+import reka.nashorn.OperationConfigurer;
 
 public class HttpRouteGroupConfigurer {
 
 	private final ConfigurerProvider provider;
 
-	private final Map<String, List<OperationsConfigurer>> segments = new HashMap<>();
+	private final Map<String, List<OperationConfigurer>> segments = new HashMap<>();
 	private final List<HttpRouter.Route> routes = new ArrayList<>();
 	private final List<HttpRouteGroupConfigurer> groups = new ArrayList<>();
 
@@ -91,10 +91,10 @@ public class HttpRouteGroupConfigurer {
 
 		ops.parallel(par -> {
 
-			for (Entry<String, List<OperationsConfigurer>> entry : segments.entrySet()) {
+			for (Entry<String, List<OperationConfigurer>> entry : segments.entrySet()) {
 				
 				String connectionName = entry.getKey();
-				List<OperationsConfigurer> operations = entry.getValue();
+				List<OperationConfigurer> operations = entry.getValue();
 				
 				par.routeSeq(connectionName, route -> {
 					operations.forEach(routeOperations -> route.add(routeOperations));
@@ -124,7 +124,7 @@ public class HttpRouteGroupConfigurer {
 		
 		routes.add(route);
 
-		OperationsConfigurer segment = configToSegment(config);
+		OperationConfigurer segment = configToSegment(config);
 		
 		if (!segments.containsKey(route.connectionName())) {
 			segments.put(route.connectionName(), new ArrayList<>());
@@ -134,7 +134,7 @@ public class HttpRouteGroupConfigurer {
 		
 	}
 	
-	private OperationsConfigurer configToSegment(Config config) {
+	private OperationConfigurer configToSegment(Config config) {
 		if (config.hasDocument()) {
 			return configure(new HttpContentConfigurer(), config);
 		} else if (config.hasBody()) {

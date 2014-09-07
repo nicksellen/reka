@@ -2,7 +2,6 @@ package reka.core.builder;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static java.util.Collections.emptyMap;
 import static reka.core.builder.FlowConnector.connectSegments;
 import static reka.core.builder.FlowSegments.seq;
 import static reka.core.builder.FlowSegments.startNode;
@@ -15,7 +14,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.Executors;
 
-import reka.api.IdentityStore;
 import reka.api.Path;
 import reka.api.flow.Flow;
 import reka.api.flow.FlowNode;
@@ -34,16 +32,16 @@ public class FlowBuilders {
 	
 	private final Map<Path,FlowInfo> roots = new HashMap<>();
 	
-	public static Flow createFlow(Path name, FlowSegment segment, Map<Integer,IdentityStore> stores) {
+	public static Flow createFlow(Path name, FlowSegment segment) {
 		FlowBuilders b = new FlowBuilders();
 		b.add(name, segment);
-		return b.build(stores).flow(name);
+		return b.build().flow(name);
 	}
 	
 	public static FlowVisualizer createVisualizer(Path name, FlowSegment segment) {
-		FlowBuilders b = new FlowBuilders();
-		b.add(name, segment);
-		return b.buildVisualizersMaps().get(name);
+		FlowBuilders builders = new FlowBuilders();
+		builders.add(name, segment);
+		return builders.buildVisualizersMaps().get(name);
 	}
 	
 	private static class FlowInfo {
@@ -109,10 +107,10 @@ public class FlowBuilders {
 		return roots.keySet();
 	}
 	
-	public Flows build(Map<Integer,IdentityStore> stores) {
+	public Flows build() {
 		
 		for (FlowInfo root : roots.values()) {
-			createFlow(root, true, stores);
+			createFlow(root, true);
 		}
 		
 		Flows flows = new Flows();
@@ -131,7 +129,7 @@ public class FlowBuilders {
 	private Map<Path,FlowVisualizer> buildVisualizersMaps() {
 		
 		for (FlowInfo root : roots.values()) {
-			createFlow(root, false, emptyMap()); // TODO should this be an empty map?
+			createFlow(root, false);
 		}
 		
 		Map<Path,FlowVisualizer> visualizers = new HashMap<>();
@@ -157,7 +155,7 @@ public class FlowBuilders {
 	
 	private final Map<Path,FlowConnector> connectors = new HashMap<>();
 	
-	private void createFlow(FlowInfo info, boolean buildFlow, Map<Integer,IdentityStore> stores) {
+	private void createFlow(FlowInfo info, boolean buildFlow) {
 		
 		FlowConnector connections = connectSegments(info.segment());
 		
@@ -175,7 +173,7 @@ public class FlowBuilders {
 					}
 				}
 				checkNotNull(nested, "flow [%s] is required by [%s] but was not defined, we did have %s though", name, info.name(), roots.keySet());
-				if (nested.flow() == null) createFlow(nested, buildFlow, stores);
+				if (nested.flow() == null) createFlow(nested, buildFlow);
 			}
 		}
 		
@@ -227,7 +225,7 @@ public class FlowBuilders {
 		if (buildFlow) {
 			configure(new ConfigurationNodePath(NodeChildBuilder.create(headBuilder)));
 			Map<Path,Flow> dependencies = makeMapOfBuiltFlows();
-	        NodeFactory factory = new NodeFactory(idToNodeBuilder, dependencies, stores);        
+	        NodeFactory factory = new NodeFactory(idToNodeBuilder, dependencies);        
 	        Node headNode = factory.get(flowNodeToId.get(info.start()));
 	        info.flow(new DefaultFlow(info.name(), headNode));
 		}

@@ -14,16 +14,16 @@ import org.slf4j.LoggerFactory;
 
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.OperationSetup;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
+import reka.core.setup.OperationSetup;
 import reka.http.operations.HttpRouter;
 import reka.http.operations.HttpRouter.RouteKey;
-import reka.nashorn.OperationsConfigurer;
+import reka.nashorn.OperationConfigurer;
 
 import com.google.common.collect.ImmutableList;
 
-public class HttpRouterConfigurer extends HttpRouteGroupConfigurer implements OperationsConfigurer {
+public class HttpRouterConfigurer extends HttpRouteGroupConfigurer implements OperationConfigurer {
 	
 	private static final Logger log = LoggerFactory.getLogger(HttpRouterConfigurer.class);
 
@@ -38,7 +38,7 @@ public class HttpRouterConfigurer extends HttpRouteGroupConfigurer implements Op
 
 	private static final String missingRouteName = "notfound";
 	
-	private OperationsConfigurer missing;
+	private OperationConfigurer missing;
 	
 	/* 		examples:
 	 * 			"/some/{param}/thing"

@@ -11,12 +11,12 @@ import java.util.Map.Entry;
 import reka.api.Path.Response;
 import reka.api.content.Content;
 import reka.api.data.MutableData;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 
-public class HttpResponseOperation implements SyncOperation {
+public class HttpResponseOperation implements Operation {
 	
 	private final Content content;
 	private final Content contentType;

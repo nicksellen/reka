@@ -1,7 +1,7 @@
 package reka.builtins;
 
 import reka.core.bundle.ModuleConfigurer;
-import reka.core.bundle.ModuleSetup;
+import reka.core.setup.ModuleSetup;
 
 public class AnythingModule extends ModuleConfigurer {
 

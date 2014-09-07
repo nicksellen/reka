@@ -4,11 +4,11 @@ import java.util.function.Function;
 
 import reka.api.data.Data;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.OperationSetup;
+import reka.core.setup.OperationSetup;
 import reka.core.util.StringWithVars;
-import reka.nashorn.OperationsConfigurer;
+import reka.nashorn.OperationConfigurer;
 
-public class FilesystemResolveConfigurer implements OperationsConfigurer {
+public class FilesystemResolveConfigurer implements OperationConfigurer {
 	
 	private final java.nio.file.Path basedir;
 	

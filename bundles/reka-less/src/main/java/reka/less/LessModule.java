@@ -24,13 +24,13 @@ import reka.api.Path.Response;
 import reka.api.content.Content;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.ModuleConfigurer;
-import reka.core.bundle.ModuleSetup;
-import reka.core.bundle.OperationSetup;
-import reka.nashorn.OperationsConfigurer;
+import reka.core.setup.ModuleSetup;
+import reka.core.setup.OperationSetup;
+import reka.nashorn.OperationConfigurer;
 
 public class LessModule extends ModuleConfigurer {
 	
@@ -87,7 +87,7 @@ public class LessModule extends ModuleConfigurer {
 		
 	}
 	
-	public static class LessConfigurer implements OperationsConfigurer {
+	public static class LessConfigurer implements OperationConfigurer {
 		
 		private final LessCompiler compiler;
 		
@@ -127,7 +127,7 @@ public class LessModule extends ModuleConfigurer {
 		
 	}
 	
-	public static class LessOperation implements SyncOperation {
+	public static class LessOperation implements Operation {
 		
 		private final Function<Data,Path> outFn;
 		private final Content content;

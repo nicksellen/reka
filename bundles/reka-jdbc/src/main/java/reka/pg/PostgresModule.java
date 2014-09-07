@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import reka.core.bundle.ModuleConfigurer;
-import reka.core.bundle.ModuleSetup;
+import reka.core.setup.ModuleSetup;
 
 public class PostgresModule extends ModuleConfigurer {
 

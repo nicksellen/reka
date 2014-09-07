@@ -17,9 +17,9 @@ import reka.api.Path;
 import reka.api.Path.Response;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 
-public class FilesystemRead implements SyncOperation {
+public class FilesystemRead implements Operation {
 	
 	private final java.nio.file.Path basedir;
 	private final Function<Data,Path> dataPathFn;

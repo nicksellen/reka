@@ -4,12 +4,12 @@ import java.util.function.Function;
 
 import reka.api.data.Data;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.OperationSetup;
+import reka.core.setup.OperationSetup;
 import reka.core.util.StringWithVars;
 import reka.http.operations.HttpRedirectOperation;
-import reka.nashorn.OperationsConfigurer;
+import reka.nashorn.OperationConfigurer;
 
-public class HttpRedirectConfigurer implements OperationsConfigurer {
+public class HttpRedirectConfigurer implements OperationConfigurer {
 
 	private Function<Data,String> urlFn;
 	private boolean temporary = true;

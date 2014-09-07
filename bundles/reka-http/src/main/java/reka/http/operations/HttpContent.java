@@ -11,9 +11,9 @@ import java.nio.file.Files;
 import reka.api.Path.Response;
 import reka.api.content.Content;
 import reka.api.data.MutableData;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 
-public class HttpContent implements SyncOperation {
+public class HttpContent implements Operation {
 
 	private static final long PUT_IN_FILE_THRESHOLD = 1024L * 512L; // 512k
 	

@@ -1,4 +1,4 @@
-package reka.core.bundle;
+package reka.core.setup;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -10,8 +10,7 @@ import reka.api.data.MutableData;
 import reka.api.flow.FlowSegment;
 import reka.api.flow.SimpleFlowOperation;
 import reka.api.run.RoutingOperation;
-import reka.core.bundle.ModuleSetup.DoneCallback;
-import reka.nashorn.OperationsConfigurer;
+import reka.nashorn.OperationConfigurer;
 
 public interface OperationSetup extends Supplier<FlowSegment> {
 	
@@ -28,13 +27,13 @@ public interface OperationSetup extends Supplier<FlowSegment> {
 	
 	OperationSetup add(Supplier<FlowSegment> supplier);
 	
-	OperationSetup add(OperationsConfigurer configurer);
+	OperationSetup add(OperationConfigurer configurer);
 	
 	OperationSetup sequential(Consumer<OperationSetup> seq);
 	OperationSetup sequential(String label, Consumer<OperationSetup> seq);
 
 	OperationSetup routeSeq(String name, Consumer<OperationSetup> seq);
-	OperationSetup route(String name, OperationsConfigurer configurer);
+	OperationSetup route(String name, OperationConfigurer configurer);
 	
 	OperationSetup parallel(Consumer<OperationSetup> par);
 	OperationSetup parallel(String label, Consumer<OperationSetup> par);

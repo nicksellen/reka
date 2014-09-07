@@ -1,4 +1,4 @@
-package reka.core.bundle;
+package reka.core.setup;
 
 import static java.util.stream.Collectors.toList;
 import static reka.config.configurer.Configurer.configure;
@@ -18,9 +18,6 @@ import java.util.function.Function;
 import java.util.function.IntConsumer;
 import java.util.function.Supplier;
 
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.SettableFuture;
-
 import reka.api.IdentityKey;
 import reka.api.IdentityStore;
 import reka.api.Path;
@@ -29,12 +26,15 @@ import reka.api.data.MutableData;
 import reka.api.flow.Flow;
 import reka.api.flow.FlowSegment;
 import reka.api.run.AsyncOperation;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
-import reka.nashorn.OperationsConfigurer;
+import reka.nashorn.OperationConfigurer;
+
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 
 public class ModuleSetup {
 	
@@ -61,16 +61,14 @@ public class ModuleSetup {
 		}
 	}
 	
-	public ModuleSetup setupInitializer(Consumer<ModuleOperationSetup> seq) {
+	public ModuleSetup setupInitializer(Consumer<ModuleOperationSetup> init) {
 		OperationSetup e = new SequentialCollector(store);
-		seq.accept(new ModuleOperationSetup(e));
+		init.accept(new ModuleOperationSetup(e));
 		segments.add(e);
 		return this;
 	}
 	
-	/*
-	 * wraps the fullon OperationSetup and only allows direct operations to be defined, which just see the store
-	 */
+	// wraps the fullon OperationSetup and only allows direct operations to be defined, which just see the store
 	public static class ModuleOperationSetup {
 		
 		private final OperationSetup ops;
@@ -81,7 +79,7 @@ public class ModuleSetup {
 		
 		public ModuleOperationSetup run(String name, Consumer<IdentityStore> c) {
 			ops.add(name, store -> {
-				return new SyncOperation() {
+				return new Operation() {
 					
 					@Override
 					public MutableData call(MutableData data) {
@@ -127,7 +125,7 @@ public class ModuleSetup {
 		shutdownHandlers.add(handler);
 	}
 	
-	public ModuleSetup operation(Path name, Function<ConfigurerProvider,OperationsConfigurer> c) {
+	public ModuleSetup operation(Path name, Function<ConfigurerProvider,OperationConfigurer> c) {
 		operations.put(path.add(name), (provider, config) -> {
 			return configure(c.apply(provider), config).bind(store);
 		});
@@ -280,9 +278,9 @@ public class ModuleSetup {
 
 		private final Path base;
 		private final IdentityKey<Flow> name;
-		private final Function<ConfigurerProvider, OperationsConfigurer> supplier;
+		private final Function<ConfigurerProvider, OperationConfigurer> supplier;
 		
-		public Trigger(Path base, IdentityKey<Flow> name, Function<ConfigurerProvider, OperationsConfigurer> supplier) {
+		public Trigger(Path base, IdentityKey<Flow> name, Function<ConfigurerProvider, OperationConfigurer> supplier) {
 			this.base = base;
 			this.name = name;
 			this.supplier = supplier;
@@ -296,7 +294,7 @@ public class ModuleSetup {
 			return name;
 		}
 		
-		public Function<ConfigurerProvider,OperationsConfigurer> supplier() {
+		public Function<ConfigurerProvider,OperationConfigurer> supplier() {
 			return supplier;
 		}
 		
@@ -306,11 +304,11 @@ public class ModuleSetup {
 		return trigger(IdentityKey.named(name), body, c);
 	}
 
-	public ModuleSetup trigger(String name, Function<ConfigurerProvider, OperationsConfigurer> supplier, Consumer<SingleFlowRegistration> c) {
+	public ModuleSetup trigger(String name, Function<ConfigurerProvider, OperationConfigurer> supplier, Consumer<SingleFlowRegistration> c) {
 		return trigger(IdentityKey.named(name), supplier, c);
 	}
 	
-	public ModuleSetup triggers(Map<IdentityKey<Flow>,Function<ConfigurerProvider, OperationsConfigurer>> suppliers, Consumer<MultiFlowRegistration> cs) {
+	public ModuleSetup triggers(Map<IdentityKey<Flow>,Function<ConfigurerProvider, OperationConfigurer>> suppliers, Consumer<MultiFlowRegistration> cs) {
 		triggers.add(new TriggerCollection(suppliers.entrySet().stream().map(e -> new Trigger(path, e.getKey(), e.getValue())).collect(toList()), cs, store));
 		return this;
 	}
@@ -319,8 +317,8 @@ public class ModuleSetup {
 		return trigger(key, provider -> configure(new SequenceConfigurer(provider), body), c);
 	}
 	
-	private ModuleSetup trigger(IdentityKey<Flow> key, Function<ConfigurerProvider, OperationsConfigurer> supplier, Consumer<SingleFlowRegistration> c) {
-		Map<IdentityKey<Flow>,Function<ConfigurerProvider, OperationsConfigurer>> suppliers = new HashMap<>();
+	private ModuleSetup trigger(IdentityKey<Flow> key, Function<ConfigurerProvider, OperationConfigurer> supplier, Consumer<SingleFlowRegistration> c) {
+		Map<IdentityKey<Flow>,Function<ConfigurerProvider, OperationConfigurer>> suppliers = new HashMap<>();
 		suppliers.put(key, supplier);
 		return triggers(suppliers, m -> c.accept(m.singleFor(key)));
 	}

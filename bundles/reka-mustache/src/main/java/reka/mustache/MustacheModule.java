@@ -2,7 +2,7 @@ package reka.mustache;
 
 import static reka.api.Path.root;
 import reka.core.bundle.ModuleConfigurer;
-import reka.core.bundle.ModuleSetup;
+import reka.core.setup.ModuleSetup;
 
 public class MustacheModule extends ModuleConfigurer {
 

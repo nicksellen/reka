@@ -15,14 +15,14 @@ import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.run.DataOperation;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.ModuleConfigurer;
-import reka.core.bundle.ModuleSetup;
-import reka.core.bundle.OperationSetup;
 import reka.core.bundle.RekaBundle;
+import reka.core.setup.ModuleSetup;
+import reka.core.setup.OperationSetup;
 import reka.core.util.StringWithVars;
-import reka.nashorn.OperationsConfigurer;
+import reka.nashorn.OperationConfigurer;
 
 import com.twilio.sdk.TwilioRestClient;
 import com.twilio.sdk.TwilioRestException;
@@ -65,7 +65,7 @@ public class TwilioBundle implements RekaBundle {
 		
 	}
 	
-	public static class TwilioSendConfigurer implements OperationsConfigurer {
+	public static class TwilioSendConfigurer implements OperationConfigurer {
 		
 		private final String sid;
 		private final String token;
@@ -159,7 +159,7 @@ public class TwilioBundle implements RekaBundle {
 		
 	}
 	
-	public static class TwilioSendOperation implements SyncOperation {
+	public static class TwilioSendOperation implements Operation {
 		
 		private final String sid;
 		private final String token;

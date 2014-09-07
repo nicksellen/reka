@@ -4,9 +4,9 @@ import java.util.function.Supplier;
 
 import reka.api.IdentityStore;
 import reka.api.flow.FlowSegment;
-import reka.core.bundle.OperationSetup;
+import reka.core.setup.OperationSetup;
 
-public interface OperationsConfigurer {
+public interface OperationConfigurer {
 	
 	void setup(OperationSetup ops);
 	

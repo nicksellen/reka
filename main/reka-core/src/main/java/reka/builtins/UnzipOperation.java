@@ -14,11 +14,11 @@ import java.util.zip.ZipInputStream;
 import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 
 import com.google.common.base.Charsets;
 
-public class UnzipOperation implements SyncOperation {
+public class UnzipOperation implements Operation {
 	
 	private final Function<Data,Path> dataPathFn;
 	private final Function<Data,java.nio.file.Path> outputDirFn;

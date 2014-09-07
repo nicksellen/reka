@@ -5,10 +5,10 @@ import reka.api.Path;
 import reka.api.Path.Response;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.OperationSetup;
-import reka.nashorn.OperationsConfigurer;
+import reka.core.setup.OperationSetup;
+import reka.nashorn.OperationConfigurer;
 
-public class MustacheConfigurer implements OperationsConfigurer {
+public class MustacheConfigurer implements OperationConfigurer {
 
 	private String template;
 	private Path in, out;

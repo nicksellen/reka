@@ -5,13 +5,13 @@ import java.io.StringWriter;
 
 import reka.api.Path;
 import reka.api.data.MutableData;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 
-public class MustacheOp implements SyncOperation {
+public class MustacheOp implements Operation {
 	
 	private final static MustacheFactory mf = new DefaultMustacheFactory();
 	

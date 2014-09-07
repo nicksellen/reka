@@ -7,9 +7,9 @@ import java.nio.file.Files;
 
 import reka.api.Path;
 import reka.api.data.MutableData;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 
-public class FilesystemMktempDir implements SyncOperation {
+public class FilesystemMktempDir implements Operation {
 
 	private final Path dirname;
 	

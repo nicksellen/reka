@@ -7,7 +7,7 @@ import java.nio.file.Path;
 
 import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.ModuleConfigurer;
-import reka.core.bundle.ModuleSetup;
+import reka.core.setup.ModuleSetup;
 import reka.filesystem.FilesystemBundle.FilesystemDeleteConfigurer;
 import reka.filesystem.FilesystemBundle.FilesystemListConfigurer;
 import reka.filesystem.FilesystemBundle.FilesystemMktmpDirConfigurer;

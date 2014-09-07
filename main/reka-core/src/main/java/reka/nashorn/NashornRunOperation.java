@@ -9,10 +9,10 @@ import javax.script.CompiledScript;
 
 import reka.api.Path;
 import reka.api.data.MutableData;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 import reka.core.data.memory.MutableMemoryData;
 
-public class NashornRunOperation implements SyncOperation {
+public class NashornRunOperation implements Operation {
 
 	private final NashornRunner runner;
 	private final CompiledScript compiled;

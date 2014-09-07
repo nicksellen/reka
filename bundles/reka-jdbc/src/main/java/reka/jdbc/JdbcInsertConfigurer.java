@@ -12,10 +12,10 @@ import org.slf4j.LoggerFactory;
 import reka.api.data.Data;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.OperationSetup;
-import reka.nashorn.OperationsConfigurer;
+import reka.core.setup.OperationSetup;
+import reka.nashorn.OperationConfigurer;
 
-public class JdbcInsertConfigurer implements OperationsConfigurer {
+public class JdbcInsertConfigurer implements OperationConfigurer {
 	
 	private final Logger log = LoggerFactory.getLogger(getClass());
 

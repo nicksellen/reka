@@ -10,7 +10,7 @@ import java.io.IOException;
 import org.junit.Test;
 
 import reka.api.data.MutableData;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 import reka.core.data.memory.MutableMemoryData;
 
 import com.google.common.base.Charsets;
@@ -22,7 +22,7 @@ public class JRubyTest {
 	
 	@Test
 	public void test() {
-		SyncOperation op = new JRubyRunOperation(env, "\"name is #{data['name']}\"", path("out"));
+		Operation op = new JRubyRunOperation(env, "\"name is #{data['name']}\"", path("out"));
 		System.out.printf("start\n");
 		for (int i = 0; i < 10000; i++) {
 			MutableData data = MutableMemoryData.create();
@@ -41,7 +41,7 @@ public class JRubyTest {
 		
 		env.exec(test2initrb);
 		
-		SyncOperation op = new JRubyRunOperation(env, test2rb, path("out"));
+		Operation op = new JRubyRunOperation(env, test2rb, path("out"));
 		MutableData data = MutableMemoryData.create();
 		data.putString(dots("something.deep.in.here"), "yay");
 		data.putString("name", "omg");

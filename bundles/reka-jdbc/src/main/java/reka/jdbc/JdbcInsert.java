@@ -14,13 +14,13 @@ import java.util.Optional;
 import reka.api.content.Content;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 import reka.core.util.StringWithVars;
 import reka.core.util.StringWithVars.Variable;
 
 import com.google.common.collect.ImmutableList;
 
-public class JdbcInsert implements SyncOperation {
+public class JdbcInsert implements Operation {
 	
 	private final JdbcConnectionProvider jdbc;
 	private final String table;

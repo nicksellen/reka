@@ -2,10 +2,10 @@ package reka;
 
 import reka.config.configurer.annotations.Conf;
 import reka.core.builder.EmbeddedFlowNode;
-import reka.core.bundle.OperationSetup;
-import reka.nashorn.OperationsConfigurer;
+import reka.core.setup.OperationSetup;
+import reka.nashorn.OperationConfigurer;
 
-public class EmbeddedFlowConfigurer implements OperationsConfigurer {
+public class EmbeddedFlowConfigurer implements OperationConfigurer {
 
 	private String name;
 	

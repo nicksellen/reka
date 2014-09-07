@@ -8,9 +8,9 @@ import org.mozilla.javascript.ScriptableObject;
 
 import reka.api.Path;
 import reka.api.data.MutableData;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 
-public class RhinoWithScope implements SyncOperation {
+public class RhinoWithScope implements Operation {
 
 	private final ScriptableObject scope;
 	private final Script script;

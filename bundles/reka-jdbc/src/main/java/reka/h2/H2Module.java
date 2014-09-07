@@ -5,7 +5,7 @@ import static reka.util.Util.unchecked;
 import org.h2.Driver;
 
 import reka.core.bundle.ModuleConfigurer;
-import reka.core.bundle.ModuleSetup;
+import reka.core.setup.ModuleSetup;
 
 public class H2Module extends ModuleConfigurer {
 

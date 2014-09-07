@@ -10,10 +10,10 @@ import org.mozilla.javascript.Script;
 import reka.api.Path;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.OperationSetup;
-import reka.nashorn.OperationsConfigurer;
+import reka.core.setup.OperationSetup;
+import reka.nashorn.OperationConfigurer;
 
-public class RhinoConfigurer implements OperationsConfigurer {
+public class RhinoConfigurer implements OperationConfigurer {
 	
 	private Script script;
 	private Path out = root();

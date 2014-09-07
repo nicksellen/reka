@@ -2,14 +2,13 @@ package reka.jruby;
 
 import static reka.api.Path.dots;
 import static reka.jruby.JRubyModule.RUBY_ENV;
-
 import reka.api.Path;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.OperationSetup;
-import reka.nashorn.OperationsConfigurer;
+import reka.core.setup.OperationSetup;
+import reka.nashorn.OperationConfigurer;
 
-public class JRubyRunConfigurer implements OperationsConfigurer {
+public class JRubyRunConfigurer implements OperationConfigurer {
 	
 	private String script;
 	private Path out;

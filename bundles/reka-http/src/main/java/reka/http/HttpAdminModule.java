@@ -7,13 +7,13 @@ import java.util.Map.Entry;
 
 import reka.api.Path;
 import reka.api.data.MutableData;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 import reka.core.bundle.ModuleConfigurer;
-import reka.core.bundle.ModuleSetup;
-import reka.core.bundle.OperationSetup;
+import reka.core.setup.ModuleSetup;
+import reka.core.setup.OperationSetup;
 import reka.http.server.HttpServerManager;
 import reka.http.server.HttpSettings;
-import reka.nashorn.OperationsConfigurer;
+import reka.nashorn.OperationConfigurer;
 
 public class HttpAdminModule extends ModuleConfigurer {
 
@@ -28,7 +28,7 @@ public class HttpAdminModule extends ModuleConfigurer {
 		use.operation(path("list"), provider -> new ListConfigurer());
 	}
 	
-	class ListConfigurer implements OperationsConfigurer {
+	class ListConfigurer implements OperationConfigurer {
 		
 		private Path out = dots("admin.http.deployed");
 
@@ -39,7 +39,7 @@ public class HttpAdminModule extends ModuleConfigurer {
 		
 	}
 	
-	class ListOperation implements SyncOperation {
+	class ListOperation implements Operation {
 		
 		private final Path out;
 		

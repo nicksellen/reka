@@ -8,9 +8,9 @@ import org.mozilla.javascript.Script;
 
 import reka.api.Path;
 import reka.api.data.MutableData;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 
-public class Rhino implements SyncOperation {
+public class Rhino implements Operation {
 
 	private final Script script;
 	private final Path out;

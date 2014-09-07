@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 import reka.api.Path;
 import reka.api.content.Content;
 import reka.api.data.MutableData;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 import reka.core.data.memory.MutableMemoryData;
 import reka.core.util.StringWithVars;
 import reka.core.util.StringWithVars.Variable;
@@ -42,7 +42,7 @@ import reka.core.util.StringWithVars.Variable;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
-public class JdbcQuery implements SyncOperation {
+public class JdbcQuery implements Operation {
 
 	@SuppressWarnings("unused")
 	private static final Logger logger = LoggerFactory.getLogger("jdbc-query");

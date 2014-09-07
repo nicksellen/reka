@@ -5,9 +5,9 @@ import java.util.function.Function;
 import reka.ApplicationManager;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 
-public class RekaUndeployOperation implements SyncOperation {
+public class RekaUndeployOperation implements Operation {
 	
 	private final ApplicationManager manager;
 	private final Function<Data,String> identityFn;

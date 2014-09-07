@@ -17,10 +17,10 @@ import java.util.regex.Pattern;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.ModuleConfigurer;
-import reka.core.bundle.ModuleSetup;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.core.data.memory.MutableMemoryData;
+import reka.core.setup.ModuleSetup;
 import reka.http.configurers.HttpContentConfigurer;
 import reka.http.configurers.HttpRedirectConfigurer;
 import reka.http.configurers.HttpRequestConfigurer;
@@ -28,7 +28,7 @@ import reka.http.configurers.HttpRouterConfigurer;
 import reka.http.server.HttpServerManager;
 import reka.http.server.HttpSettings;
 import reka.http.server.HttpSettings.Type;
-import reka.nashorn.OperationsConfigurer;
+import reka.nashorn.OperationConfigurer;
 
 public class HttpModule extends ModuleConfigurer {
 
@@ -60,7 +60,7 @@ public class HttpModule extends ModuleConfigurer {
 	private final HttpServerManager server;
 	
 	private final List<HostAndPort> listens = new ArrayList<>();
-	private final List<Function<ConfigurerProvider,OperationsConfigurer>> requestHandlers = new ArrayList<>();
+	private final List<Function<ConfigurerProvider,OperationConfigurer>> requestHandlers = new ArrayList<>();
 	
 	public HttpModule(HttpServerManager server) {
 		this.server = server;
@@ -137,7 +137,7 @@ public class HttpModule extends ModuleConfigurer {
 		module.operation(path("request"), provider -> new HttpRequestConfigurer(server.nettyEventGroup()));
 		module.operation(path("req"), provider -> new HttpRequestConfigurer(server.nettyEventGroup()));
 		
-		for (Function<ConfigurerProvider, OperationsConfigurer> h : requestHandlers) {
+		for (Function<ConfigurerProvider, OperationConfigurer> h : requestHandlers) {
 			
 			module.trigger("on request", h, registration -> {
 				

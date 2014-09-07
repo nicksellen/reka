@@ -15,11 +15,11 @@ import reka.api.Path;
 import reka.api.content.Content;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.OperationSetup;
-import reka.nashorn.OperationsConfigurer;
+import reka.core.setup.OperationSetup;
+import reka.nashorn.OperationConfigurer;
 
 import com.google.common.collect.ImmutableList;
 
@@ -29,7 +29,7 @@ public class Coercion {
 		LONG, BOOLEAN 
 	}
 
-	public static class CoerceConfigurer implements OperationsConfigurer {
+	public static class CoerceConfigurer implements OperationConfigurer {
 
 		private final List<Entry<Path,CoercionType>> coercions = new ArrayList<>();
 		
@@ -47,7 +47,7 @@ public class Coercion {
 
 	}
 	
-	public static class CoerceLongConfigurer implements OperationsConfigurer {
+	public static class CoerceLongConfigurer implements OperationConfigurer {
 
 		private Path path;
 		
@@ -63,7 +63,7 @@ public class Coercion {
 
 	}
 	
-	public static class CoerceBooleanConfigurer implements OperationsConfigurer {
+	public static class CoerceBooleanConfigurer implements OperationConfigurer {
 
 		private Path path;
 		
@@ -79,7 +79,7 @@ public class Coercion {
 
 	}
 	
-	public static class Coerce implements SyncOperation {
+	public static class Coerce implements Operation {
 		
 		private final List<Entry<Path,CoercionType>> coercions;
 		
@@ -110,7 +110,7 @@ public class Coercion {
 		
 	}
 	
-	public static class CoerceLong implements SyncOperation {
+	public static class CoerceLong implements Operation {
 		
 		private final Path path;
 		
@@ -130,7 +130,7 @@ public class Coercion {
 		
 	}
 	
-	public static class CoerceBoolean implements SyncOperation {
+	public static class CoerceBoolean implements Operation {
 		
 		private final Path path;
 		

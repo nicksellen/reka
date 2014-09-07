@@ -19,7 +19,7 @@ import reka.api.data.MutableData;
 import reka.api.flow.FlowOperation;
 import reka.api.run.RouteCollector;
 import reka.api.run.RoutingOperation;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashFunction;
@@ -50,7 +50,7 @@ public abstract class HttpContents implements FlowOperation {
 		
 	}
 	
-	public static class Basic extends HttpContents implements SyncOperation {
+	public static class Basic extends HttpContents implements Operation {
 		
 		public Basic(Map<String, ContentItem> contents) {
 			super(contents);

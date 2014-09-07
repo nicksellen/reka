@@ -7,11 +7,11 @@ import static reka.jdbc.JdbcModule.POOL;
 import reka.api.Path;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.OperationSetup;
+import reka.core.setup.OperationSetup;
 import reka.core.util.StringWithVars;
-import reka.nashorn.OperationsConfigurer;
+import reka.nashorn.OperationConfigurer;
 
-public class JdbcQueryConfigurer implements OperationsConfigurer {
+public class JdbcQueryConfigurer implements OperationConfigurer {
 
 	private final JdbcConfiguration config;
 	private Path out = root();

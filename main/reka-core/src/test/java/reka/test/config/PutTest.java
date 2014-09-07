@@ -24,15 +24,15 @@ import reka.api.flow.FlowOperation;
 import reka.api.flow.FlowSegment;
 import reka.api.run.AsyncOperation;
 import reka.api.run.RoutingOperation;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 import reka.builtins.BuiltinsModule;
 import reka.config.Config;
 import reka.config.NavigableConfig;
 import reka.config.configurer.Configurer.InvalidConfigurationException;
-import reka.core.bundle.OperationSetup;
 import reka.core.data.memory.MutableMemoryData;
 import reka.core.runtime.DefaultRouter;
-import reka.nashorn.OperationsConfigurer;
+import reka.core.setup.OperationSetup;
+import reka.nashorn.OperationConfigurer;
 
 public class PutTest {
 	
@@ -89,7 +89,7 @@ public class PutTest {
 		return configureThenCall(new BuiltinsModule.PutConfigurer(), root.at(path).get(), MutableMemoryData.create());
 	}
 	
-	private static Data configureThenCall(OperationsConfigurer s, Config config, MutableData input) {
+	private static Data configureThenCall(OperationConfigurer s, Config config, MutableData input) {
 		OperationSetup collector = OperationSetup.createSequentialCollector(IdentityStore.createConcurrentIdentityStore());
 		configure(s, config);
 		
@@ -97,8 +97,8 @@ public class PutTest {
 		FlowSegment v = collector.get();
 		
 		FlowOperation op = firstNode(v).operationSupplier().get();
-		if (op instanceof SyncOperation) {
-			return callSync((SyncOperation) op, input);
+		if (op instanceof Operation) {
+			return callSync((Operation) op, input);
 		} else if (op instanceof AsyncOperation) {
 			return callAsync((AsyncOperation) op, input);
 		} else if (op instanceof RoutingOperation) {
@@ -122,7 +122,7 @@ public class PutTest {
 		return null;
 	}
 
-	private static Data callSync(SyncOperation op, MutableData input) {
+	private static Data callSync(Operation op, MutableData input) {
 		return op.call(input);
 	}
 	

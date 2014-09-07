@@ -1,6 +1,7 @@
 package reka.builtins;
 
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
 import static reka.api.Path.dots;
 import static reka.api.Path.path;
 import static reka.api.Path.root;
@@ -13,10 +14,11 @@ import static reka.config.configurer.Configurer.Preconditions.invalidConfig;
 import static reka.core.builder.FlowSegments.halt;
 import static reka.core.config.ConfigUtils.configToData;
 import static reka.util.Util.createEntry;
-import static reka.util.Util.unchecked;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.UUID;
@@ -36,27 +38,26 @@ import reka.api.content.Content;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.run.AsyncOperation;
+import reka.api.run.Operation;
 import reka.api.run.RouteCollector;
 import reka.api.run.RoutingOperation;
-import reka.api.run.SyncOperation;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.Configurer.ErrorCollector;
 import reka.config.configurer.ErrorReporter;
 import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.ModuleConfigurer;
-import reka.core.bundle.ModuleSetup;
-import reka.core.bundle.OperationSetup;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
+import reka.core.data.memory.MutableMemoryData;
+import reka.core.setup.ModuleSetup;
+import reka.core.setup.OperationSetup;
 import reka.core.util.StringWithVars;
-import reka.nashorn.OperationsConfigurer;
+import reka.nashorn.OperationConfigurer;
 
 import com.google.common.base.Splitter;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 
@@ -92,7 +93,7 @@ public class BuiltinsModule extends ModuleConfigurer {
 		
 	}
 	
-	public static class SplitConfigurer implements OperationsConfigurer, ErrorReporter {
+	public static class SplitConfigurer implements OperationConfigurer, ErrorReporter {
 		
 		private Function<Data,Path> inFn, outFn;
 		private String on = ",";
@@ -127,7 +128,7 @@ public class BuiltinsModule extends ModuleConfigurer {
 		
 	}
 	
-	public static class SplitOperation implements SyncOperation {
+	public static class SplitOperation implements Operation {
 		
 		private final Splitter splitter;
 		private final Function<Data,Path> inFn, outFn;
@@ -153,15 +154,15 @@ public class BuiltinsModule extends ModuleConfigurer {
 		
 	}
 	
-	public static class BCryptCheckpwConfigurer implements OperationsConfigurer {
+	public static class BCryptCheckpwConfigurer implements OperationConfigurer {
 
 		private final ConfigurerProvider provider;
 		
 		private Path readPwFrom = dots("bcrypt.pw");
 		private Path readHashFrom = dots("bcrypt.hash");
 		
-		private OperationsConfigurer ok;
-		private OperationsConfigurer fail;
+		private OperationConfigurer ok;
+		private OperationConfigurer fail;
 		
 		public BCryptCheckpwConfigurer(ConfigurerProvider provider) {
 			this.provider = provider;
@@ -224,7 +225,7 @@ public class BuiltinsModule extends ModuleConfigurer {
 		
 	}
 	
-	public static class BCryptHashpwConfigurer implements OperationsConfigurer {
+	public static class BCryptHashpwConfigurer implements OperationConfigurer {
 
 		private Path in = dots("bcrypt.pw");
 		private Path out = dots("bcrypt.hash");
@@ -246,7 +247,7 @@ public class BuiltinsModule extends ModuleConfigurer {
 		
 	}
 	
-	public static class BCryptHashpwOperation implements SyncOperation {
+	public static class BCryptHashpwOperation implements Operation {
 
 		private final Path in;
 		private final Path out;
@@ -268,7 +269,7 @@ public class BuiltinsModule extends ModuleConfigurer {
 	
 	private static final Random RANDOM = new Random();
 	
-	public static class InspectConfigurer implements OperationsConfigurer {
+	public static class InspectConfigurer implements OperationConfigurer {
 
 		@Override
 		public void setup(OperationSetup ops) {
@@ -277,7 +278,7 @@ public class BuiltinsModule extends ModuleConfigurer {
 		
 	}
 	
-	public static class InspectOperation implements SyncOperation {
+	public static class InspectOperation implements Operation {
 
 		@Override
 		public MutableData call(MutableData data) {
@@ -289,7 +290,7 @@ public class BuiltinsModule extends ModuleConfigurer {
 		
 	}
 	
-	public static class RandomStringConfigurer implements OperationsConfigurer { 
+	public static class RandomStringConfigurer implements OperationConfigurer { 
 
 		private static final char[] chars;
 		
@@ -318,7 +319,7 @@ public class BuiltinsModule extends ModuleConfigurer {
 		
 	}
 	
-	public static class RandomStringOperation implements SyncOperation {
+	public static class RandomStringOperation implements Operation {
 
 		private final int length;
 		private final char[] chars;
@@ -345,7 +346,7 @@ public class BuiltinsModule extends ModuleConfigurer {
 		
 	}
 	
-	public static class ThrowConfigurer implements OperationsConfigurer {
+	public static class ThrowConfigurer implements OperationConfigurer {
 		
 		private Function<Data,String> msgFn = (data) -> "error";
 		
@@ -361,7 +362,7 @@ public class BuiltinsModule extends ModuleConfigurer {
 		
 	}
 	
-	public static class PrintlnConfigurer implements OperationsConfigurer {
+	public static class PrintlnConfigurer implements OperationConfigurer {
 
 		private Function<Data,String> msg = (data) -> "";
 		
@@ -381,7 +382,7 @@ public class BuiltinsModule extends ModuleConfigurer {
 		
 	}
 	
-	public static class PrintlnOperation implements SyncOperation {
+	public static class PrintlnOperation implements Operation {
 
 		private final Function<Data,String> msg;
 		
@@ -397,7 +398,7 @@ public class BuiltinsModule extends ModuleConfigurer {
 		
 	}
 	
-	public static class GenerateUUIDConfigurer implements OperationsConfigurer, ErrorReporter {
+	public static class GenerateUUIDConfigurer implements OperationConfigurer, ErrorReporter {
 
 		private Path out = dots("uuid");
 		
@@ -419,7 +420,7 @@ public class BuiltinsModule extends ModuleConfigurer {
 		
 	}
 	
-	public static class GenerateUUIDOperation implements SyncOperation {
+	public static class GenerateUUIDOperation implements Operation {
 
 		private final Path out;
 		
@@ -434,7 +435,7 @@ public class BuiltinsModule extends ModuleConfigurer {
 		
 	}
 	
-	public static class SleepConfigurer implements OperationsConfigurer {
+	public static class SleepConfigurer implements OperationConfigurer {
 
 		private long ms = 1000L;
 		
@@ -473,11 +474,11 @@ public class BuiltinsModule extends ModuleConfigurer {
 		}
 	}
 	
-	public static class RunParallelConfigurer implements OperationsConfigurer {
+	public static class RunParallelConfigurer implements OperationConfigurer {
 		
 		private final ConfigurerProvider provider;
 		
-		private final List<OperationsConfigurer> items = new ArrayList<>();
+		private final List<OperationConfigurer> items = new ArrayList<>();
 		
 		public RunParallelConfigurer(ConfigurerProvider provider) {
 			this.provider = provider;
@@ -498,7 +499,7 @@ public class BuiltinsModule extends ModuleConfigurer {
 		
 	}
 	
-	public static class HaltConfigurer implements OperationsConfigurer {
+	public static class HaltConfigurer implements OperationConfigurer {
 
 		@Override
 		public void setup(OperationSetup ops) {
@@ -507,7 +508,7 @@ public class BuiltinsModule extends ModuleConfigurer {
 		
 	}
 	
-	public static class StringWithVariablesConfigurer implements OperationsConfigurer {
+	public static class StringWithVariablesConfigurer implements OperationConfigurer {
 
 		private Function<Data,String> template;
 		private Path out = Response.CONTENT;
@@ -531,7 +532,7 @@ public class BuiltinsModule extends ModuleConfigurer {
 		
 	}
 	
-	public static class DataContentFunctionOperation implements SyncOperation {
+	public static class DataContentFunctionOperation implements Operation {
 		
 		private final Function<Data,String> template;
 		private final Path out;
@@ -548,10 +549,10 @@ public class BuiltinsModule extends ModuleConfigurer {
 		
 	}
 	
-	public static class RunConfigurer implements OperationsConfigurer {
+	public static class RunConfigurer implements OperationConfigurer {
 		
 		private final ConfigurerProvider provider;
-		private OperationsConfigurer configurer;
+		private OperationConfigurer configurer;
 		
 		public RunConfigurer(ConfigurerProvider provider) {
 			this.provider = provider;
@@ -575,7 +576,7 @@ public class BuiltinsModule extends ModuleConfigurer {
 		
 	}
 	
-	public static class LogConfigurer implements OperationsConfigurer {
+	public static class LogConfigurer implements OperationConfigurer {
 
 		private Function<Data,String> msgFn;
 		
@@ -591,7 +592,7 @@ public class BuiltinsModule extends ModuleConfigurer {
 		
 	}
 	
-	public static class LogOperation implements SyncOperation {
+	public static class LogOperation implements Operation {
 		
 		private final Function<Data,String> msgFn;
 		
@@ -607,7 +608,7 @@ public class BuiltinsModule extends ModuleConfigurer {
 		
 	}
 	
-	public static class CopyConfigurer implements OperationsConfigurer {
+	public static class CopyConfigurer implements OperationConfigurer {
 		
 		private final ImmutableList.Builder<Entry<Path,Path>> entries = ImmutableList.builder();
 
@@ -626,7 +627,7 @@ public class BuiltinsModule extends ModuleConfigurer {
 		
 	}
 	
-	public static class CopyOperation implements SyncOperation {
+	public static class CopyOperation implements Operation {
 
 		private final List<Entry<Path,Path>> entries;
 		
@@ -656,7 +657,7 @@ public class BuiltinsModule extends ModuleConfigurer {
 		
 	}
 	
-	public static class PutConfigurer implements OperationsConfigurer {
+	public static class PutConfigurer implements OperationConfigurer {
 
 		private Content content;
 		private Data data;
@@ -716,36 +717,37 @@ public class BuiltinsModule extends ModuleConfigurer {
 		
 	}
 		
-	public static class PutWithVarsConfigurer implements OperationsConfigurer {
+	public static class PutWithVarsConfigurer implements OperationConfigurer {
 
 		private Data data;
 		private Path out = root();
 		
-		private String key;
-		
-		@Conf.Key
-		public void key(String val) {
-			key = val;
-		}
-		
 		@Conf.Config
 		public void config(Config config) {
-			checkConfig(config.hasBody(), "must have body!");
-			data = configToData(config.body());
-			// TODO: this is where we need to go through te data and find out which bit has vars in it...
-		}
-
-		@Conf.Val
-		@Conf.At("out")
-		public void out(String val) {
-			out = dots(val);
+			if (config.hasSubkey()) {
+				out = out.add(dots(config.subkey()));
+				if (config.hasValue()) {
+					checkConfig(!config.hasBody(), "can't have a body if you are using subkey and value");
+					data = MutableMemoryData.create().put(root(), utf8(config.valueAsString()));
+				} else if (config.hasBody()) {
+					if (config.hasValue()) {
+						out = out.add(dots(config.valueAsString()));
+					}
+					data = configToData(config.body());	
+				}
+			} else if (config.hasBody()) {
+				data = configToData(config.body());
+				if (config.hasValue()) {
+					out = out.add(dots(config.valueAsString()));
+				}
+			}
 		}
 
 		private String name() {
 			if (out.isEmpty()) {
-				return key;
+				return "putv";
 			} else {
-				return format("%s %s", key, out.dots());
+				return format("putv %s", out.dots());
 			}
 		}
 
@@ -757,7 +759,7 @@ public class BuiltinsModule extends ModuleConfigurer {
 		
 	}
 	
-	public static class PutContentOperation implements SyncOperation {
+	public static class PutContentOperation implements Operation {
 
 		private final Content content;
 		private final Path out;
@@ -774,19 +776,19 @@ public class BuiltinsModule extends ModuleConfigurer {
 		
 	}
 	
-	public static class PutDataOperation implements SyncOperation {
+	public static class PutDataOperation implements Operation {
 
-		private final Data dataValue;
+		private final Data datavalue;
 		private final Path out;
 		
 		public PutDataOperation(Data data, Path out) {
-			this.dataValue = data;
+			this.datavalue = data;
 			this.out = out;
 		}
 		
 		@Override
 		public MutableData call(MutableData data) {
-			dataValue.forEachContent((path, content) -> {
+			datavalue.forEachContent((path, content) -> {
 				data.put(out.add(path), content);
 			});
 			return data;
@@ -794,44 +796,41 @@ public class BuiltinsModule extends ModuleConfigurer {
 		
 	}
 	
-	public static class PutDataWithVarsOperation implements SyncOperation {
-
-		private final LoadingCache<Content,Function<Data,Content>> cache = CacheBuilder.newBuilder()
-			.build(new CacheLoader<Content, Function<Data,Content>>(){
-	
-				@Override
-				public Function<Data,Content> load(Content content) throws Exception {
-					try {
-						String val = content.asUTF8();
-						if (StringWithVars.hasVars(val)) {
-							return StringWithVars.compile(content.asUTF8()).andThen(s -> utf8(s));
-						} else {
-							return (data) -> content;
-						}
-					} catch (Throwable t) {
-						return (data) -> content;
-					}
-				}
-				
-			});
+	public static class PutDataWithVarsOperation implements Operation {
 		
-		private final Data dataValue;
-		private final Path out;
+		private final Data dataonly;
+		private final Map<Path,Function<Data,Content>> vardata;
 		
 		public PutDataWithVarsOperation(Data data, Path out) {
-			this.dataValue = data;
-			this.out = out;
+			
+			MutableData fordataonly = MutableMemoryData.create();
+			Map<Path,Function<Data,Content>> forvars = new HashMap<>();
+			
+			data.forEachContent((path, content) -> {
+				try {
+					String val = content.asUTF8();
+					if (StringWithVars.hasVars(val)) {
+						forvars.put(out.add(path), StringWithVars.compile(content.asUTF8()).andThen(s -> utf8(s)));
+					} else {
+						fordataonly.put(out.add(path), content);
+					}
+				} catch (Throwable t) {
+					fordataonly.put(out.add(path), content);
+				}
+			});
+			
+			dataonly = fordataonly.immutable();
+			vardata = ImmutableMap.copyOf(forvars);
+			
 		}
 		
 		@Override
 		public MutableData call(MutableData data) {
-			// TODO: fix this up, do it BEFORE runtime as much as we can
-			dataValue.forEachContent((path, content) -> {
-				try {
-					data.put(out.add(path), cache.get(content).apply(data));
-				} catch (Exception e) {
-					throw unchecked(e);
-				}
+			dataonly.forEachContent((path, content) -> {
+				data.put(path, content);
+			});
+			vardata.forEach((path, f) -> {
+				data.put(path, f.apply(data));
 			});
 			return data;
 		}

@@ -28,10 +28,11 @@ import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.builder.FlowVisualizer;
 import reka.core.builder.SingleFlow;
-import reka.core.bundle.ModuleSetup.FlowSegmentBiFunction;
-import reka.core.bundle.ModuleSetup.TriggerCollection;
 import reka.core.runtime.NoFlow;
 import reka.core.runtime.NoFlowVisualizer;
+import reka.core.setup.ModuleSetup;
+import reka.core.setup.ModuleSetup.FlowSegmentBiFunction;
+import reka.core.setup.ModuleSetup.TriggerCollection;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -50,7 +51,6 @@ public abstract class ModuleConfigurer {
 				Map<Path,FlowSegmentBiFunction> providers,
 				List<TriggerCollection> triggers,
 				List<Runnable> shutdownHandlers) {
-			
 			this.flow = initialize;
 			this.visualizer = visualizer;
 			this.providers = ImmutableMap.copyOf(providers);
@@ -99,7 +99,6 @@ public abstract class ModuleConfigurer {
 			List<TriggerCollection> triggerCollector = new ArrayList<>();
 			List<Runnable> shutdownHandlers = new ArrayList<>();
 			Map<ModuleConfigurer,FlowSegment> segments = new HashMap<>();
-			Map<Integer,IdentityStore> stores = new HashMap<>();
 			
 			for (ModuleConfigurer module : all) {
 				
@@ -124,36 +123,39 @@ public abstract class ModuleConfigurer {
 			
 			Optional<FlowSegment> segment = buildSegment(toplevel, segments);
 			
-			Flow flow = new NoFlow();
-			FlowVisualizer visualizer = new NoFlowVisualizer();
+			Flow flow;
+			FlowVisualizer visualizer;
 			
 			if (segment.isPresent()) {
-				Entry<Flow, FlowVisualizer> entry = SingleFlow.create(Path.path("initialize"), segment.get(), stores);
+				Entry<Flow, FlowVisualizer> entry = SingleFlow.create(Path.path("initialize"), segment.get());
 				flow = entry.getKey();
 				visualizer = entry.getValue();	
+			} else {
+				flow = new NoFlow();
+				visualizer = new NoFlowVisualizer();
 			}
 			
 			return new ModuleInitializer(flow, visualizer, providersCollector, triggerCollector, shutdownHandlers);
 		}
 		
-		private static Optional<FlowSegment> buildSegment(Set<ModuleConfigurer> uses, Map<ModuleConfigurer, FlowSegment> built) {
+		private static Optional<FlowSegment> buildSegment(Set<ModuleConfigurer> modules, Map<ModuleConfigurer, FlowSegment> built) {
 			List<FlowSegment> segments = new ArrayList<>();
-			for (ModuleConfigurer use : uses) {
-				buildSegment(use, built).ifPresent(segment -> segments.add(segment));
+			for (ModuleConfigurer module : modules) {
+				buildSegment(module, built).ifPresent(segment -> segments.add(segment));
 			}
 			return segments.isEmpty() ? Optional.empty() : Optional.of(par(segments));
 		}
 		
-		private static Optional<FlowSegment> buildSegment(ModuleConfigurer use, Map<ModuleConfigurer, FlowSegment> built) {
-			if (use.isRoot()) return Optional.empty();
+		private static Optional<FlowSegment> buildSegment(ModuleConfigurer module, Map<ModuleConfigurer, FlowSegment> built) {
+			if (module.isRoot()) return Optional.empty();
 			
 			List<FlowSegment> sequence = new ArrayList<>();
 			
-			if (built.containsKey(use)) {
-				sequence.add(built.get(use));
+			if (built.containsKey(module)) {
+				sequence.add(built.get(module));
 			}
 			
-			Optional<FlowSegment> c = buildSegment(use.usedBy, built);
+			Optional<FlowSegment> c = buildSegment(module.usedBy, built);
 			if (c.isPresent()) {
 				sequence.add(c.get());
 			}

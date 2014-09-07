@@ -28,7 +28,7 @@ import reka.api.Path.Request;
 import reka.api.Path.Response;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 import reka.core.util.ReadObservedMap;
 
 import com.google.common.cache.Cache;
@@ -44,7 +44,7 @@ import de.neuland.jade4j.JadeConfiguration;
 import de.neuland.jade4j.template.JadeTemplate;
 import de.neuland.jade4j.template.TemplateLoader;
 
-public class JadeWithSomeCachingStuff implements SyncOperation, JsonProvider {
+public class JadeWithSomeCachingStuff implements Operation, JsonProvider {
 	
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	

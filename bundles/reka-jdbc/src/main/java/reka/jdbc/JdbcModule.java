@@ -34,7 +34,7 @@ import reka.api.data.Data;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.ModuleConfigurer;
-import reka.core.bundle.ModuleSetup;
+import reka.core.setup.ModuleSetup;
 import reka.core.util.StringWithVars;
 import reka.core.util.StringWithVars.Variable;
 
@@ -121,14 +121,14 @@ public class JdbcModule extends ModuleConfigurer {
 		module.operation(root(), provider -> new JdbcQueryConfigurer(config));
 		module.operation(path("insert"), provider -> new JdbcInsertConfigurer());
 		
-		module.setupInitializer(seq -> {
+		module.setupInitializer(init -> {
 			
-			seq.run("create connection pool", store -> {
+			init.run("create connection pool", store -> {
 				store.put(POOL, new DBCP2ConnectionProvider(url, username, password));
 			});
 
 			if (!migrations.isEmpty()) {
-				seq.run("run migrations", store -> {
+				init.run("run migrations", store -> {
 					File tmpdir = Files.createTempDir();
 					try {
 					
@@ -163,7 +163,7 @@ public class JdbcModule extends ModuleConfigurer {
 				});
 			}
 			
-			seq.run("run sql", store -> {
+			init.run("run sql", store -> {
 				try (Connection connection = store.get(POOL).getConnection()){
 		            Statement stmt = connection.createStatement();
 		            for (String sql : sqls) {
@@ -174,7 +174,7 @@ public class JdbcModule extends ModuleConfigurer {
 		        }
 			});
 			
-			seq.run("seed data", store -> {
+			init.run("seed data", store -> {
 				
 				try (Connection conn = store.get(POOL).getConnection()) {
 					for (Entry<String, List<Data>> e : seeds.entrySet()) {

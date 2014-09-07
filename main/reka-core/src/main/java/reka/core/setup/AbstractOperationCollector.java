@@ -1,4 +1,4 @@
-package reka.core.bundle;
+package reka.core.setup;
 
 import static java.util.stream.Collectors.toList;
 
@@ -18,7 +18,7 @@ import reka.api.run.RoutingOperation;
 import reka.core.builder.FlowSegments;
 import reka.core.builder.OperationFlowNode;
 import reka.core.data.memory.MutableMemoryData;
-import reka.nashorn.OperationsConfigurer;
+import reka.nashorn.OperationConfigurer;
 
 abstract class AbstractOperationCollector implements OperationSetup {
 	
@@ -66,7 +66,7 @@ abstract class AbstractOperationCollector implements OperationSetup {
 	}
 	
 	@Override
-	public final OperationSetup add(OperationsConfigurer configurer) {
+	public final OperationSetup add(OperationConfigurer configurer) {
 		segments.add(() -> {
 			OperationSetup ops = OperationSetup.createSequentialCollector(store);
 			configurer.setup(ops);	
@@ -112,7 +112,7 @@ abstract class AbstractOperationCollector implements OperationSetup {
 	}
 
 	@Override
-	public final OperationSetup route(String name, OperationsConfigurer configurer) {
+	public final OperationSetup route(String name, OperationConfigurer configurer) {
 		segments.add(() -> {
 			OperationSetup ops = OperationSetup.createSequentialCollector(store);
 			configurer.setup(ops);	
@@ -129,7 +129,6 @@ abstract class AbstractOperationCollector implements OperationSetup {
 		return this;
 	}
 	
-
 	@Override
 	public final OperationSetup parallel(String label, Consumer<OperationSetup> par) {
 		OperationSetup e = new ParallelCollector(store);

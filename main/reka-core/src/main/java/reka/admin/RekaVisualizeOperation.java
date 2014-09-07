@@ -23,7 +23,7 @@ import reka.api.Path.Response;
 import reka.api.content.Content;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 import reka.core.builder.DotGraphVisualizer;
 import reka.core.builder.FlowVisualizer;
 import reka.util.Graphviz;
@@ -34,7 +34,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 
-public class RekaVisualizeOperation implements SyncOperation {
+public class RekaVisualizeOperation implements Operation {
 	
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	

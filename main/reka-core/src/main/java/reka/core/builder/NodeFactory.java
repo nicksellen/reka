@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import reka.api.IdentityStore;
 import reka.api.Path;
 import reka.api.flow.Flow;
 import reka.core.runtime.Node;
@@ -17,16 +16,10 @@ public class NodeFactory {
     private final Map<Integer,NodeBuilder> builders;
     private final Map<Path,Flow> embeddableFlows;
     private final Map<Integer,Node> nodes = new HashMap<>();
-    private final Map<Integer,IdentityStore> stores;
     
-    NodeFactory(Map<Integer,NodeBuilder> builders, Map<Path,Flow> embeddedableFlows, Map<Integer,IdentityStore> stores) {
+    NodeFactory(Map<Integer,NodeBuilder> builders, Map<Path,Flow> embeddedableFlows) {
         this.builders = builders;
         this.embeddableFlows = embeddedableFlows;
-        this.stores = stores;
-    }
-    
-    public Map<Integer,IdentityStore> stores() {
-    	return stores;
     }
     
     public Node get(int id) {

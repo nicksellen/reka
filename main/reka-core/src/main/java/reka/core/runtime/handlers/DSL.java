@@ -10,7 +10,7 @@ import reka.api.run.AsyncOperation;
 import reka.api.run.DataOperation;
 import reka.api.run.RoutingOperation;
 import reka.api.run.Subscriber;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 import reka.core.config.NoOp;
 import reka.core.runtime.NodeChild;
 import reka.core.runtime.handlers.stateful.StatefulControl;
@@ -22,8 +22,8 @@ public class DSL {
 	}
 	
 	public static ActionHandler op(FlowOperation operation, ActionHandler next, ErrorHandler error) {
-		if (operation instanceof SyncOperation) {
-			return syncOperation((SyncOperation) operation, next);
+		if (operation instanceof Operation) {
+			return syncOperation((Operation) operation, next);
 		} else if (operation instanceof AsyncOperation) {
 			return asyncOperation((AsyncOperation) operation, next, error);
 		} else if (operation instanceof DataOperation) {
@@ -43,11 +43,11 @@ public class DSL {
 		return new CallSubscriberAction(next);
 	}
 
-	public static SyncAction syncOperation(SyncOperation operation, ActionHandler next) {
+	public static SyncAction syncOperation(Operation operation, ActionHandler next) {
 		return new SyncAction(operation, next);
 	}
 	
-	public static SyncAction syncOperation(SyncOperation operation) {
+	public static SyncAction syncOperation(Operation operation) {
 		return syncOperation(operation, DoNothing.INSTANCE);
 	}
 	

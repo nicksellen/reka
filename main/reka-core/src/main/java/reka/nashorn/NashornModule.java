@@ -19,13 +19,13 @@ import reka.api.IdentityKey;
 import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
-import reka.builtins.BuiltinsModule.PutDataOperation;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.ModuleConfigurer;
-import reka.core.bundle.ModuleSetup;
-import reka.core.bundle.OperationSetup;
 import reka.core.data.memory.MutableMemoryData;
+import reka.core.setup.ModuleSetup;
+import reka.core.setup.OperationSetup;
+import reka.builtins.BuiltinsModule.PutDataOperation;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
@@ -98,9 +98,13 @@ public class NashornModule extends ModuleConfigurer {
 		
 		module.operation(root(), provider -> new NashornRunConfigurer(root()));
 		
-		module.setupInitializer(run -> {
+		module.postInit(store -> {
+			
+		});
 		
-			run.run("initialize runtime", store -> {
+		module.setupInitializer(init -> {
+		
+			init.run("initialize runtime", store -> {
 				store.put(RUNNER, new PooledNashornRunner(scripts));
 			});
 
@@ -113,7 +117,7 @@ public class NashornModule extends ModuleConfigurer {
 				
 				// run the js to calculate the data we need
 				
-				run.run(format("calculate data for %s", opname), store -> {
+				init.run(format("calculate data for %s", opname), store -> {
 	
 					NashornRunner js = store.get(RUNNER);
 					
@@ -145,7 +149,7 @@ public class NashornModule extends ModuleConfigurer {
 		
 	}
 	
-	public static class PutJSDataConfigurer implements OperationsConfigurer {
+	public static class PutJSDataConfigurer implements OperationConfigurer {
 		
 		private final IdentityKey<Data> key;
 		

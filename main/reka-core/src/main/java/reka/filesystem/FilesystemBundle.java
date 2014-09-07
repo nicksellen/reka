@@ -13,12 +13,12 @@ import reka.api.data.Data;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.OperationSetup;
 import reka.core.bundle.RekaBundle;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
+import reka.core.setup.OperationSetup;
 import reka.core.util.StringWithVars;
-import reka.nashorn.OperationsConfigurer;
+import reka.nashorn.OperationConfigurer;
 
 public class FilesystemBundle implements RekaBundle {
 
@@ -27,7 +27,7 @@ public class FilesystemBundle implements RekaBundle {
 		bundle.module(path("filesystem"), () -> new FilesystemModule());
 	}
 	
-	public static class FilesystemReadConfigurer implements OperationsConfigurer {
+	public static class FilesystemReadConfigurer implements OperationConfigurer {
 
 		private final Path basedir;
 		
@@ -62,7 +62,7 @@ public class FilesystemBundle implements RekaBundle {
 		
 	}
 	
-	public static class FilesystemDeleteConfigurer implements OperationsConfigurer {
+	public static class FilesystemDeleteConfigurer implements OperationConfigurer {
 
 		private final Path basedir;
 		
@@ -85,7 +85,7 @@ public class FilesystemBundle implements RekaBundle {
 		
 	}
 	
-	public static class FilesystemListConfigurer implements OperationsConfigurer {
+	public static class FilesystemListConfigurer implements OperationConfigurer {
 
 		private final Path basedir;
 		
@@ -113,7 +113,7 @@ public class FilesystemBundle implements RekaBundle {
 		
 	}
 	
-	public static class FilesystemMktmpDirConfigurer implements OperationsConfigurer {
+	public static class FilesystemMktmpDirConfigurer implements OperationConfigurer {
 		
 		private reka.api.Path dirname = path("tmpdir");
 		
@@ -129,7 +129,7 @@ public class FilesystemBundle implements RekaBundle {
 		
 	}
 
-	public static class FilesystemTypeConfigurer implements OperationsConfigurer {
+	public static class FilesystemTypeConfigurer implements OperationConfigurer {
 
 		private final ConfigurerProvider provider;
 
@@ -137,9 +137,9 @@ public class FilesystemBundle implements RekaBundle {
 		
 		private Function<Data,String> pathFn = (unused) -> ".";
 		
-		private OperationsConfigurer whenDir;
-		private OperationsConfigurer whenFile;
-		private OperationsConfigurer whenMissing;
+		private OperationConfigurer whenDir;
+		private OperationConfigurer whenFile;
+		private OperationConfigurer whenMissing;
 		
 		public FilesystemTypeConfigurer(ConfigurerProvider provider, Path basedir) {
 			this.provider = provider;
@@ -167,7 +167,7 @@ public class FilesystemBundle implements RekaBundle {
 			}
 		}
 		
-		private OperationsConfigurer ops(ConfigBody body) {
+		private OperationConfigurer ops(ConfigBody body) {
 			return configure(new SequenceConfigurer(provider), body);
 		}
 

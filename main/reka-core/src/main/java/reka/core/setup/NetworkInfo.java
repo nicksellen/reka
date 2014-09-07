@@ -1,4 +1,4 @@
-package reka.core.bundle;
+package reka.core.setup;
 
 import java.util.Optional;
 

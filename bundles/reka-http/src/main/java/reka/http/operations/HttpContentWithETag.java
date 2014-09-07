@@ -14,14 +14,14 @@ import reka.api.Path.Request;
 import reka.api.Path.Response;
 import reka.api.content.Content;
 import reka.api.data.MutableData;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
 
-public class HttpContentWithETag implements SyncOperation {
+public class HttpContentWithETag implements Operation {
 
 	private static final long PUT_IN_FILE_THRESHOLD = 1024L * 512L; // 512k
 

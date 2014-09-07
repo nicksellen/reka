@@ -21,7 +21,7 @@ import reka.api.flow.FlowOperation;
 import reka.api.run.EverythingSubscriber;
 import reka.api.run.RoutingOperation;
 import reka.api.run.Subscriber;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 import reka.core.runtime.FailureHandler;
 import reka.core.runtime.FlowContext;
 import reka.core.runtime.Node;
@@ -178,8 +178,8 @@ class NodeBuilder {
 			ActionHandler next = actionHandlers(childActions);
 			
 			if (operation != null) {
-				if (operation instanceof SyncOperation && node.shouldUseAnotherThread()) {
-					operation = ((SyncOperation) operation).toAsync(executor);
+				if (operation instanceof Operation && node.shouldUseAnotherThread()) {
+					operation = ((Operation) operation).toAsync(executor);
 				}
 				action = op(operation, next, error);
 				

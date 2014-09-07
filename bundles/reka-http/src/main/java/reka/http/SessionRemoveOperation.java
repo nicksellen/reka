@@ -6,9 +6,9 @@ import reka.api.Path;
 import reka.api.Path.Request;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 
-public class SessionRemoveOperation implements SyncOperation {
+public class SessionRemoveOperation implements Operation {
 	
 	private final SessionStore store;
 	

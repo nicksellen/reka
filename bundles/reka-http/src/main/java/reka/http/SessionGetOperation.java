@@ -6,9 +6,9 @@ import reka.api.Path;
 import reka.api.Path.Request;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 
-public class SessionGetOperation implements SyncOperation {
+public class SessionGetOperation implements Operation {
 	
 	private final SessionStore store;
 	private final Path sessionIdPath = Request.COOKIES.add(HttpSessionsModule.COOKIENAME).add("value");

@@ -11,10 +11,10 @@ import org.slf4j.LoggerFactory;
 
 import reka.api.Path;
 import reka.api.data.MutableData;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 import reka.core.data.memory.MutableMemoryData;
 
-public class JRubyRunOperation implements SyncOperation {
+public class JRubyRunOperation implements Operation {
 	
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	

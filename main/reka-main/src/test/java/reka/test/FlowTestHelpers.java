@@ -10,7 +10,7 @@ import reka.api.flow.FlowOperation;
 import reka.api.run.AsyncOperation;
 import reka.api.run.RouteCollector;
 import reka.api.run.RoutingOperation;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -36,7 +36,7 @@ public class FlowTestHelpers {
 	}
 
 	public static FlowOperation incrementFunction(final AtomicInteger counter) {
-		return new SyncOperation() {
+		return new Operation() {
 
 			@Override
 			public MutableData call(MutableData data) {
@@ -68,7 +68,7 @@ public class FlowTestHelpers {
 
 	
 	public static FlowOperation latchFunction(final CountDownLatch latch) {
-		return new SyncOperation() {
+		return new Operation() {
 
 			@Override
 			public MutableData call(MutableData data) {

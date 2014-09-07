@@ -5,11 +5,11 @@ import java.util.Map;
 
 import reka.api.data.Data;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.OperationSetup;
+import reka.core.setup.OperationSetup;
 import reka.http.operations.HttpResponseOperation;
-import reka.nashorn.OperationsConfigurer;
+import reka.nashorn.OperationConfigurer;
 
-public class HttpResponseConfigurer implements OperationsConfigurer {
+public class HttpResponseConfigurer implements OperationConfigurer {
 	
 	private String content;
 	private String contentType;

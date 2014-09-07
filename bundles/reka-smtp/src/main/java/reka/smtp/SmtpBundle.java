@@ -32,17 +32,17 @@ import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.flow.Flow;
 import reka.api.run.EverythingSubscriber;
-import reka.api.run.SyncOperation;
+import reka.api.run.Operation;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.ModuleConfigurer;
-import reka.core.bundle.ModuleSetup;
-import reka.core.bundle.OperationSetup;
 import reka.core.bundle.RekaBundle;
 import reka.core.data.memory.MutableMemoryData;
+import reka.core.setup.ModuleSetup;
+import reka.core.setup.OperationSetup;
 import reka.core.util.StringWithVars;
-import reka.nashorn.OperationsConfigurer;
+import reka.nashorn.OperationConfigurer;
 
 public class SmtpBundle implements RekaBundle {
 	
@@ -127,7 +127,7 @@ public class SmtpBundle implements RekaBundle {
 		
 	}
 	
-	public static class SMTPSendConfigurer implements OperationsConfigurer {
+	public static class SMTPSendConfigurer implements OperationConfigurer {
 
 		private String host, username, password;
 		private int port;
@@ -182,7 +182,7 @@ public class SmtpBundle implements RekaBundle {
 		
 	}
 	
-	public static class SMTPSendOperation implements SyncOperation {
+	public static class SMTPSendOperation implements Operation {
 
 		private final String host, username, password;
 		private final int port;

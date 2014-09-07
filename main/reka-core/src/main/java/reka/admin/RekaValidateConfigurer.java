@@ -12,13 +12,13 @@ import reka.api.data.Data;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.OperationSetup;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
+import reka.core.setup.OperationSetup;
 import reka.core.util.StringWithVars;
-import reka.nashorn.OperationsConfigurer;
+import reka.nashorn.OperationConfigurer;
 
-public class RekaValidateConfigurer implements OperationsConfigurer {
+public class RekaValidateConfigurer implements OperationConfigurer {
 
 	private final ConfigurerProvider provider;
 	private final ApplicationManager manager;
@@ -26,8 +26,8 @@ public class RekaValidateConfigurer implements OperationsConfigurer {
 	private Path in;
 	private Function<Data,String> filenameFn;
 	
-	private OperationsConfigurer whenOk;
-	private OperationsConfigurer whenError;
+	private OperationConfigurer whenOk;
+	private OperationConfigurer whenError;
 	
 	RekaValidateConfigurer(ConfigurerProvider provider, ApplicationManager manager) {
 		this.provider = provider;
@@ -59,7 +59,7 @@ public class RekaValidateConfigurer implements OperationsConfigurer {
 	}
 
 	
-	private OperationsConfigurer ops(ConfigBody body) {
+	private OperationConfigurer ops(ConfigBody body) {
 		return configure(new SequenceConfigurer(provider), body);
 	}
 	
