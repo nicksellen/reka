@@ -57,7 +57,7 @@ public class RekaVisualizeOperation implements Operation {
 	}
 	
 	@Override
-	public MutableData call(MutableData data) {
+	public void call(MutableData data) {
 		
 		HashCode hash = data.hash(Hashing.sha1().newHasher()).hash();
 		
@@ -123,8 +123,6 @@ public class RekaVisualizeOperation implements Operation {
 		} catch (ExecutionException e) {
 			e.printStackTrace();
 		}
-		
-		return data;
 	}
 	
 }

@@ -16,7 +16,8 @@ public class SyncAction implements ActionHandler {
 	
 	@Override
 	public void call(MutableData data, FlowContext context) {
-		next.call(operation.call(data), context);
+		operation.call(data);
+		next.call(data, context);
 	}
 
 }

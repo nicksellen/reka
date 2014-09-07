@@ -34,7 +34,7 @@ public class FilesystemListAndRoute implements RoutingOperation {
 	}
 
 	@Override
-	public MutableData call(MutableData data, RouteCollector router) {
+	public void call(MutableData data, RouteCollector router) {
 		String relative = data.getString(dirField).orElse("/");
 		if (relative.startsWith("/")) relative = relative.substring(1);
 		File entry = resolveAndCheck(basedir, relative).toFile();
@@ -53,7 +53,6 @@ public class FilesystemListAndRoute implements RoutingOperation {
 			populate(data.createMapAt(field), entry, relative);
 			router.routeTo(FILE);
 		}
-		return data;
 	}
 	
 	private void populate(MutableData item, File file, String path) {

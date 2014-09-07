@@ -27,7 +27,7 @@ import reka.api.data.MutableData;
 import reka.api.run.Operation;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.ModuleConfigurer;
+import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
 import reka.core.setup.OperationSetup;
 import reka.nashorn.OperationConfigurer;
@@ -138,8 +138,8 @@ public class LessModule extends ModuleConfigurer {
 		}
 
 		@Override
-		public MutableData call(MutableData data) {
-			return data.put(outFn.apply(data), content);
+		public void call(MutableData data) {
+			data.put(outFn.apply(data), content);
 		}
 		
 	}

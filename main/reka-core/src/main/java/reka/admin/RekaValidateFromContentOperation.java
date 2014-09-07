@@ -25,12 +25,12 @@ public class RekaValidateFromContentOperation implements RoutingOperation {
 	}
 
 	@Override
-	public MutableData call(MutableData data, RouteCollector router) {
+	public void call(MutableData data, RouteCollector router) {
 		try {
 			String configString = RekaModule.getConfigStringFromData(data, in);
 			manager.validate(StringSource.from(configString));
 			router.routeTo("ok");
-			return data;
+			return;
 		} catch (Throwable t) {
 			t = Util.unwrap(t);
 			if (t instanceof InvalidConfigurationException) {
@@ -53,7 +53,6 @@ public class RekaValidateFromContentOperation implements RoutingOperation {
 			}
 			router.routeTo("error");
 		}
-		return data;
 	}
 	
 }

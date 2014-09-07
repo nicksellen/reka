@@ -20,7 +20,7 @@ public class RekaListOperation implements Operation {
 	}
 
 	@Override
-	public MutableData call(MutableData data) {
+	public void call(MutableData data) {
 		data.putList(out, list -> {
 			manager.forEach(e -> {
 				String identity = e.getKey();
@@ -31,7 +31,6 @@ public class RekaListOperation implements Operation {
 				list.add(item);
 			});
 		});
-		return data;
 	}
 
 }

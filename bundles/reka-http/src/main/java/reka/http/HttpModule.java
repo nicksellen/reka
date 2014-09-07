@@ -16,10 +16,10 @@ import java.util.regex.Pattern;
 
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.ModuleConfigurer;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.core.data.memory.MutableMemoryData;
+import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
 import reka.http.configurers.HttpContentConfigurer;
 import reka.http.configurers.HttpRedirectConfigurer;

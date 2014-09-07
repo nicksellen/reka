@@ -1,4 +1,4 @@
-package reka.core.bundle;
+package reka.core.setup;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
@@ -30,8 +30,8 @@ import reka.core.builder.FlowVisualizer;
 import reka.core.builder.SingleFlow;
 import reka.core.runtime.NoFlow;
 import reka.core.runtime.NoFlowVisualizer;
-import reka.core.setup.ModuleSetup;
 import reka.core.setup.ModuleSetup.FlowSegmentBiFunction;
+import reka.core.setup.ModuleSetup.InitFlow;
 import reka.core.setup.ModuleSetup.TriggerCollection;
 
 import com.google.common.collect.ImmutableList;
@@ -44,16 +44,19 @@ public abstract class ModuleConfigurer {
 		private final Flow flow;
 		private final FlowVisualizer visualizer;
 		private final Map<Path,FlowSegmentBiFunction> providers;
+		private final List<InitFlow> initflows;
 		private final List<TriggerCollection> triggers;
 		private final List<Runnable> shutdownHandlers;
 		
 		ModuleInitializer(Flow initialize, FlowVisualizer visualizer, 
 				Map<Path,FlowSegmentBiFunction> providers,
+				List<InitFlow> initflows,
 				List<TriggerCollection> triggers,
 				List<Runnable> shutdownHandlers) {
 			this.flow = initialize;
 			this.visualizer = visualizer;
 			this.providers = ImmutableMap.copyOf(providers);
+			this.initflows = ImmutableList.copyOf(initflows);
 			this.triggers = ImmutableList.copyOf(triggers);
 			this.shutdownHandlers = ImmutableList.copyOf(shutdownHandlers);
 			
@@ -69,6 +72,10 @@ public abstract class ModuleConfigurer {
 		
 		public Map<Path,FlowSegmentBiFunction> providers() {
 			return providers;
+		}
+		
+		public List<InitFlow> initflows() {
+			return initflows;
 		}
 		
 		public List<TriggerCollection> triggers() {
@@ -95,8 +102,9 @@ public abstract class ModuleConfigurer {
 			
 			resolveNamedDependencies(all, rootsMap);
 			
-			Map<Path,FlowSegmentBiFunction> providersCollector = new HashMap<>();
-			List<TriggerCollection> triggerCollector = new ArrayList<>();
+			Map<Path,FlowSegmentBiFunction> providers = new HashMap<>();
+			List<InitFlow> initflows = new ArrayList<>();
+			List<TriggerCollection> triggers = new ArrayList<>();
 			List<Runnable> shutdownHandlers = new ArrayList<>();
 			Map<ModuleConfigurer,FlowSegment> segments = new HashMap<>();
 			
@@ -111,9 +119,10 @@ public abstract class ModuleConfigurer {
 					segments.put(module, segment);
 				});
 				
-				providersCollector.putAll(init.providers());
+				providers.putAll(init.providers());
 				
-				triggerCollector.addAll(init.triggers());
+				initflows.addAll(init.initflows());
+				triggers.addAll(init.triggers());
 				
 				init.shutdownHandlers().forEach(h -> {
 					shutdownHandlers.add(() -> h.accept(store));
@@ -135,7 +144,7 @@ public abstract class ModuleConfigurer {
 				visualizer = new NoFlowVisualizer();
 			}
 			
-			return new ModuleInitializer(flow, visualizer, providersCollector, triggerCollector, shutdownHandlers);
+			return new ModuleInitializer(flow, visualizer, providers, initflows, triggers, shutdownHandlers);
 		}
 		
 		private static Optional<FlowSegment> buildSegment(Set<ModuleConfigurer> modules, Map<ModuleConfigurer, FlowSegment> built) {

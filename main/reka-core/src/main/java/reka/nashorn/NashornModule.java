@@ -5,6 +5,7 @@ import static java.util.Arrays.asList;
 import static reka.api.Path.dots;
 import static reka.api.Path.path;
 import static reka.api.Path.root;
+import static reka.api.Path.slashes;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import static reka.util.Util.runtime;
 
@@ -13,17 +14,24 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.regex.Pattern;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import reka.api.IdentityKey;
 import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
+import reka.api.run.Operation;
 import reka.builtins.BuiltinsModule.PutDataOperation;
 import reka.config.Config;
+import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.ModuleConfigurer;
 import reka.core.data.memory.MutableMemoryData;
+import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
 import reka.core.setup.OperationSetup;
 
@@ -32,11 +40,15 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 
 public class NashornModule extends ModuleConfigurer {
+	
+	private static final Logger log = LoggerFactory.getLogger(NashornModule.class);
+	private static final ExecutorService executor = Executors.newCachedThreadPool(); // TODO: remove this!
 
 	protected static final IdentityKey<NashornRunner> RUNNER = IdentityKey.named("nashorn runner");
 	
 	private final List<String> scripts = new ArrayList<>();
 	private final Map<String,String> ops = new HashMap<>();
+	private final Map<String,ConfigBody> initops = new HashMap<>();
 	
 	@Conf.Config
 	public void config(Config config) {
@@ -91,6 +103,14 @@ public class NashornModule extends ModuleConfigurer {
 		checkConfig(config.hasDocument(), "must have document");
 		ops.put(config.key(), config.documentContentAsString());
 	}
+	
+	@Conf.Each("initop")
+	public void initop(Config config) {
+		checkConfig(config.hasKey(), "must have key");
+		checkConfig(config.hasValue(), "must have value");
+		checkConfig(config.hasBody(), "must have body");
+		initops.put(config.valueAsString(), config.body());
+	}
 
 	@SuppressWarnings("unchecked")
 	@Override
@@ -142,6 +162,63 @@ public class NashornModule extends ModuleConfigurer {
 			}
 		
 		});
+
+		initops.forEach((name, body) -> {
+		
+			IdentityKey<Data> key = IdentityKey.named(format("%s init op", name));
+			
+			module.initflow(name, body, init -> {
+				log.debug("running init flow for {}", name);
+				init.flow().prepare().executor(executor).complete(data -> {
+					log.debug("finished running init flow for {}", name);
+					init.store().put(key, data);
+					log.debug("put boo data");
+				}).run();
+			});
+			
+			module.operation(slashes(name), provider -> new BooConfigurer(key));
+		});
+		
+	}
+	
+	public static class BooConfigurer implements OperationConfigurer {
+		
+		private final IdentityKey<Data> key;
+		private Path out = root();
+		
+		public BooConfigurer(IdentityKey<Data> key) {
+			this.key = key;
+		}
+		
+		@Conf.Val
+		public void path(String val) {
+			out = dots(val);
+		}
+
+		@Override
+		public void setup(OperationSetup ops) {
+			ops.add("yay", store -> new BooOperation(store.get(key), out));
+		}
+		
+	}
+	
+	public static class BooOperation implements Operation {
+		
+		private final Data datavalue;
+		private final Path out;
+		
+		public BooOperation(Data datavalue, Path out) {
+			log.info("initting boo op");
+			this.datavalue = datavalue;
+			this.out = out;
+		}
+
+		@Override
+		public void call(MutableData data) {
+			datavalue.forEachContent((path, content) -> {
+				data.put(out.add(path), content);
+			});
+		}
 		
 	}
 	

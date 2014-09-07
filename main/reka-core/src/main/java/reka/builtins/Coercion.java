@@ -88,7 +88,7 @@ public class Coercion {
 		}
 
 		@Override
-		public MutableData call(MutableData data) {
+		public void call(MutableData data) {
 			
 			for (Entry<Path, CoercionType> e : coercions) {
 				Path path = e.getKey();
@@ -105,7 +105,6 @@ public class Coercion {
 					}
 				}
 			}
-			return data;
 		}
 		
 	}
@@ -119,13 +118,12 @@ public class Coercion {
 		}
 
 		@Override
-		public MutableData call(MutableData data) {
+		public void call(MutableData data) {
 			Data val = data.at(path);
 			if (val.isContent()) {
 				Content content = val.content();
 				data.put(path, longValue(Long.valueOf(content.asUTF8())));
 			}
-			return data;
 		}
 		
 	}
@@ -139,13 +137,11 @@ public class Coercion {
 		}
 
 		@Override
-		public MutableData call(MutableData data) {
+		public void call(MutableData data) {
 			Data val = data.at(path);
 			if (val.isContent()) {
-				Content content = val.content();
-				data.put(path, Boolean.valueOf(content.asUTF8()) ? trueValue() : falseValue());
+				data.put(path, Boolean.valueOf(val.content().asUTF8()) ? trueValue() : falseValue());
 			}
-			return data;
 		}
 		
 	}

@@ -26,7 +26,7 @@ import reka.config.processor.DocConverter;
 import reka.config.processor.IncludeConverter;
 import reka.config.processor.MultiConverter;
 import reka.config.processor.Processor;
-import reka.core.bundle.ModuleConfigurer;
+import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
 
 import com.google.common.base.Charsets;
@@ -66,7 +66,6 @@ public class RekaModule extends ModuleConfigurer {
 		module.operation(path("validate"), provider -> new RekaValidateConfigurer(provider, manager));
 		module.operation(path("deploy"), provider -> new RekaDeployConfigurer(manager));
 		module.operation(path("undeploy"), provider -> new RekaUndeployConfigurer(manager));
-		module.operation(path("redeploy"), provider -> new RekaRedeployConfigurer(manager));
 		module.operation(path("visualize"), provider -> new RekaVisualizeConfigurer(manager));
 		
 		for (ConfigBody body : deployHandlers) {			

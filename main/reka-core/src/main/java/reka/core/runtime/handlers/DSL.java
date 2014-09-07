@@ -7,10 +7,9 @@ import java.util.Collection;
 
 import reka.api.flow.FlowOperation;
 import reka.api.run.AsyncOperation;
-import reka.api.run.DataOperation;
+import reka.api.run.Operation;
 import reka.api.run.RoutingOperation;
 import reka.api.run.Subscriber;
-import reka.api.run.Operation;
 import reka.core.config.NoOp;
 import reka.core.runtime.NodeChild;
 import reka.core.runtime.handlers.stateful.StatefulControl;
@@ -25,9 +24,7 @@ public class DSL {
 		if (operation instanceof Operation) {
 			return syncOperation((Operation) operation, next);
 		} else if (operation instanceof AsyncOperation) {
-			return asyncOperation((AsyncOperation) operation, next, error);
-		} else if (operation instanceof DataOperation) {
-			return new DataOperationAction((DataOperation) operation, next, error);
+			return new DataOperationAction((AsyncOperation) operation, next, error);
 		} else if (operation instanceof NoOp) {
 			return next; // NoOp does nothing so skip to the next immediately...
 		} else {
@@ -49,10 +46,6 @@ public class DSL {
 	
 	public static SyncAction syncOperation(Operation operation) {
 		return syncOperation(operation, DoNothing.INSTANCE);
-	}
-	
-	public static AsyncAction asyncOperation(AsyncOperation operation, ActionHandler next, ErrorHandler error) {
-		return new AsyncAction(operation, next, error);
 	}
 	
 	public static SubscribersAction subscriber(Subscriber subscriber) {

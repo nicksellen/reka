@@ -39,14 +39,13 @@ public class HttpResponseOperation implements Operation {
 
 
 	@Override
-	public MutableData call(MutableData data) {
+	public void call(MutableData data) {
 		
 		for (Entry<String, Content> header : headers.entrySet()) {
 			data.put(Response.HEADERS.add(header.getKey()), header.getValue());
 		}
 		
-		return data
-			.put(Response.CONTENT, content)
+		data.put(Response.CONTENT, content)
 			.put(Response.Headers.CONTENT_TYPE, contentType)
 			.put(Response.STATUS, status)
 		;

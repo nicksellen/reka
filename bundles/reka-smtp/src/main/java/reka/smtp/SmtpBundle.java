@@ -36,9 +36,9 @@ import reka.api.run.Operation;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.ModuleConfigurer;
 import reka.core.bundle.RekaBundle;
 import reka.core.data.memory.MutableMemoryData;
+import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
 import reka.core.setup.OperationSetup;
 import reka.core.util.StringWithVars;
@@ -211,7 +211,7 @@ public class SmtpBundle implements RekaBundle {
 		}
 		
 		@Override
-		public MutableData call(final MutableData data) {
+		public void call(final MutableData data) {
 			
 			try {
 				
@@ -235,8 +235,6 @@ public class SmtpBundle implements RekaBundle {
 				email.setMsg(body.apply(data));
 				
 				email.send();
-				
-				return data;
 				
 				/*
 				return executor.submit(new Callable<MutableData>(){

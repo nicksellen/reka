@@ -1,7 +1,7 @@
 package reka.jade;
 
 import static reka.api.Path.root;
-import reka.core.bundle.ModuleConfigurer;
+import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
 
 public class JadeModule extends ModuleConfigurer {

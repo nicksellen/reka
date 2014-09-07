@@ -5,11 +5,11 @@ import java.io.StringWriter;
 import reka.api.Path;
 import reka.api.Path.Response;
 import reka.api.data.MutableData;
-import reka.api.run.DataOperation;
+import reka.api.run.Operation;
 import de.neuland.jade4j.model.JadeModel;
 import de.neuland.jade4j.template.JadeTemplate;
 
-public class Jade implements DataOperation {
+public class Jade implements Operation {
 	
 	private final JadeTemplate template;
 	private final Path in;
@@ -24,12 +24,11 @@ public class Jade implements DataOperation {
 	}
 
 	@Override
-	public void run(MutableData data, OperationContext ctx) {
+	public void call(MutableData data) {
 		if (mainResponse) data.putString(Response.Headers.CONTENT_TYPE, "text/html");
 		StringWriter writer = new StringWriter();
         template.process(new JadeModel(data.at(in).viewAsMap()), writer);
 	    data.putString(out, writer.toString());
-	    ctx.end();
 	}
 	
 }

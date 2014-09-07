@@ -28,7 +28,7 @@ public class SessionPutOperation implements Operation {
 	}
 	
 	@Override
-	public MutableData call(MutableData data) {
+	public void call(MutableData data) {
 		Optional<String> o = data.getString(getSessionIdPath);
 		String id;
 		if (o.isPresent()) {
@@ -43,7 +43,6 @@ public class SessionPutOperation implements Operation {
 			sessdata.putString(keyFn.apply(data), valFn.apply(data));	
 		}
 		
-		return data;
 	}
 
 }

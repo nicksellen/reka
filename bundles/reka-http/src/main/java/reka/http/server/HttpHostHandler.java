@@ -40,7 +40,7 @@ import reka.core.data.memory.MutableMemoryData;
 @ChannelHandler.Sharable
 public class HttpHostHandler extends SimpleChannelInboundHandler<MutableData> {
 	
-	private static final Path CLOSE_CHANNEL = dots("options.close");
+	public static final Path CLOSE_CHANNEL = dots("options.close");
 	
 	private static final Logger log = LoggerFactory.getLogger(HttpHostHandler.class);
 	
@@ -214,7 +214,6 @@ public class HttpHostHandler extends SimpleChannelInboundHandler<MutableData> {
 	}
 	
 	private void executeFlow(ChannelHandlerContext context, Flow flow, MutableData data, String host) {
-		//log.info("[{}] {} {}", flow.fullName(), data.getString(Request.METHOD).orElse(""), data.getString(Request.PATH).orElse(""));
 		flow.run(listeningDecorator(context.executor()), data, new ChannelHandlerContextDataSubscriber(context));
 	}
 

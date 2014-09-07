@@ -7,7 +7,7 @@ import java.util.List;
 
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.ModuleConfigurer;
+import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
 
 public class CommandModule extends ModuleConfigurer {

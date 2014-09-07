@@ -18,9 +18,7 @@ public class RekaUndeployOperation implements Operation {
 	}
 	
 	@Override
-	public MutableData call(MutableData data) {
-		String identity = identityFn.apply(data);
-		manager.undeploy(identity);
-		return data;
+	public void call(MutableData data) {
+		manager.undeploy(identityFn.apply(data));
 	}
 }

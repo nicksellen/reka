@@ -33,9 +33,6 @@ import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.nashorn.OperationConfigurer;
 
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.SettableFuture;
-
 public class ModuleSetup {
 	
 	private final Path path;
@@ -44,6 +41,7 @@ public class ModuleSetup {
 	private final List<Consumer<IdentityStore>> shutdownHandlers = new ArrayList<>();
 	private final List<TriggerCollection> triggers = new ArrayList<>();
 	private final Map<Path,FlowSegmentBiFunction> operations = new HashMap<>();
+	private final List<InitFlow> initflows = new ArrayList<>();
 	
 	public ModuleSetup(Path path, IdentityStore store) {
 		this.path = path;
@@ -61,6 +59,25 @@ public class ModuleSetup {
 		}
 	}
 	
+	public static class InitFlowSetup {
+		
+		private final Flow flow;
+		private final IdentityStore store;
+		
+		public InitFlowSetup(Flow flow, IdentityStore store) {
+			this.flow = flow;
+			this.store = store;
+		}
+		
+		public Flow flow() {
+			return flow;
+		}
+		
+		public IdentityStore store() {
+			return store;
+		}
+	}
+	
 	public ModuleSetup setupInitializer(Consumer<ModuleOperationSetup> init) {
 		OperationSetup e = new SequentialCollector(store);
 		init.accept(new ModuleOperationSetup(e));
@@ -68,7 +85,7 @@ public class ModuleSetup {
 		return this;
 	}
 	
-	// wraps the fullon OperationSetup and only allows direct operations to be defined, which just see the store
+	// wraps the full-on OperationSetup and only allows direct operations to be defined, which just see the store
 	public static class ModuleOperationSetup {
 		
 		private final OperationSetup ops;
@@ -82,25 +99,18 @@ public class ModuleSetup {
 				return new Operation() {
 					
 					@Override
-					public MutableData call(MutableData data) {
+					public void call(MutableData data) {
 						c.accept(store);
-						return data;
 					}
+					
 				};
 			});
 			return this;
 		}
+		
 		public ModuleOperationSetup runAsync(String name, BiConsumer<IdentityStore, DoneCallback> c) {
 			ops.add(name, store -> {
-				return new AsyncOperation() {
-					
-					@Override
-					public ListenableFuture<MutableData> call(MutableData data) {
-						SettableFuture<MutableData> future = SettableFuture.create();
-						c.accept(store, () -> future.set(data));
-						return future;
-					}
-				};
+				return AsyncOperation.create((data, ctx) -> c.accept(store, () -> ctx.end()));
 			});
 			return this;
 		}
@@ -299,6 +309,34 @@ public class ModuleSetup {
 		}
 		
 	}
+
+	
+	public static class InitFlow {
+		
+		public final Path name;
+		public final Function<ConfigurerProvider, OperationConfigurer> supplier;
+		public final IdentityStore store;
+		public final Consumer<Flow> consumer;
+		
+		public InitFlow(Path name,
+				Function<ConfigurerProvider, OperationConfigurer> supplier,
+				IdentityStore store,
+				Consumer<Flow> consumer) {
+			this.name = name;
+			this.supplier = supplier;
+			this.store = store;
+			this.consumer = consumer;
+		}
+		
+	}
+	
+	public ModuleSetup initflow(String name, ConfigBody body, Consumer<InitFlowSetup> init) {
+		Function<ConfigurerProvider, OperationConfigurer> supplier = provider -> configure(new SequenceConfigurer(provider), body);
+		initflows.add(new InitFlow(path.add(name), supplier, store, flow -> {
+			init.accept(new InitFlowSetup(flow, store));
+		}));
+		return this;
+	}
 	
 	public ModuleSetup trigger(String name, ConfigBody body, Consumer<SingleFlowRegistration> c) {
 		return trigger(IdentityKey.named(name), body, c);
@@ -323,21 +361,25 @@ public class ModuleSetup {
 		return triggers(suppliers, m -> c.accept(m.singleFor(key)));
 	}
 	
-	public Optional<FlowSegment> buildFlowSegment() {
+	protected Optional<FlowSegment> buildFlowSegment() {
 		if (segments.isEmpty()) return Optional.empty();
 		List<FlowSegment> built = segments.stream().map(Supplier<FlowSegment>::get).collect(toList());
 		return Optional.of(label(path.slashes(), seq(built)));
 	}
 	
-	public Map<Path,FlowSegmentBiFunction> providers() {
+	protected Map<Path,FlowSegmentBiFunction> providers() {
 		return operations;
 	}
+
+	protected List<InitFlow> initflows() {
+		return initflows;
+	}
 	
-	public List<TriggerCollection> triggers() {
+	protected List<TriggerCollection> triggers() {
 		return triggers;
 	}
 	
-	public List<Consumer<IdentityStore>> shutdownHandlers() {
+	protected List<Consumer<IdentityStore>> shutdownHandlers() {
 		return shutdownHandlers;
 	}
 	

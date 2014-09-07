@@ -21,20 +21,19 @@ import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.flow.Flow;
 import reka.api.run.AsyncOperation;
+import reka.api.run.AsyncOperation.OperationContext;
 import reka.api.run.Operation;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.ModuleConfigurer;
 import reka.core.data.memory.MutableMemoryData;
+import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
 import reka.core.setup.OperationSetup;
 import reka.core.util.StringWithVars;
 import reka.nashorn.OperationConfigurer;
 
 import com.google.common.base.Splitter;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.SettableFuture;
 
 public class ProcessModule extends ModuleConfigurer {
 	
@@ -157,9 +156,8 @@ public class ProcessModule extends ModuleConfigurer {
 		}
 		
 		@Override
-		public MutableData call(MutableData data) {
+		public void call(MutableData data) {
 			manager.run(lineFn.apply(data));
-			return data;
 		}
 		
 	}
@@ -175,13 +173,11 @@ public class ProcessModule extends ModuleConfigurer {
 		}
 		
 		@Override
-		public ListenableFuture<MutableData> call(MutableData data) {
-			SettableFuture<MutableData> f = SettableFuture.create();
+		public void run(MutableData data, OperationContext ctx) {
 			manager.run(lineFn.apply(data), output -> {
 				data.putString("out", output);
-				f.set(data);
+				ctx.end();
 			});
-			return f;
 		}
 		
 	}

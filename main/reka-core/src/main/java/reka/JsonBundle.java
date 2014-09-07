@@ -17,9 +17,9 @@ import reka.api.run.Operation;
 import reka.config.configurer.Configurer.ErrorCollector;
 import reka.config.configurer.ErrorReporter;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.ModuleConfigurer;
 import reka.core.bundle.RekaBundle;
 import reka.core.data.memory.MutableMemoryData;
+import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
 import reka.core.setup.OperationSetup;
 import reka.core.util.StringWithVars;
@@ -112,7 +112,7 @@ public class JsonBundle implements RekaBundle {
 		}
 
 		@Override
-		public MutableData call(MutableData data) {
+		public void call(MutableData data) {
 			Data val = data.at(inFn.apply(data));
 			if (val.isContent()) {
 				try {
@@ -123,7 +123,6 @@ public class JsonBundle implements RekaBundle {
 					throw unchecked(e);
 				}
 			}
-			return data;
 		}
 		
 	}
@@ -138,9 +137,8 @@ public class JsonBundle implements RekaBundle {
 		}
 
 		@Override
-		public MutableData call(MutableData data) {
+		public void call(MutableData data) {
 			data.putString(outFn.apply(data), data.at(inFn.apply(data)).toJson());
-			return data;
 		}
 		
 	}

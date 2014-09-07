@@ -32,11 +32,11 @@ public class RoutingAction implements ActionHandler {
 	}
 	
 	@Override
-	public void call(MutableData incoming, FlowContext context) {
+	public void call(MutableData data, FlowContext context) {
 		
 		DefaultRouter mr = DefaultRouter.create(childrenNames);
 		
-		MutableData data = operation.call(incoming, mr);
+		operation.call(data, mr);
 		
 		boolean copy = mr.routed().size() > 1;
 		

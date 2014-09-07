@@ -16,12 +16,11 @@ public class FlowBuilderTest {
 		}
 
 		@Override
-		public MutableData call(MutableData data) {
+		public void call(MutableData data) {
 			//System.out.log.debug("ran [{}]\n", message);
 
 			// System.out.log.debug("js.result: [{}]\n",
 			// data.get(dots("js.result")));
-			return data;
 		}
 
 	}

@@ -1,6 +1,6 @@
 package reka;
 
-import reka.core.bundle.ModuleConfigurer;
+import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
 
 public class RootModule extends ModuleConfigurer {

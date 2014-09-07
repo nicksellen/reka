@@ -27,7 +27,7 @@ public class JRubyTest {
 		for (int i = 0; i < 10000; i++) {
 			MutableData data = MutableMemoryData.create();
 			data.putString("name", "omg " + i);
-			data = op.call(data);
+			op.call(data);
 			assertThat(data.getString("out").get(), equalTo("name is omg " + i));
 		}
 		System.out.printf("end\n");
@@ -45,7 +45,7 @@ public class JRubyTest {
 		MutableData data = MutableMemoryData.create();
 		data.putString(dots("something.deep.in.here"), "yay");
 		data.putString("name", "omg");
-		data = op.call(data);
+		op.call(data);
 		System.out.printf("data is: %s\n", data.toPrettyJson());
 	}
 	

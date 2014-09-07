@@ -26,7 +26,7 @@ public class NashornRunOperation implements Operation {
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public MutableData call(MutableData data) {
+	public void call(MutableData data) {
 		Map<String,Object> m = new HashMap<>();
 		m.put("data", data.viewAsMap());
 		m.put("out", new HashMap<>());
@@ -39,7 +39,6 @@ public class NashornRunOperation implements Operation {
 		} else {
 			throw runtime("not sure what to do with %s", outval);
 		}
-		return data;
 	}
 
 }

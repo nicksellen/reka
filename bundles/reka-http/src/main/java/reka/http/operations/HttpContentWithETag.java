@@ -14,14 +14,14 @@ import reka.api.Path.Request;
 import reka.api.Path.Response;
 import reka.api.content.Content;
 import reka.api.data.MutableData;
-import reka.api.run.Operation;
+import reka.api.run.AsyncOperation;
 
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
 
-public class HttpContentWithETag implements Operation {
+public class HttpContentWithETag implements AsyncOperation {
 
 	private static final long PUT_IN_FILE_THRESHOLD = 1024L * 512L; // 512k
 
@@ -67,19 +67,18 @@ public class HttpContentWithETag implements Operation {
 		etagStr = hex.encode(hasher.hash().asBytes());
 		etag = utf8(etagStr);
 	}
-	
+
 	@Override
-	public MutableData call(MutableData data) {
+	public void run(MutableData data, OperationContext ctx) {
 		if (data.existsAt(Request.Headers.IF_NONE_MATCH) && etagStr.equals(data.getString(Request.Headers.IF_NONE_MATCH).orElse(""))) {
-			return data
-				.put(Response.CONTENT, EMPTY)
+			data.put(Response.CONTENT, EMPTY)
 				.put(Response.STATUS, NOT_MODIFIED);
 		} else {
-			return data
-				.put(Response.CONTENT, content)
+			data.put(Response.CONTENT, content)
 				.put(Response.Headers.CONTENT_TYPE, contentType)
 				.put(Response.Headers.ETAG, etag);
 		}
+		ctx.end();
 	}
 
 }

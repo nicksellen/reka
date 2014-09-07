@@ -21,8 +21,8 @@ public class FilesystemResolveOperation implements Operation {
 	}
 
 	@Override
-	public MutableData call(MutableData data) {
-		return data.putString(dots(outFn.apply(data)), resolveAndCheck(basedir, inFn.apply(data)).normalize().toString());
+	public void call(MutableData data) {
+		data.putString(dots(outFn.apply(data)), resolveAndCheck(basedir, inFn.apply(data)).normalize().toString());
 	}
 
 }

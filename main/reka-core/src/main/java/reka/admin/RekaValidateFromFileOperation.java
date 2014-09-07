@@ -30,7 +30,7 @@ public class RekaValidateFromFileOperation implements RoutingOperation {
 	}
 
 	@Override
-	public MutableData call(MutableData data, RouteCollector router) {
+	public void call(MutableData data, RouteCollector router) {
 		try {
 			String filename = filenameFn.apply(data);
 			File file = new File(filename);
@@ -38,7 +38,7 @@ public class RekaValidateFromFileOperation implements RoutingOperation {
 			checkArgument(!file.isDirectory(), "path is a directory [%s]", filename);
 			manager.validate(FileSource.from(file));
 			router.routeTo("ok");
-			return data;
+			return;
 		} catch (Throwable t) {
 			t = Util.unwrap(t);
 			if (t instanceof InvalidConfigurationException) {
@@ -61,7 +61,6 @@ public class RekaValidateFromFileOperation implements RoutingOperation {
 			}
 			router.routeTo("error");
 		}
-		return data;
 	}
 	
 }

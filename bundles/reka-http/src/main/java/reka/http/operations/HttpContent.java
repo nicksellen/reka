@@ -47,8 +47,8 @@ public class HttpContent implements Operation {
 	}
 	
 	@Override
-	public MutableData call(MutableData data) {
-		return data.put(Response.CONTENT, content)
+	public void call(MutableData data) {
+		data.put(Response.CONTENT, content)
 				   .put(Response.Headers.CONTENT_TYPE, contentType);
 	}
 

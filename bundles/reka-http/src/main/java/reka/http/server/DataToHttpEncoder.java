@@ -151,6 +151,13 @@ public class DataToHttpEncoder extends MessageToMessageEncoder<Data> {
 			
 			response.headers().set(HttpHeaders.SERVER, DEFAULT_SERVER_NAME);
 			io.netty.handler.codec.http.HttpHeaders.setDate(response, new Date());
+			if (data.existsAt(HttpHostHandler.CLOSE_CHANNEL)) {
+				response.headers().set(io.netty.handler.codec.http.HttpHeaders.Names.CONNECTION, 
+									   io.netty.handler.codec.http.HttpHeaders.Values.CLOSE);
+			} else {
+				response.headers().set(io.netty.handler.codec.http.HttpHeaders.Names.CONNECTION,
+									   io.netty.handler.codec.http.HttpHeaders.Values.KEEP_ALIVE);
+			}
 			
 			data.at(Response.HEADERS).forEachContent((p, c) -> {
 				response.headers().set(p.last().toString(), c);

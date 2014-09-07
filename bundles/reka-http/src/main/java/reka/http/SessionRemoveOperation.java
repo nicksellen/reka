@@ -22,7 +22,7 @@ public class SessionRemoveOperation implements Operation {
 	}
 	
 	@Override
-	public MutableData call(MutableData data) {
+	public void call(MutableData data) {
 		data.getString(getSessionIdPath).ifPresent(id -> {
 			Path key = keyFn.apply(data);		
 			if (key.isEmpty()) {
@@ -35,7 +35,6 @@ public class SessionRemoveOperation implements Operation {
 				});
 			}
 		});
-		return data;
 	}
 
 }

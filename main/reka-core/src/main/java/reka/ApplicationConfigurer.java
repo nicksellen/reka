@@ -19,7 +19,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import reka.api.IdentityKey;
-import reka.api.IdentityStore;
 import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
@@ -35,11 +34,11 @@ import reka.core.builder.FlowBuilders;
 import reka.core.builder.FlowVisualizer;
 import reka.core.builder.Flows;
 import reka.core.bundle.BundleManager;
-import reka.core.bundle.ModuleConfigurer;
-import reka.core.bundle.ModuleConfigurer.ModuleInitializer;
 import reka.core.config.MultiConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.core.data.memory.MutableMemoryData;
+import reka.core.setup.ModuleConfigurer;
+import reka.core.setup.ModuleConfigurer.ModuleInitializer;
 import reka.core.setup.ModuleSetup.MultiFlowRegistration;
 import reka.core.setup.ModuleSetup.Trigger;
 import reka.core.setup.ModuleSetup.TriggerCollection;
@@ -156,7 +155,8 @@ public class ApplicationConfigurer implements ErrorReporter {
     	CompletableFuture<Application> future = new CompletableFuture<>();
     	
     	return safelyCompletable(future, () -> {
-    		
+
+    		FlowBuilders initflowBuilders = new FlowBuilders();
     		FlowBuilders flowBuilders = new FlowBuilders();
     		
 	    	ModuleInitializer initializer = ModuleConfigurer.buildInitializer(rootModule);
@@ -171,6 +171,11 @@ public class ApplicationConfigurer implements ErrorReporter {
 	    	List<Runnable> shutdownHandlers = initializer.shutdownHandlers();
 	    	
 	    	MultiConfigurerProvider configurerProvider = new MultiConfigurerProvider(initializer.providers());
+	    	
+	    	initializer.initflows().forEach(initflow -> {
+	    		initflowBuilders.add(initflow.name, 
+    					initflow.supplier.apply(configurerProvider).bind(initflow.store).get());
+	    	});
 	    	
 	    	initializer.triggers().forEach(triggers -> {
 	    		triggers.get().forEach(trigger -> {
@@ -187,16 +192,31 @@ public class ApplicationConfigurer implements ErrorReporter {
 	
 	    	EverythingSubscriber subscriber = EverythingSubscriber.wrap(s);
 	    	
-	    	MutableData initdata = MutableMemoryData.create();
-	    	
-	    	initializer.flow().prepare().data(initdata).complete(new EverythingSubscriber() {
+	    	initializer.flow().prepare().data(MutableMemoryData.create()).complete(new EverythingSubscriber() {
 				
 				@Override
 				public void ok(MutableData data) {
 					
 					log.debug("initialized app");
 					
+					log.debug("building init flows");
+					
+					Flows initFlows = initflowBuilders.build();
+					
+					initializer.initflows().forEach(initflow -> {
+						log.debug("passing build initflow to {}", initflow.name.slashes());
+						initflow.consumer.accept(initFlows.flow(initflow.name));
+					});
+					
+					try {
+						Thread.sleep(5000);
+					} catch (InterruptedException e) {
+						Thread.currentThread().interrupt();
+					}
+					
 			    	try {
+			    		
+			    		log.debug("building main flows");
 			    		
 						Flows flows = flowBuilders.build();
 						

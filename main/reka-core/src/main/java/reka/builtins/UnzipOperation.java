@@ -29,7 +29,7 @@ public class UnzipOperation implements Operation {
 	}
 	
 	@Override
-	public MutableData call(MutableData data) {
+	public void call(MutableData data) {
 		Path dataPath = dataPathFn.apply(data);
 		java.nio.file.Path outputDir = outputDirFn.apply(data);
 		
@@ -61,8 +61,6 @@ public class UnzipOperation implements Operation {
 		} catch (Throwable t) {
 			throw unchecked(t);
 		}
-		
-		return data;
 	}
 	
 }

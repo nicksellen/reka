@@ -8,9 +8,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import reka.api.data.MutableData;
 import reka.api.flow.FlowOperation;
 import reka.api.run.AsyncOperation;
+import reka.api.run.Operation;
 import reka.api.run.RouteCollector;
 import reka.api.run.RoutingOperation;
-import reka.api.run.Operation;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -25,11 +25,10 @@ public class FlowTestHelpers {
 		return new RoutingOperation() {
 			
 			@Override
-			public MutableData call(MutableData data, RouteCollector router) {
+			public void call(MutableData data, RouteCollector router) {
 				for (String route : routeTo) {
 					router.routeTo(route);
 				}
-				return data;
 			}
 			
 		};
@@ -39,30 +38,20 @@ public class FlowTestHelpers {
 		return new Operation() {
 
 			@Override
-			public MutableData call(MutableData data) {
+			public void call(MutableData data) {
 				counter.incrementAndGet();
-				return data;
 			}
 			
 		};
 	}
 
 	public static FlowOperation asyncCountingFunction(final AtomicInteger counter) {
-		return new AsyncOperation() {
-
-			@Override
-			public ListenableFuture<MutableData> call(final MutableData data) {
-				return executor.submit(new Callable<MutableData>(){
-
-					@Override
-					public MutableData call() throws Exception {
-						counter.incrementAndGet();
-						return data;
-					}
-				});
-			}
-			
-		};
+		return AsyncOperation.create((data, ctx) -> {
+			executor.submit(() -> {
+				counter.incrementAndGet();
+				ctx.end();
+			});
+		});
 	}
 	
 
@@ -71,9 +60,8 @@ public class FlowTestHelpers {
 		return new Operation() {
 
 			@Override
-			public MutableData call(MutableData data) {
+			public void call(MutableData data) {
 				latch.countDown();
-				return data;
 			}
 			
 		};

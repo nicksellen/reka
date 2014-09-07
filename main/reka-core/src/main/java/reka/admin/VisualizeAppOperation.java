@@ -64,7 +64,7 @@ public class VisualizeAppOperation implements Operation {
 	}
 	
 	@Override
-	public MutableData call(MutableData data) {
+	public void call(MutableData data) {
 		
 		String identity = appIdentityFn.apply(data);
 		Path flowName = slashes(flowNameFn.apply(data));
@@ -143,8 +143,6 @@ public class VisualizeAppOperation implements Operation {
 		} catch (ExecutionException e) {
 			e.printStackTrace();
 		}
-		
-		return data;
 	}
 	
 }

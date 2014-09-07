@@ -43,7 +43,7 @@ public class DefaultFlow implements Flow {
 		
 		private EverythingSubscriber subscriber;
 		private MutableData data;
-		private ListeningExecutorService executor;
+		private ExecutorService executor;
 		
 		@Override
         public FlowRun complete(EverythingSubscriber subscriber) {
@@ -53,11 +53,6 @@ public class DefaultFlow implements Flow {
 		
 		@Override
         public FlowRun executor(ExecutorService executor) {
-			return executor(MoreExecutors.listeningDecorator(executor));
-		}
-		
-		@Override
-        public FlowRun executor(ListeningExecutorService executor) {
 			this.executor = executor;
 			return this;
 		}
@@ -93,7 +88,7 @@ public class DefaultFlow implements Flow {
 	}
 	
 	@Override
-	public void run(ListeningExecutorService executor, MutableData data, EverythingSubscriber subscriber) {
+	public void run(ExecutorService executor, MutableData data, EverythingSubscriber subscriber) {
 		head.call(data, new DefaultFlowContext(id, executor, subscriber));
 	}
 	

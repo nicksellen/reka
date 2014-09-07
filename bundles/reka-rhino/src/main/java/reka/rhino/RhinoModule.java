@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 import reka.api.IdentityKey;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.ModuleConfigurer;
+import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
 
 import com.google.common.base.Charsets;

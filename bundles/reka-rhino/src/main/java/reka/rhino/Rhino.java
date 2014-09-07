@@ -21,9 +21,8 @@ public class Rhino implements Operation {
 	}
 	
 	@Override
-	public MutableData call(MutableData data) {
+	public void call(MutableData data) {
 		addObjectToData(data, out, runJavascript(script, data));
-		return data;
 	}
 	
 }

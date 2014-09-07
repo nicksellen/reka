@@ -72,7 +72,7 @@ public class HttpRouter implements RoutingOperation {
 	}
 		
 	@Override
-	public MutableData call(MutableData data, RouteCollector router) {
+	public void call(MutableData data, RouteCollector router) {
 		
 		String path = data.getString(Request.PATH).orElse("");
 		HttpMethod method = HttpMethod.valueOf(data.getString(Request.METHOD).orElse("GET"));
@@ -88,13 +88,6 @@ public class HttpRouter implements RoutingOperation {
 			router.routeTo(notFoundConnectionName);
 		}
 		
-		/* TODO: need to add route formatters into a 'helpers' type thing 
-		for (Entry<String, RouteFormatter> entry : namedRouteFormatters.entrySet()) {
-			data.put(ROUTE_FORMATTER_PATH.add(entry.getKey()), new RouteFunctions(entry.getValue(), matchedRoutes.contains(entry.getKey())));
-		}
-		*/
-		
-		return data;
 	}
 	
 	public static interface Route {

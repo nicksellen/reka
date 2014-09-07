@@ -15,7 +15,7 @@ public class ThrowOperation implements Operation {
 	}
 
 	@Override
-	public MutableData call(MutableData data) {
+	public void call(MutableData data) {
 		throw new RuntimeException(msgFn.apply(data));
 	}
 	

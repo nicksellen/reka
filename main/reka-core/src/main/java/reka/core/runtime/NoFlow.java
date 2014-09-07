@@ -11,8 +11,6 @@ import reka.api.flow.FlowRun;
 import reka.api.run.EverythingSubscriber;
 import reka.core.data.memory.MutableMemoryData;
 
-import com.google.common.util.concurrent.ListeningExecutorService;
-
 public class NoFlow implements Flow {
 
 	@Override
@@ -62,11 +60,6 @@ public class NoFlow implements Flow {
 		}
 
 		@Override
-		public FlowRun executor(ListeningExecutorService executor) {
-			return this;
-		}
-
-		@Override
 		public FlowRun data(MutableData value) {
 			data = value;
 			return this;
@@ -80,8 +73,7 @@ public class NoFlow implements Flow {
 	}
 
 	@Override
-	public void run(ListeningExecutorService executor, MutableData data,
-			EverythingSubscriber subscriber) {
+	public void run(ExecutorService executor, MutableData data, EverythingSubscriber subscriber) {
 		new NoFlowRun().executor(executor).data(data).complete(subscriber).run();
 	}
 	

@@ -134,14 +134,17 @@ public class HttpServerManager {
 				.group(nettyEventGroup)
 				.channel(NioServerSocketChannel.class)
 				.option(ChannelOption.TCP_NODELAY, true)
-				.option(ChannelOption.SO_REUSEADDR, true)
+				//.option(ChannelOption.SO_REUSEADDR, true)
 				.childOption(ChannelOption.TCP_NODELAY, true)
-				.childOption(ChannelOption.SO_REUSEADDR, true)
+				//.childOption(ChannelOption.SO_REUSEADDR, true)
+				//.childOption(ChannelOption.SO_KEEPALIVE, true)
 				.childHandler(initializer);
-
+			
 			try {
 				
 				channel = bootstrap.bind().sync().channel();
+				
+				
 				
 				logger.info("opened port {}", port);
 				

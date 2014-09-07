@@ -23,7 +23,6 @@ import io.netty.handler.codec.http.HttpVersion;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.concurrent.Callable;
 
 import org.apache.http.client.utils.URIBuilder;
 
@@ -31,10 +30,6 @@ import reka.api.Path;
 import reka.api.data.MutableData;
 import reka.api.run.AsyncOperation;
 import reka.http.server.HttpResponseToDatasetDecoder;
-
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListenableFutureTask;
-
 public class HttpRequestOperation implements AsyncOperation {
 
 	private final Bootstrap bootstrap;
@@ -63,77 +58,31 @@ public class HttpRequestOperation implements AsyncOperation {
 				});
 	}
 
-	private static class ContentStoreHolder implements Callable<MutableData> {
-
-		private final MutableData data;
-		private final ListenableFutureTask<MutableData> task;
-
-		ContentStoreHolder(MutableData data) {
-			this.data = data;
-			this.task = ListenableFutureTask.create(this);
-		}
-
-		public ListenableFuture<MutableData> future() {
-			return task;
-		}
-
-		public void run() {
-			task.run();
-		}
-
-		@Override
-		public MutableData call() throws Exception {
-			return data;
-		}
-
-	}
-
-	private static class ResponseHandler extends
-			SimpleChannelInboundHandler<MutableData> {
-
-		private final ContentStoreHolder holder;
-		private final Path out;
-
-		ResponseHandler(ContentStoreHolder holder, Path out) {
-			this.holder = holder;
-			this.out = out;
-		}
-
-		@Override
-		protected void channelRead0(ChannelHandlerContext context, MutableData msg) throws Exception {
-			//holder.data.createMapAt(path("rr")).merge(msg);
-			holder.data.put(out, msg);
-			holder.run();
-		}
-
-	}
-
 	@Override
-	public ListenableFuture<MutableData> call(MutableData data) {
-		
-		final ContentStoreHolder holder = new ContentStoreHolder(data);
+	public void run(MutableData data, OperationContext ctx) {
 
-		ChannelFuture channelFuture = bootstrap.connect(host, port);
-		channelFuture.addListener(new ChannelFutureListener() {
+		bootstrap.connect(host, port).addListener(new ChannelFutureListener() {
 
 			@Override
 			public void operationComplete(ChannelFuture cf) throws Exception {
 				Channel ch = cf.channel();
-				ch.pipeline().addLast(new ResponseHandler(holder, out));
+				ch.pipeline().addLast(new SimpleChannelInboundHandler<MutableData>(){
 
-				HttpRequest request = new DefaultHttpRequest(
-						HttpVersion.HTTP_1_1, HttpMethod.GET, uri.getRawPath());
+					@Override
+					protected void channelRead0(ChannelHandlerContext nctx, MutableData msg) throws Exception {
+						data.put(out, msg);
+						ctx.end();
+					}
+					
+				});
+
+				HttpRequest request = new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, uri.getRawPath());
 				request.headers().set(HttpHeaders.Names.HOST, host);
-				request.headers().set(HttpHeaders.Names.CONNECTION,
-						HttpHeaders.Values.CLOSE);
-				// request.headers().put(HttpHeaders.Names.ACCEPT_ENCODING,
-				// HttpHeaders.Values.GZIP);
+				request.headers().set(HttpHeaders.Names.CONNECTION, HttpHeaders.Values.CLOSE);
 
-				ch.writeAndFlush(request);//.addListener(new ResponseHandler(holder));
+				ch.writeAndFlush(request);
 			}
 		});
-
-		return holder.future();
 	}
 
 	private URI makeURI(String url) {

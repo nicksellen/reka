@@ -14,11 +14,11 @@ import org.slf4j.LoggerFactory;
 import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
-import reka.api.run.DataOperation;
+import reka.api.run.AsyncOperation;
 import reka.api.run.Operation;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.ModuleConfigurer;
 import reka.core.bundle.RekaBundle;
+import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
 import reka.core.setup.OperationSetup;
 import reka.core.util.StringWithVars;
@@ -105,7 +105,7 @@ public class TwilioBundle implements RekaBundle {
 		
 	}
 	
-	public static class TwilioSendOperation2 implements DataOperation {
+	public static class TwilioSendOperation2 implements AsyncOperation {
 
 		private final String sid;
 		private final String token;
@@ -178,7 +178,7 @@ public class TwilioBundle implements RekaBundle {
 		}
 
 		@Override
-		public MutableData call(MutableData data) {
+		public void call(MutableData data) {
 			TwilioRestClient client = new TwilioRestClient(sid, token);
 			 
 		    Map<String, String> params = new HashMap<String, String>();
@@ -206,8 +206,6 @@ public class TwilioBundle implements RekaBundle {
 			} catch (TwilioRestException e) {
 				throw unchecked(e);
 			}
-		    
-		    return data;
 		}
 		
 		

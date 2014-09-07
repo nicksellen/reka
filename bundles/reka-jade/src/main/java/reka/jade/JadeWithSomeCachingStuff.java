@@ -120,9 +120,12 @@ public class JadeWithSomeCachingStuff implements Operation, JsonProvider {
 	}
 	
 	@Override
-	public MutableData call(MutableData data) {
-		return useCache.get() ? runWithCache(data) : 
+	public void call(MutableData data) {
+		if (useCache.get()) { 
+			runWithCache(data); 
+		} else {
 			data.putString(outputPath, jade.renderTemplate(template, simpleMap(data)));
+		}
 	}
 		
 	private MutableData runWithCache(MutableData data) {
@@ -325,9 +328,9 @@ public class JadeWithSomeCachingStuff implements Operation, JsonProvider {
 		}
 
 		@Override
-		public MutableData call(MutableData data) {
+		public void call(MutableData data) {
 			if (mainResponse) data.putString(Response.Headers.CONTENT_TYPE, "text/html");
-			return data.putString(outputPath, jade.renderTemplate(template, simpleMap(data)));
+			data.putString(outputPath, jade.renderTemplate(template, simpleMap(data)));
 		}
 		
 	}

@@ -4,5 +4,5 @@ import reka.api.data.MutableData;
 import reka.api.flow.FlowOperation;
 
 public interface RoutingOperation extends FlowOperation {
-	public MutableData call(MutableData data, RouteCollector router);
+	public void call(MutableData data, RouteCollector router);
 }

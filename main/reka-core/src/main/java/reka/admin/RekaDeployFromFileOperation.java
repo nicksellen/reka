@@ -16,9 +16,6 @@ import reka.api.run.AsyncOperation;
 import reka.api.run.EverythingSubscriber;
 import reka.config.FileSource;
 
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.SettableFuture;
-
 public class RekaDeployFromFileOperation implements AsyncOperation {
 	
 	private final Logger log = LoggerFactory.getLogger(getClass());
@@ -33,9 +30,7 @@ public class RekaDeployFromFileOperation implements AsyncOperation {
 	}
 	
 	@Override
-	public ListenableFuture<MutableData> call(MutableData data) {
-
-		SettableFuture<MutableData> result = SettableFuture.create();
+	public void run(MutableData data, OperationContext ctx) {
 		
 		String filename = filenameFn.apply(data);
 		String identity = identityFn.apply(data);
@@ -54,7 +49,8 @@ public class RekaDeployFromFileOperation implements AsyncOperation {
 			@Override
 			public void ok(MutableData initializationData) {
 				log.info("deploying {} ok", identity);
-				result.set(data.putString("message", "created application!"));
+				data.putString("message", "created application!");
+				ctx.end();
 			}
 
 			@Override
@@ -63,7 +59,7 @@ public class RekaDeployFromFileOperation implements AsyncOperation {
 				String msg = "failed to deploy application; initialization halted";
 				log.debug(msg);
 				data.putString("message", msg);
-				result.set(data);
+				ctx.error(new RuntimeException("halted!"));
 			}
 
 			@Override
@@ -72,13 +68,10 @@ public class RekaDeployFromFileOperation implements AsyncOperation {
 				t = unwrap(t);
 				log.error("failed to deploy application",  t);
 				t.printStackTrace();
-				result.setException(t);
+				ctx.error(t);
 			}
 			
 		});
-		
-		return result;
-		
 		
 	}
 }

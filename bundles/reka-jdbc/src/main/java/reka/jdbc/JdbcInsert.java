@@ -33,7 +33,7 @@ public class JdbcInsert implements Operation {
 	}
 
 	@Override
-	public MutableData call(MutableData data) {
+	public void call(MutableData data) {
 		try (Connection conn = jdbc.getConnection()) {
 			for (Data entry : values) {
 				
@@ -75,8 +75,6 @@ public class JdbcInsert implements Operation {
 		} catch (SQLException e) {
 			throw unchecked(e);
 		}
-		
-		return data;
 	}
 
 }

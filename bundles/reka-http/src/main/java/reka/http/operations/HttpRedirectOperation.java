@@ -9,9 +9,9 @@ import reka.api.Path.Response;
 import reka.api.content.Content;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
-import reka.api.run.Operation;
+import reka.api.run.AsyncOperation;
 
-public class HttpRedirectOperation implements Operation {
+public class HttpRedirectOperation implements AsyncOperation {
 
 	private final Function<Data,String> urlFn;
 	private final Content status;
@@ -23,11 +23,11 @@ public class HttpRedirectOperation implements Operation {
 	}
 	
 	@Override
-	public MutableData call(MutableData data) {
-		return data
-			.put(Response.STATUS, status)
+	public void run(MutableData data, OperationContext ctx) {
+		data.put(Response.STATUS, status)
 			.put(Response.CONTENT, content)
 			.putString(Response.Headers.LOCATION, urlFn.apply(data));
+		ctx.end();
 	}
 
 }

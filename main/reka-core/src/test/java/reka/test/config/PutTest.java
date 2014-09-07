@@ -7,11 +7,9 @@ import static reka.api.Path.dots;
 import static reka.config.ConfigTestUtil.loadconfig;
 import static reka.config.configurer.Configurer.configure;
 import static reka.util.Util.runtime;
-import static reka.util.Util.unchecked;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.concurrent.ExecutionException;
 
 import org.junit.Test;
 
@@ -22,9 +20,8 @@ import reka.api.data.MutableData;
 import reka.api.flow.FlowNode;
 import reka.api.flow.FlowOperation;
 import reka.api.flow.FlowSegment;
-import reka.api.run.AsyncOperation;
-import reka.api.run.RoutingOperation;
 import reka.api.run.Operation;
+import reka.api.run.RoutingOperation;
 import reka.builtins.BuiltinsModule;
 import reka.config.Config;
 import reka.config.NavigableConfig;
@@ -86,10 +83,12 @@ public class PutTest {
 	}
 	
 	private Data configurePutWith(String path) {
-		return configureThenCall(new BuiltinsModule.PutConfigurer(), root.at(path).get(), MutableMemoryData.create());
+		MutableData data = MutableMemoryData.create();
+		configureThenCall(new BuiltinsModule.PutConfigurer(), root.at(path).get(), data);
+		return data;
 	}
 	
-	private static Data configureThenCall(OperationConfigurer s, Config config, MutableData input) {
+	private static void configureThenCall(OperationConfigurer s, Config config, MutableData data) {
 		OperationSetup collector = OperationSetup.createSequentialCollector(IdentityStore.createConcurrentIdentityStore());
 		configure(s, config);
 		
@@ -98,11 +97,9 @@ public class PutTest {
 		
 		FlowOperation op = firstNode(v).operationSupplier().get();
 		if (op instanceof Operation) {
-			return callSync((Operation) op, input);
-		} else if (op instanceof AsyncOperation) {
-			return callAsync((AsyncOperation) op, input);
+			callSync((Operation) op, data);
 		} else if (op instanceof RoutingOperation) {
-			return callRouting((RoutingOperation) op, input);
+			callRouting((RoutingOperation) op, data);
 		}
 		throw runtime("couldn't work out %s", op);
 	}
@@ -122,20 +119,12 @@ public class PutTest {
 		return null;
 	}
 
-	private static Data callSync(Operation op, MutableData input) {
-		return op.call(input);
+	private static void callSync(Operation op, MutableData data) {
+		op.call(data);
 	}
 	
-	private static Data callAsync(AsyncOperation op, MutableData input) {
-		try {
-			return op.call(input).get();
-		} catch (InterruptedException | ExecutionException e) {
-			throw unchecked(e);
-		}
-	}
-	
-	private static Data callRouting(RoutingOperation op, MutableData input) {
-		return op.call(input, DefaultRouter.create(new ArrayList<String>()));
+	private static void callRouting(RoutingOperation op, MutableData data) {
+		op.call(data, DefaultRouter.create(new ArrayList<String>()));
 	}
 
 }

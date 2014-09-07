@@ -7,8 +7,6 @@ import static org.junit.Assert.fail;
 import static reka.api.Path.dots;
 import static reka.api.content.Contents.utf8;
 import static reka.core.runtime.handlers.DSL.actionHandlers;
-import static reka.core.runtime.handlers.DSL.asyncOperation;
-import static reka.core.runtime.handlers.DSL.subscriber;
 import static reka.core.runtime.handlers.DSL.subscribers;
 import static reka.core.runtime.handlers.DSL.syncOperation;
 
@@ -22,15 +20,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import reka.api.data.Data;
+import reka.api.run.AsyncOperation;
 import reka.core.data.memory.MutableMemoryData;
 import reka.core.runtime.DefaultFlowContext;
 import reka.core.runtime.Node;
 import reka.core.runtime.NodeChild;
+import reka.core.runtime.handlers.DSL;
+import reka.core.runtime.handlers.DataOperationAction;
 import reka.core.runtime.handlers.DoNothing;
 import reka.core.runtime.handlers.RuntimeNode;
 
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+
 
 public class ModularNodeTest {
 	
@@ -75,17 +77,16 @@ public class ModularNodeTest {
 		final ListeningExecutorService executor2 = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
 		final AtomicReference<Data> result = new AtomicReference<>();
 		
-		Node child = new RuntimeNode(0, "child", 
-			asyncOperation(
-					(data) -> 
-						executor2.submit(() -> { 
-							return data.put(dots("example.from.child.async"), utf8("I am from async"));
-						}),
-					subscriber((data) -> {
-						log.debug("it was called! with : {}\n", data.toPrettyJson());
-						result.set(data);
-						latch.countDown();
-					}), DoNothing.INSTANCE), DoNothing.INSTANCE, DoNothing.INSTANCE);
+		Node child = new RuntimeNode(0, "child", new DataOperationAction(AsyncOperation.create((data, ctx) -> { 
+			executor2.submit(() -> { 
+				data.put(dots("example.from.child.async"), utf8("I am from async"));
+				ctx.end();
+			});
+		}), DSL.subscriber((data) -> {
+			log.debug("it was called! with : {}\n", data.toPrettyJson());
+			result.set(data);
+			latch.countDown();
+		}), DoNothing.INSTANCE), DoNothing.INSTANCE, DoNothing.INSTANCE);
 		
 		Node parent = new RuntimeNode(1, "parent", syncOperation((data) ->
 					data.put(dots("example.from.parent"), utf8("hello from parent")),

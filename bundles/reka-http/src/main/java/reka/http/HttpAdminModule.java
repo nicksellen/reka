@@ -8,7 +8,7 @@ import java.util.Map.Entry;
 import reka.api.Path;
 import reka.api.data.MutableData;
 import reka.api.run.Operation;
-import reka.core.bundle.ModuleConfigurer;
+import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
 import reka.core.setup.OperationSetup;
 import reka.http.server.HttpServerManager;
@@ -48,14 +48,13 @@ public class HttpAdminModule extends ModuleConfigurer {
 		}
 
 		@Override
-		public MutableData call(MutableData data) {
+		public void call(MutableData data) {
 			for (Entry<String, HttpSettings> e : server.deployed().entrySet()) {
 				MutableData entry = data.createMapAt(out.add(e.getKey()));
 				HttpSettings settings = e.getValue();
 				entry.putString("host", settings.host());
 				entry.putInt("port", settings.port());
 			}
-			return data;
 		}
 		
 	}

@@ -23,9 +23,8 @@ public class RhinoWithScope implements Operation {
 	}
 	
 	@Override
-	public MutableData call(MutableData data) {
+	public void call(MutableData data) {
 		addObjectToData(data, out, runJavascriptWithParentScope(scope, script, data));
-		return data;
 	}
 	
 }

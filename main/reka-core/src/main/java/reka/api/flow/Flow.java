@@ -7,9 +7,6 @@ import reka.api.data.MutableData;
 import reka.api.run.EverythingSubscriber;
 import reka.api.run.Subscriber;
 
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
-
 public interface Flow extends Comparable<Flow> {
 	
     long id();
@@ -18,7 +15,6 @@ public interface Flow extends Comparable<Flow> {
     
     void run();
     void run(EverythingSubscriber run);
-    void run(ListeningExecutorService executor, MutableData data, EverythingSubscriber subscriber);
 
     FlowRun prepare();
 
@@ -27,7 +23,11 @@ public interface Flow extends Comparable<Flow> {
     }
 
     default void run(ExecutorService executor, MutableData data, EverythingSubscriber subscriber) {
-    	run(MoreExecutors.listeningDecorator(executor), data, subscriber);
+    	run(executor, data, subscriber);
+    }
+    
+    default void run(ExecutorService executor, MutableData data, Subscriber subscriber) {
+    	run(executor, data, subscriber);
     }
     
     @Override

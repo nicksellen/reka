@@ -28,9 +28,9 @@ import reka.api.run.Operation;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.ModuleConfigurer;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
+import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
 import reka.core.setup.OperationSetup;
 import reka.core.util.StringWithVars;
@@ -302,7 +302,7 @@ public class WebsocketModule extends ModuleConfigurer {
 		}
 		
 		@Override
-		public MutableData call(MutableData data) {
+		public void call(MutableData data) {
 			log.debug("preparing send: {}:{}", settings.host(), settings.port());
 			server.websocket(settings, ws -> {
 				ws.channel(toFn.apply(data)).ifPresent(channel -> {
@@ -311,7 +311,6 @@ public class WebsocketModule extends ModuleConfigurer {
 					}
 				});
 			});
-			return data;
 		}
 		
 	}
@@ -329,7 +328,7 @@ public class WebsocketModule extends ModuleConfigurer {
 		}
 		
 		@Override
-		public MutableData call(MutableData data) {
+		public void call(MutableData data) {
 			log.debug("preparing broadcast: {}:{}", settings.host(), settings.port());
 			log.debug("running broadcast: {}:{}", settings.host(), settings.port());
 			server.websocket(settings, ws -> {
@@ -339,7 +338,6 @@ public class WebsocketModule extends ModuleConfigurer {
 					}
 				});
 			});
-			return data;
 		}
 		
 	}
@@ -359,7 +357,7 @@ public class WebsocketModule extends ModuleConfigurer {
 		}
 		
 		@Override
-		public MutableData call(MutableData data) {
+		public void call(MutableData data) {
 			log.debug("preparing broadcast: {}:{}", settings.host(), settings.port());
 			log.debug("running topic send: {}:{}", settings.host(), settings.port());
 			server.websocket(settings, ws -> {
@@ -371,8 +369,6 @@ public class WebsocketModule extends ModuleConfigurer {
 					});
 				});
 			});
-			
-			return data;
 		}
 		
 	}
@@ -391,7 +387,7 @@ public class WebsocketModule extends ModuleConfigurer {
 		}
 		
 		@Override
-		public MutableData call(MutableData data) {
+		public void call(MutableData data) {
 			server.websocket(settings, ws -> {
 				ws.channel(idFn.apply(data)).ifPresent(channel -> {
 					if (channel.isOpen()) {
@@ -401,7 +397,6 @@ public class WebsocketModule extends ModuleConfigurer {
 					}
 				});
 			});
-			return data;
 		}
 		
 	}

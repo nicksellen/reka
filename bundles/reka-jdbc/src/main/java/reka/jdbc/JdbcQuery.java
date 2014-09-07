@@ -66,8 +66,8 @@ public class JdbcQuery implements Operation {
 	}
 
 	@Override
-	public MutableData call(MutableData data) {
-		return run(data);
+	public void call(MutableData data) {
+		run(data);
 	}
 
 	private MutableData run(MutableData data) {

@@ -17,9 +17,9 @@ import reka.api.Path.Response;
 import reka.api.content.Content;
 import reka.api.data.MutableData;
 import reka.api.flow.FlowOperation;
+import reka.api.run.AsyncOperation;
 import reka.api.run.RouteCollector;
 import reka.api.run.RoutingOperation;
-import reka.api.run.Operation;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashFunction;
@@ -36,29 +36,27 @@ public abstract class HttpContents implements FlowOperation {
 		}
 
 		@Override
-		public MutableData call(MutableData data, RouteCollector router) {
-			data = process(data);
-
+		public void call(MutableData data, RouteCollector router) {
+			process(data);
 			if (data.existsAt(Response.CONTENT)) {
 				router.routeTo(FOUND);
 			} else {
 				router.routeTo(PASSTHROUGH);
 			}
-			
-			return data;
 		}
 		
 	}
 	
-	public static class Basic extends HttpContents implements Operation {
+	public static class Basic extends HttpContents implements AsyncOperation {
 		
 		public Basic(Map<String, ContentItem> contents) {
 			super(contents);
 		}
 
 		@Override
-		public MutableData call(MutableData data) {
-			return process(data);
+		public void run(MutableData data, OperationContext ctx) {
+			process(data);
+			ctx.end();
 		}
 		
 	}
@@ -108,7 +106,7 @@ public abstract class HttpContents implements FlowOperation {
 		*/
 	}
 	
-	protected MutableData process(MutableData data) {
+	protected void process(MutableData data) {
 		
 		String path = data.getString(Request.PATH).orElse("/");
 		
@@ -152,8 +150,6 @@ public abstract class HttpContents implements FlowOperation {
 				}
 			}
 		}
-		
-		return data;
 	}
 	
 	public static class ContentItem {

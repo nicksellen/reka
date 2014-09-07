@@ -35,7 +35,7 @@ public class FilesystemList implements Operation {
 	}
 
 	@Override
-	public MutableData call(MutableData data) {
+	public void call(MutableData data) {
 
 		Path dataOut = dataPathFn.apply(data);
 		
@@ -65,8 +65,6 @@ public class FilesystemList implements Operation {
 		} else {
 			populate(data, dataOut.add(0), entry, dir);
 		}
-		
-		return data;
 	}
 	
 	private void populate(MutableData item, Path base, File file, String path) {

@@ -1,7 +1,6 @@
 package reka.builtins;
 
 import static java.lang.String.format;
-import static java.util.Arrays.asList;
 import static reka.api.Path.dots;
 import static reka.api.Path.path;
 import static reka.api.Path.root;
@@ -46,10 +45,10 @@ import reka.config.ConfigBody;
 import reka.config.configurer.Configurer.ErrorCollector;
 import reka.config.configurer.ErrorReporter;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.ModuleConfigurer;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.core.data.memory.MutableMemoryData;
+import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
 import reka.core.setup.OperationSetup;
 import reka.core.util.StringWithVars;
@@ -58,8 +57,6 @@ import reka.nashorn.OperationConfigurer;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.SettableFuture;
 
 public class BuiltinsModule extends ModuleConfigurer {
 	
@@ -140,7 +137,7 @@ public class BuiltinsModule extends ModuleConfigurer {
 		}
 
 		@Override
-		public MutableData call(MutableData data) {
+		public void call(MutableData data) {
 			Data val = data.at(inFn.apply(data));
 			if (val.isContent()) {
 				data.putList(outFn.apply(data), list -> {
@@ -149,7 +146,6 @@ public class BuiltinsModule extends ModuleConfigurer {
 					}
 				});
 			}
-			return data;
 		}
 		
 	}
@@ -210,17 +206,13 @@ public class BuiltinsModule extends ModuleConfigurer {
 		}
 		
 		@Override
-		public MutableData call(MutableData data, RouteCollector router) {
-			
+		public void call(MutableData data, RouteCollector router) {
 			router.defaultRoute("fail");
-			
 			data.getContent(readPwFrom).ifPresent(pw -> {
 				data.getContent(readHashFrom).ifPresent(hash -> {
 					router.routeTo("ok");
 				});
 			});
-			
-			return data;
 		}
 		
 	}
@@ -258,11 +250,10 @@ public class BuiltinsModule extends ModuleConfigurer {
 		}
 		
 		@Override
-		public MutableData call(MutableData data) {
+		public void call(MutableData data) {
 			data.getContent(in).ifPresent(content -> {
 				data.putString(out, BCrypt.hashpw(content.asUTF8(), BCrypt.gensalt()));
 			});
-			return data;
 		}
 		
 	}
@@ -281,11 +272,10 @@ public class BuiltinsModule extends ModuleConfigurer {
 	public static class InspectOperation implements Operation {
 
 		@Override
-		public MutableData call(MutableData data) {
+		public void call(MutableData data) {
 			data.forEachContent((path, content) -> {
 				log.debug("{} ->|{}|<- ({})", path.dots(), content, content.getClass());
 			});
-			return data;
 		}
 		
 	}
@@ -334,14 +324,14 @@ public class BuiltinsModule extends ModuleConfigurer {
 		}
 		
 		@Override
-		public MutableData call(MutableData data) {
+		public void call(MutableData data) {
 			char[] buf = new char[length];
 			
 			for (int i = 0; i < length; i++) {
 				buf[i] = chars[random.nextInt(chars.length)];
 			}
 			
-			return data.putString(out, new String(buf));
+			data.putString(out, new String(buf));
 		}
 		
 	}
@@ -391,9 +381,8 @@ public class BuiltinsModule extends ModuleConfigurer {
 		}
 		
 		@Override
-		public MutableData call(MutableData data) {
+		public void call(MutableData data) {
 			System.out.println(msg.apply(data));
-			return data;
 		}
 		
 	}
@@ -429,8 +418,8 @@ public class BuiltinsModule extends ModuleConfigurer {
 		}
 		
 		@Override
-		public MutableData call(MutableData data) {
-			return data.putString(out, UUID.randomUUID().toString());
+		public void call(MutableData data) {
+			data.putString(out, UUID.randomUUID().toString());
 		}
 		
 	}
@@ -463,14 +452,8 @@ public class BuiltinsModule extends ModuleConfigurer {
 		}
 
 		@Override
-		public ListenableFuture<MutableData> call(MutableData data) {
-			SettableFuture<MutableData> future = SettableFuture.create();
-			
-			e.schedule(new Runnable(){ 
-				@Override public void run() { future.set(data); } 
-			}, ms, TimeUnit.MILLISECONDS);
-			
-			return future;
+		public void run(MutableData data, OperationContext ctx) {
+			e.schedule(() -> ctx.end(), ms, TimeUnit.MILLISECONDS);
 		}
 	}
 	
@@ -543,8 +526,8 @@ public class BuiltinsModule extends ModuleConfigurer {
 		}
 
 		@Override
-		public MutableData call(MutableData data) {
-			return data.putString(out, template.apply(data));
+		public void call(MutableData data) {
+			data.putString(out, template.apply(data));
 		}
 		
 	}
@@ -601,9 +584,8 @@ public class BuiltinsModule extends ModuleConfigurer {
 		}
 
 		@Override
-		public MutableData call(MutableData data) {
+		public void call(MutableData data) {
 			log.info(msgFn.apply(data));
-			return data;
 		}
 		
 	}
@@ -636,7 +618,7 @@ public class BuiltinsModule extends ModuleConfigurer {
 		}
 		
 		@Override
-		public MutableData call(MutableData data) {
+		public void call(MutableData data) {
 			for (Entry<Path,Path> e : entries) {
 				Data d = data.at(e.getKey());
 				
@@ -652,7 +634,6 @@ public class BuiltinsModule extends ModuleConfigurer {
 				}
 				
 			}
-			return data;
 		}
 		
 	}
@@ -770,8 +751,8 @@ public class BuiltinsModule extends ModuleConfigurer {
 		}
 		
 		@Override
-		public MutableData call(MutableData data) {
-			return data.put(out, content);
+		public void call(MutableData data) {
+			data.put(out, content);
 		}
 		
 	}
@@ -787,11 +768,10 @@ public class BuiltinsModule extends ModuleConfigurer {
 		}
 		
 		@Override
-		public MutableData call(MutableData data) {
+		public void call(MutableData data) {
 			datavalue.forEachContent((path, content) -> {
 				data.put(out.add(path), content);
 			});
-			return data;
 		}
 		
 	}
@@ -825,14 +805,13 @@ public class BuiltinsModule extends ModuleConfigurer {
 		}
 		
 		@Override
-		public MutableData call(MutableData data) {
+		public void call(MutableData data) {
 			dataonly.forEachContent((path, content) -> {
 				data.put(path, content);
 			});
 			vardata.forEach((path, f) -> {
 				data.put(path, f.apply(data));
 			});
-			return data;
 		}
 		
 	}

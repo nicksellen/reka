@@ -38,7 +38,7 @@ public class FilesystemRead implements Operation {
 	}
 	
 	@Override
-	public MutableData call(MutableData data) {
+	public void call(MutableData data) {
 		
 		Path dataOut = dataPathFn.apply(data);
 		
@@ -72,8 +72,6 @@ public class FilesystemRead implements Operation {
 		} else {
 			throw runtime("%s cannot be read", file.getAbsolutePath());
 		}
-		
-		return data;
 	}
 
 }

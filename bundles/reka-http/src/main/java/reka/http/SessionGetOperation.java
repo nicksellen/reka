@@ -20,7 +20,7 @@ public class SessionGetOperation implements Operation {
 	}
 	
 	@Override
-	public MutableData call(MutableData data) {
+	public void call(MutableData data) {
 		
 		data.getString(sessionIdPath).ifPresent(sessionid -> {
 			store.find(sessionid).ifPresent(sessdata -> {
@@ -31,7 +31,6 @@ public class SessionGetOperation implements Operation {
 			});
 		});
 		
-		return data;
 	}
 
 }

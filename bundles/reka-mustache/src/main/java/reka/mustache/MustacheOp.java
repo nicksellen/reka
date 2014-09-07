@@ -25,11 +25,10 @@ public class MustacheOp implements Operation {
 	}
 
 	@Override
-	public MutableData call(MutableData data) {
+	public void call(MutableData data) {
 		StringWriter writer = new StringWriter();
 		mustache.execute(writer, data.at(in).viewAsMap());
 		data.putString(out, writer.toString());
-		return data;
 	}
 
 }

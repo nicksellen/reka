@@ -179,7 +179,7 @@ class NodeBuilder {
 			
 			if (operation != null) {
 				if (operation instanceof Operation && node.shouldUseAnotherThread()) {
-					operation = ((Operation) operation).toAsync(executor);
+					operation = ((Operation) operation).async(executor);
 				}
 				action = op(operation, next, error);
 				

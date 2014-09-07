@@ -35,7 +35,7 @@ public class RunCommandOperation implements Operation {
 	}
 	
 	@Override
-	public MutableData call(MutableData data) {
+	public void call(MutableData data) {
 		try {
 			ProcessBuilder builder = new ProcessBuilder();
 			builder.command(cmd);
@@ -63,7 +63,6 @@ public class RunCommandOperation implements Operation {
 			data.putString("stdout", new String(outBytes.toByteArray(), Charsets.UTF_8));
 			data.putInt("exit", process.exitValue());
 			
-			return data;
 		} catch (IOException | InterruptedException e) {
 			throw unchecked(e);
 		}

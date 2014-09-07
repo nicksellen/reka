@@ -635,7 +635,7 @@ public class MutableMemoryData implements MutableDataProvider<Object> {
 	
 	@Override
 	public Object createEmpty() {
-		return null; // TODO: this used to be new Object()... is this ok being null?
+		return null;
 	}
 
 	@Override

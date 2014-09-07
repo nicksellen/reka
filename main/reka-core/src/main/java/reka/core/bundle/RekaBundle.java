@@ -9,6 +9,7 @@ import java.util.function.Supplier;
 
 import reka.api.Path;
 import reka.config.processor.ConfigConverter;
+import reka.core.setup.ModuleConfigurer;
 
 public interface RekaBundle {
 	

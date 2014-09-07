@@ -33,7 +33,7 @@ import reka.api.content.Content;
 import reka.api.data.Data;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.ModuleConfigurer;
+import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
 import reka.core.util.StringWithVars;
 import reka.core.util.StringWithVars.Variable;

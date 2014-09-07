@@ -62,6 +62,10 @@ public class FullHttpToDatasetDecoder extends MessageToMessageDecoder<FullHttpRe
 		
 		final MutableData data = MutableMemoryData.create();
 
+		if (!HttpHeaders.isKeepAlive(request)) {
+			data.putBool(HttpHostHandler.CLOSE_CHANNEL, true);
+		}
+
 		MutableData params = data.createMapAt(Request.PARAMS);
 		MutableData headers = data.createMapAt(Request.HEADERS);
 		MutableData cookies = data.createMapAt(Request.COOKIES);

@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
 import reka.api.flow.Flow;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.ModuleConfigurer;
+import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
 
 public class TimerModule extends ModuleConfigurer {

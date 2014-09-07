@@ -37,7 +37,7 @@ public class FilesystemWrite implements Operation {
 	}
 	
 	@Override
-	public MutableData call(MutableData data) {
+	public void call(MutableData data) {
 		
 		Path dataIn = dataPathFn.apply(data);
 		
@@ -86,8 +86,6 @@ public class FilesystemWrite implements Operation {
 		} catch (Throwable t) {
 			throw unchecked(t);
 		}
-		
-		return data;
 	}
 
 }

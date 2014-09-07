@@ -26,7 +26,7 @@ public class FilesystemDelete implements Operation {
 	}
 	
 	@Override
-	public MutableData call(MutableData data) {
+	public void call(MutableData data) {
 		
 		String filename = filenameFn.apply(data);
 		try {
@@ -60,8 +60,6 @@ public class FilesystemDelete implements Operation {
 		} catch (IOException e) {
 			throw unchecked(e);
 		}
-		
-		return data;
 	}
 
 }

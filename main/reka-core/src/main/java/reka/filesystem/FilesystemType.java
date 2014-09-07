@@ -22,7 +22,7 @@ public class FilesystemType implements RoutingOperation {
 	}
 
 	@Override
-	public MutableData call(MutableData data, RouteCollector router) {
+	public void call(MutableData data, RouteCollector router) {
 		
 		String path = pathFn.apply(data);
 		
@@ -37,8 +37,6 @@ public class FilesystemType implements RoutingOperation {
 		} else {
 			router.routeTo("missing");
 		}
-		
-		return data;
 	}
 
 }

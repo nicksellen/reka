@@ -12,6 +12,7 @@ import reka.api.Path;
 import reka.config.processor.ConfigConverter;
 import reka.config.processor.MultiConverter;
 import reka.config.processor.Processor;
+import reka.core.setup.ModuleConfigurer;
 
 public class BundleManager {
 	

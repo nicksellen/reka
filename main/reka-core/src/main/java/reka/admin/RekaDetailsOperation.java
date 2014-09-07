@@ -1,9 +1,7 @@
 package reka.admin;
 
-import java.util.Optional;
 import java.util.function.Function;
 
-import reka.Application;
 import reka.ApplicationManager;
 import reka.api.Path;
 import reka.api.data.Data;
@@ -23,12 +21,8 @@ public class RekaDetailsOperation implements Operation {
 	}
 
 	@Override
-	public MutableData call(MutableData data) {
-		String identity = idFn.apply(data);
-		Optional<Application> opt = manager.get(identity);
-		if (!opt.isPresent()) return data;
-		AdminUtils.putAppDetails(data.createMapAt(out), opt.get());
-		return data;
+	public void call(MutableData data) {
+		manager.get(idFn.apply(data)).ifPresent(app -> AdminUtils.putAppDetails(data.createMapAt(out), app));
 	}
 
 }

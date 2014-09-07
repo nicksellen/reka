@@ -1,9 +1,12 @@
 package reka.core.runtime;
 
-import reka.api.run.EverythingSubscriber;
-import reka.core.runtime.handlers.stateful.NodeState;
+import java.util.concurrent.ExecutorService;
 
-import com.google.common.util.concurrent.ListeningExecutorService;
+import reka.api.data.MutableData;
+import reka.api.run.EverythingSubscriber;
+import reka.core.runtime.handlers.ActionHandler;
+import reka.core.runtime.handlers.ErrorHandler;
+import reka.core.runtime.handlers.stateful.NodeState;
 
 public interface FlowContext {
 	long id();
@@ -12,6 +15,7 @@ public interface FlowContext {
 	long started();
     NodeState stateFor(int id);
     EverythingSubscriber subscriber();
-    ListeningExecutorService executor();
+    ExecutorService executor();
     void execute(Runnable runnable);
+	void call(ActionHandler next, ErrorHandler error, MutableData data);
 }

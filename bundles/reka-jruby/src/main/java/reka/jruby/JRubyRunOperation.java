@@ -32,7 +32,7 @@ public class JRubyRunOperation implements Operation {
 	}
 
 	@Override
-	public MutableData call(MutableData data) {
+	public void call(MutableData data) {
 		
 		Object result = container.callMethod(null, methodName, data, Object.class);
 		
@@ -49,7 +49,6 @@ public class JRubyRunOperation implements Operation {
 		} else {
 			log.debug("jruby return ({}) [{}]\n", result.getClass(), result);
 		}
-		return data;
 	}
 	
 }
