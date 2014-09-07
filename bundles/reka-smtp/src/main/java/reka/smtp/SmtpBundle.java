@@ -6,14 +6,12 @@ import static reka.api.Path.PathElements.nextIndex;
 import static reka.api.content.Contents.binary;
 import static reka.api.content.Contents.utf8;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
-import static reka.core.builder.FlowSegments.background;
 import static reka.util.Util.runtime;
 import static reka.util.Util.unchecked;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
-import java.util.function.Supplier;
 
 import javax.activation.DataSource;
 import javax.mail.Address;
@@ -33,7 +31,6 @@ import org.subethamail.smtp.server.SMTPServer;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.flow.Flow;
-import reka.api.flow.FlowSegment;
 import reka.api.run.EverythingSubscriber;
 import reka.api.run.SyncOperation;
 import reka.config.Config;
@@ -41,9 +38,11 @@ import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.ModuleConfigurer;
 import reka.core.bundle.ModuleSetup;
+import reka.core.bundle.OperationSetup;
 import reka.core.bundle.RekaBundle;
 import reka.core.data.memory.MutableMemoryData;
 import reka.core.util.StringWithVars;
+import reka.nashorn.OperationsConfigurer;
 
 public class SmtpBundle implements RekaBundle {
 	
@@ -123,12 +122,12 @@ public class SmtpBundle implements RekaBundle {
 
 		@Override
 		public void setup(ModuleSetup init) {
-			init.operation(path("send"), () -> new SMTPSendConfigurer(host, port, username, password));
+			init.operation(path("send"), provider -> new SMTPSendConfigurer(host, port, username, password));
 		}
 		
 	}
 	
-	public static class SMTPSendConfigurer implements Supplier<FlowSegment> {
+	public static class SMTPSendConfigurer implements OperationsConfigurer {
 
 		private String host, username, password;
 		private int port;
@@ -168,8 +167,8 @@ public class SmtpBundle implements RekaBundle {
 		}
 		
 		@Override
-		public FlowSegment get() {
-			return background("smtp/send", () -> new SMTPSendOperation(
+		public void setup(OperationSetup ops) {
+			ops.add("smtp/send", store -> new SMTPSendOperation(
 					host, 
 					port, 
 					username, 

@@ -2,17 +2,14 @@ package reka.http.configurers;
 
 import static reka.api.Path.dots;
 import static reka.api.Path.path;
-import static reka.core.builder.FlowSegments.async;
 import io.netty.channel.nio.NioEventLoopGroup;
-
-import java.util.function.Supplier;
-
 import reka.api.Path;
-import reka.api.flow.FlowSegment;
 import reka.config.configurer.annotations.Conf;
+import reka.core.bundle.OperationSetup;
 import reka.http.operations.HttpRequestOperation;
+import reka.nashorn.OperationsConfigurer;
 
-public class HttpRequestConfigurer implements Supplier<FlowSegment> {
+public class HttpRequestConfigurer implements OperationsConfigurer {
 	
 	private final NioEventLoopGroup group;
 	
@@ -36,8 +33,8 @@ public class HttpRequestConfigurer implements Supplier<FlowSegment> {
 	}
 
 	@Override
-	public FlowSegment get() {
-		return async("http request", () -> new HttpRequestOperation(group, url, out));
+	public void setup(OperationSetup ops) {
+		ops.add("http request", store -> new HttpRequestOperation(group, url, out));
 	}
 
 }

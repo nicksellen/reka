@@ -2,7 +2,6 @@ package reka.jdbc;
 
 import static java.lang.String.format;
 import static java.lang.String.join;
-import static java.util.Arrays.asList;
 import static reka.api.Path.path;
 import static reka.api.Path.root;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
@@ -30,9 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import reka.api.IdentityKey;
-import reka.api.Path;
 import reka.api.content.Content;
-import reka.api.content.Contents;
 import reka.api.data.Data;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
@@ -121,17 +118,17 @@ public class JdbcModule extends ModuleConfigurer {
 			if (password == null) password = "sa";
 		}
 		
-		module.operation(asList(path("query"), path("q"), root()), () -> new JdbcQueryConfigurer(config));
-		module.operation(path("insert"), () -> new JdbcInsertConfigurer());
+		module.operation(root(), provider -> new JdbcQueryConfigurer(config));
+		module.operation(path("insert"), provider -> new JdbcInsertConfigurer());
 		
-		module.init(seq -> {
+		module.setupInitializer(seq -> {
 			
-			seq.storeRun("create connection pool", store -> {
+			seq.run("create connection pool", store -> {
 				store.put(POOL, new DBCP2ConnectionProvider(url, username, password));
 			});
 
 			if (!migrations.isEmpty()) {
-				seq.storeRun("run migrations", store -> {
+				seq.run("run migrations", store -> {
 					File tmpdir = Files.createTempDir();
 					try {
 					
@@ -166,7 +163,7 @@ public class JdbcModule extends ModuleConfigurer {
 				});
 			}
 			
-			seq.storeRun("run sql", store -> {
+			seq.run("run sql", store -> {
 				try (Connection connection = store.get(POOL).getConnection()){
 		            Statement stmt = connection.createStatement();
 		            for (String sql : sqls) {
@@ -177,7 +174,7 @@ public class JdbcModule extends ModuleConfigurer {
 		        }
 			});
 			
-			seq.storeRun("seed data", store -> {
+			seq.run("seed data", store -> {
 				
 				try (Connection conn = store.get(POOL).getConnection()) {
 					for (Entry<String, List<Data>> e : seeds.entrySet()) {

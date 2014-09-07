@@ -11,10 +11,12 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Deque;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.BlockingDeque;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import org.slf4j.Logger;
@@ -32,9 +34,6 @@ public class SimpleProcessManager implements ProcessManager {
 
 	@SuppressWarnings("unused")
 	private final boolean noreply;
-
-	@SuppressWarnings("unused")
-	private final AtomicReference<Consumer<String>> trigger;
 	
 	private final OutputStream stdin;
 	private final BufferedReader stdoutReader;
@@ -47,15 +46,15 @@ public class SimpleProcessManager implements ProcessManager {
 	
 	private final Deque<Consumer<String>> consumerq = new ArrayDeque<>();
 	
+	private final List<Consumer<String>> lineTriggers = Collections.synchronizedList(new ArrayList<>());
+	
 	public SimpleProcessManager(
 			ProcessBuilder builder, 
 			BlockingDeque<Entry<String,Consumer<String>>> q, 
-			boolean noreply,
-			AtomicReference<Consumer<String>> trigger) {
+			boolean noreply) {
 		this.q = q;
 		this.builder = builder;
 		this.noreply = noreply;
-		this.trigger = trigger;
 		try {
 			this.process = builder.start();
 		} catch (IOException e1) {
@@ -100,8 +99,11 @@ public class SimpleProcessManager implements ProcessManager {
 						String output = stdoutReader.readLine();
 						if (output != null) {
 							if (!noreply) consumer = consumerq.poll();
-							if (consumer == null) consumer = trigger.get();
-							if (consumer != null) consumer.accept(output);
+							if (consumer != null) {
+								consumer.accept(output);
+							} else if (lineTriggers.isEmpty()) {
+								lineTriggers.forEach(c -> c.accept(output));
+							}
 						}
 						drain(stderr);
 					}	
@@ -148,6 +150,11 @@ public class SimpleProcessManager implements ProcessManager {
 	@Override
 	public void run(String input) {
 		run(input, null);
+	}
+
+	@Override
+	public void addLineTrigger(Consumer<String> consumer) {
+		lineTriggers.add(consumer);
 	}
 	
 }

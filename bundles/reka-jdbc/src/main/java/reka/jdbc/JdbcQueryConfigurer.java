@@ -3,18 +3,15 @@ package reka.jdbc;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static reka.api.Path.dots;
 import static reka.api.Path.root;
-import static reka.core.builder.FlowSegments.storeSync;
 import static reka.jdbc.JdbcModule.POOL;
-
-import java.util.function.Supplier;
-
 import reka.api.Path;
-import reka.api.flow.FlowSegment;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
+import reka.core.bundle.OperationSetup;
 import reka.core.util.StringWithVars;
+import reka.nashorn.OperationsConfigurer;
 
-public class JdbcQueryConfigurer implements Supplier<FlowSegment> {
+public class JdbcQueryConfigurer implements OperationsConfigurer {
 
 	private final JdbcConfiguration config;
 	private Path out = root();
@@ -52,9 +49,9 @@ public class JdbcQueryConfigurer implements Supplier<FlowSegment> {
     }
 	
 	@Override
-	public FlowSegment get() {
+	public void setup(OperationSetup ops) {
 	    checkNotNull(queryFn, "you didn't pick a query!");
-		return storeSync("jdbc/query", store -> new JdbcQuery(config, store.get(POOL), queryFn, out));
+		ops.add("jdbc/query", store -> new JdbcQuery(config, store.get(POOL), queryFn, out));
 	}
 
 }

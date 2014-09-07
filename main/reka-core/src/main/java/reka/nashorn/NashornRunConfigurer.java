@@ -1,17 +1,13 @@
 package reka.nashorn;
 
 import static reka.api.Path.dots;
-import static reka.core.builder.FlowSegments.storeSync;
 import static reka.nashorn.NashornModule.RUNNER;
-
-import java.util.function.Supplier;
-
 import reka.api.Path;
-import reka.api.flow.FlowSegment;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
+import reka.core.bundle.OperationSetup;
 
-public class NashornRunConfigurer implements Supplier<FlowSegment> {
+public class NashornRunConfigurer implements OperationsConfigurer {
 	
 	private String script;
 	private Path out;
@@ -35,8 +31,8 @@ public class NashornRunConfigurer implements Supplier<FlowSegment> {
 	}
 
 	@Override
-	public FlowSegment get() {
-		return storeSync("run", (store) -> new NashornRunOperation(store.get(RUNNER), script, out));
+	public void setup(OperationSetup ops) {
+		ops.add("run", store -> new NashornRunOperation(store.get(RUNNER), script, out));
 	}
 
 }

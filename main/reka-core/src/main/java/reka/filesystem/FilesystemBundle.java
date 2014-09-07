@@ -4,23 +4,21 @@ import static java.util.Arrays.asList;
 import static reka.api.Path.dots;
 import static reka.api.Path.path;
 import static reka.config.configurer.Configurer.configure;
-import static reka.core.builder.FlowSegments.sequential;
-import static reka.core.builder.FlowSegments.sync;
 
 import java.nio.file.Path;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import reka.api.Path.Response;
 import reka.api.data.Data;
-import reka.api.flow.FlowSegment;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
+import reka.core.bundle.OperationSetup;
 import reka.core.bundle.RekaBundle;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.core.util.StringWithVars;
+import reka.nashorn.OperationsConfigurer;
 
 public class FilesystemBundle implements RekaBundle {
 
@@ -29,7 +27,7 @@ public class FilesystemBundle implements RekaBundle {
 		bundle.module(path("filesystem"), () -> new FilesystemModule());
 	}
 	
-	public static class FilesystemReadConfigurer implements Supplier<FlowSegment> {
+	public static class FilesystemReadConfigurer implements OperationsConfigurer {
 
 		private final Path basedir;
 		
@@ -58,13 +56,13 @@ public class FilesystemBundle implements RekaBundle {
 		}
 		
 		@Override
-		public FlowSegment get() {
-			return sync("files/read", () -> new FilesystemRead(basedir, dataPathFn, filenameFn, download));
+		public void setup(OperationSetup ops) {
+			ops.add("files/read", store -> new FilesystemRead(basedir, dataPathFn, filenameFn, download));
 		}
 		
 	}
 	
-	public static class FilesystemDeleteConfigurer implements Supplier<FlowSegment> {
+	public static class FilesystemDeleteConfigurer implements OperationsConfigurer {
 
 		private final Path basedir;
 		
@@ -81,13 +79,13 @@ public class FilesystemBundle implements RekaBundle {
 		}
 		
 		@Override
-		public FlowSegment get() {
-			return sync("filesystem/delete", () -> new FilesystemDelete(basedir, filenameFn));
+		public void setup(OperationSetup ops) {
+			ops.add("filesystem/delete", store -> new FilesystemDelete(basedir, filenameFn));
 		}
 		
 	}
 	
-	public static class FilesystemListConfigurer implements Supplier<FlowSegment> {
+	public static class FilesystemListConfigurer implements OperationsConfigurer {
 
 		private final Path basedir;
 		
@@ -109,13 +107,13 @@ public class FilesystemBundle implements RekaBundle {
 		}
 		
 		@Override
-		public FlowSegment get() {
-			return sync("files/list", () -> new FilesystemList(basedir, dataPathFn, dirFn));
+		public void setup(OperationSetup ops) {
+			ops.add("files/list", store -> new FilesystemList(basedir, dataPathFn, dirFn));
 		}
 		
 	}
 	
-	public static class FilesystemMktmpDirConfigurer implements Supplier<FlowSegment> {
+	public static class FilesystemMktmpDirConfigurer implements OperationsConfigurer {
 		
 		private reka.api.Path dirname = path("tmpdir");
 		
@@ -125,13 +123,13 @@ public class FilesystemBundle implements RekaBundle {
 		}
 		
 		@Override
-		public FlowSegment get() {
-			return sync("files/mktmpdir", () -> new FilesystemMktempDir(dirname));
+		public void setup(OperationSetup ops) {
+			ops.add("files/mktmpdir", store -> new FilesystemMktempDir(dirname));
 		}
 		
 	}
 
-	public static class FilesystemTypeConfigurer implements Supplier<FlowSegment> {
+	public static class FilesystemTypeConfigurer implements OperationsConfigurer {
 
 		private final ConfigurerProvider provider;
 
@@ -139,9 +137,9 @@ public class FilesystemBundle implements RekaBundle {
 		
 		private Function<Data,String> pathFn = (unused) -> ".";
 		
-		private Supplier<FlowSegment> whenDir;
-		private Supplier<FlowSegment> whenFile;
-		private Supplier<FlowSegment> whenMissing;
+		private OperationsConfigurer whenDir;
+		private OperationsConfigurer whenFile;
+		private OperationsConfigurer whenMissing;
 		
 		public FilesystemTypeConfigurer(ConfigurerProvider provider, Path basedir) {
 			this.provider = provider;
@@ -169,19 +167,17 @@ public class FilesystemBundle implements RekaBundle {
 			}
 		}
 		
-		private Supplier<FlowSegment> ops(ConfigBody body) {
+		private OperationsConfigurer ops(ConfigBody body) {
 			return configure(new SequenceConfigurer(provider), body);
 		}
 
 		@Override
-		public FlowSegment get() {
-			return sequential(seq -> {
-				seq.routerNode("file/type", () -> new FilesystemType(basedir, pathFn));
-				seq.parallel(par -> {
-					if (whenDir != null) par.add("dir", whenDir.get());
-					if (whenFile != null) par.add("file", whenFile.get());
-					if (whenMissing != null) par.add("missing", whenMissing.get());
-				});
+		public void setup(OperationSetup ops) {
+			ops.addRouter("file/type", store -> new FilesystemType(basedir, pathFn));
+			ops.parallel(par -> {
+				if (whenDir != null) par.route("dir", whenDir);
+				if (whenFile != null) par.route("file", whenFile);
+				if (whenMissing != null) par.route("missing", whenMissing);
 			});
 		}
 		

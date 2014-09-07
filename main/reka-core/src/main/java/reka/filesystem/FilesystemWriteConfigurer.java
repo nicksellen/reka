@@ -1,17 +1,16 @@
 package reka.filesystem;
 
 import static reka.api.Path.dots;
-import static reka.core.builder.FlowSegments.sync;
 
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import reka.api.data.Data;
-import reka.api.flow.FlowSegment;
 import reka.config.configurer.annotations.Conf;
+import reka.core.bundle.OperationSetup;
 import reka.core.util.StringWithVars;
+import reka.nashorn.OperationsConfigurer;
 
-public class FilesystemWriteConfigurer implements Supplier<FlowSegment> {
+public class FilesystemWriteConfigurer implements OperationsConfigurer {
 
 	private final java.nio.file.Path basedir;
 	
@@ -33,8 +32,8 @@ public class FilesystemWriteConfigurer implements Supplier<FlowSegment> {
 	}
 	
 	@Override
-	public FlowSegment get() {
-		return sync("files/write", () -> new FilesystemWrite(basedir, dataPathFn, filenameFn));
+	public void setup(OperationSetup ops) {
+		ops.add("files/write", store -> new FilesystemWrite(basedir, dataPathFn, filenameFn));
 	}
 	
 }

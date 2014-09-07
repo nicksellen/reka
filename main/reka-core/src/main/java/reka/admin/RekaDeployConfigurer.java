@@ -1,21 +1,20 @@
 package reka.admin;
 
 import static reka.api.Path.dots;
-import static reka.core.builder.FlowSegments.async;
 import static reka.util.Util.runtime;
 
 import java.util.UUID;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import reka.ApplicationManager;
 import reka.api.Path;
 import reka.api.data.Data;
-import reka.api.flow.FlowSegment;
 import reka.config.configurer.annotations.Conf;
+import reka.core.bundle.OperationSetup;
 import reka.core.util.StringWithVars;
+import reka.nashorn.OperationsConfigurer;
 
-public class RekaDeployConfigurer implements Supplier<FlowSegment> {
+public class RekaDeployConfigurer implements OperationsConfigurer {
 
 	private final ApplicationManager manager;
 	
@@ -43,11 +42,11 @@ public class RekaDeployConfigurer implements Supplier<FlowSegment> {
 	}
 	
 	@Override
-	public FlowSegment get() {
+	public void setup(OperationSetup ops) {
 		if (in != null) {
-			return async("deploy", () -> new RekaDeployFromContentOperation(manager, in));
+			ops.add("deploy", store -> new RekaDeployFromContentOperation(manager, in));
 		} else if (filenameFn != null) {
-			return async("deploy", () -> new RekaDeployFromFileOperation(manager, filenameFn, identityFn));
+			ops.add("deploy", store -> new RekaDeployFromFileOperation(manager, filenameFn, identityFn));
 		} else {
 			throw runtime("must specify either 'in' or 'filename'");
 		}

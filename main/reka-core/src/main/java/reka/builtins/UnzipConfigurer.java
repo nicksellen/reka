@@ -1,19 +1,18 @@
 package reka.builtins;
 
 import static reka.api.Path.dots;
-import static reka.core.builder.FlowSegments.sync;
 
 import java.io.File;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import reka.api.Path;
 import reka.api.data.Data;
-import reka.api.flow.FlowSegment;
 import reka.config.configurer.annotations.Conf;
+import reka.core.bundle.OperationSetup;
 import reka.core.util.StringWithVars;
+import reka.nashorn.OperationsConfigurer;
 
-public class UnzipConfigurer implements Supplier<FlowSegment> {
+public class UnzipConfigurer implements OperationsConfigurer {
 
 	private Function<Data,Path> dataPathFn;
 	private Function<Data,java.nio.file.Path> outputDirFn;
@@ -29,8 +28,8 @@ public class UnzipConfigurer implements Supplier<FlowSegment> {
 	}
 	
 	@Override
-	public FlowSegment get() {
-		return sync("unzip", () -> new UnzipOperation(dataPathFn, outputDirFn));
+	public void setup(OperationSetup ops) {
+		ops.add("unzip", store -> new UnzipOperation(dataPathFn, outputDirFn));
 	}
 
 }

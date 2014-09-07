@@ -1,17 +1,14 @@
 package reka.mustache;
 
 import static reka.api.Path.dots;
-import static reka.core.builder.FlowSegments.sync;
-
-import java.util.function.Supplier;
-
 import reka.api.Path;
 import reka.api.Path.Response;
-import reka.api.flow.FlowSegment;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
+import reka.core.bundle.OperationSetup;
+import reka.nashorn.OperationsConfigurer;
 
-public class MustacheConfigurer implements Supplier<FlowSegment> {
+public class MustacheConfigurer implements OperationsConfigurer {
 
 	private String template;
 	private Path in, out;
@@ -35,10 +32,10 @@ public class MustacheConfigurer implements Supplier<FlowSegment> {
 	}
 	
 	@Override
-	public FlowSegment get() {
+	public void setup(OperationSetup ops) {
 		if (in == null) in = Path.empty();
 		if (out == null) out = Response.CONTENT;
-	    return sync("mustache", () -> new MustacheOp(template, in, out));
+		ops.add("mustache", store -> new MustacheOp(template, in, out));
 	}
 
 }

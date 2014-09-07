@@ -1,16 +1,14 @@
 package reka.filesystem;
 
-import static reka.core.builder.FlowSegments.sync;
-
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import reka.api.data.Data;
-import reka.api.flow.FlowSegment;
 import reka.config.configurer.annotations.Conf;
+import reka.core.bundle.OperationSetup;
 import reka.core.util.StringWithVars;
+import reka.nashorn.OperationsConfigurer;
 
-public class FilesystemResolveConfigurer implements Supplier<FlowSegment> {
+public class FilesystemResolveConfigurer implements OperationsConfigurer {
 	
 	private final java.nio.file.Path basedir;
 	
@@ -32,8 +30,8 @@ public class FilesystemResolveConfigurer implements Supplier<FlowSegment> {
 	}
 
 	@Override
-	public FlowSegment get() {
-		return sync("resolve", () -> new FilesystemResolveOperation(basedir, inFn, outFn));
+	public void setup(OperationSetup ops) {
+		ops.add("resolve", store -> new FilesystemResolveOperation(basedir, inFn, outFn));
 	}
 
 }

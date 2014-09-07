@@ -1,10 +1,7 @@
 package reka.http.configurers;
 
 import static java.lang.String.format;
-import static java.util.stream.Collectors.toList;
 import static reka.config.configurer.Configurer.configure;
-import static reka.core.builder.FlowSegments.noop;
-import static reka.core.builder.FlowSegments.sequential;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,17 +13,20 @@ import java.util.function.Supplier;
 import reka.api.flow.FlowSegment;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
+import reka.core.bundle.OperationSetup;
 import reka.core.config.ConfigurerProvider;
+import reka.core.config.NoOp;
 import reka.core.config.SequenceConfigurer;
 import reka.http.configurers.HttpRouterConfigurer.RouteBuilder;
 import reka.http.operations.HttpRouter;
 import reka.http.operations.HttpRouter.Route;
+import reka.nashorn.OperationsConfigurer;
 
 public class HttpRouteGroupConfigurer {
 
 	private final ConfigurerProvider provider;
 
-	private final Map<String, List<Supplier<FlowSegment>>> segments = new HashMap<>();
+	private final Map<String, List<OperationsConfigurer>> segments = new HashMap<>();
 	private final List<HttpRouter.Route> routes = new ArrayList<>();
 	private final List<HttpRouteGroupConfigurer> groups = new ArrayList<>();
 
@@ -82,35 +82,33 @@ public class HttpRouteGroupConfigurer {
 
 	@Conf.At("run")
 	public void run(Config config) {
-		then = configure(provider.provide("run", provider).get(), config);
+		then = provider.provide("run", provider, config);
 	}
 
-	protected FlowSegment buildGroupSegment() {
+	protected void buildGroupSegment(OperationSetup ops) {
 
-		FlowSegment main = sequential(seq -> {
+		if (groupName != null) ops.label(groupName);
 
-			if (groupName != null) seq.addLabel(groupName);
+		ops.parallel(par -> {
 
-			seq.parallel(par -> {
+			for (Entry<String, List<OperationsConfigurer>> entry : segments.entrySet()) {
+				
+				String connectionName = entry.getKey();
+				List<OperationsConfigurer> operations = entry.getValue();
+				
+				par.routeSeq(connectionName, route -> {
+					operations.forEach(routeOperations -> route.add(routeOperations));
+				});
+			}
 
-				for (Entry<String, List<Supplier<FlowSegment>>> entry : segments.entrySet()) {
-					
-					List<FlowSegment> segs = entry.getValue().stream().map(Supplier<FlowSegment>::get).collect(toList());
-					par.add(entry.getKey(), segs);
-					
-				}
-
-				for (HttpRouteGroupConfigurer group : groups) {
-					par.add(group.buildGroupSegment());
-				}
-
-			});
-
-			if (then != null) seq.add(then.get());
+			for (HttpRouteGroupConfigurer group : groups) {
+				par.sequential(g -> group.buildGroupSegment(g));
+			}
 
 		});
 
-		return main;
+		if (then != null) ops.add(then);
+		
 	}
 
 	protected List<HttpRouter.Route> buildGroupRoutes() {
@@ -126,7 +124,7 @@ public class HttpRouteGroupConfigurer {
 		
 		routes.add(route);
 
-		Supplier<FlowSegment> segment = configToSegment(config);
+		OperationsConfigurer segment = configToSegment(config);
 		
 		if (!segments.containsKey(route.connectionName())) {
 			segments.put(route.connectionName(), new ArrayList<>());
@@ -136,13 +134,14 @@ public class HttpRouteGroupConfigurer {
 		
 	}
 	
-	private Supplier<FlowSegment> configToSegment(Config config) {
+	private OperationsConfigurer configToSegment(Config config) {
 		if (config.hasDocument()) {
 			return configure(new HttpContentConfigurer(), config);
 		} else if (config.hasBody()) {
 			return configure(new SequenceConfigurer(provider), config);
 		} else {
-			return () -> noop("nothing");
+			// TODO: make it so we don't have to pass a NoOp here...
+			return ops -> { ops.add("-", store -> NoOp.INSTANCE); };
 		}
 	}
 	

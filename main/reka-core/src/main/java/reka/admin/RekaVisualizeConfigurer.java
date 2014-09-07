@@ -1,20 +1,19 @@
 package reka.admin;
 
 import static reka.api.Path.dots;
-import static reka.core.builder.FlowSegments.sync;
 
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import reka.ApplicationManager;
 import reka.api.Path;
 import reka.api.Path.Response;
 import reka.api.data.Data;
-import reka.api.flow.FlowSegment;
 import reka.config.configurer.annotations.Conf;
+import reka.core.bundle.OperationSetup;
 import reka.core.util.StringWithVars;
+import reka.nashorn.OperationsConfigurer;
 
-public class RekaVisualizeConfigurer implements Supplier<FlowSegment> {
+public class RekaVisualizeConfigurer implements OperationsConfigurer {
 
 	private final ApplicationManager manager;
 	
@@ -54,11 +53,11 @@ public class RekaVisualizeConfigurer implements Supplier<FlowSegment> {
 	}
 	
 	@Override
-	public FlowSegment get() {
+	public void setup(OperationSetup ops) {
 		if (in != null) {
-			return sync("visualize", () -> new RekaVisualizeOperation(manager, in, formatFn, out));
+			ops.add("visualize", store -> new RekaVisualizeOperation(manager, in, formatFn, out));
 		} else if (appIdentityFn != null) {
-			return sync("visualize", () -> new VisualizeAppOperation(manager, appIdentityFn, flowNameFn, formatFn, out));
+			ops.add("visualize", store -> new VisualizeAppOperation(manager, appIdentityFn, flowNameFn, formatFn, out));
 		} else {
 			throw new RuntimeException("put the errors in the proper place nick!");
 		}

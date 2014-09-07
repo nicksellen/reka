@@ -2,18 +2,17 @@ package reka.jade;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static reka.api.Path.dots;
-import static reka.core.builder.FlowSegments.dataop;
 import static reka.util.Util.unchecked;
 
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
-import java.util.function.Supplier;
 
 import reka.api.Path;
-import reka.api.flow.FlowSegment;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
+import reka.core.bundle.OperationSetup;
+import reka.nashorn.OperationsConfigurer;
 
 import com.google.common.base.Charsets;
 
@@ -22,7 +21,7 @@ import de.neuland.jade4j.exceptions.JadeException;
 import de.neuland.jade4j.template.JadeTemplate;
 import de.neuland.jade4j.template.TemplateLoader;
 
-public class JadeConfigurer implements Supplier<FlowSegment> {
+public class JadeConfigurer implements OperationsConfigurer {
 	
 	private JadeTemplate template;
 	
@@ -76,9 +75,9 @@ public class JadeConfigurer implements Supplier<FlowSegment> {
 	}
 	
 	@Override
-	public FlowSegment get() {
+	public void setup(OperationSetup ops) {
 		if (out == null) out = Path.Response.CONTENT;
-	    return dataop("jade", () -> new Jade(template, in, out));
+	    ops.add("jade", store -> new Jade(template, in, out));
 	}
 	
 }

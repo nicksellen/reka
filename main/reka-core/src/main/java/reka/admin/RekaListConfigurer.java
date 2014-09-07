@@ -1,16 +1,13 @@
 package reka.admin;
 
 import static reka.api.Path.dots;
-import static reka.core.builder.FlowSegments.sync;
-
-import java.util.function.Supplier;
-
 import reka.ApplicationManager;
 import reka.api.Path;
-import reka.api.flow.FlowSegment;
 import reka.config.configurer.annotations.Conf;
+import reka.core.bundle.OperationSetup;
+import reka.nashorn.OperationsConfigurer;
 
-public class RekaListConfigurer implements Supplier<FlowSegment> {
+public class RekaListConfigurer implements OperationsConfigurer {
 	
 	private final ApplicationManager manager;
 	
@@ -26,8 +23,8 @@ public class RekaListConfigurer implements Supplier<FlowSegment> {
 	}
 	
 	@Override
-	public FlowSegment get() {
-		return sync("list apps", () -> new RekaListOperation(manager, out));
+	public void setup(OperationSetup ops) {
+		ops.add("list apps", store -> new RekaListOperation(manager, out));
 	}
 
 }

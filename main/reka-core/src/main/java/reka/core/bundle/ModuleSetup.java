@@ -2,11 +2,8 @@ package reka.core.bundle;
 
 import static java.util.stream.Collectors.toList;
 import static reka.config.configurer.Configurer.configure;
-import static reka.core.builder.FlowSegments.async;
 import static reka.core.builder.FlowSegments.label;
-import static reka.core.builder.FlowSegments.par;
 import static reka.core.builder.FlowSegments.seq;
-import static reka.core.builder.FlowSegments.sync;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -15,10 +12,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntConsumer;
 import java.util.function.Supplier;
+
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 
 import reka.api.IdentityKey;
 import reka.api.IdentityStore;
@@ -29,157 +30,22 @@ import reka.api.flow.Flow;
 import reka.api.flow.FlowSegment;
 import reka.api.run.AsyncOperation;
 import reka.api.run.SyncOperation;
+import reka.config.Config;
 import reka.config.ConfigBody;
-import reka.core.builder.FlowSegments;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
-
-import com.google.common.util.concurrent.SettableFuture;
+import reka.nashorn.OperationsConfigurer;
 
 public class ModuleSetup {
 	
-	public static interface ModuleExecutor extends Supplier<FlowSegment> {
-		ModuleExecutor run(String name, SyncOperation operation);		
-		ModuleExecutor storeRun(String name, Consumer<IdentityStore> c);
-		ModuleExecutor runAsync(String name, AsyncOperation operation);
-		ModuleExecutor storeRunAsync(String name, BiConsumer<IdentityStore, DoneCallback> c);
-		ModuleExecutor sequential(Consumer<ModuleExecutor> seq);
-		ModuleExecutor sequential(String label, Consumer<ModuleExecutor> seq);
-		ModuleExecutor parallel(Consumer<ModuleExecutor> par);
-		ModuleExecutor parallel(String label, Consumer<ModuleExecutor> par);
-		<T> ModuleExecutor eachParallel(Iterable<T> it, BiConsumer<T, ModuleExecutor> seq);
-	}
-	
-	private abstract static class AbstractExecutor implements ModuleExecutor {
-		
-		private final IdentityStore store;
-		private final List<Supplier<FlowSegment>> segments = new ArrayList<>();
-		
-		public AbstractExecutor(IdentityStore store) {
-			this.store = store;
-		}
-
-		@Override
-		public ModuleExecutor run(String name, SyncOperation operation) {
-			segments.add(() -> sync(name, () -> operation));
-			return this;
-		}
-
-		@Override
-		public ModuleExecutor runAsync(String name, AsyncOperation operation) {
-			segments.add(() -> async(name, () -> operation));
-			return this;
-		}
-		
-		@Override
-		public ModuleExecutor storeRun(String name, Consumer<IdentityStore> c) {
-			return run(name, (data) -> {
-				c.accept(store);
-				return data;
-			});
-		}
-		
-		@Override
-		public <T> ModuleExecutor eachParallel(Iterable<T> it, BiConsumer<T, ModuleExecutor> c) {
-			ModuleExecutor e = new ParallelExecutor(store);
-			for (T v : it) {
-				e.sequential(s -> {
-					c.accept(v, s);
-				});
-			}
-			segments.add(e);
-			return this;
-		}
-		
-		@Override
-		public ModuleExecutor storeRunAsync(String name, BiConsumer<IdentityStore, DoneCallback> c) {
-			return runAsync(name, (data) -> {
-				SettableFuture<MutableData> future = SettableFuture.create();
-				c.accept(store, () -> future.set(data));
-				return future;
-			});
-		}
-
-		@Override
-		public ModuleExecutor sequential(Consumer<ModuleExecutor> seq) {
-			ModuleExecutor e = new SequentialExecutor(store);
-			seq.accept(e);
-			segments.add(e);
-			return this;
-		}
-
-		@Override
-		public ModuleExecutor sequential(String label, Consumer<ModuleExecutor> seq) {
-			ModuleExecutor e = new SequentialExecutor(store);
-			seq.accept(e);
-			segments.add(() -> FlowSegments.label(label, e.get()));
-			return this;
-		}
-
-		@Override
-		public ModuleExecutor parallel(Consumer<ModuleExecutor> par) {
-			ModuleExecutor e = new ParallelExecutor(store);
-			par.accept(e);
-			segments.add(e);
-			return this;
-		}
-		
-
-		@Override
-		public ModuleExecutor parallel(String label, Consumer<ModuleExecutor> par) {
-			ModuleExecutor e = new ParallelExecutor(store);
-			par.accept(e);
-			segments.add(() -> FlowSegments.label(label, e.get()));
-			return this;
-		}
-
-		@Override
-		public FlowSegment get() {
-			List<FlowSegment> built = segments.stream().map(Supplier<FlowSegment>::get).collect(toList());
-			return build(built);
-		}
-		
-		abstract FlowSegment build(Collection<FlowSegment> segments);
-		
-	}
-	
-	private static class SequentialExecutor extends AbstractExecutor {
-
-		public SequentialExecutor(IdentityStore store) {
-			super(store);
-		}
-
-		@Override
-		FlowSegment build(Collection<FlowSegment> segments) {
-			return FlowSegments.seq(segments);
-		}
-		
-	}
-
-	
-	private static class ParallelExecutor extends AbstractExecutor {
-
-		public ParallelExecutor(IdentityStore store) {
-			super(store);
-		}
-
-		@Override
-		FlowSegment build(Collection<FlowSegment> segments) {
-			return par(segments);
-		}
-		
-	}
-
-	private final int moduleId;
 	private final Path path;
 	private final IdentityStore store;
 	private final List<Supplier<FlowSegment>> segments = new ArrayList<>();
 	private final List<Consumer<IdentityStore>> shutdownHandlers = new ArrayList<>();
 	private final List<TriggerCollection> triggers = new ArrayList<>();
-	private final Map<Path,Function<ConfigurerProvider,Supplier<FlowSegment>>> providers = new HashMap<>();
+	private final Map<Path,FlowSegmentBiFunction> operations = new HashMap<>();
 	
-	public ModuleSetup(int moduleId, Path path, IdentityStore store) {
-		this.moduleId = moduleId;
+	public ModuleSetup(Path path, IdentityStore store) {
 		this.path = path;
 		this.store = store;
 	}
@@ -195,81 +61,87 @@ public class ModuleSetup {
 		}
 	}
 	
-	public ModuleSetup init(Consumer<ModuleExecutor> seq) {
-		ModuleExecutor e = new SequentialExecutor(store);
-		seq.accept(e);
+	public ModuleSetup setupInitializer(Consumer<ModuleOperationSetup> seq) {
+		OperationSetup e = new SequentialCollector(store);
+		seq.accept(new ModuleOperationSetup(e));
 		segments.add(e);
 		return this;
+	}
+	
+	/*
+	 * wraps the fullon OperationSetup and only allows direct operations to be defined, which just see the store
+	 */
+	public static class ModuleOperationSetup {
+		
+		private final OperationSetup ops;
+		
+		public ModuleOperationSetup(OperationSetup ops) {
+			this.ops = ops;
+		}
+		
+		public ModuleOperationSetup run(String name, Consumer<IdentityStore> c) {
+			ops.add(name, store -> {
+				return new SyncOperation() {
+					
+					@Override
+					public MutableData call(MutableData data) {
+						c.accept(store);
+						return data;
+					}
+				};
+			});
+			return this;
+		}
+		public ModuleOperationSetup runAsync(String name, BiConsumer<IdentityStore, DoneCallback> c) {
+			ops.add(name, store -> {
+				return new AsyncOperation() {
+					
+					@Override
+					public ListenableFuture<MutableData> call(MutableData data) {
+						SettableFuture<MutableData> future = SettableFuture.create();
+						c.accept(store, () -> future.set(data));
+						return future;
+					}
+				};
+			});
+			return this;
+		}
+		
+		public ModuleOperationSetup parallel(Consumer<ModuleOperationSetup> par) {
+			ops.parallel(p -> {
+				par.accept(new ModuleOperationSetup(p));
+			});
+			return this;
+		}
+		
+		public <T> ModuleOperationSetup eachParallel(Iterable<T> it, BiConsumer<T, ModuleOperationSetup> seq) {
+			ops.eachParallel(it, (v, s) -> {
+				seq.accept(v, new ModuleOperationSetup(s));
+			});
+			return this;
+		}
+		
 	}
 	
 	public void shutdown(String name, Consumer<IdentityStore> handler) {
 		shutdownHandlers.add(handler);
 	}
 	
-	public ModuleSetup operation(Path name, Supplier<Supplier<FlowSegment>> supplier) {
-		providers.put(path.add(name), provider -> supplier.get());
-		return this;
-	}
-	
-	public static class OperationContext {
-		
-		private final ConfigurerProvider provider;
-		private final IdentityStore store;
-		
-		OperationContext(ConfigurerProvider provider, IdentityStore store) {
-			this.provider = provider;
-			this.store = store;
-		}
-		
-		public ConfigurerProvider provider() {
-			return provider;
-		}
-		
-		public IdentityStore store() {
-			return store;
-		}
-		
-	}
-	
-	public ModuleSetup operationWCtx(Path name, Function<OperationContext,Function<IdentityStore, FlowSegment>> a) {
-		operation(name, provider -> {
-			Function<IdentityStore,FlowSegment> idtoflow = a.apply(new OperationContext(provider, store));
-			return () -> idtoflow.apply(store);
+	public ModuleSetup operation(Path name, Function<ConfigurerProvider,OperationsConfigurer> c) {
+		operations.put(path.add(name), (provider, config) -> {
+			return configure(c.apply(provider), config).bind(store);
 		});
 		return this;
 	}
 	
-	public ModuleSetup operation(Path name, Function<ConfigurerProvider,Supplier<FlowSegment>> provider) {
-		providers.put(path.add(name), provider);
-		return this;
-	}
-
-	public ModuleSetup operation(Iterable<Path> names, Supplier<Supplier<FlowSegment>> supplier) {
-		Function<ConfigurerProvider,Supplier<FlowSegment>> provider = (p) -> supplier.get();
-		for (Path name : names) {
-			operation(name, provider);
-		}
-		return this;
-	}
-
-	public ModuleSetup storeOperation(Iterable<Path> names, Function<ConfigurerProvider,Supplier<FlowSegment>> provider) {
-		for (Path name : names) {
-			operation(name, provider);
-		}
-		return this;
-	}
-	
-	public ModuleSetup operation(Iterable<Path> names, Function<ConfigurerProvider,Supplier<FlowSegment>> provider) {
-		for (Path name : names) {
-			operation(name, provider);
-		}
-		return this;
+	public static interface FlowSegmentBiFunction extends BiFunction<ConfigurerProvider, Config, Supplier<FlowSegment>> {
 	}
 
 	private static abstract class BaseRegistration {
 
 		private final int applicationVersion;
 		private final String identity;
+		private final IdentityStore store;
 
 		private final List<NetworkInfo> network;
 		
@@ -280,12 +152,14 @@ public class ModuleSetup {
 		public BaseRegistration(
 				int applicationVersion, 
 				String identity,
+				IdentityStore store,
 				List<NetworkInfo> network,
 				List<IntConsumer> undeployConsumers,
 				List<IntConsumer> pauseConsumers,
 				List<IntConsumer> resumeConsumers) {
 			this.applicationVersion = applicationVersion;
 			this.identity = identity;
+			this.store = store;
 			this.network = network;
 			this.undeployConsumers = undeployConsumers;
 			this.pauseConsumers = pauseConsumers;
@@ -298,6 +172,10 @@ public class ModuleSetup {
 		
 		public String applicationIdentity() {
 			return identity;
+		}
+		
+		public IdentityStore store() {
+			return store;
 		}
 		
 		public void undeploy(IntConsumer c) {
@@ -338,8 +216,8 @@ public class ModuleSetup {
 		
 		private final Map<IdentityKey<Flow>,Flow> map;
 		
-		public MultiFlowRegistration(int applicationVersion, String identity, Map<IdentityKey<Flow>,Flow> map) {
-			super(applicationVersion, identity, new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
+		public MultiFlowRegistration(int applicationVersion, String identity, IdentityStore store, Map<IdentityKey<Flow>,Flow> map) {
+			super(applicationVersion, identity, store, new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
 			this.map = map;
 		}
 
@@ -362,7 +240,7 @@ public class ModuleSetup {
 		private final Flow flow;
 		
 		private SingleFlowRegistration(BaseRegistration base, Flow flow) {
-			super(base.applicationVersion, base.identity, base.network, base.undeployConsumers, base.pauseConsumers, base.resumeConsumers);
+			super(base.applicationVersion, base.identity, base.store, base.network, base.undeployConsumers, base.pauseConsumers, base.resumeConsumers);
 			this.flow = flow;
 		}
 		
@@ -376,10 +254,12 @@ public class ModuleSetup {
 		
 		private final List<Trigger> triggers;
 		private final Consumer<MultiFlowRegistration> consumer;
+		private final IdentityStore store;
 		
-		public TriggerCollection(Collection<Trigger> triggers, Consumer<MultiFlowRegistration> consumer) {
+		public TriggerCollection(Collection<Trigger> triggers, Consumer<MultiFlowRegistration> consumer, IdentityStore store) {
 			this.triggers = new ArrayList<>(triggers);
 			this.consumer = consumer;
+			this.store = store;
 		}
 		
 		public List<Trigger> get() {
@@ -390,15 +270,19 @@ public class ModuleSetup {
 			return consumer;
 		}
 		
+		public IdentityStore store() {
+			return store;
+		}
+		
 	}
 	
 	public static class Trigger {
 
 		private final Path base;
 		private final IdentityKey<Flow> name;
-		private final Function<ConfigurerProvider, Supplier<FlowSegment>> supplier;
+		private final Function<ConfigurerProvider, OperationsConfigurer> supplier;
 		
-		public Trigger(Path base, IdentityKey<Flow> name, Function<ConfigurerProvider, Supplier<FlowSegment>> supplier) {
+		public Trigger(Path base, IdentityKey<Flow> name, Function<ConfigurerProvider, OperationsConfigurer> supplier) {
 			this.base = base;
 			this.name = name;
 			this.supplier = supplier;
@@ -412,7 +296,7 @@ public class ModuleSetup {
 			return name;
 		}
 		
-		public Function<ConfigurerProvider, Supplier<FlowSegment>> supplier() {
+		public Function<ConfigurerProvider,OperationsConfigurer> supplier() {
 			return supplier;
 		}
 		
@@ -422,21 +306,21 @@ public class ModuleSetup {
 		return trigger(IdentityKey.named(name), body, c);
 	}
 
-	public ModuleSetup trigger(String name, Function<ConfigurerProvider, Supplier<FlowSegment>> supplier, Consumer<SingleFlowRegistration> c) {
+	public ModuleSetup trigger(String name, Function<ConfigurerProvider, OperationsConfigurer> supplier, Consumer<SingleFlowRegistration> c) {
 		return trigger(IdentityKey.named(name), supplier, c);
 	}
 	
-	public ModuleSetup triggers(Map<IdentityKey<Flow>,Function<ConfigurerProvider, Supplier<FlowSegment>>> suppliers, Consumer<MultiFlowRegistration> cs) {
-		triggers.add(new TriggerCollection(suppliers.entrySet().stream().map(e -> new Trigger(path, e.getKey(), e.getValue())).collect(toList()), cs));
+	public ModuleSetup triggers(Map<IdentityKey<Flow>,Function<ConfigurerProvider, OperationsConfigurer>> suppliers, Consumer<MultiFlowRegistration> cs) {
+		triggers.add(new TriggerCollection(suppliers.entrySet().stream().map(e -> new Trigger(path, e.getKey(), e.getValue())).collect(toList()), cs, store));
 		return this;
 	}
 
 	private ModuleSetup trigger(IdentityKey<Flow> key, ConfigBody body, Consumer<SingleFlowRegistration> c) {
-		return trigger(key,  (provider) -> configure(new SequenceConfigurer(provider), body), c);
+		return trigger(key, provider -> configure(new SequenceConfigurer(provider), body), c);
 	}
 	
-	private ModuleSetup trigger(IdentityKey<Flow> key, Function<ConfigurerProvider, Supplier<FlowSegment>> supplier, Consumer<SingleFlowRegistration> c) {
-		Map<IdentityKey<Flow>,Function<ConfigurerProvider, Supplier<FlowSegment>>> suppliers = new HashMap<>();
+	private ModuleSetup trigger(IdentityKey<Flow> key, Function<ConfigurerProvider, OperationsConfigurer> supplier, Consumer<SingleFlowRegistration> c) {
+		Map<IdentityKey<Flow>,Function<ConfigurerProvider, OperationsConfigurer>> suppliers = new HashMap<>();
 		suppliers.put(key, supplier);
 		return triggers(suppliers, m -> c.accept(m.singleFor(key)));
 	}
@@ -447,8 +331,8 @@ public class ModuleSetup {
 		return Optional.of(label(path.slashes(), seq(built)));
 	}
 	
-	public Map<Path,Function<ConfigurerProvider,Supplier<FlowSegment>>> providers() {
-		return providers;
+	public Map<Path,FlowSegmentBiFunction> providers() {
+		return operations;
 	}
 	
 	public List<TriggerCollection> triggers() {

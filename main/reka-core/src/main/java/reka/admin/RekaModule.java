@@ -61,13 +61,13 @@ public class RekaModule extends ModuleConfigurer {
 	
 	@Override
 	public void setup(ModuleSetup module) {
-		module.operation(path("list"), () -> new RekaListConfigurer(manager));
-		module.operation(path("get"), () -> new RekaDetailsConfigurer(manager));
-		module.operation(path("validate"), (provider) -> new RekaValidateConfigurer(provider, manager));
-		module.operation(path("deploy"), () -> new RekaDeployConfigurer(manager));
-		module.operation(path("undeploy"), () -> new RekaUndeployConfigurer(manager));
-		module.operation(path("redeploy"), () -> new RekaRedeployConfigurer(manager));
-		module.operation(path("visualize"), () -> new RekaVisualizeConfigurer(manager));
+		module.operation(path("list"), provider -> new RekaListConfigurer(manager));
+		module.operation(path("get"), provider -> new RekaDetailsConfigurer(manager));
+		module.operation(path("validate"), provider -> new RekaValidateConfigurer(provider, manager));
+		module.operation(path("deploy"), provider -> new RekaDeployConfigurer(manager));
+		module.operation(path("undeploy"), provider -> new RekaUndeployConfigurer(manager));
+		module.operation(path("redeploy"), provider -> new RekaRedeployConfigurer(manager));
+		module.operation(path("visualize"), provider -> new RekaVisualizeConfigurer(manager));
 		
 		for (ConfigBody body : deployHandlers) {			
 			module.trigger("on deploy", body, registration -> {

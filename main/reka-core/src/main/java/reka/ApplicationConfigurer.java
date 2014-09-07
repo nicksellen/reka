@@ -106,7 +106,7 @@ public class ApplicationConfigurer implements ErrorReporter {
     	Map<Path,Supplier<FlowSegment>> configuredFlows = new HashMap<>();
     	flowConfigs.forEach((config) -> 
 			configuredFlows.put(path(config.valueAsString()), 
-					configure(new SequenceConfigurer(provider), config)));
+					configure(new SequenceConfigurer(provider), config).bind(null)));
 		
     	configuredFlows.forEach((name, segment) -> flowsBuilder.add(name, segment.get()));
     	
@@ -124,8 +124,13 @@ public class ApplicationConfigurer implements ErrorReporter {
     public void checkValid() {
     	ModuleInitializer initializer = ModuleConfigurer.buildInitializer(rootModule);
     	MultiConfigurerProvider configurerProvider = new MultiConfigurerProvider(initializer.providers());
-    	initializer.triggers().forEach(triggers -> triggers.get().forEach(trigger -> trigger.supplier().apply(configurerProvider).get()));
-    	flowConfigs.forEach((config) -> configure(new SequenceConfigurer(configurerProvider), config).get());
+    	initializer.triggers().forEach(triggers -> triggers.get().forEach(trigger -> {
+    		trigger.supplier().apply(configurerProvider).bind(triggers.store()).get();
+    	}));
+    	flowConfigs.forEach(config -> {
+    		// TODO: these need to have their 
+    		configure(new SequenceConfigurer(configurerProvider), config).bind(null).get();
+    	});
     }
     
     public static class TriggerSetup {
@@ -169,13 +174,15 @@ public class ApplicationConfigurer implements ErrorReporter {
 	    	
 	    	initializer.triggers().forEach(triggers -> {
 	    		triggers.get().forEach(trigger -> {
-	    			flowBuilders.add(triggerPath(trigger), trigger.supplier().apply(configurerProvider).get());
+	    			log.info("configuring trigger {}", trigger);
+	    			flowBuilders.add(triggerPath(trigger), 
+	    					trigger.supplier().apply(configurerProvider).bind(triggers.store()).get());
 	    		});
 	    	});
 	    	
 	    	flowConfigs.forEach((config) -> 
 				flowBuilders.add(applicationName.add(config.valueAsString()), 
-						configure(new SequenceConfigurer(configurerProvider), config).get()));
+						configure(new SequenceConfigurer(configurerProvider), config).bind(null).get()));
 	    	
 	    	// ok, run the app initializer
 	
@@ -208,7 +215,7 @@ public class ApplicationConfigurer implements ErrorReporter {
 								m.put(trigger.key(), flows.flow(triggerPath(trigger)));
 							});
 							
-							MultiFlowRegistration mr = new MultiFlowRegistration(applicationVersion, identity, m);
+							MultiFlowRegistration mr = new MultiFlowRegistration(applicationVersion, identity, triggers.store(), m);
 							triggers.consumer().accept(mr);
 							
 							applicationBuilder.network().addAll(mr.network());

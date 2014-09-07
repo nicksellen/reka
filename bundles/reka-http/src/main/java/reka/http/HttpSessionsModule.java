@@ -2,7 +2,6 @@ package reka.http;
 
 import static reka.api.Path.path;
 import reka.api.IdentityKey;
-import reka.api.Path;
 import reka.core.bundle.ModuleConfigurer;
 import reka.core.bundle.ModuleSetup;
 
@@ -14,15 +13,14 @@ public class HttpSessionsModule extends ModuleConfigurer {
 
 	@Override
 	public void setup(ModuleSetup module) {
-		Path storePath = module.path().add("store");
-		module.init(seq -> {
-			seq.storeRun("create session storage", store -> {
+		module.setupInitializer(seq -> {
+			seq.run("create session storage", store -> {
 				store.put(SESSION_STORE, new SessionStore());
 			});
 		});
-		module.operation(path("put"), () -> new SessionPutConfigurer());
-		module.operation(path("get"), () -> new SessionGetConfigurer());
-		module.operation(path("remove"), () -> new SessionRemoveConfigurer());
+		module.operation(path("put"), provider -> new SessionPutConfigurer());
+		module.operation(path("get"), provider -> new SessionGetConfigurer());
+		module.operation(path("remove"), provider -> new SessionRemoveConfigurer());
 	}
 
 }

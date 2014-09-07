@@ -1,7 +1,5 @@
 package reka.rhino;
 
-import static java.util.Arrays.asList;
-import static reka.api.Path.path;
 import static reka.api.Path.root;
 import static reka.rhino.RhinoHelper.compileJavascript;
 import static reka.rhino.RhinoHelper.runJavascriptInScope;
@@ -60,9 +58,9 @@ public class RhinoModule extends ModuleConfigurer {
 	@Override
 	public void setup(ModuleSetup module) {
 		
-		module.init(seq -> {
+		module.setupInitializer(seq -> {
 		
-			seq.storeRun("create js scope", store -> {
+			seq.run("create js scope", store -> {
 				Context context = Context.enter();
 				if (optimization != null) context.setOptimizationLevel(optimization);
 				try {
@@ -75,14 +73,14 @@ public class RhinoModule extends ModuleConfigurer {
 			log.info("setting up {} script(s)", scripts.size());
 			
 			for (Script script : scripts) {
-				seq.storeRun("run initial javascript", store -> {
+				seq.run("run initial javascript", store -> {
 					log.debug("running initial js");
 					runJavascriptInScope(store.get(SCOPE), script, optimization);
 				});
 			}
 		});
 		
-		module.operation(asList(root(), path("run")), () -> new RhinoConfigurer());
+		module.operation(root(), provider -> new RhinoConfigurer());
 		
 	}
 

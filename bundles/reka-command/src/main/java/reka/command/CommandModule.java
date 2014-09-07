@@ -35,7 +35,7 @@ public class CommandModule extends ModuleConfigurer {
 	
 	@Override
 	public void setup(ModuleSetup module) {
-		module.operation(root(), () -> new RunCommandConfigurer(exec, args));
+		module.operation(root(), provider -> new RunCommandConfigurer(exec, args));
 	}
 
 }

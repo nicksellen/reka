@@ -3,20 +3,17 @@ package reka.http.configurers;
 import static reka.api.content.Contents.binary;
 import static reka.api.content.Contents.utf8;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
-import static reka.core.builder.FlowSegments.sync;
-
-import java.util.function.Supplier;
-
 import reka.api.content.Content;
 import reka.api.content.Content.BinaryContent;
 import reka.api.content.Contents;
 import reka.api.data.Data;
-import reka.api.flow.FlowSegment;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
+import reka.core.bundle.OperationSetup;
 import reka.http.operations.HttpContentWithETag;
+import reka.nashorn.OperationsConfigurer;
 
-public class HttpContentConfigurer implements Supplier<FlowSegment> {
+public class HttpContentConfigurer implements OperationsConfigurer {
 	
 	private Content content;
 	private Content contentType;
@@ -60,14 +57,14 @@ public class HttpContentConfigurer implements Supplier<FlowSegment> {
 	}
 	
 	@Override
-	public FlowSegment get() {
+	public void setup(OperationSetup ops) {
 		if (content instanceof BinaryContent && contentType == null) {
 			String ct = ((BinaryContent) content).contentType();
 			if (ct != null) {
 				contentType = utf8(ct);
 			}
 		}
-		return sync("http/content", () -> new HttpContentWithETag(content, contentType));
+		ops.add("http/content", store -> new HttpContentWithETag(content, contentType));
 	}
 
 }

@@ -1,19 +1,18 @@
 package reka.http;
 
 import static reka.api.Path.dots;
-import static reka.core.builder.FlowSegments.storeSync;
 import static reka.http.HttpSessionsModule.SESSION_STORE;
 
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import reka.api.Path;
 import reka.api.data.Data;
-import reka.api.flow.FlowSegment;
 import reka.config.configurer.annotations.Conf;
+import reka.core.bundle.OperationSetup;
 import reka.core.util.StringWithVars;
+import reka.nashorn.OperationsConfigurer;
 
-public class SessionPutConfigurer implements Supplier<FlowSegment> {
+public class SessionPutConfigurer implements OperationsConfigurer {
 	
 	private Function<Data,Path> keyFn;
 	private Function<Data,String> valFn;
@@ -29,8 +28,8 @@ public class SessionPutConfigurer implements Supplier<FlowSegment> {
 	}
 
 	@Override
-	public FlowSegment get() {
-		return storeSync("session/put", (store) -> new SessionPutOperation(store.get(SESSION_STORE), keyFn, valFn));
+	public void setup(OperationSetup ops) {
+		ops.add("session/put", store -> new SessionPutOperation(store.get(SESSION_STORE), keyFn, valFn));
 	}
 
 }

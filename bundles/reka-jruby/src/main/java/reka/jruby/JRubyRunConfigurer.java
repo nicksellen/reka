@@ -1,17 +1,15 @@
 package reka.jruby;
 
 import static reka.api.Path.dots;
-import static reka.core.builder.FlowSegments.storeSync;
 import static reka.jruby.JRubyModule.RUBY_ENV;
 
-import java.util.function.Supplier;
-
 import reka.api.Path;
-import reka.api.flow.FlowSegment;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
+import reka.core.bundle.OperationSetup;
+import reka.nashorn.OperationsConfigurer;
 
-public class JRubyRunConfigurer implements Supplier<FlowSegment> {
+public class JRubyRunConfigurer implements OperationsConfigurer {
 	
 	private String script;
 	private Path out;
@@ -35,8 +33,8 @@ public class JRubyRunConfigurer implements Supplier<FlowSegment> {
 	}
 
 	@Override
-	public FlowSegment get() {
-		return storeSync("run", store -> new JRubyRunOperation(store.get(RUBY_ENV), script, out));
+	public void setup(OperationSetup ops) {
+		ops.add("run", store -> new JRubyRunOperation(store.get(RUBY_ENV), script, out));
 	}
 	
 }

@@ -9,18 +9,12 @@ import static reka.core.runtime.handlers.DSL.haltedHandlers;
 import static reka.core.runtime.handlers.DSL.op;
 import static reka.core.runtime.handlers.DSL.routing;
 import static reka.core.runtime.handlers.DSL.subscribableAction;
-import static reka.util.Util.unchecked;
 import static reka.util.Util.unwrap;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Supplier;
 
-import reka.api.IdentityStore;
 import reka.api.data.Data;
 import reka.api.flow.FlowNode;
 import reka.api.flow.FlowOperation;
@@ -56,14 +50,12 @@ class NodeBuilder {
 	private boolean isTrigger; // only used if we are a waiting node, means it needs to trigger something further down the flow
 	
 	private final FlowNode node;
-	private final Map<Integer,IdentityStore> stores;
 	
-	public NodeBuilder(int id, String name, FlowNode node, ListeningExecutorService executor, Map<Integer,IdentityStore> stores) {
+	public NodeBuilder(int id, String name, FlowNode node, ListeningExecutorService executor) {
 	    this.id = id;
 		this.name = name;
 		this.node = node;
 		this.executor = executor;
-		this.stores = stores;
 	}
 	
 	public void addListener(int subscriber) {
@@ -97,15 +89,7 @@ class NodeBuilder {
 
 	public boolean isRouterNode() {
 		if (!node.hasOperationSupplier()) return false;
-		Supplier<? extends FlowOperation> s = node.operationSupplier();
-		try {
-			Method m = s.getClass().getMethod("get");
-			throw new AssertionError("gotta make sure this works!");
-			//return RoutingOperation.class.isAssignableFrom(m.getReturnType());
-		} catch (NoSuchMethodException | SecurityException e) {
-			throw unchecked(e);
-		}
-		//return node.hasOperationSupplier() && node.operationSupplier() instanceof RouterOperationSupplier;
+		return node.operationSupplier().isRouter();
 	}
 	
 	public Collection<NodeChildBuilder> children() {
@@ -178,16 +162,14 @@ class NodeBuilder {
 			halted = haltedHandlers(asList(halted, NOTIFY_SUBSCRIBER_ON_HALTED));
 		}
 		
-		Optional<FlowOperation> o = Optional.empty();
+		FlowOperation operation = null;
 		
 		if (node.hasOperationSupplier()) {
-			o = Optional.ofNullable(node.operationSupplier().get());
+			operation = node.operationSupplier().get();
 		} else if (node.isSubscribeable()) {
 		} else if (!node.hasEmbeddedFlow()) {
 			throw new IllegalStateException(format("node [%s] must have supplier or embedded flow reference", name()));
 		}
-		
-		FlowOperation operation = o.orElse(null);
 		
 		if (operation instanceof RoutingOperation) {
 			action = routing((RoutingOperation) operation, children);

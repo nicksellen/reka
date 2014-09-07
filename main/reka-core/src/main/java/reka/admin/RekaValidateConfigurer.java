@@ -2,25 +2,23 @@ package reka.admin;
 
 import static reka.api.Path.dots;
 import static reka.config.configurer.Configurer.configure;
-import static reka.core.builder.FlowSegments.router;
-import static reka.core.builder.FlowSegments.sequential;
 import static reka.util.Util.runtime;
 
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import reka.ApplicationManager;
 import reka.api.Path;
 import reka.api.data.Data;
-import reka.api.flow.FlowSegment;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
+import reka.core.bundle.OperationSetup;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.core.util.StringWithVars;
+import reka.nashorn.OperationsConfigurer;
 
-public class RekaValidateConfigurer implements Supplier<FlowSegment> {
+public class RekaValidateConfigurer implements OperationsConfigurer {
 
 	private final ConfigurerProvider provider;
 	private final ApplicationManager manager;
@@ -28,8 +26,8 @@ public class RekaValidateConfigurer implements Supplier<FlowSegment> {
 	private Path in;
 	private Function<Data,String> filenameFn;
 	
-	private Supplier<FlowSegment> whenOk;
-	private Supplier<FlowSegment> whenError;
+	private OperationsConfigurer whenOk;
+	private OperationsConfigurer whenError;
 	
 	RekaValidateConfigurer(ConfigurerProvider provider, ApplicationManager manager) {
 		this.provider = provider;
@@ -61,29 +59,23 @@ public class RekaValidateConfigurer implements Supplier<FlowSegment> {
 	}
 
 	
-	private Supplier<FlowSegment> ops(ConfigBody body) {
+	private OperationsConfigurer ops(ConfigBody body) {
 		return configure(new SequenceConfigurer(provider), body);
 	}
 	
 	@Override
-	public FlowSegment get() {
-		
-		FlowSegment router;
+	public void setup(OperationSetup ops) {
 		
 		if (in != null) {
-			router = router("validate", () -> new RekaValidateFromContentOperation(manager, in));
+			ops.addRouter("validate", store -> new RekaValidateFromContentOperation(manager, in));
 		} else if (filenameFn != null) {
-			router = router("validate", () -> new RekaValidateFromFileOperation(manager, filenameFn));
+			ops.addRouter("validate", store -> new RekaValidateFromFileOperation(manager, filenameFn));
 		} else {
 			throw runtime("must specify either 'in' or 'filename'");
 		}
-		
-		return sequential(seq -> {
-			seq.add(router);
-			seq.parallel(par -> {
-				if (whenOk != null) par.add("ok", whenOk.get());
-				if (whenError != null) par.add("error", whenError.get());
-			});
+		ops.parallel(par -> {
+			if (whenOk != null) par.route("ok", whenOk);
+			if (whenError != null) par.route("error", whenError);
 		});
 	}
 	

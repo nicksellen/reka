@@ -871,6 +871,7 @@ public class Configurer {
 	}
 	
 	private static InvalidConfigurationException asInvalidConfigurationException(Config conf, Throwable t) {
+		t.printStackTrace();
 		InvalidConfigurationException e = findInvalidConfigurationException(t);
 		if (e != null) return e;
 		return new InvalidConfigurationException(asList(new ConfigurationError(new WrappedConfig(conf), rootExceptionMessage(t),t)));

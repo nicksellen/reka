@@ -2,13 +2,11 @@ package reka.twilio;
 
 import static reka.api.Path.dots;
 import static reka.api.Path.path;
-import static reka.core.builder.FlowSegments.sync;
 import static reka.util.Util.unchecked;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,14 +14,15 @@ import org.slf4j.LoggerFactory;
 import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
-import reka.api.flow.FlowSegment;
 import reka.api.run.DataOperation;
 import reka.api.run.SyncOperation;
 import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.ModuleConfigurer;
 import reka.core.bundle.ModuleSetup;
+import reka.core.bundle.OperationSetup;
 import reka.core.bundle.RekaBundle;
 import reka.core.util.StringWithVars;
+import reka.nashorn.OperationsConfigurer;
 
 import com.twilio.sdk.TwilioRestClient;
 import com.twilio.sdk.TwilioRestException;
@@ -61,12 +60,12 @@ public class TwilioBundle implements RekaBundle {
 
 		@Override
 		public void setup(ModuleSetup module) {
-			module.operation(path("send"), () -> new TwilioSendConfigurer(sid, token, defaultFrom));
+			module.operation(path("send"), provider -> new TwilioSendConfigurer(sid, token, defaultFrom));
 		}
 		
 	}
 	
-	public static class TwilioSendConfigurer implements Supplier<FlowSegment> {
+	public static class TwilioSendConfigurer implements OperationsConfigurer {
 		
 		private final String sid;
 		private final String token;
@@ -100,8 +99,8 @@ public class TwilioBundle implements RekaBundle {
 		}
 
 		@Override
-		public FlowSegment get() {
-			return sync("send sms", () -> new TwilioSendOperation(sid, token, defaultFrom, msgFn, toFn, out));
+		public void setup(OperationSetup ops) {
+			ops.add("send sms", store -> new TwilioSendOperation(sid, token, defaultFrom, msgFn, toFn, out));
 		}
 		
 	}

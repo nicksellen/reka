@@ -12,10 +12,10 @@ import static reka.util.Util.unchecked;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.ExecutionException;
-import java.util.function.Supplier;
 
 import org.junit.Test;
 
+import reka.api.IdentityStore;
 import reka.api.Path.PathElement;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
@@ -29,8 +29,10 @@ import reka.builtins.BuiltinsModule;
 import reka.config.Config;
 import reka.config.NavigableConfig;
 import reka.config.configurer.Configurer.InvalidConfigurationException;
+import reka.core.bundle.OperationSetup;
 import reka.core.data.memory.MutableMemoryData;
 import reka.core.runtime.DefaultRouter;
+import reka.nashorn.OperationsConfigurer;
 
 public class PutTest {
 	
@@ -87,11 +89,14 @@ public class PutTest {
 		return configureThenCall(new BuiltinsModule.PutConfigurer(), root.at(path).get(), MutableMemoryData.create());
 	}
 	
-	private static Data configureThenCall(Supplier<FlowSegment> s, Config config, MutableData input) {
-		
+	private static Data configureThenCall(OperationsConfigurer s, Config config, MutableData input) {
+		OperationSetup collector = OperationSetup.createSequentialCollector(IdentityStore.createConcurrentIdentityStore());
 		configure(s, config);
 		
-		FlowOperation op = firstNode(s.get()).operationSupplier().get();
+		s.setup(collector);
+		FlowSegment v = collector.get();
+		
+		FlowOperation op = firstNode(v).operationSupplier().get();
 		if (op instanceof SyncOperation) {
 			return callSync((SyncOperation) op, input);
 		} else if (op instanceof AsyncOperation) {

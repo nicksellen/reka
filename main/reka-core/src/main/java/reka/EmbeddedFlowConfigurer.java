@@ -1,12 +1,11 @@
 package reka;
 
-import java.util.function.Supplier;
-
-import reka.api.flow.FlowSegment;
 import reka.config.configurer.annotations.Conf;
 import reka.core.builder.EmbeddedFlowNode;
+import reka.core.bundle.OperationSetup;
+import reka.nashorn.OperationsConfigurer;
 
-public class EmbeddedFlowConfigurer implements Supplier<FlowSegment> {
+public class EmbeddedFlowConfigurer implements OperationsConfigurer {
 
 	private String name;
 	
@@ -17,8 +16,8 @@ public class EmbeddedFlowConfigurer implements Supplier<FlowSegment> {
 	}
 	
 	@Override
-	public FlowSegment get() {
-		return new EmbeddedFlowNode(name, name);
+	public void setup(OperationSetup ops) {
+		ops.add(() -> new EmbeddedFlowNode(name, name));
 	}
 
 }

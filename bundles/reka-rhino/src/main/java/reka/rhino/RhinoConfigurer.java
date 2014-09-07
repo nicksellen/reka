@@ -2,20 +2,18 @@ package reka.rhino;
 
 import static reka.api.Path.dots;
 import static reka.api.Path.root;
-import static reka.core.builder.FlowSegments.storeSync;
 import static reka.rhino.RhinoHelper.compileJavascript;
 import static reka.rhino.RhinoModule.SCOPE;
-
-import java.util.function.Supplier;
 
 import org.mozilla.javascript.Script;
 
 import reka.api.Path;
-import reka.api.flow.FlowSegment;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
+import reka.core.bundle.OperationSetup;
+import reka.nashorn.OperationsConfigurer;
 
-public class RhinoConfigurer implements Supplier<FlowSegment> {
+public class RhinoConfigurer implements OperationsConfigurer {
 	
 	private Script script;
 	private Path out = root();
@@ -39,8 +37,8 @@ public class RhinoConfigurer implements Supplier<FlowSegment> {
 	}
 	
 	@Override
-	public FlowSegment get() {
-		return storeSync("run", store -> new RhinoWithScope(store.get(SCOPE), script, out));
+	public void setup(OperationSetup ops) {
+		ops.add("run", store -> new RhinoWithScope(store.get(SCOPE), script, out));
 	}
 
 }

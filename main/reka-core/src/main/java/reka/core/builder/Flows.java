@@ -1,7 +1,7 @@
 package reka.core.builder;
 
-import static java.util.Comparator.naturalOrder;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Comparator.naturalOrder;
 import static java.util.stream.Collectors.toSet;
 
 import java.util.ArrayList;

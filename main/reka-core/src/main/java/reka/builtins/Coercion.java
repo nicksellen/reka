@@ -5,22 +5,21 @@ import static reka.api.content.Contents.falseValue;
 import static reka.api.content.Contents.longValue;
 import static reka.api.content.Contents.trueValue;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
-import static reka.core.builder.FlowSegments.sync;
 import static reka.util.Util.createEntry;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.function.Supplier;
 
 import reka.api.Path;
 import reka.api.content.Content;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
-import reka.api.flow.FlowSegment;
 import reka.api.run.SyncOperation;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
+import reka.core.bundle.OperationSetup;
+import reka.nashorn.OperationsConfigurer;
 
 import com.google.common.collect.ImmutableList;
 
@@ -30,7 +29,7 @@ public class Coercion {
 		LONG, BOOLEAN 
 	}
 
-	public static class CoerceConfigurer implements Supplier<FlowSegment> {
+	public static class CoerceConfigurer implements OperationsConfigurer {
 
 		private final List<Entry<Path,CoercionType>> coercions = new ArrayList<>();
 		
@@ -42,13 +41,13 @@ public class Coercion {
 		}
 		
 		@Override
-		public FlowSegment get() {
-			return sync("coerce", () -> new Coerce(coercions));
+		public void setup(OperationSetup ops) {
+			ops.add("coerce", store -> new Coerce(coercions));
 		}
 
 	}
 	
-	public static class CoerceLongConfigurer implements Supplier<FlowSegment> {
+	public static class CoerceLongConfigurer implements OperationsConfigurer {
 
 		private Path path;
 		
@@ -58,13 +57,13 @@ public class Coercion {
 		}
 		
 		@Override
-		public FlowSegment get() {
-			return sync("coerce/long", () -> new CoerceLong(path));
+		public void setup(OperationSetup ops) {
+			ops.add("coerce/long", store -> new CoerceLong(path));
 		}
 
 	}
 	
-	public static class CoerceBooleanConfigurer implements Supplier<FlowSegment> {
+	public static class CoerceBooleanConfigurer implements OperationsConfigurer {
 
 		private Path path;
 		
@@ -74,8 +73,8 @@ public class Coercion {
 		}
 		
 		@Override
-		public FlowSegment get() {
-			return sync("coerce/boolean", () -> new CoerceBoolean(path));
+		public void setup(OperationSetup ops) {
+			ops.add("coerce/boolean", store -> new CoerceBoolean(path));
 		}
 
 	}

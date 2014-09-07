@@ -1,13 +1,11 @@
 package reka.command;
 
-import static reka.core.builder.FlowSegments.sync;
-
 import java.util.List;
-import java.util.function.Supplier;
 
-import reka.api.flow.FlowSegment;
+import reka.core.bundle.OperationSetup;
+import reka.nashorn.OperationsConfigurer;
 
-public class RunCommandConfigurer implements Supplier<FlowSegment> {
+public class RunCommandConfigurer implements OperationsConfigurer {
 	
 	private final String exec;
 	private final List<String> args;
@@ -18,8 +16,8 @@ public class RunCommandConfigurer implements Supplier<FlowSegment> {
 	}
 
 	@Override
-	public FlowSegment get() {
-		return sync("run", () -> new RunCommandOperation(exec, args));
+	public void setup(OperationSetup ops) {
+		ops.add("run", store -> new RunCommandOperation(exec, args));
 	}
 
 }

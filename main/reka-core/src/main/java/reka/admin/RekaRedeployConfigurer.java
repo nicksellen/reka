@@ -1,17 +1,15 @@
 package reka.admin;
 
-import static reka.core.builder.FlowSegments.async;
-
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import reka.ApplicationManager;
 import reka.api.data.Data;
-import reka.api.flow.FlowSegment;
 import reka.config.configurer.annotations.Conf;
+import reka.core.bundle.OperationSetup;
 import reka.core.util.StringWithVars;
+import reka.nashorn.OperationsConfigurer;
 
-public class RekaRedeployConfigurer implements Supplier<FlowSegment> {
+public class RekaRedeployConfigurer implements OperationsConfigurer {
 
 	private final ApplicationManager manager;
 	private Function<Data,String> identityFn;
@@ -27,8 +25,8 @@ public class RekaRedeployConfigurer implements Supplier<FlowSegment> {
 	}
 	
 	@Override
-	public FlowSegment get() {
-		return async("redeploy", () -> new RekaRedeployOperation(manager, identityFn));
+	public void setup(OperationSetup ops) {
+		ops.add("redeploy", store -> new RekaRedeployOperation(manager, identityFn));
 	}
 	
 }

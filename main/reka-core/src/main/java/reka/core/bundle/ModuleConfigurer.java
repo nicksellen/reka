@@ -18,10 +18,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
-import reka.api.ConcurrentIdentityStore;
 import reka.api.IdentityStore;
 import reka.api.Path;
 import reka.api.flow.Flow;
@@ -30,8 +28,8 @@ import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.builder.FlowVisualizer;
 import reka.core.builder.SingleFlow;
+import reka.core.bundle.ModuleSetup.FlowSegmentBiFunction;
 import reka.core.bundle.ModuleSetup.TriggerCollection;
-import reka.core.config.ConfigurerProvider;
 import reka.core.runtime.NoFlow;
 import reka.core.runtime.NoFlowVisualizer;
 
@@ -44,12 +42,12 @@ public abstract class ModuleConfigurer {
 		
 		private final Flow flow;
 		private final FlowVisualizer visualizer;
-		private final Map<Path,Function<ConfigurerProvider,Supplier<FlowSegment>>> providers;
+		private final Map<Path,FlowSegmentBiFunction> providers;
 		private final List<TriggerCollection> triggers;
 		private final List<Runnable> shutdownHandlers;
 		
 		ModuleInitializer(Flow initialize, FlowVisualizer visualizer, 
-				Map<Path,Function<ConfigurerProvider,Supplier<FlowSegment>>> providers,
+				Map<Path,FlowSegmentBiFunction> providers,
 				List<TriggerCollection> triggers,
 				List<Runnable> shutdownHandlers) {
 			
@@ -69,7 +67,7 @@ public abstract class ModuleConfigurer {
 			return visualizer;
 		}
 		
-		public Map<Path,Function<ConfigurerProvider,Supplier<FlowSegment>>> providers() {
+		public Map<Path,FlowSegmentBiFunction> providers() {
 			return providers;
 		}
 		
@@ -97,19 +95,17 @@ public abstract class ModuleConfigurer {
 			
 			resolveNamedDependencies(all, rootsMap);
 			
-			Map<Path,Function<ConfigurerProvider,Supplier<FlowSegment>>> providersCollector = new HashMap<>();
+			Map<Path,FlowSegmentBiFunction> providersCollector = new HashMap<>();
 			List<TriggerCollection> triggerCollector = new ArrayList<>();
 			List<Runnable> shutdownHandlers = new ArrayList<>();
 			Map<ModuleConfigurer,FlowSegment> segments = new HashMap<>();
 			Map<Integer,IdentityStore> stores = new HashMap<>();
 			
-			int id = 0;
 			for (ModuleConfigurer module : all) {
 				
-				IdentityStore store = new ConcurrentIdentityStore();
-				stores.put(id, store);
+				IdentityStore store = IdentityStore.createConcurrentIdentityStore();
 				
-				ModuleSetup init = new ModuleSetup(id, module.fullPath(), store);
+				ModuleSetup init = new ModuleSetup(module.fullPath(), store);
 				module.setup(init);
 				
 				init.buildFlowSegment().ifPresent(segment -> {
@@ -124,7 +120,6 @@ public abstract class ModuleConfigurer {
 					shutdownHandlers.add(() -> h.accept(store));
 				});
 				
-				id++;
 			}
 			
 			Optional<FlowSegment> segment = buildSegment(toplevel, segments);

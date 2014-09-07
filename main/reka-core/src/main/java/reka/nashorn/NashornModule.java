@@ -6,7 +6,6 @@ import static reka.api.Path.dots;
 import static reka.api.Path.path;
 import static reka.api.Path.root;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
-import static reka.core.builder.FlowSegments.storeSync;
 import static reka.util.Util.runtime;
 
 import java.util.ArrayList;
@@ -14,19 +13,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 import reka.api.IdentityKey;
 import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
-import reka.api.flow.FlowSegment;
 import reka.builtins.BuiltinsModule.PutDataOperation;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.ModuleConfigurer;
 import reka.core.bundle.ModuleSetup;
+import reka.core.bundle.OperationSetup;
 import reka.core.data.memory.MutableMemoryData;
 
 import com.google.common.base.Joiner;
@@ -98,11 +96,11 @@ public class NashornModule extends ModuleConfigurer {
 	@Override
 	public void setup(ModuleSetup module) {
 		
-		module.operation(asList(path("run"), root()), (initdata) -> new NashornRunConfigurer(root()));
+		module.operation(root(), provider -> new NashornRunConfigurer(root()));
 		
-		module.init(run -> {
+		module.setupInitializer(run -> {
 		
-			run.storeRun("initialize runtime", store -> {
+			run.run("initialize runtime", store -> {
 				store.put(RUNNER, new PooledNashornRunner(scripts));
 			});
 
@@ -115,7 +113,7 @@ public class NashornModule extends ModuleConfigurer {
 				
 				// run the js to calculate the data we need
 				
-				run.storeRun(format("calculate data for %s", opname), store -> {
+				run.run(format("calculate data for %s", opname), store -> {
 	
 					NashornRunner js = store.get(RUNNER);
 					
@@ -140,14 +138,14 @@ public class NashornModule extends ModuleConfigurer {
 				});
 				
 				// the operation that will insert this data
-				module.operation(path(opname), () -> new PutJSDataConfigurer(dataKey));
+				module.operation(path(opname), provider -> new PutJSDataConfigurer(dataKey));
 			}
 		
 		});
 		
 	}
 	
-	public static class PutJSDataConfigurer implements Supplier<FlowSegment> {
+	public static class PutJSDataConfigurer implements OperationsConfigurer {
 		
 		private final IdentityKey<Data> key;
 		
@@ -163,8 +161,8 @@ public class NashornModule extends ModuleConfigurer {
 		}
 
 		@Override
-		public FlowSegment get() {
-			return storeSync("jsdata", store -> new PutDataOperation(store.get(key), out));
+		public void setup(OperationSetup ops) {
+			ops.add("jsdata", store -> new PutDataOperation(store.get(key), out));
 		}
 		
 	}

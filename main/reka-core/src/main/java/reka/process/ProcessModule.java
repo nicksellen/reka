@@ -4,20 +4,14 @@ import static com.google.common.collect.Iterables.toArray;
 import static java.util.Arrays.asList;
 import static reka.api.Path.root;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
-import static reka.core.builder.FlowSegments.async;
-import static reka.core.builder.FlowSegments.storeAsync;
-import static reka.core.builder.FlowSegments.storeSync;
-import static reka.core.builder.FlowSegments.sync;
 import static reka.util.Util.runtime;
 import static reka.util.Util.unchecked;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +19,7 @@ import org.slf4j.LoggerFactory;
 import reka.api.IdentityKey;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
-import reka.api.flow.FlowSegment;
+import reka.api.flow.Flow;
 import reka.api.run.AsyncOperation;
 import reka.api.run.SyncOperation;
 import reka.config.Config;
@@ -33,8 +27,10 @@ import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.ModuleConfigurer;
 import reka.core.bundle.ModuleSetup;
+import reka.core.bundle.OperationSetup;
 import reka.core.data.memory.MutableMemoryData;
 import reka.core.util.StringWithVars;
+import reka.nashorn.OperationsConfigurer;
 
 import com.google.common.base.Splitter;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -94,27 +90,23 @@ public class ProcessModule extends ModuleConfigurer {
 	@Override
 	public void setup(ModuleSetup module) {
 		
-		AtomicReference<Consumer<String>> triggerRef = new AtomicReference<>();
-		
 		if (onLine != null) {
 			module.trigger("on line", onLine, registration -> {
-				triggerRef.set(line -> {
-					registration.flow()
-						.prepare()
-						.data(MutableMemoryData.create().putString("out", line))
-						.run();
+				Flow flow = registration.flow();
+				registration.store().get(PROCESS_MANAGER).addLineTrigger(line -> {
+					flow.prepare().data(MutableMemoryData.create().putString("out", line)).run();
 				});
 			});
 		}
 		
-		module.init(seq -> {
-			seq.storeRun("start process", store -> {
+		module.setupInitializer(seq -> {
+			seq.run("start process", store -> {
 				try {
 					ProcessBuilder builder = new ProcessBuilder();
 					builder.command(command);
 					log.info("starting {}\n", asList(command));
 					builder.environment().clear();
-					store.put(PROCESS_MANAGER, new MultiProcessManager(builder, Runtime.getRuntime().availableProcessors(), noreply, triggerRef));
+					store.put(PROCESS_MANAGER, new MultiProcessManager(builder, Runtime.getRuntime().availableProcessors(), noreply));
 				} catch (Exception e) {
 					throw unchecked(e);
 				}
@@ -125,10 +117,10 @@ public class ProcessModule extends ModuleConfigurer {
 			store.lookup(PROCESS_MANAGER).ifPresent(manager -> manager.kill());
 		});
 		
-		module.operation(root(), () -> new ProcessCallConfigurer(noreply));
+		module.operation(root(), provider -> new ProcessCallConfigurer(noreply));
 	}
 	
-	public static class ProcessCallConfigurer implements Supplier<FlowSegment> {
+	public static class ProcessCallConfigurer implements OperationsConfigurer {
 
 		private final boolean noreply;
 		
@@ -144,11 +136,11 @@ public class ProcessModule extends ModuleConfigurer {
 		}
 		
 		@Override
-		public FlowSegment get() {
+		public void setup(OperationSetup ops) {
 			if (noreply) {
-				return storeSync("call (noreply)", store -> new ProcessCallNoreplyOperation(store.get(PROCESS_MANAGER), lineFn));
+				ops.add("call (noreply)", store -> new ProcessCallNoreplyOperation(store.get(PROCESS_MANAGER), lineFn));
 			} else {
-				return storeAsync("call", store -> new ProcessCallOperation(store.get(PROCESS_MANAGER), lineFn));
+				ops.add("call", store -> new ProcessCallOperation(store.get(PROCESS_MANAGER), lineFn));
 			}
 		}
 		

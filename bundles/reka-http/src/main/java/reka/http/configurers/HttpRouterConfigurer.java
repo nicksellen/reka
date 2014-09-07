@@ -2,30 +2,28 @@ package reka.http.configurers;
 
 import static reka.api.Path.dots;
 import static reka.config.configurer.Configurer.configure;
-import static reka.core.builder.FlowSegments.namedInput;
-import static reka.core.builder.FlowSegments.sequential;
 import io.netty.handler.codec.http.HttpMethod;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.api.flow.FlowSegment;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
+import reka.core.bundle.OperationSetup;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.http.operations.HttpRouter;
 import reka.http.operations.HttpRouter.RouteKey;
+import reka.nashorn.OperationsConfigurer;
 
 import com.google.common.collect.ImmutableList;
 
-public class HttpRouterConfigurer extends HttpRouteGroupConfigurer implements Supplier<FlowSegment> {
+public class HttpRouterConfigurer extends HttpRouteGroupConfigurer implements OperationsConfigurer {
 	
 	private static final Logger log = LoggerFactory.getLogger(HttpRouterConfigurer.class);
 
@@ -40,7 +38,7 @@ public class HttpRouterConfigurer extends HttpRouteGroupConfigurer implements Su
 
 	private static final String missingRouteName = "notfound";
 	
-	private Supplier<FlowSegment> missing;
+	private OperationsConfigurer missing;
 	
 	/* 		examples:
 	 * 			"/some/{param}/thing"
@@ -185,21 +183,15 @@ public class HttpRouterConfigurer extends HttpRouteGroupConfigurer implements Su
 	}
 
 	@Override
-	public FlowSegment get() {
-		return sequential(seq -> {
+	public void setup(OperationSetup ops) {
 			
-			seq.routerNode("http/router", () -> new HttpRouter(buildGroupRoutes(), missing != null ? missingRouteName : null));
-			
-			seq.parallel(par -> {
-				
-				par.add(buildGroupSegment());
-				
-				if (missing != null) {
-					par.add(namedInput(missingRouteName, missing.get()));
-				}
-				
-			});
-			
+		ops.addRouter("http/router", store -> new HttpRouter(buildGroupRoutes(), missing != null ? missingRouteName : null));
+		
+		ops.parallel(par -> {
+			buildGroupSegment(par);
+			if (missing != null) {
+				par.route(missingRouteName, missing);
+			}
 		});
 	}
 	

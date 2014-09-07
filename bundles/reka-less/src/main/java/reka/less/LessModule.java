@@ -4,7 +4,6 @@ import static java.lang.String.format;
 import static reka.api.Path.root;
 import static reka.api.Path.slashes;
 import static reka.api.content.Contents.utf8;
-import static reka.core.builder.FlowSegments.sync;
 import static reka.util.Util.unchecked;
 
 import java.io.ByteArrayInputStream;
@@ -14,7 +13,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import org.lesscss.LessCompiler;
 import org.lesscss.LessException;
@@ -26,12 +24,13 @@ import reka.api.Path.Response;
 import reka.api.content.Content;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
-import reka.api.flow.FlowSegment;
 import reka.api.run.SyncOperation;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.ModuleConfigurer;
 import reka.core.bundle.ModuleSetup;
+import reka.core.bundle.OperationSetup;
+import reka.nashorn.OperationsConfigurer;
 
 public class LessModule extends ModuleConfigurer {
 	
@@ -43,7 +42,7 @@ public class LessModule extends ModuleConfigurer {
 
 	@Override
 	public void setup(ModuleSetup module) {
-		module.operation(root(), () -> new LessConfigurer(compiler));
+		module.operation(root(), provider -> new LessConfigurer(compiler));
 	}
 	
 	public static class ConfigResource implements Resource {
@@ -88,7 +87,7 @@ public class LessModule extends ModuleConfigurer {
 		
 	}
 	
-	public static class LessConfigurer implements Supplier<FlowSegment> {
+	public static class LessConfigurer implements OperationsConfigurer {
 		
 		private final LessCompiler compiler;
 		
@@ -122,8 +121,8 @@ public class LessModule extends ModuleConfigurer {
 			}
 		}
 
-		public FlowSegment get() {
-			return sync("less", () -> new LessOperation(outFn, content));
+		public void setup(OperationSetup ops) {
+			ops.add("less", store -> new LessOperation(outFn, content));
 		}
 		
 	}

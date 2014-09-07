@@ -12,10 +12,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
-import reka.api.IdentityStore;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.flow.FlowConnection;
@@ -42,7 +40,7 @@ public class FlowSegments extends AbstractFlowNode {
 		void sequential(Consumer<SegmentCollector> seq);
 		void parallel(Consumer<SegmentCollector> par);
 		void routerNode(String name, Supplier<RoutingOperation> supplier);
-		void node(String name, Supplier<SyncOperation> supplier);
+		void node(String name,Supplier<SyncOperation> supplier);
 		void asyncNode(String name, Supplier<AsyncOperation> supplier);
 	}
 	
@@ -87,15 +85,15 @@ public class FlowSegments extends AbstractFlowNode {
 		}
 		
 		public void routerNode(String name, Supplier<RoutingOperation> supplier) {
-			add(new OperationFlowNode(name, supplier));
+			add(OperationFlowNode.router(name, supplier));
 		}
 		
 		public void node(String name, Supplier<SyncOperation> supplier) {
-			add(new OperationFlowNode(name, supplier));
+			add(OperationFlowNode.simple(name, supplier));
 		}
 		
 		public void asyncNode(String name, Supplier<AsyncOperation> supplier) {
-			add(new OperationFlowNode(name, supplier));
+			add(OperationFlowNode.simple(name, supplier));
 		}
 		
 		private FlowSegment collectSequential(Consumer<SegmentCollector> consumer) {
@@ -179,39 +177,31 @@ public class FlowSegments extends AbstractFlowNode {
 	}
 
 	public static FlowNode noop(String name) {
-		return new OperationFlowNode(name, () -> NoOp.INSTANCE);
+		return OperationFlowNode.simple(name, () -> NoOp.INSTANCE);
 	}
 	
 	public static FlowNode router(String name, Supplier<RoutingOperation> supplier) {
-		return new OperationFlowNode(name, supplier);
+		return OperationFlowNode.router(name, supplier);
 	}
 	
 	public static FlowNode sync(String name, Supplier<SyncOperation> supplier) {
-		return new OperationFlowNode(name, supplier);
-	}
-	
-	public static FlowNode storeSync(String name, Function<IdentityStore,SyncOperation> supplier) {
-		return sync(name, () -> supplier.apply(store));
-	}
-	
-	public static FlowNode storeAsync(String name, Function<IdentityStore,AsyncOperation> supplier) {
-		return async(name, store -> supplier.apply(store));
+		return OperationFlowNode.simple(name, supplier);
 	}
 	
 	public static FlowNode dataop(String name, Supplier<DataOperation> supplier) {
-		return new OperationFlowNode(name, supplier);
+		return OperationFlowNode.simple(name, supplier);
 	}
 	
 	public static FlowNode background(String name, Supplier<SyncOperation> supplier) {
-		return new OperationFlowNode(name, supplier).shouldUseAnotherThread(true);
+		return OperationFlowNode.simple(name, supplier).shouldUseAnotherThread(true);
 	}
 	
 	public static FlowNode async(String name, Supplier<AsyncOperation> supplier) {
-		return new OperationFlowNode(name, supplier);
+		return OperationFlowNode.simple(name, supplier);
 	}
 
 	public static FlowNode startNode(String name) {
-		return new OperationFlowNode(name, () -> NoOp.INSTANCE).isStart(true);
+		return OperationFlowNode.simple(name, () -> NoOp.INSTANCE).isStart(true);
 	}
 	
 	public static FlowNode subscribeableEndNode(String name) {

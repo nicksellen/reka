@@ -1,7 +1,6 @@
 package reka.http;
 
 import static java.lang.String.format;
-import static java.util.Arrays.asList;
 import static reka.api.Path.path;
 import static reka.config.configurer.Configurer.configure;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
@@ -14,11 +13,9 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import reka.api.flow.FlowSegment;
 import reka.config.Config;
 import reka.config.configurer.Configurer.ErrorCollector;
 import reka.config.configurer.ErrorReporter;
@@ -36,6 +33,7 @@ import reka.http.server.HttpServerManager;
 import reka.http.server.HttpSettings;
 import reka.http.server.HttpSettings.SslSettings;
 import reka.http.server.HttpSettings.Type;
+import reka.nashorn.OperationsConfigurer;
 
 public class HttpsModule extends ModuleConfigurer implements ErrorReporter {
 	
@@ -65,7 +63,7 @@ public class HttpsModule extends ModuleConfigurer implements ErrorReporter {
 	private final HttpServerManager server;
 	
 	private final List<HostAndPort> listens = new ArrayList<>();
-	private final List<Function<ConfigurerProvider,Supplier<FlowSegment>>> requestHandlers = new ArrayList<>();
+	private final List<Function<ConfigurerProvider,OperationsConfigurer>> requestHandlers = new ArrayList<>();
 	
 	private byte[] crt;
 	private byte[] key;
@@ -122,7 +120,7 @@ public class HttpsModule extends ModuleConfigurer implements ErrorReporter {
 		checkConfig(config.hasValue(), "must have a value");
 		switch (config.valueAsString()) {
 		case "request":
-			requestHandlers.add((provider) -> configure(new SequenceConfigurer(provider), config.body()));
+			requestHandlers.add(provider -> configure(new SequenceConfigurer(provider), config.body()));
 			break;
 		default:
 			throw runtime("unknown trigger %s", config.valueAsString());
@@ -134,12 +132,13 @@ public class HttpsModule extends ModuleConfigurer implements ErrorReporter {
 		
 		SslSettings sslSettings = new SslSettings(byteToFile(crt), byteToFile(key));
 		
-		http.operation(path("router"), (provider) -> new HttpRouterConfigurer(provider));
-		http.operation(path("redirect"), () -> new HttpRedirectConfigurer());
-		http.operation(path("content"), () -> new HttpContentConfigurer());
-		http.operation(asList(path("request"), path("req")), () -> new HttpRequestConfigurer(server.nettyEventGroup()));
+		http.operation(path("router"), provider -> new HttpRouterConfigurer(provider));
+		http.operation(path("redirect"), provider -> new HttpRedirectConfigurer());
+		http.operation(path("content"), provider -> new HttpContentConfigurer());
+		http.operation(path("request"), provider -> new HttpRequestConfigurer(server.nettyEventGroup()));
+		http.operation(path("req"), provider -> new HttpRequestConfigurer(server.nettyEventGroup()));
 		
-		for (Function<ConfigurerProvider, Supplier<FlowSegment>> h : requestHandlers) {
+		for (Function<ConfigurerProvider, OperationsConfigurer> h : requestHandlers) {
 			
 			http.trigger("on request", h, registration -> {
 				

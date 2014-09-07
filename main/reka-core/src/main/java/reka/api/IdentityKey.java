@@ -19,7 +19,7 @@ public final class IdentityKey<T> {
 	}
 	
 	public static void main(String[] args) {
-		IdentityStore store = new ConcurrentIdentityStore();
+		IdentityStore store = IdentityStore.createConcurrentIdentityStore();
 		
 		IdentityKey<UUID> key = IdentityKey.named("name");
 		store.put(key, UUID.randomUUID());

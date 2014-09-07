@@ -1,8 +1,6 @@
 package reka.builtins;
 
 import static java.lang.String.format;
-import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
 import static reka.api.Path.dots;
 import static reka.api.Path.path;
 import static reka.api.Path.root;
@@ -11,15 +9,10 @@ import static reka.api.content.Contents.binary;
 import static reka.api.content.Contents.utf8;
 import static reka.config.configurer.Configurer.configure;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
-import static reka.core.builder.FlowSegments.async;
+import static reka.config.configurer.Configurer.Preconditions.invalidConfig;
 import static reka.core.builder.FlowSegments.halt;
-import static reka.core.builder.FlowSegments.label;
-import static reka.core.builder.FlowSegments.par;
-import static reka.core.builder.FlowSegments.sequential;
-import static reka.core.builder.FlowSegments.sync;
 import static reka.core.config.ConfigUtils.configToData;
 import static reka.util.Util.createEntry;
-import static reka.util.Util.runtime;
 import static reka.util.Util.unchecked;
 
 import java.util.ArrayList;
@@ -31,7 +24,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import org.mindrot.jbcrypt.BCrypt;
 import org.slf4j.Logger;
@@ -43,7 +35,6 @@ import reka.api.Path.Response;
 import reka.api.content.Content;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
-import reka.api.flow.FlowSegment;
 import reka.api.run.AsyncOperation;
 import reka.api.run.RouteCollector;
 import reka.api.run.RoutingOperation;
@@ -53,13 +44,13 @@ import reka.config.ConfigBody;
 import reka.config.configurer.Configurer.ErrorCollector;
 import reka.config.configurer.ErrorReporter;
 import reka.config.configurer.annotations.Conf;
-import reka.core.builder.FlowSegments;
 import reka.core.bundle.ModuleConfigurer;
 import reka.core.bundle.ModuleSetup;
+import reka.core.bundle.OperationSetup;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
-import reka.core.data.memory.MutableMemoryData;
 import reka.core.util.StringWithVars;
+import reka.nashorn.OperationsConfigurer;
 
 import com.google.common.base.Splitter;
 import com.google.common.cache.CacheBuilder;
@@ -76,32 +67,32 @@ public class BuiltinsModule extends ModuleConfigurer {
 	@Override
 	public void setup(ModuleSetup module) {
 		
-		module.operation(path("put"), () -> new PutConfigurer());
-		module.operation(path("putv"), () -> new PutWithVarsConfigurer());
-		module.operation(path("copy"), () -> new CopyConfigurer());
-    	module.operation(asList(path("run"), path("then")), (provider) -> new RunConfigurer(provider));
-    	module.operation(slashes("run/parallel"), (provider) -> new RunParallelConfigurer(provider));
-    	module.operation(path("log"), () -> new LogConfigurer());
-    	module.operation(path("label"), (provider) -> new LabelConfigurer(provider));
-    	module.operation(path("stringwithvariables"), () -> new StringWithVariablesConfigurer());
-    	module.operation(path("sleep"), () -> new SleepConfigurer());
-    	module.operation(path("halt!"), () -> new HaltConfigurer());
-    	module.operation(slashes("uuid/generate"), () -> new GenerateUUIDConfigurer());
-    	module.operation(path("println"), () -> new PrintlnConfigurer());
-    	module.operation(slashes("bcrypt/hashpw"), () -> new BCryptHashpwConfigurer());
-    	module.operation(path("bcrypt/checkpw"), (provider) -> new BCryptCheckpwConfigurer(provider));
-    	module.operation(path("throw"), () -> new ThrowConfigurer());
-    	module.operation(path("inspect"), () -> new InspectConfigurer());
-    	module.operation(path("random/string"), () -> new RandomStringConfigurer());
-    	module.operation(path("coerce"), () -> new Coercion.CoerceConfigurer());
-    	module.operation(slashes("coerce/int64"), () -> new Coercion.CoerceLongConfigurer());
-    	module.operation(slashes("coerce/bool"), () -> new Coercion.CoerceBooleanConfigurer());
-    	module.operation(path("unzip"), () -> new UnzipConfigurer());
-    	module.operation(path("split"), () -> new SplitConfigurer());
+		module.operation(path("put"), provider -> new PutConfigurer());
+		module.operation(path("putv"), provider -> new PutWithVarsConfigurer());
+		module.operation(path("copy"), provider -> new CopyConfigurer());
+    	module.operation(path("run"), provider -> new RunConfigurer(provider));
+    	module.operation(path("then"), provider -> new RunConfigurer(provider));
+    	module.operation(slashes("run/parallel"), provider -> new RunParallelConfigurer(provider));
+    	module.operation(path("log"), provider -> new LogConfigurer());
+    	module.operation(path("stringwithvariables"), provider -> new StringWithVariablesConfigurer());
+    	module.operation(path("sleep"), provider -> new SleepConfigurer());
+    	module.operation(path("halt!"), provider -> new HaltConfigurer());
+    	module.operation(slashes("uuid/generate"), provider -> new GenerateUUIDConfigurer());
+    	module.operation(path("println"), provider -> new PrintlnConfigurer());
+    	module.operation(slashes("bcrypt/hashpw"), provider -> new BCryptHashpwConfigurer());
+    	module.operation(path("bcrypt/checkpw"), provider -> new BCryptCheckpwConfigurer(provider));
+    	module.operation(path("throw"), provider -> new ThrowConfigurer());
+    	module.operation(path("inspect"), provider -> new InspectConfigurer());
+    	module.operation(path("random/string"), provider -> new RandomStringConfigurer());
+    	module.operation(path("coerce"), provider -> new Coercion.CoerceConfigurer());
+    	module.operation(slashes("coerce/int64"), provider -> new Coercion.CoerceLongConfigurer());
+    	module.operation(slashes("coerce/bool"), provider -> new Coercion.CoerceBooleanConfigurer());
+    	module.operation(path("unzip"), provider -> new UnzipConfigurer());
+    	module.operation(path("split"), provider -> new SplitConfigurer());
 		
 	}
 	
-	public static class SplitConfigurer implements Supplier<FlowSegment>, ErrorReporter {
+	public static class SplitConfigurer implements OperationsConfigurer, ErrorReporter {
 		
 		private Function<Data,Path> inFn, outFn;
 		private String on = ",";
@@ -130,8 +121,8 @@ public class BuiltinsModule extends ModuleConfigurer {
 		}
 
 		@Override
-		public FlowSegment get() {
-			return sync("split", () -> new SplitOperation(inFn, outFn, Splitter.on(on)));
+		public void setup(OperationSetup ops) {
+			ops.add("split", store -> new SplitOperation(inFn, outFn, Splitter.on(on)));
 		}
 		
 	}
@@ -162,15 +153,15 @@ public class BuiltinsModule extends ModuleConfigurer {
 		
 	}
 	
-	public static class BCryptCheckpwConfigurer implements Supplier<FlowSegment> {
+	public static class BCryptCheckpwConfigurer implements OperationsConfigurer {
 
 		private final ConfigurerProvider provider;
 		
 		private Path readPwFrom = dots("bcrypt.pw");
 		private Path readHashFrom = dots("bcrypt.hash");
 		
-		private Supplier<FlowSegment> ok;
-		private Supplier<FlowSegment> fail;
+		private OperationsConfigurer ok;
+		private OperationsConfigurer fail;
 		
 		public BCryptCheckpwConfigurer(ConfigurerProvider provider) {
 			this.provider = provider;
@@ -197,16 +188,12 @@ public class BuiltinsModule extends ModuleConfigurer {
 		}
 		
 		@Override
-		public FlowSegment get() {
-			
-			return sequential(seq -> {
-				seq.routerNode("bcrypt/checkpw", () -> new BCryptCheckpwOperation(readPwFrom, readHashFrom));
-				seq.parallel(par -> {
-					par.add("ok", ok.get());
-					par.add("fail", fail.get());
-				});
+		public void setup(OperationSetup ops) {
+			ops.addRouter("bcrypt/checkpw", store -> new BCryptCheckpwOperation(readPwFrom, readHashFrom));
+			ops.parallel(par -> {
+				par.route("ok", ok);
+				par.route("fail", fail);
 			});
-			
 		}
 		
 	}
@@ -237,7 +224,7 @@ public class BuiltinsModule extends ModuleConfigurer {
 		
 	}
 	
-	public static class BCryptHashpwConfigurer implements Supplier<FlowSegment> {
+	public static class BCryptHashpwConfigurer implements OperationsConfigurer {
 
 		private Path in = dots("bcrypt.pw");
 		private Path out = dots("bcrypt.hash");
@@ -253,8 +240,8 @@ public class BuiltinsModule extends ModuleConfigurer {
 		}
 		
 		@Override
-		public FlowSegment get() {
-			return sync("bcrypt/hashpw", () -> new BCryptHashpwOperation(in, out));
+		public void setup(OperationSetup ops) {
+			ops.add("bcrypt/hashpw", store -> new BCryptHashpwOperation(in, out));
 		}
 		
 	}
@@ -281,11 +268,11 @@ public class BuiltinsModule extends ModuleConfigurer {
 	
 	private static final Random RANDOM = new Random();
 	
-	public static class InspectConfigurer implements Supplier<FlowSegment> {
+	public static class InspectConfigurer implements OperationsConfigurer {
 
 		@Override
-		public FlowSegment get() {
-			return sync("inspect", () -> new InspectOperation());
+		public void setup(OperationSetup ops) {
+			ops.add("inspect", store -> new InspectOperation());
 		}
 		
 	}
@@ -302,7 +289,7 @@ public class BuiltinsModule extends ModuleConfigurer {
 		
 	}
 	
-	public static class RandomStringConfigurer implements Supplier<FlowSegment> { 
+	public static class RandomStringConfigurer implements OperationsConfigurer { 
 
 		private static final char[] chars;
 		
@@ -325,8 +312,8 @@ public class BuiltinsModule extends ModuleConfigurer {
 		}
 		
 		@Override
-		public FlowSegment get() {
-			return sync("random/string", () -> new RandomStringOperation(length, chars, RANDOM, out));
+		public void setup(OperationSetup ops) {
+			ops.add("random/string", store -> new RandomStringOperation(length, chars, RANDOM, out));
 		}
 		
 	}
@@ -358,7 +345,7 @@ public class BuiltinsModule extends ModuleConfigurer {
 		
 	}
 	
-	public static class ThrowConfigurer implements Supplier<FlowSegment> {
+	public static class ThrowConfigurer implements OperationsConfigurer {
 		
 		private Function<Data,String> msgFn = (data) -> "error";
 		
@@ -368,13 +355,13 @@ public class BuiltinsModule extends ModuleConfigurer {
 		}
 
 		@Override
-		public FlowSegment get() {
-			return sync("throw", () -> new ThrowOperation(msgFn));
+		public void setup(OperationSetup ops) {
+			ops.add("throw", store -> new ThrowOperation(msgFn));
 		}
 		
 	}
 	
-	public static class PrintlnConfigurer implements Supplier<FlowSegment> {
+	public static class PrintlnConfigurer implements OperationsConfigurer {
 
 		private Function<Data,String> msg = (data) -> "";
 		
@@ -388,8 +375,8 @@ public class BuiltinsModule extends ModuleConfigurer {
 		}
 		
 		@Override
-		public FlowSegment get() {
-			return sync("println", () -> new PrintlnOperation(msg));
+		public void setup(OperationSetup ops) {
+			ops.add("println", store -> new PrintlnOperation(msg));
 		}
 		
 	}
@@ -410,7 +397,7 @@ public class BuiltinsModule extends ModuleConfigurer {
 		
 	}
 	
-	public static class GenerateUUIDConfigurer implements Supplier<FlowSegment>, ErrorReporter {
+	public static class GenerateUUIDConfigurer implements OperationsConfigurer, ErrorReporter {
 
 		private Path out = dots("uuid");
 		
@@ -426,8 +413,8 @@ public class BuiltinsModule extends ModuleConfigurer {
 		}
 		
 		@Override
-		public FlowSegment get() {
-			return sync("uuid/generate", () -> new GenerateUUIDOperation(out));
+		public void setup(OperationSetup ops) {
+			ops.add("uuid/generate", store -> new GenerateUUIDOperation(out));
 		}
 		
 	}
@@ -447,7 +434,7 @@ public class BuiltinsModule extends ModuleConfigurer {
 		
 	}
 	
-	public static class SleepConfigurer implements Supplier<FlowSegment> {
+	public static class SleepConfigurer implements OperationsConfigurer {
 
 		private long ms = 1000L;
 		
@@ -457,8 +444,8 @@ public class BuiltinsModule extends ModuleConfigurer {
 		}
 		
 		@Override
-		public FlowSegment get() {
-			return async("sleep", () -> new SleepOperation(ms));
+		public void setup(OperationSetup ops) {
+			ops.add("sleep", store -> new SleepOperation(ms));
 		}
 		
 	}
@@ -486,11 +473,11 @@ public class BuiltinsModule extends ModuleConfigurer {
 		}
 	}
 	
-	public static class RunParallelConfigurer implements Supplier<FlowSegment> {
+	public static class RunParallelConfigurer implements OperationsConfigurer {
 		
 		private final ConfigurerProvider provider;
 		
-		private final List<Supplier<FlowSegment>> items = new ArrayList<>();
+		private final List<OperationsConfigurer> items = new ArrayList<>();
 		
 		public RunParallelConfigurer(ConfigurerProvider provider) {
 			this.provider = provider;
@@ -503,23 +490,24 @@ public class BuiltinsModule extends ModuleConfigurer {
 		}
 
 		@Override
-		public FlowSegment get() {
-			List<FlowSegment> segments = items.stream().map(Supplier<FlowSegment>::get).collect(toList());
-			return par(segments);
+		public void setup(OperationSetup ops) {
+			ops.parallel(par -> {
+				items.forEach(item -> par.add(item));
+			});
 		}
 		
 	}
 	
-	public static class HaltConfigurer implements Supplier<FlowSegment> {
+	public static class HaltConfigurer implements OperationsConfigurer {
 
 		@Override
-		public FlowSegment get() {
-			return halt();
+		public void setup(OperationSetup ops) {
+			ops.add(() ->  halt());
 		}
 		
 	}
 	
-	public static class StringWithVariablesConfigurer implements Supplier<FlowSegment> {
+	public static class StringWithVariablesConfigurer implements OperationsConfigurer {
 
 		private Function<Data,String> template;
 		private Path out = Response.CONTENT;
@@ -537,8 +525,8 @@ public class BuiltinsModule extends ModuleConfigurer {
 		}
 		
 		@Override
-		public FlowSegment get() {
-			return sync("stringwithvariables", () -> new DataContentFunctionOperation(template, out));
+		public void setup(OperationSetup ops) {
+			ops.add("stringwithvariables", store -> new DataContentFunctionOperation(template, out));
 		}
 		
 	}
@@ -560,60 +548,34 @@ public class BuiltinsModule extends ModuleConfigurer {
 		
 	}
 	
-	public static class LabelConfigurer implements Supplier<FlowSegment> {
-
-		private final ConfigurerProvider provider;
-		private String name;
-		private Supplier<FlowSegment> configurer;
-		
-		public LabelConfigurer(ConfigurerProvider provider) {
-			this.provider = provider;
-		}
-		
-		@Conf.Config
-		public void config(Config config) {
-			if (config.hasValue()) {
-				name = config.valueAsString();
-			}
-			configurer = configure(new SequenceConfigurer(provider), config);
-		}
-		
-		@Override
-		public FlowSegment get() {
-			return label(name, configurer.get());
-		}
-		
-	}
-	
-	public static class RunConfigurer implements Supplier<FlowSegment> {
+	public static class RunConfigurer implements OperationsConfigurer {
 		
 		private final ConfigurerProvider provider;
-		private Supplier<FlowSegment> configurer;
+		private OperationsConfigurer configurer;
 		
 		public RunConfigurer(ConfigurerProvider provider) {
 			this.provider = provider;
-		}
-
-		@Conf.Val
-		public void embed(String val) {
-			configurer = new EmbeddedFlowConfigurer().name(val);
 		}
 		
 		@Conf.Config
 		public void config(Config config) {
 			if (config.hasBody()) {
 				configurer = configure(new SequenceConfigurer(provider), config);
+			} else if (config.hasValue()) {
+				configurer = new EmbeddedFlowConfigurer().name(config.valueAsString());
+			} else {
+				invalidConfig("must have body or value");
 			}
 		}
 		
 		@Override
-		public FlowSegment get() {
-			return configurer.get();
+		public void setup(OperationSetup ops) {
+			configurer.setup(ops);
 		}
 		
 	}
 	
-	public static class LogConfigurer implements Supplier<FlowSegment> {
+	public static class LogConfigurer implements OperationsConfigurer {
 
 		private Function<Data,String> msgFn;
 		
@@ -623,8 +585,8 @@ public class BuiltinsModule extends ModuleConfigurer {
 		}
 		
 		@Override
-		public FlowSegment get() {
-			return sync("log", () -> new LogOperation(msgFn));
+		public void setup(OperationSetup ops) {
+			ops.add("log", store -> new LogOperation(msgFn));
 		}
 		
 	}
@@ -645,7 +607,7 @@ public class BuiltinsModule extends ModuleConfigurer {
 		
 	}
 	
-	public static class CopyConfigurer implements Supplier<FlowSegment> {
+	public static class CopyConfigurer implements OperationsConfigurer {
 		
 		private final ImmutableList.Builder<Entry<Path,Path>> entries = ImmutableList.builder();
 
@@ -656,10 +618,10 @@ public class BuiltinsModule extends ModuleConfigurer {
 				entries.add(createEntry(dots(item.key()), dots(item.valueAsString())));
 			}
 		}
-		
+
 		@Override
-		public FlowSegment get() {
-			return sync("copy", () -> new CopyOperation(entries.build()));
+		public void setup(OperationSetup ops) {
+			ops.add("copy", store -> new CopyOperation(entries.build()));
 		}
 		
 	}
@@ -694,7 +656,7 @@ public class BuiltinsModule extends ModuleConfigurer {
 		
 	}
 	
-	public static class PutConfigurer implements Supplier<FlowSegment> {
+	public static class PutConfigurer implements OperationsConfigurer {
 
 		private Content content;
 		private Data data;
@@ -738,25 +700,23 @@ public class BuiltinsModule extends ModuleConfigurer {
 				return format("put %s", out.dots());
 			}
 		}
-		
+
 		@Override
-		public FlowSegment get() {
-			MutableData meta = MutableMemoryData.create();
-			FlowSegment segment = null;
+		public void setup(OperationSetup ops) {
 			if (content != null) {
-				meta.put("content", content);
-				segment = sync(name(), () -> new PutContentOperation(content, out));
+				ops.meta().put("content", content);
+				ops.add(name(), store -> new PutContentOperation(content, out));
 			} else if (data != null) {
-				meta.put("data", content);
-				segment = sync(name(), () -> new PutDataOperation(data, out));
+				ops.meta().put("data", data);
+				ops.add(name(), store -> new PutDataOperation(data, out));
+			} else {
+				invalidConfig("you must have content or data");
 			}
-			checkConfig(segment != null, "you must have content or data");
-			return FlowSegments.meta(segment, meta);
 		}
 		
 	}
 		
-	public static class PutWithVarsConfigurer implements Supplier<FlowSegment> {
+	public static class PutWithVarsConfigurer implements OperationsConfigurer {
 
 		private Data data;
 		private Path out = root();
@@ -788,13 +748,11 @@ public class BuiltinsModule extends ModuleConfigurer {
 				return format("%s %s", key, out.dots());
 			}
 		}
-		
+
 		@Override
-		public FlowSegment get() {
-			if (data != null) {
-				return sync(name(), () -> new PutDataWithVarsOperation(data, out));
-			}
-			throw runtime("you must have content or data");
+		public void setup(OperationSetup ops) {
+			checkConfig(data != null, "you must have data");
+			ops.add(name(), store -> new PutDataWithVarsOperation(data, out));
 		}
 		
 	}

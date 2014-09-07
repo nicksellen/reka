@@ -1,12 +1,9 @@
 package reka.http;
 
 import static java.lang.String.format;
-import static java.util.Arrays.asList;
 import static reka.api.Path.path;
 import static reka.config.configurer.Configurer.configure;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
-import static reka.core.builder.FlowSegments.parallel;
-import static reka.core.builder.FlowSegments.sync;
 import static reka.util.Util.runtime;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 
@@ -16,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -24,22 +20,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import reka.api.IdentityKey;
+import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.flow.Flow;
-import reka.api.flow.FlowSegment;
 import reka.api.run.SyncOperation;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.ModuleConfigurer;
 import reka.core.bundle.ModuleSetup;
+import reka.core.bundle.OperationSetup;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.core.util.StringWithVars;
 import reka.http.server.HttpServerManager;
 import reka.http.server.HttpSettings;
 import reka.http.server.HttpSettings.Type;
+import reka.nashorn.OperationsConfigurer;
 
 public class WebsocketModule extends ModuleConfigurer {
 	
@@ -124,28 +122,31 @@ public class WebsocketModule extends ModuleConfigurer {
 		}
 	}
 
-	private static Function<ConfigurerProvider,Supplier<FlowSegment>> combine(List<ConfigBody> bodies) {
-		return (provider) -> {
-			return () -> parallel(par -> {
-				bodies.forEach(body -> {
-					par.add(configure(new SequenceConfigurer(provider), body).get());
+	private static Function<ConfigurerProvider,OperationsConfigurer> combine(List<ConfigBody> bodies) {
+		return provider -> {
+			return ops -> {
+				ops.parallel(par -> {
+					bodies.forEach(body -> {
+						par.add(configure(new SequenceConfigurer(provider), body));
+					});
 				});
-			});
+			};
 		};
 	}
 	
 	@Override
 	public void setup(ModuleSetup module) {
 		
-		module.operation(path("send"), () -> new WebsocketSendConfigurer());
-		module.operation(path("broadcast"), () -> new WebsocketBroadcastConfigurer());
+		module.operation(path("send"), provider -> new WebsocketSendConfigurer());
+		module.operation(path("broadcast"), provider -> new WebsocketBroadcastConfigurer());
 		
 		topics.forEach(topic -> {
-			module.operation(asList(path(topic.key().name()), path(topic.key().name(), "send")), () -> new WebsocketTopicSendConfigurer(topic.key()));
-			module.operation(path(topic.key().name(), "subscribe"), () -> new WebsocketTopicSubscribeConfigurer(topic.key()));
+			Path base = path(topic.key().name());
+			module.operation(base, provider -> new WebsocketTopicSendConfigurer(topic.key()));
+			module.operation(base.add("subscribe"), provider -> new WebsocketTopicSubscribeConfigurer(topic.key()));
 		});
 		
-		Map<IdentityKey<Flow>,Function<ConfigurerProvider, Supplier<FlowSegment>>> triggers = new HashMap<>();
+		Map<IdentityKey<Flow>,Function<ConfigurerProvider, OperationsConfigurer>> triggers = new HashMap<>();
 		
 		IdentityKey<Flow> connect = IdentityKey.named("connect");
 		IdentityKey<Flow> disconnect = IdentityKey.named("disconnect");
@@ -202,7 +203,7 @@ public class WebsocketModule extends ModuleConfigurer {
 		});
 	}
 
-	public class WebsocketSendConfigurer implements Supplier<FlowSegment> {
+	public class WebsocketSendConfigurer implements OperationsConfigurer {
 
 		private Function<Data,String> to;
 		private Function<Data,String> messageFn;
@@ -218,13 +219,13 @@ public class WebsocketModule extends ModuleConfigurer {
 		}
 		
 		@Override
-		public FlowSegment get() {
-			return sync("msg", () -> new WebsocketSendOperation(to, messageFn));
+		public void setup(OperationSetup ops) {
+			ops.add("msg", store -> new WebsocketSendOperation(to, messageFn));
 		}
 		
 	}
 
-	public class WebsocketBroadcastConfigurer implements Supplier<FlowSegment> {
+	public class WebsocketBroadcastConfigurer implements OperationsConfigurer {
 		
 		private Function<Data,String> messageFn;
 		
@@ -235,13 +236,13 @@ public class WebsocketModule extends ModuleConfigurer {
 		}
 		
 		@Override
-		public FlowSegment get() {
-			return sync("broadcast", () -> new WebsocketBroadcastOperation(messageFn));
+		public void setup(OperationSetup ops) {
+			ops.add("broadcast", store -> new WebsocketBroadcastOperation(messageFn));
 		}
 		
 	}
 
-	public class WebsocketTopicSendConfigurer implements Supplier<FlowSegment> {
+	public class WebsocketTopicSendConfigurer implements OperationsConfigurer {
 		
 		private final IdentityKey<Object> key;
 		
@@ -258,13 +259,13 @@ public class WebsocketModule extends ModuleConfigurer {
 		}
 		
 		@Override
-		public FlowSegment get() {
-			return sync(format("%s/send", key.name()), () -> new WebsocketTopicSendOperation(key, messageFn));
+		public void setup(OperationSetup ops) {
+			ops.add(format("%s/send", key.name()), store -> new WebsocketTopicSendOperation(key, messageFn));
 		}
 		
 	}
 
-	public class WebsocketTopicSubscribeConfigurer implements Supplier<FlowSegment> {
+	public class WebsocketTopicSubscribeConfigurer implements OperationsConfigurer {
 		
 		private final IdentityKey<Object> key;
 		
@@ -281,8 +282,8 @@ public class WebsocketModule extends ModuleConfigurer {
 		}
 		
 		@Override
-		public FlowSegment get() {
-			return sync(format("%s/subscribe", key.name()), () -> new WebsocketTopicSubscribeOperation(key, idFn));
+		public void setup(OperationSetup ops) {
+			ops.add(format("%s/subscribe", key.name()), store -> new WebsocketTopicSubscribeOperation(key, idFn));
 		}
 		
 	}

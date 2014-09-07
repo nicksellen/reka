@@ -1,17 +1,15 @@
 package reka.http.configurers;
 
-import static reka.core.builder.FlowSegments.sync;
-
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import reka.api.data.Data;
-import reka.api.flow.FlowSegment;
 import reka.config.configurer.annotations.Conf;
+import reka.core.bundle.OperationSetup;
 import reka.core.util.StringWithVars;
 import reka.http.operations.HttpRedirectOperation;
+import reka.nashorn.OperationsConfigurer;
 
-public class HttpRedirectConfigurer implements Supplier<FlowSegment> {
+public class HttpRedirectConfigurer implements OperationsConfigurer {
 
 	private Function<Data,String> urlFn;
 	private boolean temporary = true;
@@ -23,8 +21,8 @@ public class HttpRedirectConfigurer implements Supplier<FlowSegment> {
 	}
 	
 	@Override
-	public FlowSegment get() {
-		return sync("http/redirect", () -> new HttpRedirectOperation(urlFn, temporary));
+	public void setup(OperationSetup ops) {
+		ops.add("http/redirect", store -> new HttpRedirectOperation(urlFn, temporary));
 	}
 
 }

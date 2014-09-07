@@ -2,29 +2,28 @@ package reka;
 
 import static reka.api.Path.dots;
 import static reka.api.Path.path;
-import static reka.core.builder.FlowSegments.sync;
 import static reka.util.Util.unchecked;
 
 import java.io.IOException;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import org.codehaus.jackson.map.ObjectMapper;
 
 import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
-import reka.api.flow.FlowSegment;
 import reka.api.run.SyncOperation;
 import reka.config.configurer.Configurer.ErrorCollector;
 import reka.config.configurer.ErrorReporter;
 import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.ModuleConfigurer;
 import reka.core.bundle.ModuleSetup;
+import reka.core.bundle.OperationSetup;
 import reka.core.bundle.RekaBundle;
 import reka.core.data.memory.MutableMemoryData;
 import reka.core.util.StringWithVars;
+import reka.nashorn.OperationsConfigurer;
 
 public class JsonBundle implements RekaBundle {
 	
@@ -39,13 +38,13 @@ public class JsonBundle implements RekaBundle {
 
 		@Override
 		public void setup(ModuleSetup module) {
-			module.operation(path("parse"), () -> new JsonParseConfigurer());
-			module.operation(path("stringify"), () -> new JsonStringifyConfigurer());
+			module.operation(path("parse"), provider -> new JsonParseConfigurer());
+			module.operation(path("stringify"), provider -> new JsonStringifyConfigurer());
 		}
 		
 	}
 
-	public static class JsonParseConfigurer implements Supplier<FlowSegment>, ErrorReporter {
+	public static class JsonParseConfigurer implements OperationsConfigurer, ErrorReporter {
 		
 		private Function<Data,Path> inFn, outFn;
 		
@@ -68,13 +67,13 @@ public class JsonBundle implements RekaBundle {
 		}
 
 		@Override
-		public FlowSegment get() {
-			return sync("json/parse", () -> new JsonParseOperation(inFn, outFn));
+		public void setup(OperationSetup ops) {
+			ops.add("json/parse", store -> new JsonParseOperation(inFn, outFn));
 		}
 		
 	}
 	
-	public static class JsonStringifyConfigurer implements Supplier<FlowSegment>, ErrorReporter {
+	public static class JsonStringifyConfigurer implements OperationsConfigurer, ErrorReporter {
 		
 		private Function<Data,Path> inFn, outFn;
 		
@@ -97,8 +96,8 @@ public class JsonBundle implements RekaBundle {
 		}
 
 		@Override
-		public FlowSegment get() {
-			return sync("json/stringify", () -> new JsonStringifyOperation(inFn, outFn));
+		public void setup(OperationSetup ops) {
+			ops.add("json/stringify", store -> new JsonStringifyOperation(inFn, outFn));
 		}
 		
 	}

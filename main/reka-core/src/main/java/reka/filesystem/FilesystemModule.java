@@ -1,6 +1,5 @@
 package reka.filesystem;
 
-import static java.util.Arrays.asList;
 import static reka.api.Path.path;
 
 import java.io.File;
@@ -26,13 +25,18 @@ public class FilesystemModule extends ModuleConfigurer {
 
 	@Override
 	public void setup(ModuleSetup module) {
-		module.operation(path("write"), () -> new FilesystemWriteConfigurer(basedir));
-		module.operation(path("read"), () -> new FilesystemReadConfigurer(basedir));
-		module.operation(asList(path("list"), path("ls")), () -> new FilesystemListConfigurer(basedir));
-		module.operation(asList(path("mktmpdir")), () -> new FilesystemMktmpDirConfigurer());
-		module.operation(asList(path("delete"), path("rm")), () -> new FilesystemDeleteConfigurer(basedir));
-		module.operation(asList(path("resolve"), path("expand"), path("full-path")), () -> new FilesystemResolveConfigurer(basedir));
-		module.operation(asList(path("type"), path("switch")), (provider) -> new FilesystemTypeConfigurer(provider, basedir));
+		module.operation(path("write"), provider -> new FilesystemWriteConfigurer(basedir));
+		module.operation(path("read"), provider -> new FilesystemReadConfigurer(basedir));
+		module.operation(path("list"), provider -> new FilesystemListConfigurer(basedir));
+		module.operation(path("ls"), provider -> new FilesystemListConfigurer(basedir));
+		module.operation(path("mktmpdir"), provider -> new FilesystemMktmpDirConfigurer());
+		module.operation(path("delete"), provider -> new FilesystemDeleteConfigurer(basedir));
+		module.operation(path("rm"), provider -> new FilesystemDeleteConfigurer(basedir));
+		module.operation(path("resolve"), provider -> new FilesystemResolveConfigurer(basedir));
+		module.operation(path("full-path"), provider -> new FilesystemResolveConfigurer(basedir));
+		module.operation(path("expand"), provider -> new FilesystemResolveConfigurer(basedir));
+		module.operation(path("type"), provider -> new FilesystemTypeConfigurer(provider, basedir));
+		module.operation(path("switch"), provider -> new FilesystemTypeConfigurer(provider, basedir));
 	}
 	
 }

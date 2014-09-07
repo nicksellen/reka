@@ -2,19 +2,18 @@ package reka.http;
 
 import static reka.api.Path.dots;
 import static reka.api.Path.path;
-import static reka.core.builder.FlowSegments.sync;
 
 import java.util.Map.Entry;
-import java.util.function.Supplier;
 
 import reka.api.Path;
 import reka.api.data.MutableData;
-import reka.api.flow.FlowSegment;
 import reka.api.run.SyncOperation;
 import reka.core.bundle.ModuleConfigurer;
 import reka.core.bundle.ModuleSetup;
+import reka.core.bundle.OperationSetup;
 import reka.http.server.HttpServerManager;
 import reka.http.server.HttpSettings;
+import reka.nashorn.OperationsConfigurer;
 
 public class HttpAdminModule extends ModuleConfigurer {
 
@@ -26,16 +25,16 @@ public class HttpAdminModule extends ModuleConfigurer {
 	
 	@Override
 	public void setup(ModuleSetup use) {
-		use.operation(path("list"), () -> new ListConfigurer());
+		use.operation(path("list"), provider -> new ListConfigurer());
 	}
 	
-	class ListConfigurer implements Supplier<FlowSegment> {
+	class ListConfigurer implements OperationsConfigurer {
 		
 		private Path out = dots("admin.http.deployed");
 
 		@Override
-		public FlowSegment get() {
-			return sync("list", () -> new ListOperation(out));
+		public void setup(OperationSetup ops) {
+			ops.add("list", store -> new ListOperation(out));
 		}
 		
 	}

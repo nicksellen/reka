@@ -1,17 +1,15 @@
 package reka.http.configurers;
 
-import static reka.core.builder.FlowSegments.sync;
-
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Supplier;
 
 import reka.api.data.Data;
-import reka.api.flow.FlowSegment;
 import reka.config.configurer.annotations.Conf;
+import reka.core.bundle.OperationSetup;
 import reka.http.operations.HttpResponseOperation;
+import reka.nashorn.OperationsConfigurer;
 
-public class HttpResponseConfigurer implements Supplier<FlowSegment> {
+public class HttpResponseConfigurer implements OperationsConfigurer {
 	
 	private String content;
 	private String contentType;
@@ -45,8 +43,8 @@ public class HttpResponseConfigurer implements Supplier<FlowSegment> {
 	}
 
 	@Override
-	public FlowSegment get() {
-		return sync("http response", () -> new HttpResponseOperation(content, contentType, status, headers));
+	public void setup(OperationSetup ops) {
+		ops.add("http response", store -> new HttpResponseOperation(content, contentType, status, headers));
 	}
 
 }

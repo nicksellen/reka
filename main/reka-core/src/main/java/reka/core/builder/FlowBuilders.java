@@ -10,7 +10,6 @@ import static reka.core.builder.FlowSegments.subscribeableEndNode;
 import static reka.util.Util.runtime;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -18,7 +17,6 @@ import java.util.concurrent.Executors;
 
 import reka.api.IdentityStore;
 import reka.api.Path;
-import reka.api.data.Data;
 import reka.api.flow.Flow;
 import reka.api.flow.FlowNode;
 import reka.api.flow.FlowSegment;
@@ -192,7 +190,7 @@ public class FlowBuilders {
 		
 		for (FlowNode node : connections.nodes()) {
 		    int id = nextId++;
-		    NodeBuilder builder = new NodeBuilder(id, node.label(), node, executor, stores);
+		    NodeBuilder builder = new NodeBuilder(id, node.label(), node, executor);
 			idToNodeBuilder.put(id, builder);
 			flowNodeToId.put(node, id);
 			idToName.put(id, builder.name());

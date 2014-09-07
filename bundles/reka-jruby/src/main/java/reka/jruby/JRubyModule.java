@@ -1,7 +1,5 @@
 package reka.jruby;
 
-import static java.util.Arrays.asList;
-import static reka.api.Path.path;
 import static reka.api.Path.root;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import reka.api.IdentityKey;
@@ -39,14 +37,14 @@ public class JRubyModule extends ModuleConfigurer {
 	
 	@Override
 	public void setup(ModuleSetup module) {
-		module.init(seq -> {
-			seq.storeRun("initialize runtime", store -> {
+		module.setupInitializer(seq -> {
+			seq.run("initialize runtime", store -> {
 				RubyEnv env = RubyEnv.create(gemFile);
 				env.exec(script);
 				store.put(RUBY_ENV, env);
 			});
 		});
-		module.operation(asList(path("run"), root()), () -> new JRubyRunConfigurer(module.path()));
+		module.operation(root(), provider -> new JRubyRunConfigurer(module.path()));
 	}
 	
 }
