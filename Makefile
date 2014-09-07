@@ -5,7 +5,7 @@ bundles = command http jade jdbc mustache smtp
 
 dist_dir = dist/reka
 
-.PHONY: clean clean-build clean-dist upload-s3 test install-main build-main build-bundles
+.PHONY: clean clean-build clean-dist upload-s3-eu upload-s3-us test install-main build-main build-bundles
 
 all: build
 

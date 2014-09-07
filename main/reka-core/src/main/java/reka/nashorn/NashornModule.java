@@ -19,13 +19,13 @@ import reka.api.IdentityKey;
 import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
+import reka.builtins.BuiltinsModule.PutDataOperation;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.ModuleConfigurer;
 import reka.core.data.memory.MutableMemoryData;
 import reka.core.setup.ModuleSetup;
 import reka.core.setup.OperationSetup;
-import reka.builtins.BuiltinsModule.PutDataOperation;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
@@ -97,10 +97,6 @@ public class NashornModule extends ModuleConfigurer {
 	public void setup(ModuleSetup module) {
 		
 		module.operation(root(), provider -> new NashornRunConfigurer(root()));
-		
-		module.postInit(store -> {
-			
-		});
 		
 		module.setupInitializer(init -> {
 		
