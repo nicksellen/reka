@@ -84,7 +84,7 @@ public class HttpSettings {
 		return new HttpSettings(port, host, type, null, applicationVersion);
 	}
 	
-	public static HttpSettings https(int port, String host, Type type, SslSettings sslSettings, int applicationVersion) {
+	public static HttpSettings https(int port, String host, Type type, int applicationVersion, SslSettings sslSettings) {
 		return new HttpSettings(port, host, type, sslSettings, applicationVersion);
 	}
 	

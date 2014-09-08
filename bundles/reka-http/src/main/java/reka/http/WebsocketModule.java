@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static reka.api.Path.path;
 import static reka.config.configurer.Configurer.configure;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
+import static reka.http.HttpModule.byteToFile;
 import static reka.util.Util.runtime;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 
@@ -11,7 +12,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -36,11 +36,18 @@ import reka.core.setup.OperationSetup;
 import reka.core.util.StringWithVars;
 import reka.http.server.HttpServerManager;
 import reka.http.server.HttpSettings;
+import reka.http.server.HttpSettings.SslSettings;
 import reka.http.server.HttpSettings.Type;
 import reka.nashorn.OperationConfigurer;
 
 public class WebsocketModule extends ModuleConfigurer {
 	
+	private final boolean ssl;
+	private final int defaultPort;
+	
+	// ssl only
+	private byte[] crt;
+	private byte[] key;
 
 	private final Pattern listenPortOnly = Pattern.compile("^[0-9]+$");
 	private final Pattern listenHostAndPort = Pattern.compile("^(.+):([0-9]+)$");
@@ -67,10 +74,14 @@ public class WebsocketModule extends ModuleConfigurer {
 	private final HttpServerManager server;
 	
 	// TODO: have a better way to pass data around
-	private final AtomicReference<HttpSettings> httpSettingsRef = new AtomicReference<>();
+	//private final AtomicReference<HttpSettings> httpSettingsRef = new AtomicReference<>();
 	
-	public WebsocketModule(HttpServerManager server) {
+	private static final IdentityKey<HttpSettings> HTTP_SETTINGS = IdentityKey.named("http settings");
+	
+	public WebsocketModule(HttpServerManager server, boolean ssl) {
 		this.server = server;
+		this.ssl = ssl;
+		defaultPort = ssl ? 443 : 80;
 	}
 	
 	private final List<ConfigBody> onConnect = new ArrayList<>();
@@ -83,7 +94,7 @@ public class WebsocketModule extends ModuleConfigurer {
 	public void listen(String val) {
 		checkConfig(listens.isEmpty(), "can only add one listen for websockets");
 		String host = null;
-		int port = 80;
+		int port = defaultPort;
 		if (listenPortOnly.matcher(val).matches()) {
 			port = Integer.valueOf(val);
 		} else {
@@ -96,6 +107,20 @@ public class WebsocketModule extends ModuleConfigurer {
 			}
 		}
 		listens.add(new HostAndPort(host, port));
+	}
+
+	@Conf.At("crt")
+	public void crt(Config val) {
+		checkConfig(ssl, "only valid for https");
+		checkConfig(val.hasDocument(), "must have document!");
+		crt = val.documentContent();
+	}
+	
+	@Conf.At("key")
+	public void key(Config val) {
+		checkConfig(ssl, "only valid for https");
+		checkConfig(val.hasDocument(), "must have document!");
+		key = val.documentContent();
 	}
 	
 	@Conf.Each("topic")
@@ -137,6 +162,8 @@ public class WebsocketModule extends ModuleConfigurer {
 	@Override
 	public void setup(ModuleSetup module) {
 		
+		SslSettings sslSettings = ssl ? new SslSettings(byteToFile(crt), byteToFile(key)) : null;
+		
 		module.operation(path("send"), provider -> new WebsocketSendConfigurer());
 		module.operation(path("broadcast"), provider -> new WebsocketBroadcastConfigurer());
 		
@@ -164,7 +191,12 @@ public class WebsocketModule extends ModuleConfigurer {
 		
 		if (listens.isEmpty()) return;
 		
-		httpSettingsRef.set(HttpSettings.http(listens.get(0).port, listens.get(0).host, Type.WEBSOCKET, -1)); // FIXME: hackety hack
+		module.setupInitializer(init -> {
+			init.run("set http settings", store -> {
+				// FIXME: hackety hack, these aren't the real HTTP settings!
+				store.put(HTTP_SETTINGS, HttpSettings.http(listens.get(0).port, listens.get(0).host, Type.WEBSOCKET, -1));
+			});
+		});
 		
 		module.triggers(triggers, registration -> {
 			
@@ -175,7 +207,12 @@ public class WebsocketModule extends ModuleConfigurer {
 				
 				String identity = format("%s/%s/%s/ws", registration.applicationIdentity(), host, port);
 			
-				HttpSettings settings = HttpSettings.http(port, host, Type.WEBSOCKET, registration.applicationVersion());
+				HttpSettings settings;
+				if (ssl) {
+					settings = HttpSettings.https(port, host, Type.WEBSOCKET, registration.applicationVersion(), sslSettings);
+				} else {
+					settings = HttpSettings.http(port, host, Type.WEBSOCKET, registration.applicationVersion());
+				}
 				
 				server.deployWebsocket(identity, settings, ws -> {
 					
@@ -220,7 +257,7 @@ public class WebsocketModule extends ModuleConfigurer {
 		
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add("msg", store -> new WebsocketSendOperation(to, messageFn));
+			ops.add("msg", store -> new WebsocketSendOperation(store.get(HTTP_SETTINGS), to, messageFn));
 		}
 		
 	}
@@ -237,7 +274,7 @@ public class WebsocketModule extends ModuleConfigurer {
 		
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add("broadcast", store -> new WebsocketBroadcastOperation(messageFn));
+			ops.add("broadcast", store -> new WebsocketBroadcastOperation(store.get(HTTP_SETTINGS), messageFn));
 		}
 		
 	}
@@ -260,7 +297,7 @@ public class WebsocketModule extends ModuleConfigurer {
 		
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add(format("%s/send", key.name()), store -> new WebsocketTopicSendOperation(key, messageFn));
+			ops.add(format("%s/send", key.name()), store -> new WebsocketTopicSendOperation(store.get(HTTP_SETTINGS), key, messageFn));
 		}
 		
 	}
@@ -283,7 +320,7 @@ public class WebsocketModule extends ModuleConfigurer {
 		
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add(format("%s/subscribe", key.name()), store -> new WebsocketTopicSubscribeOperation(key, idFn));
+			ops.add(format("%s/subscribe", key.name()), store -> new WebsocketTopicSubscribeOperation(store.get(HTTP_SETTINGS), key, idFn));
 		}
 		
 	}
@@ -294,10 +331,10 @@ public class WebsocketModule extends ModuleConfigurer {
 		private final Function<Data,String> messageFn;
 		private final HttpSettings settings;
 		
-		public WebsocketSendOperation(Function<Data,String> toFn, Function<Data,String> messageFn) {
+		public WebsocketSendOperation(HttpSettings settings, Function<Data,String> toFn, Function<Data,String> messageFn) {
 			this.toFn = toFn;
 			this.messageFn = messageFn;
-			this.settings = httpSettingsRef.get();
+			this.settings = settings;
 			log.debug("creating send operation");
 		}
 		
@@ -320,10 +357,10 @@ public class WebsocketModule extends ModuleConfigurer {
 		private final Function<Data,String> messageFn;
 		private final HttpSettings settings;
 		
-		public WebsocketBroadcastOperation(Function<Data,String> messageFn) {
+		public WebsocketBroadcastOperation(HttpSettings settings, Function<Data,String> messageFn) {
 			log.debug("creating broadcast operation");
 			this.messageFn = messageFn;
-			this.settings = httpSettingsRef.get();
+			this.settings = settings;
 			log.debug(".. with settings: {}:{}", settings.host(), settings.port());
 		}
 		
@@ -348,11 +385,11 @@ public class WebsocketModule extends ModuleConfigurer {
 		private final Function<Data,String> messageFn;
 		private final HttpSettings settings;
 		
-		public WebsocketTopicSendOperation(IdentityKey<Object> key, Function<Data,String> messageFn) {
+		public WebsocketTopicSendOperation(HttpSettings settings, IdentityKey<Object> key, Function<Data,String> messageFn) {
 			log.debug("creating broadcast operation");
 			this.key = key;
 			this.messageFn = messageFn;
-			this.settings = httpSettingsRef.get();
+			this.settings = settings;
 			log.debug(".. with settings: {}:{}", settings.host(), settings.port());
 		}
 		
@@ -379,10 +416,10 @@ public class WebsocketModule extends ModuleConfigurer {
 		private final Function<Data,String> idFn;
 		private final HttpSettings settings;
 		
-		public WebsocketTopicSubscribeOperation(IdentityKey<Object> key, Function<Data,String> idFn) {
+		public WebsocketTopicSubscribeOperation(HttpSettings settings, IdentityKey<Object> key, Function<Data,String> idFn) {
 			this.key = key;
 			this.idFn = idFn;
-			this.settings = httpSettingsRef.get();
+			this.settings = settings;
 			log.debug(".. with settings: {}:{}", settings.host(), settings.port());
 		}
 		

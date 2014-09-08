@@ -6,7 +6,11 @@ import static reka.config.configurer.Configurer.configure;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import static reka.util.Util.createEntry;
 import static reka.util.Util.runtime;
+import static reka.util.Util.unchecked;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
@@ -27,11 +31,19 @@ import reka.http.configurers.HttpRequestConfigurer;
 import reka.http.configurers.HttpRouterConfigurer;
 import reka.http.server.HttpServerManager;
 import reka.http.server.HttpSettings;
+import reka.http.server.HttpSettings.SslSettings;
 import reka.http.server.HttpSettings.Type;
 import reka.nashorn.OperationConfigurer;
 
 public class HttpModule extends ModuleConfigurer {
-
+	
+	private final boolean ssl;
+	private final int defaultPort;
+	
+	// ssl only
+	private byte[] crt;
+	private byte[] key;
+	
 	// listen 8080
 	// listen localhost:500
 	// listen boo.com
@@ -62,14 +74,16 @@ public class HttpModule extends ModuleConfigurer {
 	private final List<HostAndPort> listens = new ArrayList<>();
 	private final List<Function<ConfigurerProvider,OperationConfigurer>> requestHandlers = new ArrayList<>();
 	
-	public HttpModule(HttpServerManager server) {
+	public HttpModule(HttpServerManager server, boolean ssl) {
 		this.server = server;
+		this.ssl = ssl;
+		defaultPort = ssl ? 443 : 80;
 	}
 	
 	@Conf.Each("listen")
 	public void listen(String val) {
 		String host = null;
-		int port = 80;
+		int port = defaultPort;
 		if (listenPortOnly.matcher(val).matches()) {
 			port = Integer.valueOf(val);
 		} else {
@@ -94,6 +108,20 @@ public class HttpModule extends ModuleConfigurer {
 		default:
 			throw runtime("unknown auth method %s", config.valueAsString());
 		}
+	}
+	
+	@Conf.At("crt")
+	public void crt(Config val) {
+		checkConfig(ssl, "only valid for https");
+		checkConfig(val.hasDocument(), "must have document!");
+		crt = val.documentContent();
+	}
+	
+	@Conf.At("key")
+	public void key(Config val) {
+		checkConfig(ssl, "only valid for https");
+		checkConfig(val.hasDocument(), "must have document!");
+		key = val.documentContent();
 	}
 	
 	public static class BasicAuthConfigurer {
@@ -131,6 +159,8 @@ public class HttpModule extends ModuleConfigurer {
 	@Override
 	public void setup(ModuleSetup module) {
 		
+		SslSettings sslSettings = ssl ? new SslSettings(byteToFile(crt), byteToFile(key)) : null;
+		
 		module.operation(path("router"), provider -> new HttpRouterConfigurer(provider));
 		module.operation(path("redirect"), provider -> new HttpRedirectConfigurer());
 		module.operation(path("content"), provider -> new HttpContentConfigurer());
@@ -148,7 +178,12 @@ public class HttpModule extends ModuleConfigurer {
 					
 					String identity = format("%s/%s/%s/http", registration.applicationIdentity(), host, port);
 				
-					HttpSettings settings = HttpSettings.http(port, host, Type.HTTP, registration.applicationVersion());
+					HttpSettings settings;
+					if (ssl) {
+						settings = HttpSettings.https(port, host, Type.HTTP, registration.applicationVersion(), sslSettings);
+					} else {
+						settings = HttpSettings.http(port, host, Type.HTTP, registration.applicationVersion());
+					}
 					
 					server.deployHttp(identity, registration.flow(), settings);
 					
@@ -164,6 +199,18 @@ public class HttpModule extends ModuleConfigurer {
 			});
 		}
 		
+	}
+
+	protected static File byteToFile(byte[] bytes) {
+		try {
+			java.nio.file.Path tmp = Files.createTempFile("reka.", "");
+			Files.write(tmp, bytes);
+			File f = tmp.toFile();
+			f.deleteOnExit();
+			return f;
+		} catch (IOException e) {
+			throw unchecked(e);
+		}
 	}
 
 }
