@@ -199,7 +199,9 @@ public class ApplicationConfigurer implements ErrorReporter {
 					
 					log.debug("initialized app");
 					
-					log.debug("building init flows");
+					log.debug("NOT building init flows");
+
+          /*
 					
 					Flows initFlows = initflowBuilders.build();
 					
@@ -207,12 +209,7 @@ public class ApplicationConfigurer implements ErrorReporter {
 						log.debug("passing build initflow to {}", initflow.name.slashes());
 						initflow.consumer.accept(initFlows.flow(initflow.name));
 					});
-					
-					try {
-						Thread.sleep(5000);
-					} catch (InterruptedException e) {
-						Thread.currentThread().interrupt();
-					}
+          */
 					
 			    	try {
 			    		
