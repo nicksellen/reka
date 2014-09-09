@@ -1,7 +1,7 @@
 package reka.test;
 
-import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -12,14 +12,9 @@ import reka.api.run.Operation;
 import reka.api.run.RouteCollector;
 import reka.api.run.RoutingOperation;
 
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
-
 public class FlowTestHelpers {
 
-	private static final ListeningExecutorService executor = 
-			MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
+	private static final ExecutorService executor = Executors.newCachedThreadPool();
 
 	public static FlowOperation router(final String... routeTo) {
 		return new RoutingOperation() {
@@ -49,7 +44,7 @@ public class FlowTestHelpers {
 		return AsyncOperation.create((data, ctx) -> {
 			executor.submit(() -> {
 				counter.incrementAndGet();
-				ctx.end();
+				ctx.done();
 			});
 		});
 	}

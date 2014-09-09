@@ -54,9 +54,9 @@ public abstract class HttpContents implements FlowOperation {
 		}
 
 		@Override
-		public void run(MutableData data, OperationContext ctx) {
+		public void run(MutableData data, OperationResult ctx) {
 			process(data);
-			ctx.end();
+			ctx.done();
 		}
 		
 	}

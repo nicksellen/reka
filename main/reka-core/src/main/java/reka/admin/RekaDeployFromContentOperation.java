@@ -29,7 +29,7 @@ public class RekaDeployFromContentOperation implements AsyncOperation {
 	}
 	
 	@Override
-	public void run(MutableData data, OperationContext ctx) {
+	public void run(MutableData data, OperationResult ctx) {
 		
 		String identity = UUID.randomUUID().toString();
 		
@@ -42,7 +42,7 @@ public class RekaDeployFromContentOperation implements AsyncOperation {
 			@Override
 			public void ok(MutableData initializationData) {
 				data.putString("message", "created application!");
-				ctx.end();
+				ctx.done();
 			}
 
 			@Override

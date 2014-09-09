@@ -154,11 +154,6 @@ public class AbstractFlowNode implements FlowNode {
 	public boolean isEnd() {
 		return isEnd;
 	}
-
-	@Override
-	public boolean shouldUseAnotherThread() {
-		return shouldUseAnotherThread;
-	}
 	
 
 }

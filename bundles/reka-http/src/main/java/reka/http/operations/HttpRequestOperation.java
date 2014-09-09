@@ -59,7 +59,7 @@ public class HttpRequestOperation implements AsyncOperation {
 	}
 
 	@Override
-	public void run(MutableData data, OperationContext ctx) {
+	public void run(MutableData data, OperationResult ctx) {
 
 		bootstrap.connect(host, port).addListener(new ChannelFutureListener() {
 
@@ -71,7 +71,7 @@ public class HttpRequestOperation implements AsyncOperation {
 					@Override
 					protected void channelRead0(ChannelHandlerContext nctx, MutableData msg) throws Exception {
 						data.put(out, msg);
-						ctx.end();
+						ctx.done();
 					}
 					
 				});

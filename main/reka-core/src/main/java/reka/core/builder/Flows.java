@@ -28,7 +28,7 @@ public class Flows {
 		flowsByName.put(flow.name(), flow);
 		visualizersByName.put(flow.name(), visualizer);
 		names.add(flow.name());
-		all.addAll(flows.keySet());
+		all.add(flow);
 		all.sort(naturalOrder());
 	}
 	

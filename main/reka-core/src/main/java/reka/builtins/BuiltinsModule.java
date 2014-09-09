@@ -69,8 +69,8 @@ public class BuiltinsModule extends ModuleConfigurer {
 		module.operation(path("putv"), provider -> new PutWithVarsConfigurer());
 		module.operation(path("copy"), provider -> new CopyConfigurer());
     	module.operation(path("run"), provider -> new RunConfigurer(provider));
+    	module.operation(path("runp"), provider -> new RunParallelConfigurer(provider));
     	module.operation(path("then"), provider -> new RunConfigurer(provider));
-    	module.operation(slashes("run/parallel"), provider -> new RunParallelConfigurer(provider));
     	module.operation(path("log"), provider -> new LogConfigurer());
     	module.operation(path("stringwithvariables"), provider -> new StringWithVariablesConfigurer());
     	module.operation(path("sleep"), provider -> new SleepConfigurer());
@@ -452,8 +452,8 @@ public class BuiltinsModule extends ModuleConfigurer {
 		}
 
 		@Override
-		public void run(MutableData data, OperationContext ctx) {
-			e.schedule(() -> ctx.end(), ms, TimeUnit.MILLISECONDS);
+		public void run(MutableData data, OperationResult ctx) {
+			e.schedule(() -> ctx.done(), ms, TimeUnit.MILLISECONDS);
 		}
 	}
 	

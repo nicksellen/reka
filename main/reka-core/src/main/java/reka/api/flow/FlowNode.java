@@ -14,6 +14,5 @@ public interface FlowNode extends FlowSegment {
 	
 	boolean isStart();
 	boolean isEnd();
-	boolean shouldUseAnotherThread();
 	
 }

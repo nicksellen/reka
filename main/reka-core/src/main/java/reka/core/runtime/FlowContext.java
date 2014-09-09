@@ -11,7 +11,7 @@ import reka.core.runtime.handlers.stateful.NodeState;
 public interface FlowContext {
 	long id();
 	long flowId();
-	long threadId();
+	long initialThreadId();
 	long started();
     NodeState stateFor(int id);
     EverythingSubscriber subscriber();

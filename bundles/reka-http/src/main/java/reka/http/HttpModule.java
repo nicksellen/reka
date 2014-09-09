@@ -6,11 +6,7 @@ import static reka.config.configurer.Configurer.configure;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import static reka.util.Util.createEntry;
 import static reka.util.Util.runtime;
-import static reka.util.Util.unchecked;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
@@ -37,13 +33,6 @@ import reka.nashorn.OperationConfigurer;
 
 public class HttpModule extends ModuleConfigurer {
 	
-	private final boolean ssl;
-	private final int defaultPort;
-	
-	// ssl only
-	private byte[] crt;
-	private byte[] key;
-	
 	// listen 8080
 	// listen localhost:500
 	// listen boo.com
@@ -53,6 +42,8 @@ public class HttpModule extends ModuleConfigurer {
 	
 	@SuppressWarnings("unused") // haven't implemented this yet
 	private BasicAuthConfigurer auth;
+	
+	private SslSettings ssl;
 	
 	public class HostAndPort {
 		private final String host;
@@ -74,16 +65,14 @@ public class HttpModule extends ModuleConfigurer {
 	private final List<HostAndPort> listens = new ArrayList<>();
 	private final List<Function<ConfigurerProvider,OperationConfigurer>> requestHandlers = new ArrayList<>();
 	
-	public HttpModule(HttpServerManager server, boolean ssl) {
+	public HttpModule(HttpServerManager server) {
 		this.server = server;
-		this.ssl = ssl;
-		defaultPort = ssl ? 443 : 80;
 	}
 	
 	@Conf.Each("listen")
 	public void listen(String val) {
 		String host = null;
-		int port = defaultPort;
+		int port = -1; // will use default for protocol later
 		if (listenPortOnly.matcher(val).matches()) {
 			port = Integer.valueOf(val);
 		} else {
@@ -110,18 +99,9 @@ public class HttpModule extends ModuleConfigurer {
 		}
 	}
 	
-	@Conf.At("crt")
-	public void crt(Config val) {
-		checkConfig(ssl, "only valid for https");
-		checkConfig(val.hasDocument(), "must have document!");
-		crt = val.documentContent();
-	}
-	
-	@Conf.At("key")
-	public void key(Config val) {
-		checkConfig(ssl, "only valid for https");
-		checkConfig(val.hasDocument(), "must have document!");
-		key = val.documentContent();
+	@Conf.At("ssl")
+	public void ssl(Config config) {
+		ssl = configure(new SslConfigurer(), config).build();
 	}
 	
 	public static class BasicAuthConfigurer {
@@ -159,8 +139,6 @@ public class HttpModule extends ModuleConfigurer {
 	@Override
 	public void setup(ModuleSetup module) {
 		
-		SslSettings sslSettings = ssl ? new SslSettings(byteToFile(crt), byteToFile(key)) : null;
-		
 		module.operation(path("router"), provider -> new HttpRouterConfigurer(provider));
 		module.operation(path("redirect"), provider -> new HttpRedirectConfigurer());
 		module.operation(path("content"), provider -> new HttpContentConfigurer());
@@ -173,14 +151,18 @@ public class HttpModule extends ModuleConfigurer {
 				
 				for (HostAndPort listen : listens) {
 					
-					final String host = listen.host() == null ? "*" : listen.host();
-					final int port = listen.port();
+					String host = listen.host() == null ? "*" : listen.host();
+					int port = listen.port();
+					
+					if (port == -1) {
+						port = ssl != null ? 443 : 80;
+					}
 					
 					String identity = format("%s/%s/%s/http", registration.applicationIdentity(), host, port);
 				
 					HttpSettings settings;
-					if (ssl) {
-						settings = HttpSettings.https(port, host, Type.HTTP, registration.applicationVersion(), sslSettings);
+					if (ssl != null) {
+						settings = HttpSettings.https(port, host, Type.HTTP, registration.applicationVersion(), ssl);
 					} else {
 						settings = HttpSettings.http(port, host, Type.HTTP, registration.applicationVersion());
 					}
@@ -199,18 +181,6 @@ public class HttpModule extends ModuleConfigurer {
 			});
 		}
 		
-	}
-
-	protected static File byteToFile(byte[] bytes) {
-		try {
-			java.nio.file.Path tmp = Files.createTempFile("reka.", "");
-			Files.write(tmp, bytes);
-			File f = tmp.toFile();
-			f.deleteOnExit();
-			return f;
-		} catch (IOException e) {
-			throw unchecked(e);
-		}
 	}
 
 }

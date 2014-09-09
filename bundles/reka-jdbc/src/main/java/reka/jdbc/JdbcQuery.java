@@ -25,7 +25,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.Executors;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
@@ -39,16 +38,10 @@ import reka.core.data.memory.MutableMemoryData;
 import reka.core.util.StringWithVars;
 import reka.core.util.StringWithVars.Variable;
 
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
-
 public class JdbcQuery implements Operation {
 
 	@SuppressWarnings("unused")
 	private static final Logger logger = LoggerFactory.getLogger("jdbc-query");
-	
-	@SuppressWarnings("unused") // TODO: not sure how to handle jdbc execution for now
-	private static final ListeningExecutorService executor = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(4));
 
 	private final JdbcConfiguration config;
 	

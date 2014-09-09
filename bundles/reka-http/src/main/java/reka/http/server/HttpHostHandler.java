@@ -1,6 +1,5 @@
 package reka.http.server;
 
-import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 import static java.util.Collections.synchronizedList;
 import static org.apache.commons.lang3.StringEscapeUtils.escapeHtml4;
 import static reka.api.Path.dots;
@@ -214,7 +213,7 @@ public class HttpHostHandler extends SimpleChannelInboundHandler<MutableData> {
 	}
 	
 	private void executeFlow(ChannelHandlerContext context, Flow flow, MutableData data, String host) {
-		flow.run(listeningDecorator(context.executor()), data, new ChannelHandlerContextDataSubscriber(context));
+		flow.run(context.executor(), data, new ChannelHandlerContextDataSubscriber(context));
 	}
 
 	private static String rootExceptionMessage(Throwable t) {

@@ -23,11 +23,11 @@ public class HttpRedirectOperation implements AsyncOperation {
 	}
 	
 	@Override
-	public void run(MutableData data, OperationContext ctx) {
+	public void run(MutableData data, OperationResult ctx) {
 		data.put(Response.STATUS, status)
 			.put(Response.CONTENT, content)
 			.putString(Response.Headers.LOCATION, urlFn.apply(data));
-		ctx.end();
+		ctx.done();
 	}
 
 }

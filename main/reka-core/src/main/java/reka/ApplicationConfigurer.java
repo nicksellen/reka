@@ -56,7 +56,7 @@ public class ApplicationConfigurer implements ErrorReporter {
 		rootModule.modules(bundles.modules());
     }
     
-    private final List<Config> flowConfigs = new ArrayList<>();
+    private final List<Config> defs = new ArrayList<>();
     
     private final ModuleConfigurer rootModule;
     
@@ -77,15 +77,10 @@ public class ApplicationConfigurer implements ErrorReporter {
     	rootModule.useThisConfig(config);
     }
     
-    @Conf.Each("use")
-    public void use(Config config) {
-    	rootModule.use(config);
-    }
-    
     @Conf.Each("def")
     public void def(Config config) {
     	checkConfig(config.hasValue(), "you must provide a value/name");
-    	flowConfigs.add(config);
+    	defs.add(config);
     }
 
 	@Override
@@ -103,7 +98,7 @@ public class ApplicationConfigurer implements ErrorReporter {
     	
     	MultiConfigurerProvider provider = new MultiConfigurerProvider(initializer.providers());
     	Map<Path,Supplier<FlowSegment>> configuredFlows = new HashMap<>();
-    	flowConfigs.forEach((config) -> 
+    	defs.forEach((config) -> 
 			configuredFlows.put(path(config.valueAsString()), 
 					configure(new SequenceConfigurer(provider), config).bind(null)));
 		
@@ -126,8 +121,7 @@ public class ApplicationConfigurer implements ErrorReporter {
     	initializer.triggers().forEach(triggers -> triggers.get().forEach(trigger -> {
     		trigger.supplier().apply(configurerProvider).bind(triggers.store()).get();
     	}));
-    	flowConfigs.forEach(config -> {
-    		// TODO: these need to have their 
+    	defs.forEach(config -> {
     		configure(new SequenceConfigurer(configurerProvider), config).bind(null).get();
     	});
     }
@@ -184,7 +178,7 @@ public class ApplicationConfigurer implements ErrorReporter {
 	    		});
 	    	});
 	    	
-	    	flowConfigs.forEach((config) -> 
+	    	defs.forEach((config) -> 
 				flowBuilders.add(applicationName.add(config.valueAsString()), 
 						configure(new SequenceConfigurer(configurerProvider), config).bind(null).get()));
 	    	

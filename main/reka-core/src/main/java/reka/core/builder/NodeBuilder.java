@@ -7,21 +7,25 @@ import static reka.core.runtime.handlers.DSL.actionHandlers;
 import static reka.core.runtime.handlers.DSL.errorHandlers;
 import static reka.core.runtime.handlers.DSL.haltedHandlers;
 import static reka.core.runtime.handlers.DSL.op;
+import static reka.core.runtime.handlers.DSL.backgroundOp;
 import static reka.core.runtime.handlers.DSL.routing;
 import static reka.core.runtime.handlers.DSL.subscribableAction;
+import static reka.util.Util.runtime;
 import static reka.util.Util.unwrap;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 import reka.api.data.Data;
 import reka.api.flow.FlowNode;
 import reka.api.flow.FlowOperation;
 import reka.api.run.EverythingSubscriber;
+import reka.api.run.Execution;
+import reka.api.run.ExecutionChoosingOperation;
 import reka.api.run.RoutingOperation;
 import reka.api.run.Subscriber;
-import reka.api.run.Operation;
 import reka.core.runtime.FailureHandler;
 import reka.core.runtime.FlowContext;
 import reka.core.runtime.Node;
@@ -35,11 +39,10 @@ import reka.core.runtime.handlers.RuntimeNode;
 import reka.core.runtime.handlers.stateful.StatefulControl;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.util.concurrent.ListeningExecutorService;
 
 class NodeBuilder {
 	
-	private final ListeningExecutorService executor;
+	private final ExecutorService backgroundExecutor;
 	
 	private final int id;
 	private final String name;
@@ -51,11 +54,11 @@ class NodeBuilder {
 	
 	private final FlowNode node;
 	
-	public NodeBuilder(int id, String name, FlowNode node, ListeningExecutorService executor) {
+	public NodeBuilder(int id, String name, FlowNode node, ExecutorService backgroundExecutor) {
 	    this.id = id;
 		this.name = name;
 		this.node = node;
-		this.executor = executor;
+		this.backgroundExecutor = backgroundExecutor;
 	}
 	
 	public void addListener(int subscriber) {
@@ -175,13 +178,25 @@ class NodeBuilder {
 			action = routing((RoutingOperation) operation, children);
 		} else {
 			List<ActionHandler> childActions = children.stream().map(NodeChild::node).collect(toList());
-			ActionHandler next = actionHandlers(childActions);
+			ActionHandler next = actionHandlers(childActions, error);
 			
 			if (operation != null) {
-				if (operation instanceof Operation && node.shouldUseAnotherThread()) {
-					operation = ((Operation) operation).async(executor);
+				
+				Execution execution = Execution.context;
+				
+				if (operation instanceof ExecutionChoosingOperation) {
+					execution = ((ExecutionChoosingOperation) operation).execution();
 				}
-				action = op(operation, next, error);
+				
+				switch (execution) {
+				case context:
+					action = op(operation, next, error);
+					break;
+				case background:
+					action = backgroundOp(operation, next, error, backgroundExecutor);
+				default:
+					throw runtime("unknown executor group %s", execution.toString());
+				}
 				
 			} else if (node.hasEmbeddedFlow()) {
 				action = new EmbeddedFlowAction(factory.getFlow(node.embeddedFlowNode().flowName()), next, halted, error);

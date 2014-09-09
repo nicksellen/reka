@@ -4,7 +4,6 @@ import static java.lang.String.format;
 import static reka.api.Path.path;
 import static reka.config.configurer.Configurer.configure;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
-import static reka.http.HttpModule.byteToFile;
 import static reka.util.Util.runtime;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 
@@ -42,13 +41,6 @@ import reka.nashorn.OperationConfigurer;
 
 public class WebsocketModule extends ModuleConfigurer {
 	
-	private final boolean ssl;
-	private final int defaultPort;
-	
-	// ssl only
-	private byte[] crt;
-	private byte[] key;
-
 	private final Pattern listenPortOnly = Pattern.compile("^[0-9]+$");
 	private final Pattern listenHostAndPort = Pattern.compile("^(.+):([0-9]+)$");
 	
@@ -69,19 +61,16 @@ public class WebsocketModule extends ModuleConfigurer {
 	
 	private final List<HostAndPort> listens = new ArrayList<>();
 	
+	private SslSettings ssl;
+	
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	
 	private final HttpServerManager server;
 	
-	// TODO: have a better way to pass data around
-	//private final AtomicReference<HttpSettings> httpSettingsRef = new AtomicReference<>();
-	
 	private static final IdentityKey<HttpSettings> HTTP_SETTINGS = IdentityKey.named("http settings");
 	
-	public WebsocketModule(HttpServerManager server, boolean ssl) {
+	public WebsocketModule(HttpServerManager server) {
 		this.server = server;
-		this.ssl = ssl;
-		defaultPort = ssl ? 443 : 80;
 	}
 	
 	private final List<ConfigBody> onConnect = new ArrayList<>();
@@ -94,7 +83,7 @@ public class WebsocketModule extends ModuleConfigurer {
 	public void listen(String val) {
 		checkConfig(listens.isEmpty(), "can only add one listen for websockets");
 		String host = null;
-		int port = defaultPort;
+		int port = -1;
 		if (listenPortOnly.matcher(val).matches()) {
 			port = Integer.valueOf(val);
 		} else {
@@ -108,19 +97,10 @@ public class WebsocketModule extends ModuleConfigurer {
 		}
 		listens.add(new HostAndPort(host, port));
 	}
-
-	@Conf.At("crt")
-	public void crt(Config val) {
-		checkConfig(ssl, "only valid for https");
-		checkConfig(val.hasDocument(), "must have document!");
-		crt = val.documentContent();
-	}
 	
-	@Conf.At("key")
-	public void key(Config val) {
-		checkConfig(ssl, "only valid for https");
-		checkConfig(val.hasDocument(), "must have document!");
-		key = val.documentContent();
+	@Conf.At("ssl")
+	public void ssl(Config config) {
+		ssl = configure(new SslConfigurer(), config).build();
 	}
 	
 	@Conf.Each("topic")
@@ -162,8 +142,6 @@ public class WebsocketModule extends ModuleConfigurer {
 	@Override
 	public void setup(ModuleSetup module) {
 		
-		SslSettings sslSettings = ssl ? new SslSettings(byteToFile(crt), byteToFile(key)) : null;
-		
 		module.operation(path("send"), provider -> new WebsocketSendConfigurer());
 		module.operation(path("broadcast"), provider -> new WebsocketBroadcastConfigurer());
 		
@@ -193,7 +171,7 @@ public class WebsocketModule extends ModuleConfigurer {
 		
 		module.setupInitializer(init -> {
 			init.run("set http settings", store -> {
-				// FIXME: hackety hack, these aren't the real HTTP settings!
+				// FIXME: hackety hack, don't look back, these aren't the real HTTP settings!
 				store.put(HTTP_SETTINGS, HttpSettings.http(listens.get(0).port, listens.get(0).host, Type.WEBSOCKET, -1));
 			});
 		});
@@ -202,14 +180,18 @@ public class WebsocketModule extends ModuleConfigurer {
 			
 			for (HostAndPort listen : listens) {
 			
-				final String host = listen.host() == null ? "*" : listen.host();
-				final int port = listen.port();
+				String host = listen.host() == null ? "*" : listen.host();
+				int port = listen.port();
+				
+				if (port == -1) {
+					port = ssl != null ? 443 : 80;
+				}
 				
 				String identity = format("%s/%s/%s/ws", registration.applicationIdentity(), host, port);
 			
 				HttpSettings settings;
-				if (ssl) {
-					settings = HttpSettings.https(port, host, Type.WEBSOCKET, registration.applicationVersion(), sslSettings);
+				if (ssl != null) {
+					settings = HttpSettings.https(port, host, Type.WEBSOCKET, registration.applicationVersion(), ssl);
 				} else {
 					settings = HttpSettings.http(port, host, Type.WEBSOCKET, registration.applicationVersion());
 				}

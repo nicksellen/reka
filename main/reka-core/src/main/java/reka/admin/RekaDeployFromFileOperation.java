@@ -30,7 +30,7 @@ public class RekaDeployFromFileOperation implements AsyncOperation {
 	}
 	
 	@Override
-	public void run(MutableData data, OperationContext ctx) {
+	public void run(MutableData data, OperationResult ctx) {
 		
 		String filename = filenameFn.apply(data);
 		String identity = identityFn.apply(data);
@@ -50,7 +50,7 @@ public class RekaDeployFromFileOperation implements AsyncOperation {
 			public void ok(MutableData initializationData) {
 				log.info("deploying {} ok", identity);
 				data.putString("message", "created application!");
-				ctx.end();
+				ctx.done();
 			}
 
 			@Override

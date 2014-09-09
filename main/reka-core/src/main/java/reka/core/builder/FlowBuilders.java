@@ -12,6 +12,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import reka.api.Path;
@@ -23,12 +24,10 @@ import reka.core.runtime.DefaultFlow;
 import reka.core.runtime.Node;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 
 public class FlowBuilders {
 	
-	private final ListeningExecutorService executor = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
+	private final ExecutorService executor = Executors.newCachedThreadPool();
 	
 	private final Map<Path,FlowInfo> roots = new HashMap<>();
 	

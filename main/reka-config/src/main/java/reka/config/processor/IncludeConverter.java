@@ -33,7 +33,6 @@ public final class IncludeConverter implements ConfigConverter {
 	private static final List<String> CONFIG_TYPES = asList("conf", "config", "reka");
 	
 	private static final Pattern KEY_INCLUDE = Pattern.compile("^@include(?:\\(([^\\s\\(\\)]*)\\))?$");
-	
 	private static final Pattern VAL_INCLUDE = Pattern.compile("^(?:(.+)\\s+)?@include(?:\\(([^\\s\\(\\)]*)\\))?$");
     
     @Override

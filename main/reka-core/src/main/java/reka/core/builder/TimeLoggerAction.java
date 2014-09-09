@@ -27,7 +27,7 @@ public class TimeLoggerAction implements ActionHandler {
 			log.debug("f:{} c:{} t:{} n:{} > {} us", 
 				context.flowId(), 
 				context.id(), 
-				context.threadId(), 
+				context.initialThreadId(), 
 				nodeId, 
 				Math.round((System.nanoTime() - context.started()) / 1E3));
 		

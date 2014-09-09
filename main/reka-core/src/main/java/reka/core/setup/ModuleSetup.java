@@ -110,7 +110,7 @@ public class ModuleSetup {
 		
 		public ModuleOperationSetup runAsync(String name, BiConsumer<IdentityStore, DoneCallback> c) {
 			ops.add(name, store -> {
-				return AsyncOperation.create((data, ctx) -> c.accept(store, () -> ctx.end()));
+				return AsyncOperation.create((data, ctx) -> c.accept(store, () -> ctx.done()));
 			});
 			return this;
 		}

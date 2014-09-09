@@ -4,12 +4,12 @@ import reka.api.data.MutableData;
 import reka.api.run.Operation;
 import reka.core.runtime.FlowContext;
 
-public class SyncAction implements ActionHandler {
+public class OperationAction implements ActionHandler {
 
 	private final Operation operation;
 	private final ActionHandler next;
 	
-	public SyncAction(Operation operation, ActionHandler next) {
+	public OperationAction(Operation operation, ActionHandler next) {
 		this.operation = operation;
 		this.next = next;
 	}

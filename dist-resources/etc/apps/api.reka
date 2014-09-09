@@ -1,4 +1,4 @@
-name newapi
+name reka api
 
 reka
 
@@ -7,7 +7,7 @@ filesystem fs {
 }
 
 http {
-  @env CONTAINER {
+  @env(CONTAINER) {
     when docker {
       listen api.reka
     }
@@ -16,7 +16,7 @@ http {
     }
   }
   on request {
-    run main
+    run main  
   }
 }
 

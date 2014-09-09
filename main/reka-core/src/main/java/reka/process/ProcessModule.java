@@ -21,7 +21,6 @@ import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.flow.Flow;
 import reka.api.run.AsyncOperation;
-import reka.api.run.AsyncOperation.OperationContext;
 import reka.api.run.Operation;
 import reka.config.Config;
 import reka.config.ConfigBody;
@@ -173,10 +172,10 @@ public class ProcessModule extends ModuleConfigurer {
 		}
 		
 		@Override
-		public void run(MutableData data, OperationContext ctx) {
+		public void run(MutableData data, OperationResult ctx) {
 			manager.run(lineFn.apply(data), output -> {
 				data.putString("out", output);
-				ctx.end();
+				ctx.done();
 			});
 		}
 		

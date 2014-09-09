@@ -20,7 +20,7 @@ public class DefaultFlowContext implements FlowContext {
 	private final ExecutorService executor;
 	private final Map<Integer,NodeState> states = new HashMap<>();
 	private final EverythingSubscriber subscriber;
-	private final long threadId;
+	private final long initialThreadId;
 	private final long id;
 	private final long flowId;
 	private final long started;
@@ -28,7 +28,7 @@ public class DefaultFlowContext implements FlowContext {
 	public DefaultFlowContext(long flowId, ExecutorService executor, EverythingSubscriber subscriber) {
 		this.executor = executor;
 		this.subscriber = subscriber;
-		this.threadId = Thread.currentThread().getId();
+		this.initialThreadId = Thread.currentThread().getId();
 		long offset = num.get(); 
 		this.id = offset;
 		this.flowId = flowId;
@@ -57,8 +57,8 @@ public class DefaultFlowContext implements FlowContext {
 	}
 	
 	@Override
-	public long threadId() {
-		return threadId;
+	public long initialThreadId() {
+		return initialThreadId;
 	}
 	
 	@Override
@@ -79,7 +79,7 @@ public class DefaultFlowContext implements FlowContext {
 	@SuppressWarnings("unused")
 	private void checkThreadId() {
 		try {
-			checkState(Thread.currentThread().getId() == threadId, "thread id changed!");
+			checkState(Thread.currentThread().getId() == initialThreadId, "thread id changed!");
 		} catch (Throwable t) {
 			t.printStackTrace();
 			throw t;
@@ -93,7 +93,7 @@ public class DefaultFlowContext implements FlowContext {
 
 	@Override
 	public void call(ActionHandler next, ErrorHandler error, MutableData data) {
-		if (Thread.currentThread().getId() == threadId) {
+		if (Thread.currentThread().getId() == initialThreadId) {
 			next.call(data, this);
 		} else {
 			execute(() -> {

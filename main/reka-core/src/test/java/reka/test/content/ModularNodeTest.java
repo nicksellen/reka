@@ -8,9 +8,9 @@ import static reka.api.Path.dots;
 import static reka.api.content.Contents.utf8;
 import static reka.core.runtime.handlers.DSL.actionHandlers;
 import static reka.core.runtime.handlers.DSL.subscribers;
-import static reka.core.runtime.handlers.DSL.syncOperation;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -21,17 +21,17 @@ import org.slf4j.LoggerFactory;
 
 import reka.api.data.Data;
 import reka.api.run.AsyncOperation;
+import reka.api.run.Operation;
 import reka.core.data.memory.MutableMemoryData;
 import reka.core.runtime.DefaultFlowContext;
 import reka.core.runtime.Node;
 import reka.core.runtime.NodeChild;
+import reka.core.runtime.handlers.ActionHandler;
+import reka.core.runtime.handlers.AsyncOperationAction;
 import reka.core.runtime.handlers.DSL;
-import reka.core.runtime.handlers.DataOperationAction;
 import reka.core.runtime.handlers.DoNothing;
+import reka.core.runtime.handlers.OperationAction;
 import reka.core.runtime.handlers.RuntimeNode;
-
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 
 
 public class ModularNodeTest {
@@ -55,10 +55,10 @@ public class ModularNodeTest {
 		
 		Node parent = new RuntimeNode(1, "parent", syncOperation((data) ->
 					data.putString(dots("example.from.parent"), "hello from parent"),
-					actionHandlers(asList(new NodeChild(child, false, "some child").node()))), DoNothing.INSTANCE, DoNothing.INSTANCE);
+					actionHandlers(asList(new NodeChild(child, false, "some child").node()), DoNothing.INSTANCE)), DoNothing.INSTANCE, DoNothing.INSTANCE);
 		
 		parent.call(MutableMemoryData.create(), 
-					new DefaultFlowContext(1, MoreExecutors.listeningDecorator(Executors.newCachedThreadPool()), null));
+					new DefaultFlowContext(1, Executors.newCachedThreadPool(), null));
 
 		if (latch.await(1, TimeUnit.SECONDS)) {
 			assertThat(result.get().getString(dots("example.from.child")).orElse("not found"), equalTo("hello from child"));
@@ -73,14 +73,14 @@ public class ModularNodeTest {
 		
 		final CountDownLatch latch = new CountDownLatch(1);
 		
-		final ListeningExecutorService executor = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
-		final ListeningExecutorService executor2 = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
+		final ExecutorService executor = Executors.newCachedThreadPool();
+		final ExecutorService executor2 =Executors.newCachedThreadPool();
 		final AtomicReference<Data> result = new AtomicReference<>();
 		
-		Node child = new RuntimeNode(0, "child", new DataOperationAction(AsyncOperation.create((data, ctx) -> { 
+		Node child = new RuntimeNode(0, "child", new AsyncOperationAction(AsyncOperation.create((data, ctx) -> { 
 			executor2.submit(() -> { 
 				data.put(dots("example.from.child.async"), utf8("I am from async"));
-				ctx.end();
+				ctx.done();
 			});
 		}), DSL.subscriber((data) -> {
 			log.debug("it was called! with : {}\n", data.toPrettyJson());
@@ -90,7 +90,7 @@ public class ModularNodeTest {
 		
 		Node parent = new RuntimeNode(1, "parent", syncOperation((data) ->
 					data.put(dots("example.from.parent"), utf8("hello from parent")),
-					actionHandlers(asList(new NodeChild(child, false, "some child").node()))), DoNothing.INSTANCE, DoNothing.INSTANCE);
+					actionHandlers(asList(new NodeChild(child, false, "some child").node()), DoNothing.INSTANCE)), DoNothing.INSTANCE, DoNothing.INSTANCE);
 		
 		parent.call(MutableMemoryData.create(), new DefaultFlowContext(1, executor, null));
 
@@ -102,6 +102,10 @@ public class ModularNodeTest {
 		} else {
 			fail("timed out");
 		}
+	}
+	
+	public static OperationAction syncOperation(Operation operation, ActionHandler next) {
+		return new OperationAction(operation, next);
 	}
 
 }

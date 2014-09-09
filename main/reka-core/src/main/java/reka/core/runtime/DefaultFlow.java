@@ -14,9 +14,6 @@ import reka.api.flow.FlowRun;
 import reka.api.run.EverythingSubscriber;
 import reka.core.data.memory.MutableMemoryData;
 
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
-
 public class DefaultFlow implements Flow {
 	
 	private final static AtomicLong flowIds = new AtomicLong();
@@ -24,8 +21,7 @@ public class DefaultFlow implements Flow {
 	@SuppressWarnings("unused")
 	private static final Logger logger = LoggerFactory.getLogger("flow");
 	
-	private static final ListeningExecutorService DEFAULT_EXECUTOR = 
-		MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
+	private static final ExecutorService DEFAULT_EXECUTOR = Executors.newCachedThreadPool();
 	
 	private final long id;
 	private final Path name;
