@@ -123,7 +123,7 @@ public class WebsocketHandler extends SimpleChannelInboundHandler<TextWebSocketF
 		h.onMessage.addAll(d.onMessage());
 		
 	}
-	
+
 	public boolean remove(String host) {
 		log.debug("removing ws host [{}]", host);
 		WebsocketHost h = hosts.remove(host);
@@ -135,57 +135,9 @@ public class WebsocketHandler extends SimpleChannelInboundHandler<TextWebSocketF
 		}
 	}
 	
-	public void reset(String host) {
-		log.debug("restting ws host [{}]", host);
-		WebsocketHost h = hosts.get(host);
-		if (h != null) {
-			//h.channels.forEach((id, ch) -> ch.disconnect());
-			//h.channels.clear();
-			h.onConnect.clear();
-			h.onDisconnect.clear();
-			h.onMessage.clear();
-		}
-	}
-	
-	public void broadcast(String host, String msg) {
-		WebsocketHost h = hosts.get(host);
-		if (h == null || h.channels.isEmpty()) return;
-        for (Entry<String, Channel> entry : h.channels.entrySet()) {
-        	Channel channel = entry.getValue();
-        	if (!channel.isOpen()) continue;
-        	channel.writeAndFlush(new TextWebSocketFrame(msg));
-        }
-	}
-
-	public void topicSend(String host, IdentityKey<Object> topicKey, String msg) {
-		WebsocketHost h = hosts.get(host);
-		if (h == null || h.channels.isEmpty()) return;
-		Topic topic = h.topics.get(topicKey);
-		if (topic == null) return;
-		topic.channels().forEach(channel -> channel.writeAndFlush(new TextWebSocketFrame(msg)));
-	}
-	
 	public void forHost(String host, Consumer<WebsocketHost> c) {
 		WebsocketHost h = hosts.get(host);
 		if (h != null) c.accept(h);
-	}
-	
-	public void topicSubscribe(String host, IdentityKey<Topic> topicKey, String id) {
-		WebsocketHost h = hosts.get(host);
-		if (h == null || h.channels.isEmpty()) return;
-		Channel channel = h.channels.get(id);
-		if (channel == null || !channel.isOpen()) return;
-		Topic topic = h.topics.get(topicKey);
-		if (topic == null) return;
-		topic.register(channel);
-	}
-
-	public void send(String host, String to, String msg) {
-		WebsocketHost h = hosts.get(host);
-		if (h == null || h.channels.isEmpty()) return;
-		Channel channel = h.channels.get(to);
-		if (channel == null || !channel.isOpen()) return;
-		channel.writeAndFlush(new TextWebSocketFrame(msg));
 	}
 	
 	@Override

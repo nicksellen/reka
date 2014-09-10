@@ -15,9 +15,6 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import reka.api.IdentityKey;
 import reka.api.Path;
 import reka.api.data.Data;
@@ -62,8 +59,6 @@ public class WebsocketModule extends ModuleConfigurer {
 	private final List<HostAndPort> listens = new ArrayList<>();
 	
 	private SslSettings ssl;
-	
-	private final Logger log = LoggerFactory.getLogger(getClass());
 	
 	private final HttpServerManager server;
 	
@@ -172,7 +167,11 @@ public class WebsocketModule extends ModuleConfigurer {
 		module.setupInitializer(init -> {
 			init.run("set http settings", store -> {
 				// FIXME: hackety hack, don't look back, these aren't the real HTTP settings!
-				store.put(HTTP_SETTINGS, HttpSettings.http(listens.get(0).port, listens.get(0).host, Type.WEBSOCKET, -1));
+				int port = listens.get(0).port;
+				if (port == -1) {
+					port = ssl != null ? 443 : 80;
+				}
+				store.put(HTTP_SETTINGS, HttpSettings.http(port, listens.get(0).host, Type.WEBSOCKET, -1));
 			});
 		});
 		
@@ -317,12 +316,10 @@ public class WebsocketModule extends ModuleConfigurer {
 			this.toFn = toFn;
 			this.messageFn = messageFn;
 			this.settings = settings;
-			log.debug("creating send operation");
 		}
 		
 		@Override
 		public void call(MutableData data) {
-			log.debug("preparing send: {}:{}", settings.host(), settings.port());
 			server.websocket(settings, ws -> {
 				ws.channel(toFn.apply(data)).ifPresent(channel -> {
 					if (channel.isOpen()) {
@@ -340,20 +337,16 @@ public class WebsocketModule extends ModuleConfigurer {
 		private final HttpSettings settings;
 		
 		public WebsocketBroadcastOperation(HttpSettings settings, Function<Data,String> messageFn) {
-			log.debug("creating broadcast operation");
 			this.messageFn = messageFn;
 			this.settings = settings;
-			log.debug(".. with settings: {}:{}", settings.host(), settings.port());
 		}
 		
 		@Override
 		public void call(MutableData data) {
-			log.debug("preparing broadcast: {}:{}", settings.host(), settings.port());
-			log.debug("running broadcast: {}:{}", settings.host(), settings.port());
 			server.websocket(settings, ws -> {
-				ws.channels.values().forEach(channel -> {
-					if (channel.isOpen()) {
-						channel.writeAndFlush(new TextWebSocketFrame(messageFn.apply(data)));
+				ws.channels.forEach((id, ch) -> {
+					if (ch.isOpen()) {
+						ch.writeAndFlush(new TextWebSocketFrame(messageFn.apply(data)));
 					}
 				});
 			});
@@ -368,17 +361,13 @@ public class WebsocketModule extends ModuleConfigurer {
 		private final HttpSettings settings;
 		
 		public WebsocketTopicSendOperation(HttpSettings settings, IdentityKey<Object> key, Function<Data,String> messageFn) {
-			log.debug("creating broadcast operation");
 			this.key = key;
 			this.messageFn = messageFn;
 			this.settings = settings;
-			log.debug(".. with settings: {}:{}", settings.host(), settings.port());
 		}
 		
 		@Override
 		public void call(MutableData data) {
-			log.debug("preparing broadcast: {}:{}", settings.host(), settings.port());
-			log.debug("running topic send: {}:{}", settings.host(), settings.port());
 			server.websocket(settings, ws -> {
 				ws.topic(key).ifPresent(topic -> {
 					topic.channels().forEach(channel -> {
@@ -402,7 +391,6 @@ public class WebsocketModule extends ModuleConfigurer {
 			this.key = key;
 			this.idFn = idFn;
 			this.settings = settings;
-			log.debug(".. with settings: {}:{}", settings.host(), settings.port());
 		}
 		
 		@Override
