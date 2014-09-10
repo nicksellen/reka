@@ -21,10 +21,6 @@ import jdk.nashorn.api.scripting.NashornScriptEngine;
 import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
-import org.apache.commons.pool2.BasePooledObjectFactory;
-import org.apache.commons.pool2.PooledObject;
-import org.apache.commons.pool2.impl.DefaultPooledObject;
-
 import com.google.common.collect.ImmutableMap;
 
 @SuppressWarnings("restriction")
@@ -91,29 +87,6 @@ public class ThreadLocalNashornRunner implements NashornRunner {
 			Bindings bindings = engine.createBindings(); // each thread needs it's own global
 			bindings.putAll(base);
 			return bindings;
-		}
-		
-	}
-	
-	public static class BindingsFactory extends BasePooledObjectFactory<Bindings> {
-
-		private final Map<String,Object> base;
-		
-		public BindingsFactory(Map<String,Object> base) {
-			System.out.printf("initialized global bindings factory with: %s\n", base.keySet());
-			this.base = base;
-		}
-		
-		@Override
-		public Bindings create() throws Exception {
-			Bindings bindings = engine.createBindings(); // each thread needs it's own global
-			bindings.putAll(base);
-			return bindings;
-		}
-
-		@Override
-		public PooledObject<Bindings> wrap(Bindings obj) {
-			return new DefaultPooledObject<>(obj);
 		}
 		
 	}

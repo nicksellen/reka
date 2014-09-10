@@ -4,12 +4,10 @@ import static java.lang.String.format;
 import static reka.api.Path.path;
 import static reka.config.configurer.Configurer.configure;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
-import static reka.util.Util.createEntry;
 import static reka.util.Util.runtime;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -25,6 +23,7 @@ import reka.http.configurers.HttpContentConfigurer;
 import reka.http.configurers.HttpRedirectConfigurer;
 import reka.http.configurers.HttpRequestConfigurer;
 import reka.http.configurers.HttpRouterConfigurer;
+import reka.http.operations.BasicAuthConfigurer;
 import reka.http.server.HttpServerManager;
 import reka.http.server.HttpSettings;
 import reka.http.server.HttpSettings.SslSettings;
@@ -39,9 +38,6 @@ public class HttpModule extends ModuleConfigurer {
 	
 	private final Pattern listenPortOnly = Pattern.compile("^[0-9]+$");
 	private final Pattern listenHostAndPort = Pattern.compile("^(.+):([0-9]+)$");
-	
-	@SuppressWarnings("unused") // haven't implemented this yet
-	private BasicAuthConfigurer auth;
 	
 	private SslSettings ssl;
 	
@@ -86,7 +82,8 @@ public class HttpModule extends ModuleConfigurer {
 		}
 		listens.add(new HostAndPort(host, port));
 	}
-	
+
+	/*
 	@Conf.At("auth")
 	public void auth(Config config) {
 		checkConfig(config.hasValue(), "must have a value");
@@ -97,11 +94,6 @@ public class HttpModule extends ModuleConfigurer {
 		default:
 			throw runtime("unknown auth method %s", config.valueAsString());
 		}
-	}
-	
-	@Conf.At("ssl")
-	public void ssl(Config config) {
-		ssl = configure(new SslConfigurer(), config).build();
 	}
 	
 	public static class BasicAuthConfigurer {
@@ -117,6 +109,12 @@ public class HttpModule extends ModuleConfigurer {
 			}
 		}
 		
+	}
+	*/
+	
+	@Conf.At("ssl")
+	public void ssl(Config config) {
+		ssl = configure(new SslConfigurer(), config).build();
 	}
 
 	@Conf.Each("on")
@@ -144,6 +142,7 @@ public class HttpModule extends ModuleConfigurer {
 		module.operation(path("content"), provider -> new HttpContentConfigurer());
 		module.operation(path("request"), provider -> new HttpRequestConfigurer(server.nettyEventGroup()));
 		module.operation(path("req"), provider -> new HttpRequestConfigurer(server.nettyEventGroup()));
+		module.operation(path("auth"), provider -> new BasicAuthConfigurer(provider));
 		
 		for (Function<ConfigurerProvider, OperationConfigurer> h : requestHandlers) {
 			

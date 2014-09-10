@@ -69,7 +69,7 @@ public class HttpContentWithETag implements AsyncOperation {
 	}
 
 	@Override
-	public void run(MutableData data, OperationResult ctx) {
+	public void call(MutableData data, OperationResult ctx) {
 		if (data.existsAt(Request.Headers.IF_NONE_MATCH) && etagStr.equals(data.getString(Request.Headers.IF_NONE_MATCH).orElse(""))) {
 			data.put(Response.CONTENT, EMPTY)
 				.put(Response.STATUS, NOT_MODIFIED);

@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Charsets;
 
-public class SimpleProcessManager implements ProcessManager {
+public class SingleProcessManager implements ProcessManager {
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	
@@ -48,7 +48,7 @@ public class SimpleProcessManager implements ProcessManager {
 	
 	private final List<Consumer<String>> lineTriggers = Collections.synchronizedList(new ArrayList<>());
 	
-	public SimpleProcessManager(
+	public SingleProcessManager(
 			ProcessBuilder builder, 
 			BlockingDeque<Entry<String,Consumer<String>>> q, 
 			boolean noreply) {
@@ -87,6 +87,7 @@ public class SimpleProcessManager implements ProcessManager {
 			}
 			
 		};
+		
 		writerThread.start();
 		
 		readerThread = new Thread() {
@@ -112,6 +113,7 @@ public class SimpleProcessManager implements ProcessManager {
 				}
 			}
 		};
+		
 		readerThread.start();
 	}
 	

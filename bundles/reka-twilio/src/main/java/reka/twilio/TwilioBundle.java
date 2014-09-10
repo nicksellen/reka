@@ -124,7 +124,7 @@ public class TwilioBundle implements RekaBundle {
 		}
 		
 		@Override
-		public void run(MutableData data, OperationResult ctx) {
+		public void call(MutableData data, OperationResult ctx) {
 			TwilioRestClient client = new TwilioRestClient(sid, token);
 			 
 		    Map<String, String> params = new HashMap<String, String>();

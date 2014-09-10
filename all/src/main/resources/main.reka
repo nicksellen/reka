@@ -1,0 +1,21 @@
+app {
+  name hello
+  http {
+    listen localhost:5000
+    on request {
+      http/auth {
+      	realm the magical land
+        accounts {
+          nick woo
+          peter yay
+        }
+      	ok {
+      	  put:response.content hey
+      	}
+      	fail {
+      	  put:response.content fail!
+      	}
+      }	
+    }
+  }
+}

@@ -11,14 +11,14 @@ public interface AsyncOperation extends SimpleFlowOperation {
 		return new AsyncOperation(){
 
 			@Override
-			public void run(MutableData data, OperationResult res) {
+			public void call(MutableData data, OperationResult res) {
 				c.accept(data, res);
 			}
 			
 		};
 	}
 
-	public void run(MutableData data, OperationResult res);
+	public void call(MutableData data, OperationResult res);
 	
 	public static interface OperationResult {
 		void done();

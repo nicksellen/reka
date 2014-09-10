@@ -121,9 +121,9 @@ public class PooledNashornRunner implements NashornRunner {
 		Map<String,Object> map = new HashMap<>();
 		Bindings bindings = new SimpleBindings(map);
 		bindings.putAll(data);
-		
+
+		Bindings global = pool.borrowObject();
 		try {
-			Bindings global = pool.borrowObject();
 			try {
 				compiledScript.eval(new EvenSimplerScriptContext(global, bindings));
 			} finally {

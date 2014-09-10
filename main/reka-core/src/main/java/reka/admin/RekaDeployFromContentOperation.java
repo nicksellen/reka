@@ -29,7 +29,7 @@ public class RekaDeployFromContentOperation implements AsyncOperation {
 	}
 	
 	@Override
-	public void run(MutableData data, OperationResult ctx) {
+	public void call(MutableData data, OperationResult ctx) {
 		
 		String identity = UUID.randomUUID().toString();
 		

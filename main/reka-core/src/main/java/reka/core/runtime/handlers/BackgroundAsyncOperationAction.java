@@ -25,7 +25,7 @@ public class BackgroundAsyncOperationAction implements ActionHandler {
 	public void call(MutableData data, FlowContext context) {
 		backgroundExecutor.execute(() -> {
 			try {
-				op.run(data, new OperationResult(){
+				op.call(data, new OperationResult(){
 		
 					@Override
 					public void done() {

@@ -172,7 +172,7 @@ public class ProcessModule extends ModuleConfigurer {
 		}
 		
 		@Override
-		public void run(MutableData data, OperationResult ctx) {
+		public void call(MutableData data, OperationResult ctx) {
 			manager.run(lineFn.apply(data), output -> {
 				data.putString("out", output);
 				ctx.done();

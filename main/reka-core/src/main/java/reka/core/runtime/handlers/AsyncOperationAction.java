@@ -19,7 +19,7 @@ public class AsyncOperationAction implements ActionHandler {
 	
 	@Override
 	public void call(MutableData data, FlowContext context) {
-		op.run(data, new OperationResult(){
+		op.call(data, new OperationResult(){
 
 			@Override
 			public void done() {

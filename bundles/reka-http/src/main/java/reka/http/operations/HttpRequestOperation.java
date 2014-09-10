@@ -60,7 +60,7 @@ public class HttpRequestOperation implements AsyncOperation {
 	}
 
 	@Override
-	public void run(MutableData data, OperationResult res) {
+	public void call(MutableData data, OperationResult res) {
 
 		bootstrap.connect(host, port).addListener(new ChannelFutureListener() {
 

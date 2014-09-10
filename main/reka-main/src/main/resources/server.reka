@@ -1,0 +1,11 @@
+bundle ../../../../../bundles/reka-http/target/reka-http-0.1.0.jar
+
+app {
+  name hello
+  http {
+    listen localhost:5000
+    on request {
+      put:response.content hey
+    }
+  }
+}

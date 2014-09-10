@@ -37,7 +37,7 @@ public class HttpServerManager {
 	
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	
-	private static final Logger logger = LoggerFactory.getLogger(HttpServerManager.class.getSimpleName());
+	private static final Logger logger = LoggerFactory.getLogger(HttpServerManager.class);
 
 	private final EventLoopGroup nettyEventGroup;
 	
@@ -46,12 +46,11 @@ public class HttpServerManager {
 	private final Object lock = new Object();
 	private final Map<String,HttpSettings> deployed = new HashMap<>();
 	
+	private final boolean epoll;
+	
 	public HttpServerManager() {
-		if (Epoll.isAvailable()) {
-			nettyEventGroup = new EpollEventLoopGroup();
-		} else {
-			nettyEventGroup = new NioEventLoopGroup();
-		}
+		epoll = Epoll.isAvailable();
+		nettyEventGroup = epoll ? new EpollEventLoopGroup() : new NioEventLoopGroup();
 	}
 	
 	public EventLoopGroup nettyEventGroup() {
@@ -143,15 +142,8 @@ public class HttpServerManager {
 		
 		private void start() {
 			
-			Class<? extends ServerChannel> serverChannelClass;
-			
-			if (Epoll.isAvailable()) {
-				log.info("using epoll");
-				serverChannelClass = EpollServerSocketChannel.class;
-			} else {
-				log.info("using nio");
-				serverChannelClass = NioServerSocketChannel.class;
-			}
+			Class<? extends ServerChannel> serverChannelClass = epoll ? 
+					EpollServerSocketChannel.class : NioServerSocketChannel.class;
 			
 			ServerBootstrap bootstrap = new ServerBootstrap()
 				.localAddress(port)

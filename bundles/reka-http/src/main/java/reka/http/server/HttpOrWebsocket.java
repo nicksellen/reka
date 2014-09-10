@@ -56,7 +56,7 @@ public class HttpOrWebsocket extends MessageToMessageDecoder<FullHttpRequest> {
 		} else {
 			
 			ctx.pipeline()
-				.addLast(DATASET_DECODER, new DataToHttpEncoder(ssl), http)
+				.addLast(DATASET_DECODER, ssl ? DataToHttpEncoder.SSL : DataToHttpEncoder.NORMAL, http)
 				.remove(this);
 			
 		}

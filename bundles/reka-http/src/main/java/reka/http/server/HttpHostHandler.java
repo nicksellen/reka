@@ -242,4 +242,9 @@ public class HttpHostHandler extends SimpleChannelInboundHandler<MutableData> {
 		return result;
 	}
 	
+	 @Override
+	 public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+		 ctx.close();
+	 }
+	
 }

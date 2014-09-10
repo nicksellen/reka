@@ -452,7 +452,7 @@ public class BuiltinsModule extends ModuleConfigurer {
 		}
 
 		@Override
-		public void run(MutableData data, OperationResult ctx) {
+		public void call(MutableData data, OperationResult ctx) {
 			e.schedule(() -> ctx.done(), ms, TimeUnit.MILLISECONDS);
 		}
 	}

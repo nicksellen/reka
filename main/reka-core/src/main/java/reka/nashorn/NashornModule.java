@@ -121,7 +121,7 @@ public class NashornModule extends ModuleConfigurer {
 		module.setupInitializer(init -> {
 		
 			init.run("initialize runtime", store -> {
-				store.put(RUNNER, new PooledNashornRunner(scripts));
+				store.put(RUNNER, new ThreadLocalNashornRunner(scripts));
 			});
 
 			for (Entry<String, String> op : ops.entrySet()) {

@@ -25,7 +25,7 @@ public class DefaultRouter implements RouteCollector {
 	
 	@Override
     public RouteCollector routeTo(String name) {
-		checkArgument(nodes.contains(name), "cannot route to %s", name);
+		checkArgument(nodes.contains(name), "cannot route to %s, we just have %s", name, nodes);
 		routed.add(name);
 		return this;
 	}
