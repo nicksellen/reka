@@ -3,9 +3,15 @@ package reka.http.server;
 import static reka.util.Util.runtime;
 import static reka.util.Util.unchecked;
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.ServerChannel;
+import io.netty.channel.epoll.Epoll;
+import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -33,14 +39,22 @@ public class HttpServerManager {
 	
 	private static final Logger logger = LoggerFactory.getLogger(HttpServerManager.class.getSimpleName());
 
-	private final NioEventLoopGroup nettyEventGroup = new NioEventLoopGroup();
+	private final EventLoopGroup nettyEventGroup;
 	
 	private final Map<Integer,PortHandler> handlers = new HashMap<>();
 		
 	private final Object lock = new Object();
 	private final Map<String,HttpSettings> deployed = new HashMap<>();
 	
-	public NioEventLoopGroup nettyEventGroup() {
+	public HttpServerManager() {
+		if (Epoll.isAvailable()) {
+			nettyEventGroup = new EpollEventLoopGroup();
+		} else {
+			nettyEventGroup = new NioEventLoopGroup();
+		}
+	}
+	
+	public EventLoopGroup nettyEventGroup() {
 		return nettyEventGroup;
 	}
 	
@@ -61,7 +75,7 @@ public class HttpServerManager {
 			httpOrWebsocketHandler = new HttpOrWebsocket(httpHandler, websocketHandler, sslSettings != null);
 
 			if (sslSettings != null) {
-				initializer = new HttpsHandler(httpOrWebsocketHandler, sslSettings.certChainFile(), sslSettings.keyFile());
+				initializer = new HttpsInitializer(httpOrWebsocketHandler, sslSettings.certChainFile(), sslSettings.keyFile());
 			} else {
 				initializer = new HttpInitializer(httpOrWebsocketHandler);
 			}
@@ -129,15 +143,24 @@ public class HttpServerManager {
 		
 		private void start() {
 			
+			Class<? extends ServerChannel> serverChannelClass;
+			
+			if (Epoll.isAvailable()) {
+				log.info("using epoll");
+				serverChannelClass = EpollServerSocketChannel.class;
+			} else {
+				log.info("using nio");
+				serverChannelClass = NioServerSocketChannel.class;
+			}
+			
 			ServerBootstrap bootstrap = new ServerBootstrap()
 				.localAddress(port)
 				.group(nettyEventGroup)
-				.channel(NioServerSocketChannel.class)
+				.channel(serverChannelClass)
 				.option(ChannelOption.TCP_NODELAY, true)
-				//.option(ChannelOption.SO_REUSEADDR, true)
+				.option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
 				.childOption(ChannelOption.TCP_NODELAY, true)
-				//.childOption(ChannelOption.SO_REUSEADDR, true)
-				//.childOption(ChannelOption.SO_KEEPALIVE, true)
+				.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
 				.childHandler(initializer);
 			
 			try {

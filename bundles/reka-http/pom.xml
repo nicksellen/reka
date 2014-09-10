@@ -48,9 +48,9 @@
 		<dependency>
 			<groupId>io.netty</groupId>
 			<artifactId>netty-tcnative</artifactId>
-			<!-- this is a fork of the fork :) 
-			     compiled for openssl 1.0.1, should be in the local repo -->
-			<version>1.1.30.Fork2-openssl-1.0.1</version> 
+			<!-- this is a fork of the fork :) compiled for openssl 1.0.1, should 
+				be in the local repo -->
+			<version>1.1.30.Fork2-openssl-1.0.1</version>
 			<classifier>linux-x86_64</classifier>
 		</dependency>
 		<dependency>
@@ -60,31 +60,37 @@
 			<classifier>osx-x86_64</classifier>
 		</dependency>
 		<dependency>
+			<groupId>io.netty</groupId>
+			<artifactId>netty-transport-native-epoll</artifactId>
+			<version>4.0.23.Final</version>
+			<classifier>linux-x86_64</classifier>
+		</dependency>
+		<dependency>
 			<groupId>javassist</groupId>
 			<artifactId>javassist</artifactId>
 			<version>3.12.1.GA</version>
 		</dependency>
 	</dependencies>
 
-  <repositories>
-    <repository>
-      <!--  http://stackoverflow.com/questions/364114/can-i-add-jars-to-maven-2-build-classpath-without-installing-them -->
-      <id>repo</id>
-      <name>reka-http</name>
-      <releases>
-        <enabled>true</enabled>
-        <checksumPolicy>ignore</checksumPolicy>
-      </releases>
-      <url>file://${project.basedir}/repo</url>
-    </repository>
-  </repositories>
+	<repositories>
+		<repository>
+			<!-- http://stackoverflow.com/questions/364114/can-i-add-jars-to-maven-2-build-classpath-without-installing-them -->
+			<id>repo</id>
+			<name>reka-http</name>
+			<releases>
+				<enabled>true</enabled>
+				<checksumPolicy>ignore</checksumPolicy>
+			</releases>
+			<url>file://${project.basedir}/repo</url>
+		</repository>
+	</repositories>
 
 	<build>
 		<plugins>
-      <plugin>
-        <artifactId>maven-install-plugin</artifactId>
-        <version>2.5.1</version>
-      </plugin>
+			<plugin>
+				<artifactId>maven-install-plugin</artifactId>
+				<version>2.5.1</version>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>

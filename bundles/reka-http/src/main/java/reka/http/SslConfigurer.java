@@ -11,7 +11,7 @@ import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.http.server.HttpSettings.SslSettings;
 
-class SslConfigurer {
+public class SslConfigurer {
 	
 	byte[] crt;
 	byte[] key;

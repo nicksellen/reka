@@ -15,12 +15,12 @@ import java.io.File;
 
 import javax.net.ssl.SSLException;
 
-public class HttpsHandler extends ChannelInitializer<SocketChannel> {
+public class HttpsInitializer extends ChannelInitializer<SocketChannel> {
 
 	private final ChannelHandler handler;
 	private final SslContext ssl;
 	
-	public HttpsHandler(ChannelHandler handler, File certChainFile, File keyFile) {
+	public HttpsInitializer(ChannelHandler handler, File certChainFile, File keyFile) {
 		this.handler = handler;
 		try {
 			this.ssl = SslContext.newServerContext(SslProvider.OPENSSL, certChainFile, keyFile);

@@ -2,7 +2,7 @@ package reka.http.configurers;
 
 import static reka.api.Path.dots;
 import static reka.api.Path.path;
-import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.EventLoopGroup;
 import reka.api.Path;
 import reka.config.configurer.annotations.Conf;
 import reka.core.setup.OperationSetup;
@@ -11,12 +11,12 @@ import reka.nashorn.OperationConfigurer;
 
 public class HttpRequestConfigurer implements OperationConfigurer {
 	
-	private final NioEventLoopGroup group;
+	private final EventLoopGroup group;
 	
 	private String url;
 	private Path out = path("response");
 	
-	public HttpRequestConfigurer(NioEventLoopGroup group) {
+	public HttpRequestConfigurer(EventLoopGroup group) {
 		this.group = group;
 	}
 

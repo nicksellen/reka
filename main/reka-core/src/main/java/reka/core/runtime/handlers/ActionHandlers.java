@@ -11,6 +11,7 @@ public class ActionHandlers implements ActionHandler {
 	private final ErrorHandler error;
 	
 	public ActionHandlers(Collection<? extends ActionHandler> handlers, ErrorHandler error) {
+		// TODO: flatten if any of the handlers passed in is itself an ActionHandlers
 		this.handlers = handlers;
 		this.error = error;
 	}

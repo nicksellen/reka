@@ -27,7 +27,6 @@ public class AbstractFlowNode implements FlowNode {
 	private boolean subscribeable = false;
 	private boolean isStart = false;
 	private boolean isEnd = false;
-	private boolean shouldUseAnotherThread = false;
 	
 	protected AbstractFlowNode embeddedFlowNode(FlowDependency embeddedFlowNode) {
 		this.embeddedFlowNode = embeddedFlowNode;
@@ -46,11 +45,6 @@ public class AbstractFlowNode implements FlowNode {
 	
 	protected AbstractFlowNode name(String name) {
 		this.name = name;
-		return this;
-	}
-	
-	protected AbstractFlowNode shouldUseAnotherThread(boolean val) {
-		this.shouldUseAnotherThread = val;
 		return this;
 	}
 	

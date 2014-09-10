@@ -9,8 +9,8 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.DefaultHttpRequest;
@@ -30,6 +30,7 @@ import reka.api.Path;
 import reka.api.data.MutableData;
 import reka.api.run.AsyncOperation;
 import reka.http.server.HttpResponseToDatasetDecoder;
+
 public class HttpRequestOperation implements AsyncOperation {
 
 	private final Bootstrap bootstrap;
@@ -39,7 +40,7 @@ public class HttpRequestOperation implements AsyncOperation {
 	private final String host;
 	private final Path out;
 
-	public HttpRequestOperation(NioEventLoopGroup group, String url, Path out) {
+	public HttpRequestOperation(EventLoopGroup group, String url, Path out) {
 		uri = makeURI(url);
 		this.out = out;
 		port = uri.getPort();
@@ -59,7 +60,7 @@ public class HttpRequestOperation implements AsyncOperation {
 	}
 
 	@Override
-	public void run(MutableData data, OperationResult ctx) {
+	public void run(MutableData data, OperationResult res) {
 
 		bootstrap.connect(host, port).addListener(new ChannelFutureListener() {
 
@@ -69,9 +70,9 @@ public class HttpRequestOperation implements AsyncOperation {
 				ch.pipeline().addLast(new SimpleChannelInboundHandler<MutableData>(){
 
 					@Override
-					protected void channelRead0(ChannelHandlerContext nctx, MutableData msg) throws Exception {
+					protected void channelRead0(ChannelHandlerContext ctx, MutableData msg) throws Exception {
 						data.put(out, msg);
-						ctx.done();
+						res.done();
 					}
 					
 				});
