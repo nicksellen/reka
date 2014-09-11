@@ -24,8 +24,8 @@ public class RoutingAction implements ActionHandler {
 		
 		ImmutableSet.Builder<String> keys = ImmutableSet.builder();
 		for (NodeChild child : children) {
-		    if (child.label() != null) {
-		        keys.add(child.label());
+		    if (child.name() != null) {
+		        keys.add(child.name());
 		    }
 		}
 		this.childrenNames = keys.build();
@@ -41,7 +41,7 @@ public class RoutingAction implements ActionHandler {
 		boolean copy = mr.routed().size() > 1;
 		
 		for (NodeChild child : children) {
-			if (mr.routed().contains(child.label())) {
+			if (mr.routed().contains(child.name())) {
 				child.node().call(copy ? data.mutableCopy() : data, context);
 			} else {
 				child.node().halted(context);

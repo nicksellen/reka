@@ -16,7 +16,6 @@ public interface FlowSegment {
     // all optional (well, should be)
     String inputName();
     String label();
-    String outputName();
 	FlowNode node();
 	
 	Data meta();

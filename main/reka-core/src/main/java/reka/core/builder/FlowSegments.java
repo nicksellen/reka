@@ -26,7 +26,7 @@ import com.google.common.collect.Iterables;
 public class FlowSegments extends AbstractFlowNode {
 	
 	public static FlowNode noop(String name) {
-		return OperationFlowNode.simple(name, () -> NoOp.INSTANCE);
+		return OperationFlowNode.createNode(name, () -> NoOp.INSTANCE);
 	}
 	
 	public static FlowSegment seq(Collection<? extends FlowSegment> segments) {
@@ -37,36 +37,32 @@ public class FlowSegments extends AbstractFlowNode {
 		return Sequential.of(first, rest);
 	}
 	
-	public static FlowSegment halt() {
+	public static FlowSegment createHalt() {
 		return new Halt();
 	}
-	
-	public static FlowSegment par(Collection<? extends FlowSegment> items) {
+
+	public static FlowSegment createParallelSegment(Collection<? extends FlowSegment> items) {
 	    checkArgument(!items.isEmpty(), "a parallel segment with no items doesn't make sense");
-		return par(items.toArray(new FlowSegment[items.size()]));
-	}
-	
-	public static FlowSegment par(FlowSegment... items) {
-		return new Parallel(items);
+		return new Parallel(items.toArray(new FlowSegment[items.size()]));
 	}
 	
 	public static FlowSegment embeddedFlow(String embeddedFlowName) {
 		return new EmbeddedFlowNode(embeddedFlowName, embeddedFlowName);
 	}
 
-	public static FlowNode startNode(String name) {
-		return OperationFlowNode.simple(name, () -> NoOp.INSTANCE).isStart(true);
+	public static FlowNode createStartNode(String name) {
+		return OperationFlowNode.createNode(name, () -> NoOp.INSTANCE).isStart(true);
 	}
 	
-	public static FlowNode subscribeableEndNode(String name) {
+	public static FlowNode createSubscribeableEndNode(String name) {
 		return new SubscribeableEndFlowNode(name);
 	}
 	
-	public static FlowSegment label(String label, FlowSegment... segment) {
+	public static FlowSegment createLabelSegment(String label, FlowSegment... segment) {
 		return new Labelled(label, Sequential.of(segment));
 	}
 
-	public static FlowSegment meta(FlowSegment segment, Data meta) {
+	public static FlowSegment createMetaSegment(FlowSegment segment, Data meta) {
 		return new Meta(segment, meta);
 	}
 	
@@ -79,45 +75,37 @@ public class FlowSegments extends AbstractFlowNode {
 		
 	}
 	
-	public static FlowSegment namedInput(String name, FlowSegment... segment) {
+	public static FlowSegment createNamedInputSegment(String name, FlowSegment... segment) {
 		return new NamedInput(name, Sequential.of(segment));
-	}
-	
-	public static FlowSegment namedOutput(String name, FlowSegment... segment) {
-		return new NamedOutput(name, Sequential.of(segment));
 	}
 	
 	public static class DefaultFlowConnection implements FlowConnection {
 		
 		private final FlowSegment source;
 		private final FlowSegment destination;
-		private final String name;
 		
-		public static FlowConnection create(FlowSegment source, FlowSegment destination, String name) {
-			return new DefaultFlowConnection(source, destination, name);
+		public static FlowConnection create(FlowSegment source, FlowSegment destination) {
+			return new DefaultFlowConnection(source, destination);
 		}
-		private DefaultFlowConnection(FlowSegment source, FlowSegment destination, String name) {
-			this.source = source; this.destination = destination; this.name = name;
+		
+		private DefaultFlowConnection(FlowSegment source, FlowSegment destination) {
+			this.source = source;
+			this.destination = destination;
 		}
+		
 		@Override
         public FlowSegment source() {
 			return source;
 		}
+		
 		@Override
         public FlowSegment destination() {
 			return destination;
 		}
-		@Override
-        public String name() {
-			return name;
-		}
+		
 		@Override
 		public String toString() {
-			if (name != null) {
-				return format("FlowConnection(%s: %s -> %s)", name, source.inputName(), destination.inputName());
-			} else {
-				return format("FlowConnection(%s -> %s)", source.inputName(), destination.inputName());
-			}
+			return format("FlowConnection(%s -> %s)", source.inputName(), destination.inputName());
 		}
 	}
 	
@@ -126,7 +114,6 @@ public class FlowSegments extends AbstractFlowNode {
 		private final MutableData meta = MutableMemoryData.create();
 		
 		private String inputName;
-		private String outputName;
 		private String label;
 		private final Collection<FlowSegment> start = new ArrayList<>();
 		private final Collection<FlowSegment> end = new ArrayList<>();
@@ -151,12 +138,7 @@ public class FlowSegments extends AbstractFlowNode {
 		}
 		
 		protected AbstractFlowSegment connection(FlowSegment source, FlowSegment destination) {
-			connections.add(DefaultFlowConnection.create(source, destination, null));
-			return this;
-		}
-		
-		protected AbstractFlowSegment connection(FlowSegment source, FlowSegment destination, String label) {
-			connections.add(DefaultFlowConnection.create(source, destination, label));
+			connections.add(DefaultFlowConnection.create(source, destination));
 			return this;
 		}
 		
@@ -166,11 +148,6 @@ public class FlowSegments extends AbstractFlowNode {
 		
 		protected AbstractFlowSegment inputName(String value) {
 			inputName = value;
-			return this;
-		}
-		
-		protected AbstractFlowSegment outputName(String value) {
-			outputName = value;
 			return this;
 		}
 		
@@ -209,11 +186,6 @@ public class FlowSegments extends AbstractFlowNode {
 		}
 		
 		@Override
-		public String outputName() {
-			return outputName;
-		}
-		
-		@Override
 		public String label() {
 			return label;
 		}
@@ -244,7 +216,6 @@ public class FlowSegments extends AbstractFlowNode {
 			List<String> stuff = new ArrayList<>();
 			if (label != null) stuff.add(format("label=%s", label));
 			if (inputName != null) stuff.add(format("input-name=%s", inputName));
-			if (outputName != null) stuff.add(format("output-name=%s", outputName));
 			return format("%s(%s)", getClass().getSimpleName(), join(", ", stuff));
 		}
 	}
@@ -252,12 +223,6 @@ public class FlowSegments extends AbstractFlowNode {
 	private static class NamedInput extends AbstractFlowSegment {
 		public NamedInput(String name, FlowSegment segment) {
 			start(segment).end(segment).inputName(name);
-		}
-	}
-	
-	private static class NamedOutput extends AbstractFlowSegment {
-		public NamedOutput(String name, FlowSegment segment) {
-			start(segment).end(segment).outputName(name);
 		}
 	}
 	

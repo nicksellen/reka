@@ -18,22 +18,28 @@ public interface OperationSetup extends Supplier<FlowSegment> {
 		return new SequentialCollector(store);
 	}
 	
+	public static interface RouterSetup {
+		RouterSetup add(String name, OperationConfigurer configurer);
+		RouterSetup addSequence(String name, Consumer<OperationSetup> seq);
+		RouterSetup parallel(Consumer<OperationSetup> par);
+	}
+	
 	MutableData meta();
 	
 	OperationSetup label(String label);
 	
 	OperationSetup add(String name, Function<IdentityStore,? extends SimpleFlowOperation> c);
-	OperationSetup addRouter(String name, Function<IdentityStore,? extends RoutingOperation> c);
-	
 	OperationSetup add(Supplier<FlowSegment> supplier);
+	
+	OperationSetup router(String name, Function<IdentityStore,? extends RoutingOperation> c, Consumer<RouterSetup> routes);
 	
 	OperationSetup add(OperationConfigurer configurer);
 	
 	OperationSetup sequential(Consumer<OperationSetup> seq);
 	OperationSetup sequential(String label, Consumer<OperationSetup> seq);
-
-	OperationSetup routeSeq(String name, Consumer<OperationSetup> seq);
-	OperationSetup route(String name, OperationConfigurer configurer);
+	
+	OperationSetup namedInputSeq(String name, Consumer<OperationSetup> seq);
+	OperationSetup namedInput(String name, OperationConfigurer configurer);
 	
 	OperationSetup parallel(Consumer<OperationSetup> par);
 	OperationSetup parallel(String label, Consumer<OperationSetup> par);

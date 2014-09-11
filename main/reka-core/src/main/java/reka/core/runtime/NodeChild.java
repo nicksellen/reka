@@ -4,15 +4,15 @@ import static java.lang.String.format;
 
 public class NodeChild {
     
-	public NodeChild(Node node, boolean optional, String label) {
+	public NodeChild(Node node, boolean optional, String name) {
 		this.node = node;
 		this.optional = optional;
-		this.label = label;
+		this.name = name;
 	}
 	
 	private final Node node;
 	private final boolean optional;
-	private final String label;
+	private final String name;
 	
 	public Node node() {
 		return node;
@@ -22,8 +22,8 @@ public class NodeChild {
 		return optional;
 	}
 	
-	public String label() {
-		return label;
+	public String name() {
+		return name;
 	}
 	
 	@Override

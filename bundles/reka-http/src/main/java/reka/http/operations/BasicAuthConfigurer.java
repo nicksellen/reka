@@ -54,11 +54,12 @@ public class BasicAuthConfigurer implements OperationConfigurer {
 	@Override
 	public void setup(OperationSetup ops) {
 		CredentialsChecker checker = new MapCredentialsChecker(ImmutableMap.copyOf(credentials));
-		ops.addRouter("basic-auth", store -> new BasicAuthRouter(realm, checker));
-		ops.parallel(par -> {
-			par.route("ok", ok);
-			par.route("fail", fail);
+		
+		ops.router("basic-auth", store -> new BasicAuthRouter(realm, checker), router -> {
+			router.add("ok", ok);
+			router.add("fail", fail);
 		});
+		
 	}
 
 }

@@ -17,7 +17,7 @@ public class LabelledOperationCollector extends SequentialCollector {
 	
 	@Override
 	FlowSegment build(Collection<FlowSegment> segments) {
-		return FlowSegments.label(label, super.build(segments));
+		return FlowSegments.createLabelSegment(label, super.build(segments));
 	}
 	
 }

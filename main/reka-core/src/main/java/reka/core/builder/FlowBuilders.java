@@ -4,8 +4,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static reka.core.builder.FlowConnector.connectSegments;
 import static reka.core.builder.FlowSegments.seq;
-import static reka.core.builder.FlowSegments.startNode;
-import static reka.core.builder.FlowSegments.subscribeableEndNode;
+import static reka.core.builder.FlowSegments.createStartNode;
+import static reka.core.builder.FlowSegments.createSubscribeableEndNode;
 import static reka.util.Util.runtime;
 
 import java.util.Collection;
@@ -55,8 +55,8 @@ public class FlowBuilders {
 		
 		public FlowInfo(Path name, FlowSegment main) {
 			this.name = name;
-			this.start = startNode("start");
-			this.end = subscribeableEndNode("end");
+			this.start = createStartNode("start");
+			this.end = createSubscribeableEndNode("end");
 			this.segment = seq(start, main, end);;
 		}
 		
@@ -215,7 +215,7 @@ public class FlowBuilders {
 			NodeBuilder child = idToNodeBuilder.get(childId);
 			checkNotNull(child);
 			
-			parent.addChild(child, connection.label());
+			parent.addChild(child, connection.name());
 			child.incrementParentCount();
 		}
 		

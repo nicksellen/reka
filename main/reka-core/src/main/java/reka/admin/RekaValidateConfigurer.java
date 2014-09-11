@@ -7,8 +7,10 @@ import static reka.util.Util.runtime;
 import java.util.function.Function;
 
 import reka.ApplicationManager;
+import reka.api.IdentityStore;
 import reka.api.Path;
 import reka.api.data.Data;
+import reka.api.run.RoutingOperation;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
@@ -66,16 +68,19 @@ public class RekaValidateConfigurer implements OperationConfigurer {
 	@Override
 	public void setup(OperationSetup ops) {
 		
+		Function<IdentityStore,RoutingOperation> supplier;
+		
 		if (in != null) {
-			ops.addRouter("validate", store -> new RekaValidateFromContentOperation(manager, in));
+			supplier = store -> new RekaValidateFromContentOperation(manager, in);
 		} else if (filenameFn != null) {
-			ops.addRouter("validate", store -> new RekaValidateFromFileOperation(manager, filenameFn));
+			supplier = store -> new RekaValidateFromFileOperation(manager, filenameFn);
 		} else {
 			throw runtime("must specify either 'in' or 'filename'");
 		}
-		ops.parallel(par -> {
-			if (whenOk != null) par.route("ok", whenOk);
-			if (whenError != null) par.route("error", whenError);
+		
+		ops.router("validate", supplier, routes -> {
+			if (whenOk != null) routes.add("ok", whenOk);
+			if (whenError != null) routes.add("error", whenError);
 		});
 	}
 	

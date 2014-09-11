@@ -173,11 +173,10 @@ public class FilesystemBundle implements RekaBundle {
 
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.addRouter("file/type", store -> new FilesystemType(basedir, pathFn));
-			ops.parallel(par -> {
-				if (whenDir != null) par.route("dir", whenDir);
-				if (whenFile != null) par.route("file", whenFile);
-				if (whenMissing != null) par.route("missing", whenMissing);
+			ops.router("file/type", store -> new FilesystemType(basedir, pathFn), router -> {
+				if (whenDir != null) router.add("dir", whenDir);
+				if (whenFile != null) router.add("file", whenFile);
+				if (whenMissing != null) router.add("missing", whenMissing);
 			});
 		}
 		

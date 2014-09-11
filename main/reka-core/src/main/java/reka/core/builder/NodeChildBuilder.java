@@ -9,22 +9,22 @@ class NodeChildBuilder {
 		return create(node, null);
 	}
 	
-	static NodeChildBuilder create(NodeBuilder node, String alias) {
-		return new NodeChildBuilder(node, false, alias);
+	static NodeChildBuilder create(NodeBuilder node, String name) {
+		return new NodeChildBuilder(node, false, name);
 	}
 	
-	private NodeChildBuilder(NodeBuilder node, boolean optional, String alias) {
+	private NodeChildBuilder(NodeBuilder node, boolean optional, String name) {
 		this.node = node;
 		this.optional = optional;
-		this.alias = alias;
+		this.name = name;
 	}
 	
-	private final String alias;
+	private final String name;
 	private final NodeBuilder node;
 	private boolean optional;
 	
 	public NodeChild build(NodeFactory factory) {
-		return new NodeChild(factory.get(node.id()), optional, alias);
+		return new NodeChild(factory.get(node.id()), optional, name);
 	}
 	
 	public NodeBuilder node() {
@@ -37,10 +37,6 @@ class NodeChildBuilder {
 	
 	public void optional(boolean value) {
 		optional = value;
-	}
-	
-	public String alias() {
-		return alias;
 	}
 	
 	@Override

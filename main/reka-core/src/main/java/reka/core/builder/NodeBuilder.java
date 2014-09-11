@@ -73,8 +73,8 @@ class NodeBuilder {
 		return initialCounter;
 	}
 
-	public NodeBuilder addChild(NodeBuilder child, String alias) {
-		children.add(NodeChildBuilder.create(child, alias));
+	public NodeBuilder addChild(NodeBuilder child, String name) {
+		children.add(NodeChildBuilder.create(child, name));
 		return this;
 	}
 	

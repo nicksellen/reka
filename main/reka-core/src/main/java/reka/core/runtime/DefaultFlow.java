@@ -4,9 +4,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import reka.api.Path;
 import reka.api.data.MutableData;
 import reka.api.flow.Flow;
@@ -16,10 +13,7 @@ import reka.core.data.memory.MutableMemoryData;
 
 public class DefaultFlow implements Flow {
 	
-	private final static AtomicLong flowIds = new AtomicLong();
-	
-	@SuppressWarnings("unused")
-	private static final Logger logger = LoggerFactory.getLogger("flow");
+	private final static AtomicLong ids = new AtomicLong();
 	
 	private static final ExecutorService DEFAULT_EXECUTOR = Executors.newCachedThreadPool();
 	
@@ -29,7 +23,7 @@ public class DefaultFlow implements Flow {
 	private final Node head;
 	
 	public DefaultFlow(Path name, Node head) {
-		this.id = flowIds.incrementAndGet();
+		this.id = ids.incrementAndGet();
 		this.name = name;
 	    this.head = head;
 	    this.fullName = name.slashes();

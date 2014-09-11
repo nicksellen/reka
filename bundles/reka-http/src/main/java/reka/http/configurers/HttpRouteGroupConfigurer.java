@@ -96,7 +96,7 @@ public class HttpRouteGroupConfigurer {
 				String connectionName = entry.getKey();
 				List<OperationConfigurer> operations = entry.getValue();
 				
-				par.routeSeq(connectionName, route -> {
+				par.namedInputSeq(connectionName, route -> {
 					operations.forEach(routeOperations -> route.add(routeOperations));
 				});
 			}

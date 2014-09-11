@@ -2,7 +2,7 @@ package reka.core.setup;
 
 import static java.util.stream.Collectors.toList;
 import static reka.config.configurer.Configurer.configure;
-import static reka.core.builder.FlowSegments.label;
+import static reka.core.builder.FlowSegments.createLabelSegment;
 import static reka.core.builder.FlowSegments.seq;
 
 import java.util.ArrayList;
@@ -364,7 +364,7 @@ public class ModuleSetup {
 	protected Optional<FlowSegment> buildFlowSegment() {
 		if (segments.isEmpty()) return Optional.empty();
 		List<FlowSegment> built = segments.stream().map(Supplier<FlowSegment>::get).collect(toList());
-		return Optional.of(label(path.slashes(), seq(built)));
+		return Optional.of(createLabelSegment(path.slashes(), seq(built)));
 	}
 	
 	protected Map<Path,FlowSegmentBiFunction> providers() {

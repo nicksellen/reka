@@ -55,7 +55,6 @@ public class FlowConnector {
 		for (FlowSegment segment : segments) {
 			expand(segment);
 		}
-		//checkState(!conns.isEmpty(), "didn't find ANY connections :(");
 	}
 	
 	private void expandNodes(FlowSegment segment) {
@@ -76,7 +75,7 @@ public class FlowConnector {
 		expandNodes(segment);
 		
 		for (FlowConnection connection : segment.connections()) {
-			connect(connection.source(), connection.destination(), connection.name());
+			connect(connection.source(), connection.destination(), null);
 		}
 		
 		for (FlowSegment nested : segment.segments()) {
@@ -98,7 +97,6 @@ public class FlowConnector {
 		nodes.add(to);
 		destinationsOf.put(from, to);
 		sourcesOf.put(to, from);
-		
 		if (from.hasEmbeddedFlow()) register(from.embeddedFlowNode());
 		if (to.hasEmbeddedFlow()) register(to.embeddedFlowNode());
 	}
@@ -163,19 +161,18 @@ public class FlowConnector {
 		return results;
 	}
 	
-	private void connect(FlowSegment sourceSegment, FlowSegment destinationSegment, String name) {
+	private void connect(FlowSegment sourceSegment, FlowSegment destinationSegment, String parentName) {
 		checkNotNull(sourceSegment, "source was null");
 		checkNotNull(destinationSegment, "destination was null");
 		
-		// TODO: probably being ineffecient here...
 		segments.add(sourceSegment);
 		segments.add(destinationSegment);
 	    
 		for (FlowConnection connection : sourceSegment.connections()) {
-			connect(connection.source(), connection.destination(), connection.name());
+			connect(connection.source(), connection.destination(), null);
 		}
 		for (FlowConnection connection : destinationSegment.connections()) {
-			connect(connection.source(), connection.destination(), connection.name());
+			connect(connection.source(), connection.destination(), null);
 		}
 		
 		if (sourceSegment.destinations().size() > 1 && destinationSegment.sources().size() > 1) {
@@ -185,11 +182,11 @@ public class FlowConnector {
 			FlowSegment intermediate = noop(format("+ [%s]", UUID.randomUUID().toString()));
 			
 			for (FlowSegment from : sourceSegment.destinations()) {
-				connect(from, intermediate, name);
+				connect(from, intermediate, parentName);
 			}
 			
 			for (FlowSegment to : destinationSegment.sources()) {
-				connect(intermediate, to, name);
+				connect(intermediate, to, parentName);
 			}
 			
 		} else {
@@ -199,9 +196,7 @@ public class FlowConnector {
 				for (FlowSegment from : sourceSegment.destinations()) {
 					
 					String connectionName = firstNonNull( 
-						name,
-						sourceSegment.outputName(), 
-						from.outputName(),
+						parentName,
 						destinationSegment.inputName(), 
 						to.inputName());
 					
@@ -220,8 +215,11 @@ public class FlowConnector {
 						
 					} else {
 						
-						connect(from, to, 
-								connectionName != null && !connectionName.equals(to.inputName()) ? connectionName : null);
+						if (connectionName != null && !connectionName.equals(to.inputName())) {
+							connect(from, to, connectionName);
+						} else {
+							connect(from, to, null);
+						}
 						
 					}
 				}

@@ -10,7 +10,7 @@ import static reka.api.content.Contents.utf8;
 import static reka.config.configurer.Configurer.configure;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import static reka.config.configurer.Configurer.Preconditions.invalidConfig;
-import static reka.core.builder.FlowSegments.halt;
+import static reka.core.builder.FlowSegments.createHalt;
 import static reka.core.config.ConfigUtils.configToData;
 import static reka.util.Util.createEntry;
 
@@ -77,11 +77,13 @@ public class BuiltinsModule extends ModuleConfigurer {
     	module.operation(path("halt!"), provider -> new HaltConfigurer());
     	module.operation(slashes("uuid/generate"), provider -> new GenerateUUIDConfigurer());
     	module.operation(path("println"), provider -> new PrintlnConfigurer());
+    	
     	module.operation(slashes("bcrypt/hashpw"), provider -> new BCryptHashpwConfigurer());
-    	module.operation(path("bcrypt/checkpw"), provider -> new BCryptCheckpwConfigurer(provider));
+    	module.operation(slashes("bcrypt/checkpw"), provider -> new BCryptCheckpwConfigurer(provider));
+    	
     	module.operation(path("throw"), provider -> new ThrowConfigurer());
     	module.operation(path("inspect"), provider -> new InspectConfigurer());
-    	module.operation(path("random/string"), provider -> new RandomStringConfigurer());
+    	module.operation(slashes("random/string"), provider -> new RandomStringConfigurer());
     	module.operation(path("coerce"), provider -> new Coercion.CoerceConfigurer());
     	module.operation(slashes("coerce/int64"), provider -> new Coercion.CoerceLongConfigurer());
     	module.operation(slashes("coerce/bool"), provider -> new Coercion.CoerceBooleanConfigurer());
@@ -186,10 +188,9 @@ public class BuiltinsModule extends ModuleConfigurer {
 		
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.addRouter("bcrypt/checkpw", store -> new BCryptCheckpwOperation(readPwFrom, readHashFrom));
-			ops.parallel(par -> {
-				par.route("ok", ok);
-				par.route("fail", fail);
+			ops.router("bcrypt/checkpw", store -> new BCryptCheckpwOperation(readPwFrom, readHashFrom), router -> {
+				router.add("ok", ok);
+				router.add("fail", fail);
 			});
 		}
 		
@@ -297,6 +298,7 @@ public class BuiltinsModule extends ModuleConfigurer {
 			length = Integer.valueOf(val);
 		}
 		
+		@Conf.Val
 		@Conf.At("out")
 		public void out(String val) {
 			out = dots(val);
@@ -486,7 +488,7 @@ public class BuiltinsModule extends ModuleConfigurer {
 
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add(() ->  halt());
+			ops.add(() ->  createHalt());
 		}
 		
 	}

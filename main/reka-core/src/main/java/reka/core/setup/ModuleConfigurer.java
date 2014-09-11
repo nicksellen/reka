@@ -6,7 +6,7 @@ import static reka.api.Path.slashes;
 import static reka.config.configurer.Configurer.configure;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import static reka.config.configurer.Configurer.Preconditions.invalidConfig;
-import static reka.core.builder.FlowSegments.par;
+import static reka.core.builder.FlowSegments.createParallelSegment;
 import static reka.core.builder.FlowSegments.seq;
 
 import java.util.ArrayList;
@@ -152,7 +152,7 @@ public abstract class ModuleConfigurer {
 			for (ModuleConfigurer module : modules) {
 				buildSegment(module, built).ifPresent(segment -> segments.add(segment));
 			}
-			return segments.isEmpty() ? Optional.empty() : Optional.of(par(segments));
+			return segments.isEmpty() ? Optional.empty() : Optional.of(createParallelSegment(segments));
 		}
 		
 		private static Optional<FlowSegment> buildSegment(ModuleConfigurer module, Map<ModuleConfigurer, FlowSegment> built) {

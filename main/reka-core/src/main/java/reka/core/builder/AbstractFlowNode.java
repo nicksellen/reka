@@ -110,11 +110,6 @@ public class AbstractFlowNode implements FlowNode {
 	}
 	
 	@Override
-	public String outputName() {
-		return null;
-	}
-	
-	@Override
 	public Data meta() {
 		return meta;
 	}

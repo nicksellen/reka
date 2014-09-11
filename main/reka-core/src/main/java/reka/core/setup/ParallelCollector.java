@@ -1,6 +1,6 @@
 package reka.core.setup;
 
-import static reka.core.builder.FlowSegments.par;
+import static reka.core.builder.FlowSegments.createParallelSegment;
 
 import java.util.Collection;
 
@@ -15,7 +15,7 @@ class ParallelCollector extends AbstractOperationCollector {
 
 	@Override
 	FlowSegment build(Collection<FlowSegment> segments) {
-		return par(segments);
+		return createParallelSegment(segments);
 	}
 	
 }

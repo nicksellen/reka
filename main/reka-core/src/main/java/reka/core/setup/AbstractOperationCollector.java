@@ -1,6 +1,11 @@
 package reka.core.setup;
 
 import static java.util.stream.Collectors.toList;
+import static reka.core.builder.FlowSegments.createLabelSegment;
+import static reka.core.builder.FlowSegments.createMetaSegment;
+import static reka.core.builder.FlowSegments.createNamedInputSegment;
+import static reka.core.builder.OperationFlowNode.createNode;
+import static reka.core.builder.OperationFlowNode.createRouterNode;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -15,8 +20,6 @@ import reka.api.data.MutableData;
 import reka.api.flow.FlowSegment;
 import reka.api.flow.SimpleFlowOperation;
 import reka.api.run.RoutingOperation;
-import reka.core.builder.FlowSegments;
-import reka.core.builder.OperationFlowNode;
 import reka.core.data.memory.MutableMemoryData;
 import reka.nashorn.OperationConfigurer;
 
@@ -24,7 +27,7 @@ abstract class AbstractOperationCollector implements OperationSetup {
 	
 	private final IdentityStore store;
 	private final MutableData meta = MutableMemoryData.create();
-	private final List<Supplier<FlowSegment>> segments = new ArrayList<>();
+	private final List<Supplier<FlowSegment>> suppliers = new ArrayList<>();
 	
 	private String label;
 	
@@ -50,24 +53,48 @@ abstract class AbstractOperationCollector implements OperationSetup {
 	}
 
 	@Override
-	public final OperationSetup addRouter(String name, Function<IdentityStore,? extends RoutingOperation> c) {
-		segments.add(() -> {
-			return OperationFlowNode.router(name, () -> {
-				return c.apply(store);
+	public final OperationSetup router(String name, 
+			                              Function<IdentityStore,? extends RoutingOperation> c, 
+			                              Consumer<RouterSetup> router) {
+		
+		suppliers.add(() -> createRouterNode(name, () -> c.apply(store)));
+		
+		parallel(par -> {
+			router.accept(new RouterSetup(){
+
+				@Override
+				public RouterSetup add(String name, OperationConfigurer configurer) {
+					par.namedInput(name, configurer);
+					return this;
+				}
+
+				@Override
+				public RouterSetup addSequence(String name, Consumer<OperationSetup> seq) {
+					par.namedInputSeq(name, seq);
+					return this;
+				}
+
+				@Override
+				public RouterSetup parallel(Consumer<OperationSetup> consumer) {
+					par.parallel(consumer);
+					return this;
+				}
+				
 			});
 		});
+		
 		return this;
 	}
 	
 	@Override
 	public final OperationSetup add(Supplier<FlowSegment> supplier) {
-		segments.add(supplier);
+		suppliers.add(supplier);
 		return this;
 	}
 	
 	@Override
 	public final OperationSetup add(OperationConfigurer configurer) {
-		segments.add(() -> {
+		add(() -> {
 			OperationSetup ops = OperationSetup.createSequentialCollector(store);
 			configurer.setup(ops);	
 			return ops.get();
@@ -79,11 +106,9 @@ abstract class AbstractOperationCollector implements OperationSetup {
 	public final <T> OperationSetup eachParallel(Iterable<T> it, BiConsumer<T, OperationSetup> c) {
 		OperationSetup e = new ParallelCollector(store);
 		for (T v : it) {
-			e.sequential(s -> {
-				c.accept(v, s);
-			});
+			e.sequential(s -> c.accept(v, s));
 		}
-		segments.add(e);
+		add(e);
 		return this;
 	}
 
@@ -91,7 +116,7 @@ abstract class AbstractOperationCollector implements OperationSetup {
 	public final OperationSetup sequential(Consumer<OperationSetup> seq) {
 		OperationSetup e = new SequentialCollector(store);
 		seq.accept(e);
-		segments.add(e);
+		add(e);
 		return this;
 	}
 
@@ -99,24 +124,24 @@ abstract class AbstractOperationCollector implements OperationSetup {
 	public final OperationSetup sequential(String label, Consumer<OperationSetup> seq) {
 		OperationSetup e = new SequentialCollector(store);
 		seq.accept(e);
-		segments.add(() -> FlowSegments.label(label, e.get()));
+		add(() -> createLabelSegment(label, e.get()));
 		return this;
 	}
 
 	@Override
-	public final OperationSetup routeSeq(String name, Consumer<OperationSetup> seq) {
+	public final OperationSetup namedInputSeq(String name, Consumer<OperationSetup> seq) {
 		OperationSetup e = new SequentialCollector(store);
 		seq.accept(e);
-		segments.add(() -> FlowSegments.namedInput(name, e.get()));
+		add(() -> createNamedInputSegment(name, e.get()));
 		return this;
 	}
 
 	@Override
-	public final OperationSetup route(String name, OperationConfigurer configurer) {
-		segments.add(() -> {
+	public final OperationSetup namedInput(String name, OperationConfigurer configurer) {
+		add(() -> {
 			OperationSetup ops = OperationSetup.createSequentialCollector(store);
 			configurer.setup(ops);	
-			return FlowSegments.namedInput(name, ops.get());
+			return createNamedInputSegment(name, ops.get());
 		});
 		return this;
 	}
@@ -125,7 +150,7 @@ abstract class AbstractOperationCollector implements OperationSetup {
 	public final OperationSetup parallel(Consumer<OperationSetup> par) {
 		OperationSetup e = new ParallelCollector(store);
 		par.accept(e);
-		segments.add(e);
+		add(e);
 		return this;
 	}
 	
@@ -133,25 +158,21 @@ abstract class AbstractOperationCollector implements OperationSetup {
 	public final OperationSetup parallel(String label, Consumer<OperationSetup> par) {
 		OperationSetup e = new ParallelCollector(store);
 		par.accept(e);
-		segments.add(() -> FlowSegments.label(label, e.get()));
+		add(() -> createLabelSegment(label, e.get()));
 		return this;
 	}
 
 	@Override
 	public final FlowSegment get() {
-		List<FlowSegment> built = segments.stream().map(Supplier<FlowSegment>::get).collect(toList());
+		List<FlowSegment> built = suppliers.stream().map(Supplier<FlowSegment>::get).collect(toList());
 		FlowSegment segment = build(built);
-		if (meta.size() > 0) segment = FlowSegments.meta(segment, meta);
-		if (label != null && !label.isEmpty()) segment = FlowSegments.label(label, segment);
+		if (meta.size() > 0) segment = createMetaSegment(segment, meta);
+		if (label != null && !label.isEmpty()) segment = createLabelSegment(label, segment);
 		return segment;
 	}
 	
 	private void addNode(String name, Function<IdentityStore,? extends SimpleFlowOperation> c) {
-		segments.add(() -> {
-			return OperationFlowNode.simple(name, () -> {
-				return c.apply(store);
-			});
-		});
+		add(() -> createNode(name, () -> c.apply(store)));
 	}
 	
 	abstract FlowSegment build(Collection<FlowSegment> segments);

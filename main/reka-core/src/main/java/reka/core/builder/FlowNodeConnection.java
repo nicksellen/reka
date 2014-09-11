@@ -6,13 +6,13 @@ public class FlowNodeConnection {
     
 	private final FlowNode source;
 	private final FlowNode destination;
-	private final String label;
+	private final String name;
 	private final boolean optional;
 	
-	private FlowNodeConnection(FlowNode source, FlowNode destination, String alias, boolean optional) {
+	private FlowNodeConnection(FlowNode source, FlowNode destination, String name, boolean optional) {
 		this.source = source;
 		this.destination = destination;
-		this.label = alias;
+		this.name = name;
 		this.optional = optional;
 	}
 	
@@ -28,8 +28,8 @@ public class FlowNodeConnection {
 		return destination;
 	}
 	
-	public String label() {
-		return label;
+	public String name() {
+		return name;
 	}
 	
 	public boolean optional() {
@@ -42,7 +42,7 @@ public class FlowNodeConnection {
 		int result = 1;
 		result = prime * result
 				+ ((destination == null) ? 0 : destination.hashCode());
-		result = prime * result + ((label == null) ? 0 : label.hashCode());
+		result = prime * result + ((name == null) ? 0 : name.hashCode());
 		result = prime * result + (optional ? 1231 : 1237);
 		result = prime * result + ((source == null) ? 0 : source.hashCode());
 		return result;
@@ -62,10 +62,10 @@ public class FlowNodeConnection {
 				return false;
 		} else if (!destination.equals(other.destination))
 			return false;
-		if (label == null) {
-			if (other.label != null)
+		if (name == null) {
+			if (other.name != null)
 				return false;
-		} else if (!label.equals(other.label))
+		} else if (!name.equals(other.name))
 			return false;
 		if (optional != other.optional)
 			return false;

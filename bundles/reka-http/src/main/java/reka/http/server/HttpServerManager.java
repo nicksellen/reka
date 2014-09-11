@@ -159,8 +159,6 @@ public class HttpServerManager {
 				
 				channel = bootstrap.bind().sync().channel();
 				
-				
-				
 				logger.info("opened port {}", port);
 				
 			} catch (InterruptedException e) {

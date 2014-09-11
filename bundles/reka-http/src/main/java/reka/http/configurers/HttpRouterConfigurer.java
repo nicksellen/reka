@@ -184,15 +184,15 @@ public class HttpRouterConfigurer extends HttpRouteGroupConfigurer implements Op
 
 	@Override
 	public void setup(OperationSetup ops) {
-			
-		ops.addRouter("http/router", store -> new HttpRouter(buildGroupRoutes(), missing != null ? missingRouteName : null));
+		HttpRouter router = new HttpRouter(buildGroupRoutes(), missing != null ? missingRouteName : null);
 		
-		ops.parallel(par -> {
-			buildGroupSegment(par);
+		ops.router("http/router", store -> router, routes -> {
+			routes.parallel(par -> buildGroupSegment(par));
 			if (missing != null) {
-				par.route(missingRouteName, missing);
+				routes.add(missingRouteName, missing);
 			}
 		});
+		
 	}
 	
 }
