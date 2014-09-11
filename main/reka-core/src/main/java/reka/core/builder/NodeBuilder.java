@@ -4,10 +4,10 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static reka.core.runtime.handlers.DSL.actionHandlers;
+import static reka.core.runtime.handlers.DSL.backgroundOp;
 import static reka.core.runtime.handlers.DSL.errorHandlers;
 import static reka.core.runtime.handlers.DSL.haltedHandlers;
 import static reka.core.runtime.handlers.DSL.op;
-import static reka.core.runtime.handlers.DSL.backgroundOp;
 import static reka.core.runtime.handlers.DSL.routing;
 import static reka.core.runtime.handlers.DSL.subscribableAction;
 import static reka.util.Util.runtime;
@@ -24,7 +24,8 @@ import reka.api.flow.FlowOperation;
 import reka.api.run.EverythingSubscriber;
 import reka.api.run.Execution;
 import reka.api.run.ExecutionChoosingOperation;
-import reka.api.run.RoutingOperation;
+import reka.api.run.RouteKey;
+import reka.api.run.RouterOperation;
 import reka.api.run.Subscriber;
 import reka.core.runtime.FailureHandler;
 import reka.core.runtime.FlowContext;
@@ -73,8 +74,8 @@ class NodeBuilder {
 		return initialCounter;
 	}
 
-	public NodeBuilder addChild(NodeBuilder child, String name) {
-		children.add(NodeChildBuilder.create(child, name));
+	public NodeBuilder addChild(NodeBuilder child, RouteKey key) {
+		children.add(NodeChildBuilder.create(child, key));
 		return this;
 	}
 	
@@ -170,12 +171,13 @@ class NodeBuilder {
 		if (node.hasOperationSupplier()) {
 			operation = node.operationSupplier().get();
 		} else if (node.isSubscribeable()) {
+			
 		} else if (!node.hasEmbeddedFlow()) {
 			throw new IllegalStateException(format("node [%s] must have supplier or embedded flow reference", name()));
 		}
 		
-		if (operation instanceof RoutingOperation) {
-			action = routing((RoutingOperation) operation, children);
+		if (operation instanceof RouterOperation) {
+			action = routing((RouterOperation) operation, children);
 		} else {
 			List<ActionHandler> childActions = children.stream().map(NodeChild::node).collect(toList());
 			ActionHandler next = actionHandlers(childActions, error);
@@ -206,6 +208,12 @@ class NodeBuilder {
 		}
 		
 		ActionHandler main = action;
+		
+		/*
+		if (node.isEnd()) {
+			main = endAction(main);
+		}
+		*/
 		
 		if (node.isSubscribeable()) {
 			main = subscribableAction(main);

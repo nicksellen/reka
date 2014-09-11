@@ -19,6 +19,7 @@ import reka.api.flow.FlowConnection;
 import reka.api.flow.FlowDependency;
 import reka.api.flow.FlowNode;
 import reka.api.flow.FlowSegment;
+import reka.api.run.RouteKey;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
@@ -90,8 +91,8 @@ public class FlowConnector {
 		connect(from, to, null);
 	}
 	
-	private void add(FlowNode from, FlowNode to, String name, boolean optional) {
-		FlowNodeConnection connection = FlowNodeConnection.create(from, to, name, optional);
+	private void add(FlowNode from, FlowNode to, RouteKey key, boolean optional) {
+		FlowNodeConnection connection = FlowNodeConnection.create(from, to, key, optional);
 		conns.add(connection);
 		nodes.add(from);
 		nodes.add(to);
@@ -161,7 +162,7 @@ public class FlowConnector {
 		return results;
 	}
 	
-	private void connect(FlowSegment sourceSegment, FlowSegment destinationSegment, String parentName) {
+	private void connect(FlowSegment sourceSegment, FlowSegment destinationSegment, RouteKey parentKey) {
 		checkNotNull(sourceSegment, "source was null");
 		checkNotNull(destinationSegment, "destination was null");
 		
@@ -182,11 +183,11 @@ public class FlowConnector {
 			FlowSegment intermediate = noop(format("+ [%s]", UUID.randomUUID().toString()));
 			
 			for (FlowSegment from : sourceSegment.destinations()) {
-				connect(from, intermediate, parentName);
+				connect(from, intermediate, parentKey);
 			}
 			
 			for (FlowSegment to : destinationSegment.sources()) {
-				connect(intermediate, to, parentName);
+				connect(intermediate, to, parentKey);
 			}
 			
 		} else {
@@ -195,28 +196,28 @@ public class FlowConnector {
 				
 				for (FlowSegment from : sourceSegment.destinations()) {
 					
-					String connectionName = firstNonNull( 
-						parentName,
-						destinationSegment.inputName(), 
-						to.inputName());
+					RouteKey key= firstNonNull( 
+						parentKey,
+						destinationSegment.key(), 
+						to.key());
 					
 					if (from.isNode() && to.isNode()) {
 						
 						String middle;
-						if (connectionName != null) {
-							middle = format("-- %s -->", connectionName);
+						if (key != null) {
+							middle = format("-- %s -->", key);
 						} else {
 							middle = "-->";
 						}
 						logger.debug("node connection [{}] {} [{}]", from.label(), middle, to.label());
 						
 						// TODO: work out how to know if it's optional here? (I don't think I can)
-						add(from.node(), to.node(), connectionName, false);
+						add(from.node(), to.node(), key, false);
 						
 					} else {
 						
-						if (connectionName != null && !connectionName.equals(to.inputName())) {
-							connect(from, to, connectionName);
+						if (key != null && !key.equals(to.key())) {
+							connect(from, to, key);
 						} else {
 							connect(from, to, null);
 						}
@@ -228,8 +229,9 @@ public class FlowConnector {
 		}
 	}
 	
-	private static String firstNonNull(String... items) {
-		for (String item : items) {
+	@SafeVarargs
+	private static <T> T firstNonNull(T... items) {
+		for (T item : items) {
 			if (item != null) {
 				return item;
 			}

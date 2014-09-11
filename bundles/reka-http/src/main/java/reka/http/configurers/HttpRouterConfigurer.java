@@ -12,13 +12,14 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import reka.api.run.RouteKey;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.core.setup.OperationSetup;
 import reka.http.operations.HttpRouter;
-import reka.http.operations.HttpRouter.RouteKey;
+import reka.http.operations.HttpRouter.HttpRouteVar;
 import reka.nashorn.OperationConfigurer;
 
 import com.google.common.collect.ImmutableList;
@@ -35,8 +36,6 @@ public class HttpRouterConfigurer extends HttpRouteGroupConfigurer implements Op
     }
     
 	static final Logger logger = LoggerFactory.getLogger("http-router-builder");
-
-	private static final String missingRouteName = "notfound";
 	
 	private OperationConfigurer missing;
 	
@@ -65,8 +64,7 @@ public class HttpRouterConfigurer extends HttpRouteGroupConfigurer implements Op
 
 		private HttpMethod method;
 		private String path;
-		private String connectionName;
-		private String name;
+		private RouteKey key;
 
 		public RouteBuilder method(String value) {
 			method = HttpMethod.valueOf(value);
@@ -78,19 +76,14 @@ public class HttpRouterConfigurer extends HttpRouteGroupConfigurer implements Op
 			return this;
 		}
 
-		public RouteBuilder name(String value) {
-			name = value;
-			return this;
-		}
-		
-		public RouteBuilder connectionName(String value) {
-			connectionName = value;
+		public RouteBuilder key(RouteKey value) {
+			key = value;
 			return this;
 		}
 		
 		public HttpRouter.Route build() {
 			
-			List<RouteKey> keys = new ArrayList<>();
+			List<HttpRouteVar> vars = new ArrayList<>();
 			
 			StringBuffer regex = new StringBuffer();
 			
@@ -99,34 +92,34 @@ public class HttpRouterConfigurer extends HttpRouteGroupConfigurer implements Op
 			Matcher matcher = PATH_VAR.matcher(path);
 
 			int pos = 0;
-			String key;
+			String var;
 			
 			int matchGroupId = 1;
 			
 			while (matcher.find()) {
 				
-				key = matcher.group(1);
+				var = matcher.group(1);
 				
-				if (key == null) {
+				if (var == null) {
 					// a {path} kind of key, just remove the '{' and '}'
-					key = matcher.group(2);
-					key = key.substring(1, key.length() - 1);
+					var = matcher.group(2);
+					var = var.substring(1, var.length() - 1);
 				}
 
 				boolean starred = false;
 				boolean optional = false;
 				
-				if (key.endsWith("?")) {
+				if (var.endsWith("?")) {
 					optional = true;
-					key = key.substring(0, key.length() - 1);
+					var = var.substring(0, var.length() - 1);
 				}
 				
-				if (key.endsWith("*")) {
+				if (var.endsWith("*")) {
 					starred = true;
-					key = key.substring(0, key.length() - 1);
+					var = var.substring(0, var.length() - 1);
 				}
 				
-				keys.add(new RouteKey(matchGroupId++, dots(key)));
+				vars.add(new HttpRouteVar(matchGroupId++, dots(var)));
 
 				// the bit of text between the last var and this one
 				String remainder = "";
@@ -164,19 +157,15 @@ public class HttpRouterConfigurer extends HttpRouteGroupConfigurer implements Op
 
 			Pattern pattern = Pattern.compile(regex.toString());
 
-			if (connectionName == null) {
+			if (key == null) {
 				throw new RuntimeException("to node was null :(");
 			}
 			
-			if (name == null) {
-				name = connectionName;
-			}
-			
-			if (keys.isEmpty()) {
-				return new HttpRouter.StaticRoute(connectionName, path, method, name, RouteFormatters.create(path));
+			if (vars.isEmpty()) {
+				return new HttpRouter.StaticRoute(key, path, method, RouteFormatters.create(path));
 			} else {
-				log.debug("http router regex [{}] for [{}]", pattern, connectionName);
-				return new HttpRouter.RegexRoute(connectionName, pattern, ImmutableList.copyOf(keys), method, name, RouteFormatters.create(path));
+				log.debug("http router regex [{}] for [{}]", pattern, key);
+				return new HttpRouter.RegexRoute(key, pattern, ImmutableList.copyOf(vars), method, RouteFormatters.create(path));
 			}
 		}
 
@@ -184,12 +173,12 @@ public class HttpRouterConfigurer extends HttpRouteGroupConfigurer implements Op
 
 	@Override
 	public void setup(OperationSetup ops) {
-		HttpRouter router = new HttpRouter(buildGroupRoutes(), missing != null ? missingRouteName : null);
+		HttpRouter router = new HttpRouter(buildGroupRoutes(), missing != null);
 		
 		ops.router("http/router", store -> router, routes -> {
 			routes.parallel(par -> buildGroupSegment(par));
 			if (missing != null) {
-				routes.add(missingRouteName, missing);
+				routes.add(HttpRouter.MISSING, missing);
 			}
 		});
 		

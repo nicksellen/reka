@@ -181,7 +181,7 @@ public class FlowBuilders {
 	    int nextId = 0;
 	    
 		Map<Integer,NodeBuilder> idToNodeBuilder = new HashMap<>();
-		Map<FlowNode,Integer> flowNodeToId = new HashMap<>();
+		Map<FlowNode,Integer> nodeToId = new HashMap<>();
 		Map<Integer,String> idToName = new HashMap<>();
 		Map<Integer,NodeType> idToType = new HashMap<>();
 		
@@ -189,7 +189,7 @@ public class FlowBuilders {
 		    int id = nextId++;
 		    NodeBuilder builder = new NodeBuilder(id, node.label(), node, executor);
 			idToNodeBuilder.put(id, builder);
-			flowNodeToId.put(node, id);
+			nodeToId.put(node, id);
 			idToName.put(id, builder.name());
 			NodeType type = NodeType.NORMAL;
 			if (node.isStart()) {
@@ -203,33 +203,33 @@ public class FlowBuilders {
 		}
 
 		for (FlowNodeConnection connection : connections.connections()) {
-		    Integer parentId = flowNodeToId.get(connection.source());
+		    Integer parentId = nodeToId.get(connection.source());
 		    checkNotNull(parentId);
 		    
             NodeBuilder parent = idToNodeBuilder.get(parentId);
             checkNotNull(parent);
 		    
-		    Integer childId = flowNodeToId.get(connection.destination());
+		    Integer childId = nodeToId.get(connection.destination());
 		    checkNotNull(childId);
 		    
 			NodeBuilder child = idToNodeBuilder.get(childId);
 			checkNotNull(child);
 			
-			parent.addChild(child, connection.name());
+			parent.addChild(child, connection.key());
 			child.incrementParentCount();
 		}
 		
-		NodeBuilder headBuilder = idToNodeBuilder.get(flowNodeToId.get(info.start()));
+		NodeBuilder headBuilder = idToNodeBuilder.get(nodeToId.get(info.start()));
 		
 		if (buildFlow) {
 			configure(new ConfigurationNodePath(NodeChildBuilder.create(headBuilder)));
 			Map<Path,Flow> dependencies = makeMapOfBuiltFlows();
 	        NodeFactory factory = new NodeFactory(idToNodeBuilder, dependencies);        
-	        Node headNode = factory.get(flowNodeToId.get(info.start()));
+	        Node headNode = factory.get(nodeToId.get(info.start()));
 	        info.flow(new DefaultFlow(info.name(), headNode));
 		}
 		
-        info.visualizer(new DefaultFlowVisualizer(info.name(), flowNodeToId, idToName, idToType, segments, connections));
+        info.visualizer(new DefaultFlowVisualizer(info.name(), nodeToId, idToName, idToType, segments, connections));
 	}
 	
 	private void configure(ConfigurationNodePath path) {

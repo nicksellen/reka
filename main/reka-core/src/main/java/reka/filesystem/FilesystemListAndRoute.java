@@ -12,13 +12,14 @@ import org.slf4j.LoggerFactory;
 import reka.api.Path;
 import reka.api.data.MutableData;
 import reka.api.run.RouteCollector;
-import reka.api.run.RoutingOperation;
+import reka.api.run.RouteKey;
+import reka.api.run.RouterOperation;
 
-public class FilesystemListAndRoute implements RoutingOperation {
+public class FilesystemListAndRoute implements RouterOperation {
 	
-	public static final String DIRECTORY = "directory";
-	public static final String FILE = "file";
-	public static final String NOT_FOUND = "not found";
+	public static final RouteKey DIRECTORY = RouteKey.named("directory");
+	public static final RouteKey FILE = RouteKey.named("file");
+	public static final RouteKey NOT_FOUND = RouteKey.named("not found");
 	
 	@SuppressWarnings("unused")
 	private final Logger logger = LoggerFactory.getLogger("filesystem/list");

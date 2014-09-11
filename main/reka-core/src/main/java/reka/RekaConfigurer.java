@@ -2,6 +2,7 @@ package reka;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
+import static java.util.Collections.emptyList;
 import static reka.util.Util.unchecked;
 
 import java.io.File;
@@ -12,6 +13,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.Map.Entry;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
@@ -29,8 +32,7 @@ public class RekaConfigurer {
 	
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
-	private final List<String> appPaths = new ArrayList<>();
-	private final List<ConfigBody> appConfigs = new ArrayList<>();
+	private final Map<String,ConfigBody> apps = new HashMap<>();
 	
 	private String datadir = "data";
 
@@ -55,16 +57,21 @@ public class RekaConfigurer {
 		unpackBundle(val);
 	}
 	
-	@Conf.Each("run")
-	public void app(String val) {
-		appPaths.add(val);
-	}
-	
 	@Conf.Each("app")
-	public void appDefinition(Config config) {
+	public void app(Config config) {
 		if (!config.hasBody()) return;
 		ConfigBody body = config.body();
-		appConfigs.add(body);
+		String identity = null;
+		if (config.hasValue()) {
+			identity = config.valueAsString();
+		} else {
+			Optional<Config> name = config.body().at("name");
+			if (name.isPresent() && name.get().hasValue()) {
+				identity = name.get().valueAsString();
+			}
+		}
+		if (identity == null) identity = UUID.randomUUID().toString();
+		apps.put(identity, body);
 	}
 	
 	private void unpackBundle(String jarpath) {
@@ -107,7 +114,7 @@ public class RekaConfigurer {
 			
 			// classloader per bundle keeps things isolated (each bundle can have it's own versions of libraries)
 			@SuppressWarnings("resource")
-			ClassLoader cl = new URLClassLoader(urls, getClass().getClassLoader());
+			ClassLoader cl = new URLClassLoader(urls, Reka.class.getClassLoader());
 			
 			String classname = e.getValue();
 			try {
@@ -122,7 +129,7 @@ public class RekaConfigurer {
 		
 		checkState(!classLoadingError, "failed to load all bundles");
 		
-		return new Reka(new File(datadir), bundles, appPaths, appConfigs);
+		return new Reka(new File(datadir), bundles, emptyList(), apps);
 	}
 
 }

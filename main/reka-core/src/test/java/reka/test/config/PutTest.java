@@ -21,13 +21,13 @@ import reka.api.flow.FlowNode;
 import reka.api.flow.FlowOperation;
 import reka.api.flow.FlowSegment;
 import reka.api.run.Operation;
-import reka.api.run.RoutingOperation;
+import reka.api.run.RouterOperation;
 import reka.builtins.BuiltinsModule;
 import reka.config.Config;
 import reka.config.NavigableConfig;
 import reka.config.configurer.Configurer.InvalidConfigurationException;
 import reka.core.data.memory.MutableMemoryData;
-import reka.core.runtime.DefaultRouter;
+import reka.core.runtime.DefaultRouteCollector;
 import reka.core.setup.OperationSetup;
 import reka.nashorn.OperationConfigurer;
 
@@ -98,8 +98,8 @@ public class PutTest {
 		FlowOperation op = firstNode(v).operationSupplier().get();
 		if (op instanceof Operation) {
 			callSync((Operation) op, data);
-		} else if (op instanceof RoutingOperation) {
-			callRouting((RoutingOperation) op, data);
+		} else if (op instanceof RouterOperation) {
+			callRouting((RouterOperation) op, data);
 		}
 		throw runtime("couldn't work out %s", op);
 	}
@@ -123,8 +123,8 @@ public class PutTest {
 		op.call(data);
 	}
 	
-	private static void callRouting(RoutingOperation op, MutableData data) {
-		op.call(data, DefaultRouter.create(new ArrayList<String>()));
+	private static void callRouting(RouterOperation op, MutableData data) {
+		op.call(data, DefaultRouteCollector.get(new ArrayList<>()));
 	}
 
 }

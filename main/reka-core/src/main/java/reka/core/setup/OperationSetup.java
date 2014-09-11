@@ -9,7 +9,8 @@ import reka.api.IdentityStore;
 import reka.api.data.MutableData;
 import reka.api.flow.FlowSegment;
 import reka.api.flow.SimpleFlowOperation;
-import reka.api.run.RoutingOperation;
+import reka.api.run.RouteKey;
+import reka.api.run.RouterOperation;
 import reka.nashorn.OperationConfigurer;
 
 public interface OperationSetup extends Supplier<FlowSegment> {
@@ -19,8 +20,8 @@ public interface OperationSetup extends Supplier<FlowSegment> {
 	}
 	
 	public static interface RouterSetup {
-		RouterSetup add(String name, OperationConfigurer configurer);
-		RouterSetup addSequence(String name, Consumer<OperationSetup> seq);
+		RouterSetup add(RouteKey key, OperationConfigurer configurer);
+		RouterSetup addSequence(RouteKey key, Consumer<OperationSetup> seq);
 		RouterSetup parallel(Consumer<OperationSetup> par);
 	}
 	
@@ -28,22 +29,24 @@ public interface OperationSetup extends Supplier<FlowSegment> {
 	
 	OperationSetup label(String label);
 	
-	OperationSetup add(String name, Function<IdentityStore,? extends SimpleFlowOperation> c);
+	OperationSetup add(String name, Function<IdentityStore,? extends SimpleFlowOperation> store);
 	OperationSetup add(Supplier<FlowSegment> supplier);
 	
-	OperationSetup router(String name, Function<IdentityStore,? extends RoutingOperation> c, Consumer<RouterSetup> routes);
+	OperationSetup router(String name, Function<IdentityStore,? extends RouterOperation> store, Consumer<RouterSetup> routes);
 	
 	OperationSetup add(OperationConfigurer configurer);
 	
 	OperationSetup sequential(Consumer<OperationSetup> seq);
 	OperationSetup sequential(String label, Consumer<OperationSetup> seq);
 	
-	OperationSetup namedInputSeq(String name, Consumer<OperationSetup> seq);
-	OperationSetup namedInput(String name, OperationConfigurer configurer);
+	OperationSetup namedInputSeq(RouteKey key, Consumer<OperationSetup> seq);
+	OperationSetup namedInput(RouteKey key, OperationConfigurer configurer);
 	
 	OperationSetup parallel(Consumer<OperationSetup> par);
 	OperationSetup parallel(String label, Consumer<OperationSetup> par);
 	
 	<T> OperationSetup eachParallel(Iterable<T> it, BiConsumer<T, OperationSetup> seq);
+
+	OperationSetup defer(Supplier<FlowSegment> supplier);
 	
 }

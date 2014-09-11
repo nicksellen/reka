@@ -17,6 +17,7 @@ import reka.api.data.MutableData;
 import reka.api.flow.FlowConnection;
 import reka.api.flow.FlowNode;
 import reka.api.flow.FlowSegment;
+import reka.api.run.RouteKey;
 import reka.core.config.NoOp;
 import reka.core.data.memory.MutableMemoryData;
 
@@ -75,8 +76,8 @@ public class FlowSegments extends AbstractFlowNode {
 		
 	}
 	
-	public static FlowSegment createNamedInputSegment(String name, FlowSegment... segment) {
-		return new NamedInput(name, Sequential.of(segment));
+	public static FlowSegment createNamedInputSegment(RouteKey key, FlowSegment... segment) {
+		return new NamedInput(key, Sequential.of(segment));
 	}
 	
 	public static class DefaultFlowConnection implements FlowConnection {
@@ -105,7 +106,7 @@ public class FlowSegments extends AbstractFlowNode {
 		
 		@Override
 		public String toString() {
-			return format("FlowConnection(%s -> %s)", source.inputName(), destination.inputName());
+			return format("FlowConnection(%s -> %s)", source.key(), destination.key());
 		}
 	}
 	
@@ -113,7 +114,7 @@ public class FlowSegments extends AbstractFlowNode {
 
 		private final MutableData meta = MutableMemoryData.create();
 		
-		private String inputName;
+		private RouteKey inputName;
 		private String label;
 		private final Collection<FlowSegment> start = new ArrayList<>();
 		private final Collection<FlowSegment> end = new ArrayList<>();
@@ -146,7 +147,7 @@ public class FlowSegments extends AbstractFlowNode {
 			return meta;
 		}
 		
-		protected AbstractFlowSegment inputName(String value) {
+		protected AbstractFlowSegment inputName(RouteKey value) {
 			inputName = value;
 			return this;
 		}
@@ -181,7 +182,7 @@ public class FlowSegments extends AbstractFlowNode {
 		}
 		
 		@Override
-		public String inputName() {
+		public RouteKey key() {
 			return inputName;
 		}
 		
@@ -221,8 +222,8 @@ public class FlowSegments extends AbstractFlowNode {
 	}
 	
 	private static class NamedInput extends AbstractFlowSegment {
-		public NamedInput(String name, FlowSegment segment) {
-			start(segment).end(segment).inputName(name);
+		public NamedInput(RouteKey key, FlowSegment segment) {
+			start(segment).end(segment).inputName(key);
 		}
 	}
 	

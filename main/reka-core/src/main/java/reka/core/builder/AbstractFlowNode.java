@@ -13,6 +13,7 @@ import reka.api.flow.FlowConnection;
 import reka.api.flow.FlowDependency;
 import reka.api.flow.FlowNode;
 import reka.api.flow.FlowSegment;
+import reka.api.run.RouteKey;
 import reka.core.data.memory.MutableMemoryData;
 
 import com.google.common.collect.ImmutableList;
@@ -58,7 +59,7 @@ public class AbstractFlowNode implements FlowNode {
 		return this;
 	}
 	
-	public String inputName() {
+	public RouteKey key() {
 		return null;
 	}
 

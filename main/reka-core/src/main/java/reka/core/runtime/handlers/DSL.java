@@ -1,5 +1,6 @@
 package reka.core.runtime.handlers;
 
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static reka.util.Util.unsupported;
 
@@ -9,7 +10,7 @@ import java.util.concurrent.ExecutorService;
 import reka.api.flow.FlowOperation;
 import reka.api.run.AsyncOperation;
 import reka.api.run.Operation;
-import reka.api.run.RoutingOperation;
+import reka.api.run.RouterOperation;
 import reka.api.run.Subscriber;
 import reka.core.config.NoOp;
 import reka.core.runtime.NodeChild;
@@ -50,24 +51,22 @@ public class DSL {
 		}
 	}
 	
-	public static RoutingAction routing(RoutingOperation operation, Collection<NodeChild> children) {
-		return new RoutingAction(operation, children);
+	public static RouterAction routing(RouterOperation operation, Collection<NodeChild> children) {
+		return new RouterAction(operation, children);
 	}
 	
 	public static ActionHandler subscribableAction(ActionHandler next) {
 		return new CallSubscriberAction(next);
 	}
 	
-	/*
-
-	public static SyncAction syncOperation(Operation operation, ActionHandler next) {
-		return new SyncAction(operation, next);
+	public static ActionHandler endAction(ActionHandler next) {
+		if (next == DoNothing.INSTANCE) {
+			return new EndAction();
+		} else {
+			throw new IllegalStateException(
+				format("was excepting this to be a DoNothing action, not %s", next.getClass()));
+		}
 	}
-	
-	public static SyncAction syncOperation(Operation operation) {
-		return syncOperation(operation, DoNothing.INSTANCE);
-	}
-	*/
 	
 	public static SubscribersAction subscriber(Subscriber subscriber) {
 		return subscribers(subscriber);

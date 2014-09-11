@@ -9,9 +9,14 @@ import java.util.function.Function;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.run.RouteCollector;
-import reka.api.run.RoutingOperation;
+import reka.api.run.RouteKey;
+import reka.api.run.RouterOperation;
 
-public class FilesystemType implements RoutingOperation {
+public class FilesystemType implements RouterOperation {
+
+	public static RouteKey DIR = RouteKey.named("dir");
+	public static RouteKey FILE = RouteKey.named("file");
+	public static RouteKey MISSING = RouteKey.named("missing");
 	
 	private final Path basedir;
 	private final Function<Data,String> pathFn;
@@ -31,11 +36,11 @@ public class FilesystemType implements RoutingOperation {
 		File entry = resolveAndCheck(basedir, path).toFile();
 		
 		if (entry.isDirectory()) {
-			router.routeTo("dir");
+			router.routeTo(DIR);
 		} else if (entry.isFile()) {
-			router.routeTo("file");
+			router.routeTo(FILE);
 		} else {
-			router.routeTo("missing");
+			router.routeTo(MISSING);
 		}
 	}
 

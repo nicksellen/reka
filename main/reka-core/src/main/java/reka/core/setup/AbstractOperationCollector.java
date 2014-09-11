@@ -19,7 +19,8 @@ import reka.api.IdentityStore;
 import reka.api.data.MutableData;
 import reka.api.flow.FlowSegment;
 import reka.api.flow.SimpleFlowOperation;
-import reka.api.run.RoutingOperation;
+import reka.api.run.RouteKey;
+import reka.api.run.RouterOperation;
 import reka.core.data.memory.MutableMemoryData;
 import reka.nashorn.OperationConfigurer;
 
@@ -54,7 +55,7 @@ abstract class AbstractOperationCollector implements OperationSetup {
 
 	@Override
 	public final OperationSetup router(String name, 
-			                              Function<IdentityStore,? extends RoutingOperation> c, 
+			                              Function<IdentityStore,? extends RouterOperation> c, 
 			                              Consumer<RouterSetup> router) {
 		
 		suppliers.add(() -> createRouterNode(name, () -> c.apply(store)));
@@ -63,14 +64,14 @@ abstract class AbstractOperationCollector implements OperationSetup {
 			router.accept(new RouterSetup(){
 
 				@Override
-				public RouterSetup add(String name, OperationConfigurer configurer) {
-					par.namedInput(name, configurer);
+				public RouterSetup add(RouteKey key, OperationConfigurer configurer) {
+					par.namedInput(key, configurer);
 					return this;
 				}
 
 				@Override
-				public RouterSetup addSequence(String name, Consumer<OperationSetup> seq) {
-					par.namedInputSeq(name, seq);
+				public RouterSetup addSequence(RouteKey key, Consumer<OperationSetup> seq) {
+					par.namedInputSeq(key, seq);
 					return this;
 				}
 
@@ -129,19 +130,19 @@ abstract class AbstractOperationCollector implements OperationSetup {
 	}
 
 	@Override
-	public final OperationSetup namedInputSeq(String name, Consumer<OperationSetup> seq) {
+	public final OperationSetup namedInputSeq(RouteKey key, Consumer<OperationSetup> seq) {
 		OperationSetup e = new SequentialCollector(store);
 		seq.accept(e);
-		add(() -> createNamedInputSegment(name, e.get()));
+		add(() -> createNamedInputSegment(key, e.get()));
 		return this;
 	}
 
 	@Override
-	public final OperationSetup namedInput(String name, OperationConfigurer configurer) {
+	public final OperationSetup namedInput(RouteKey key, OperationConfigurer configurer) {
 		add(() -> {
 			OperationSetup ops = OperationSetup.createSequentialCollector(store);
 			configurer.setup(ops);	
-			return createNamedInputSegment(name, ops.get());
+			return createNamedInputSegment(key, ops.get());
 		});
 		return this;
 	}
@@ -170,7 +171,12 @@ abstract class AbstractOperationCollector implements OperationSetup {
 		if (label != null && !label.isEmpty()) segment = createLabelSegment(label, segment);
 		return segment;
 	}
-	
+
+	@Override
+	public OperationSetup defer(Supplier<FlowSegment> supplier) {
+		throw new UnsupportedOperationException("I haven't made this bit yet");
+	}
+
 	private void addNode(String name, Function<IdentityStore,? extends SimpleFlowOperation> c) {
 		add(() -> createNode(name, () -> c.apply(store)));
 	}

@@ -82,35 +82,6 @@ public class HttpModule extends ModuleConfigurer {
 		}
 		listens.add(new HostAndPort(host, port));
 	}
-
-	/*
-	@Conf.At("auth")
-	public void auth(Config config) {
-		checkConfig(config.hasValue(), "must have a value");
-		switch (config.valueAsString()) {
-		case "basic":
-			auth = configure(new BasicAuthConfigurer(), config.body());
-			break;
-		default:
-			throw runtime("unknown auth method %s", config.valueAsString());
-		}
-	}
-	
-	public static class BasicAuthConfigurer {
-		
-		private final List<Entry<String,String>> accounts = new ArrayList<>();
-		
-		@Conf.Config
-		public void accounts(Config config) {
-			for (Config c : config.body()) {
-				String username = c.key();
-				String password = c.valueAsString();
-				accounts.add(createEntry(username, password));
-			}
-		}
-		
-	}
-	*/
 	
 	@Conf.At("ssl")
 	public void ssl(Config config) {

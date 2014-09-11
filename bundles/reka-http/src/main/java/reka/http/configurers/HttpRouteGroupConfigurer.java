@@ -11,6 +11,7 @@ import java.util.Map.Entry;
 import java.util.function.Supplier;
 
 import reka.api.flow.FlowSegment;
+import reka.api.run.RouteKey;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.config.ConfigurerProvider;
@@ -26,7 +27,7 @@ public class HttpRouteGroupConfigurer {
 
 	private final ConfigurerProvider provider;
 
-	private final Map<String, List<OperationConfigurer>> segments = new HashMap<>();
+	private final Map<RouteKey, List<OperationConfigurer>> segments = new HashMap<>();
 	private final List<HttpRouter.Route> routes = new ArrayList<>();
 	private final List<HttpRouteGroupConfigurer> groups = new ArrayList<>();
 
@@ -91,12 +92,12 @@ public class HttpRouteGroupConfigurer {
 
 		ops.parallel(par -> {
 
-			for (Entry<String, List<OperationConfigurer>> entry : segments.entrySet()) {
+			for (Entry<RouteKey, List<OperationConfigurer>> entry : segments.entrySet()) {
 				
-				String connectionName = entry.getKey();
+				RouteKey key = entry.getKey();
 				List<OperationConfigurer> operations = entry.getValue();
 				
-				par.namedInputSeq(connectionName, route -> {
+				par.namedInputSeq(key, route -> {
 					operations.forEach(routeOperations -> route.add(routeOperations));
 				});
 			}
@@ -126,11 +127,11 @@ public class HttpRouteGroupConfigurer {
 
 		OperationConfigurer segment = configToSegment(config);
 		
-		if (!segments.containsKey(route.connectionName())) {
-			segments.put(route.connectionName(), new ArrayList<>());
+		if (!segments.containsKey(route.key())) {
+			segments.put(route.key(), new ArrayList<>());
 		}
 
-		segments.get(route.connectionName()).add(segment);
+		segments.get(route.key()).add(segment);
 		
 	}
 	
@@ -146,8 +147,8 @@ public class HttpRouteGroupConfigurer {
 	}
 	
 	private void addPatternRoute(String method, String pattern, Config config) {
-		String connectionName = format("%s %s", method, pattern);
-		addRoute(new RouteBuilder().method(method).path(pattern).connectionName(connectionName).build(), config);
+		RouteKey key = RouteKey.named(format("%s %s", method, pattern));
+		addRoute(new RouteBuilder().method(method).path(pattern).key(key).build(), config);
 	}
 
 }

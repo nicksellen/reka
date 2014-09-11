@@ -19,7 +19,8 @@ import reka.api.data.MutableData;
 import reka.api.flow.FlowOperation;
 import reka.api.run.AsyncOperation;
 import reka.api.run.RouteCollector;
-import reka.api.run.RoutingOperation;
+import reka.api.run.RouteKey;
+import reka.api.run.RouterOperation;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashFunction;
@@ -29,7 +30,7 @@ import com.google.common.io.BaseEncoding;
 
 public abstract class HttpContents implements FlowOperation {
 	
-	public static class Routed extends HttpContents implements RoutingOperation {
+	public static class Routed extends HttpContents implements RouterOperation {
 		
 		public Routed(Map<String, ContentItem> contents) {
 			super(contents);
@@ -63,8 +64,8 @@ public abstract class HttpContents implements FlowOperation {
 	
 	private final static BaseEncoding HEX_ENCODING = BaseEncoding.base16();
 	
-	private static String PASSTHROUGH = "pass";
-	private static String FOUND = "found";
+	private static final RouteKey PASSTHROUGH = RouteKey.named("pass");
+	private static final RouteKey FOUND = RouteKey.named("found");
 
 	private static final Path UNIQUE_PATHS_PATH = path("data", "content", "permalink");
 	

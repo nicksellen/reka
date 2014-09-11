@@ -79,7 +79,7 @@ public class DefaultFlow implements Flow {
 	
 	@Override
 	public void run(ExecutorService executor, MutableData data, EverythingSubscriber subscriber) {
-		head.call(data, new DefaultFlowContext(id, executor, subscriber));
+		head.call(data, DefaultFlowContext.get(id, executor, subscriber));
 	}
 	
 	@Override

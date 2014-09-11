@@ -1,6 +1,7 @@
 package reka.core.builder;
 
 import static java.lang.String.format;
+import reka.api.run.RouteKey;
 import reka.core.runtime.NodeChild;
 
 class NodeChildBuilder {
@@ -9,22 +10,22 @@ class NodeChildBuilder {
 		return create(node, null);
 	}
 	
-	static NodeChildBuilder create(NodeBuilder node, String name) {
-		return new NodeChildBuilder(node, false, name);
+	static NodeChildBuilder create(NodeBuilder node, RouteKey key) {
+		return new NodeChildBuilder(node, false, key);
 	}
 	
-	private NodeChildBuilder(NodeBuilder node, boolean optional, String name) {
+	private NodeChildBuilder(NodeBuilder node, boolean optional, RouteKey key) {
 		this.node = node;
 		this.optional = optional;
-		this.name = name;
+		this.key = key;
 	}
 	
-	private final String name;
+	private final RouteKey key;
 	private final NodeBuilder node;
 	private boolean optional;
 	
 	public NodeChild build(NodeFactory factory) {
-		return new NodeChild(factory.get(node.id()), optional, name);
+		return new NodeChild(factory.get(node.id()), optional, key);
 	}
 	
 	public NodeBuilder node() {

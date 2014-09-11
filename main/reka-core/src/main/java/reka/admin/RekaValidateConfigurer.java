@@ -1,16 +1,12 @@
 package reka.admin;
 
-import static reka.api.Path.dots;
 import static reka.config.configurer.Configurer.configure;
 import static reka.util.Util.runtime;
 
 import java.util.function.Function;
 
 import reka.ApplicationManager;
-import reka.api.IdentityStore;
-import reka.api.Path;
 import reka.api.data.Data;
-import reka.api.run.RoutingOperation;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
@@ -25,7 +21,6 @@ public class RekaValidateConfigurer implements OperationConfigurer {
 	private final ConfigurerProvider provider;
 	private final ApplicationManager manager;
 	
-	private Path in;
 	private Function<Data,String> filenameFn;
 	
 	private OperationConfigurer whenOk;
@@ -34,11 +29,6 @@ public class RekaValidateConfigurer implements OperationConfigurer {
 	RekaValidateConfigurer(ConfigurerProvider provider, ApplicationManager manager) {
 		this.provider = provider;
 		this.manager = manager;
-	}
-	
-	@Conf.At("in")
-	public void in(String val) {
-		in = dots(val);
 	}
 	
 	@Conf.At("filename")
@@ -67,20 +57,9 @@ public class RekaValidateConfigurer implements OperationConfigurer {
 	
 	@Override
 	public void setup(OperationSetup ops) {
-		
-		Function<IdentityStore,RoutingOperation> supplier;
-		
-		if (in != null) {
-			supplier = store -> new RekaValidateFromContentOperation(manager, in);
-		} else if (filenameFn != null) {
-			supplier = store -> new RekaValidateFromFileOperation(manager, filenameFn);
-		} else {
-			throw runtime("must specify either 'in' or 'filename'");
-		}
-		
-		ops.router("validate", supplier, routes -> {
-			if (whenOk != null) routes.add("ok", whenOk);
-			if (whenError != null) routes.add("error", whenError);
+		ops.router("validate", store -> new RekaValidateFromFileOperation(manager, filenameFn), routes -> {
+			if (whenOk != null) routes.add(RekaValidateFromFileOperation.OK, whenOk);
+			if (whenError != null) routes.add(RekaValidateFromFileOperation.ERROR, whenError);
 		});
 	}
 	

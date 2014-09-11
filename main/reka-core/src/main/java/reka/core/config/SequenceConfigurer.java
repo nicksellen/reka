@@ -29,32 +29,36 @@ public class SequenceConfigurer implements OperationConfigurer {
         configurers.add(createEntry(config, provider.provide(config.key(), provider, config)));
     }
     
-  @Override
-  public void setup(OperationSetup ops) {
-    configurers.forEach(e -> {
-        ops.sequential(op -> {
-      
-          Config config = e.getKey();
-          Supplier<FlowSegment> configurer = e.getValue();
-          
-          op.meta().putString("key", config.key());
-          
-          if (config.hasValue()) {
-            op.meta().putString("value", config.valueAsString());
-          }
-          
-          op.meta().putInt(dots("location.start.line"), config.source().linenumbers().startLine());
-          op.meta().putInt(dots("location.start.pos"), config.source().linenumbers().startPos());
-          op.meta().putInt(dots("location.end.line"), config.source().linenumbers().endLine());
-          op.meta().putInt(dots("location.end.pos"), config.source().linenumbers().endPos());
-          
-          if (config.source().origin().isFile()) {
-            op.meta().putString("filename", config.source().origin().file().getAbsolutePath());
-          }
-          
-          op.add(configurer);
-        });
-    });
-  }
+    public Supplier<FlowSegment> bind() {
+    	return bind(null);
+    }
+    
+	@Override
+	public void setup(OperationSetup ops) {
+		configurers.forEach(e -> {
+			ops.sequential(op -> {
+
+				Config config = e.getKey();
+				Supplier<FlowSegment> configurer = e.getValue();
+
+				op.meta().putString("key", config.key());
+
+				if (config.hasValue()) {
+					op.meta().putString("value", config.valueAsString());
+				}
+
+				op.meta().putInt(dots("location.start.line"), config.source().linenumbers().startLine());
+				op.meta().putInt(dots("location.start.pos"), config.source().linenumbers().startPos());
+				op.meta().putInt(dots("location.end.line"), config.source().linenumbers().endLine());
+				op.meta().putInt(dots("location.end.pos"), config.source().linenumbers().endPos());
+
+				if (config.source().origin().isFile()) {
+					op.meta().putString("filename", config.source().origin().file().getAbsolutePath());
+				}
+
+				op.add(configurer);
+			});
+		});
+	}
 
 }

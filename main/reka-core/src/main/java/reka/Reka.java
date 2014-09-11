@@ -6,16 +6,16 @@ import static reka.util.Util.runtime;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import reka.admin.RekaSystemBundle;
-import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.FileSource;
 import reka.config.Source;
@@ -29,13 +29,13 @@ public class Reka {
 	private final File datadir;
 	private final List<RekaBundle> bundles = new ArrayList<>();
 	private final List<String> filenames = new ArrayList<>();
-	private final List<ConfigBody> configs = new ArrayList<>();
+	private final Map<String,ConfigBody> configs = new HashMap<>();
 	
-	public Reka(File datadir, List<RekaBundle> bundles, List<String> filenames, List<ConfigBody> configs) {
+	public Reka(File datadir, List<RekaBundle> bundles, List<String> filenames, Map<String,ConfigBody> configs) {
 		this.datadir = datadir;
 		this.bundles.addAll(bundles);
 		this.filenames.addAll(filenames);
-		this.configs.addAll(configs);
+		this.configs.putAll(configs);
 	}
 	
 	public void run() {
@@ -71,8 +71,6 @@ public class Reka {
 			
 			final File file = possibleFile;
 			
-			//String identity = UUID.randomUUID().toString();
-			
 			String identity = file.toPath().getFileName().toString().replaceFirst("\\.reka$", "");
 			
 			Source source = FileSource.from(file);
@@ -81,13 +79,8 @@ public class Reka {
 			
 		}
 		
-		for (ConfigBody config : configs) {
-			String identity = UUID.randomUUID().toString();
-			Optional<Config> name = config.at("name");
-			if (name.isPresent()) {
-				identity = name.get().valueAsString();
-			}
-			manager.deployConfig(identity, config);
+		for (Entry<String, ConfigBody> e : configs.entrySet()) {
+			manager.deployConfig(e.getKey(), e.getValue());
 		}
 	}
 	

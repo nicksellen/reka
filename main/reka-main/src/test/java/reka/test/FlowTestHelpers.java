@@ -10,19 +10,20 @@ import reka.api.flow.FlowOperation;
 import reka.api.run.AsyncOperation;
 import reka.api.run.Operation;
 import reka.api.run.RouteCollector;
-import reka.api.run.RoutingOperation;
+import reka.api.run.RouteKey;
+import reka.api.run.RouterOperation;
 
 public class FlowTestHelpers {
 
 	private static final ExecutorService executor = Executors.newCachedThreadPool();
 
-	public static FlowOperation router(final String... routeTo) {
-		return new RoutingOperation() {
+	public static FlowOperation router(final RouteKey... routeTo) {
+		return new RouterOperation() {
 			
 			@Override
 			public void call(MutableData data, RouteCollector router) {
-				for (String route : routeTo) {
-					router.routeTo(route);
+				for (RouteKey key : routeTo) {
+					router.routeTo(key);
 				}
 			}
 			

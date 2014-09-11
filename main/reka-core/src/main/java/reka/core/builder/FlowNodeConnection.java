@@ -1,23 +1,24 @@
 package reka.core.builder;
 
 import reka.api.flow.FlowNode;
+import reka.api.run.RouteKey;
 
 public class FlowNodeConnection {
     
 	private final FlowNode source;
 	private final FlowNode destination;
-	private final String name;
+	private final RouteKey key;
 	private final boolean optional;
 	
-	private FlowNodeConnection(FlowNode source, FlowNode destination, String name, boolean optional) {
+	private FlowNodeConnection(FlowNode source, FlowNode destination, RouteKey key, boolean optional) {
 		this.source = source;
 		this.destination = destination;
-		this.name = name;
+		this.key = key;
 		this.optional = optional;
 	}
 	
-	public static FlowNodeConnection create(FlowNode source, FlowNode destination, String alias, boolean optional) {
-		return new FlowNodeConnection(source, destination, alias, optional);
+	public static FlowNodeConnection create(FlowNode source, FlowNode destination, RouteKey key, boolean optional) {
+		return new FlowNodeConnection(source, destination, key, optional);
 	}
 	
 	public FlowNode source() {
@@ -28,8 +29,8 @@ public class FlowNodeConnection {
 		return destination;
 	}
 	
-	public String name() {
-		return name;
+	public RouteKey key() {
+		return key;
 	}
 	
 	public boolean optional() {
@@ -42,7 +43,7 @@ public class FlowNodeConnection {
 		int result = 1;
 		result = prime * result
 				+ ((destination == null) ? 0 : destination.hashCode());
-		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		result = prime * result + ((key == null) ? 0 : key.hashCode());
 		result = prime * result + (optional ? 1231 : 1237);
 		result = prime * result + ((source == null) ? 0 : source.hashCode());
 		return result;
@@ -62,10 +63,10 @@ public class FlowNodeConnection {
 				return false;
 		} else if (!destination.equals(other.destination))
 			return false;
-		if (name == null) {
-			if (other.name != null)
+		if (key == null) {
+			if (other.key != null)
 				return false;
-		} else if (!name.equals(other.name))
+		} else if (!key.equals(other.key))
 			return false;
 		if (optional != other.optional)
 			return false;

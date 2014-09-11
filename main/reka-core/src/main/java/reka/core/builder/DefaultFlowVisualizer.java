@@ -196,7 +196,7 @@ public class DefaultFlowVisualizer implements FlowVisualizer {
 	    for (FlowNodeConnection connection : connections.connections()) {
 	    	graph.connect(nodeToId.get(connection.source()), 
 	    			      nodeToId.get(connection.destination()), 
-	    			      connection.name(), 
+	    			      connection.key() != null ? connection.key().name() : null, 
 	    			      connection.optional());
 	    }
 	    

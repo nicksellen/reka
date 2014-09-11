@@ -7,13 +7,25 @@ import java.util.ArrayList;
 import java.util.List;
 
 import reka.api.data.MutableData;
+import reka.util.Recycler;
+import reka.util.Recycler.Handle;
 
-public class DefaultNodeState implements NodeState {
+public class PooledNodeState implements NodeState {
 	
-	public static NodeState get() {
-		return new DefaultNodeState();
+	private static final Recycler<PooledNodeState> RECYCLER = new Recycler<PooledNodeState>() {
+		
+		@Override
+		protected PooledNodeState newObject(Handle handle) {
+			return new PooledNodeState(handle);
+		}
+		
+	};
+
+	public static PooledNodeState get() {
+		return RECYCLER.get();
 	}
-	
+
+	private final Handle handle;
 	private final List<MutableData> data = new ArrayList<>();
 	
 	private int initial;
@@ -21,9 +33,19 @@ public class DefaultNodeState implements NodeState {
 	private boolean initialized = false;
 
 	private Lifecycle lifecycle = Lifecycle.WAITING;
-	private boolean atLeastOneThingArrived;
+	private boolean atLeastOneThingArrived = false;
 		
-	private DefaultNodeState() { }
+	private PooledNodeState(Handle handle) {
+		this.handle = handle;
+	}
+	
+	public boolean recycle() {
+    	data.clear();
+    	initialized = false;
+		lifecycle = Lifecycle.WAITING;
+		atLeastOneThingArrived = false;
+        return RECYCLER.recycle(this, handle);
+    }
 	
 	@Override
 	public NodeState initialize(int value) {

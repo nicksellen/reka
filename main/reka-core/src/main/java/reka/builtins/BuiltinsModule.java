@@ -25,6 +25,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.mindrot.jbcrypt.BCrypt;
 import org.slf4j.Logger;
@@ -36,10 +37,12 @@ import reka.api.Path.Response;
 import reka.api.content.Content;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
+import reka.api.flow.FlowSegment;
 import reka.api.run.AsyncOperation;
 import reka.api.run.Operation;
 import reka.api.run.RouteCollector;
-import reka.api.run.RoutingOperation;
+import reka.api.run.RouteKey;
+import reka.api.run.RouterOperation;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.Configurer.ErrorCollector;
@@ -77,6 +80,8 @@ public class BuiltinsModule extends ModuleConfigurer {
     	module.operation(path("halt!"), provider -> new HaltConfigurer());
     	module.operation(slashes("uuid/generate"), provider -> new GenerateUUIDConfigurer());
     	module.operation(path("println"), provider -> new PrintlnConfigurer());
+    	
+    	module.operation(path("defer"), provider -> new DeferConfigurer(provider));
     	
     	module.operation(slashes("bcrypt/hashpw"), provider -> new BCryptHashpwConfigurer());
     	module.operation(slashes("bcrypt/checkpw"), provider -> new BCryptCheckpwConfigurer(provider));
@@ -152,8 +157,37 @@ public class BuiltinsModule extends ModuleConfigurer {
 		
 	}
 	
-	public static class BCryptCheckpwConfigurer implements OperationConfigurer {
+	public static class DeferConfigurer implements OperationConfigurer {
 
+		private final ConfigurerProvider provider;
+		
+		private String name;
+		private Supplier<FlowSegment> body;
+		
+		public DeferConfigurer(ConfigurerProvider provider) {
+			this.provider = provider;
+		}
+		
+		@Conf.Config
+		public void config(Config config) {
+			if (config.hasValue()) name = config.valueAsString();
+			if (config.hasBody()) {
+				body = configure(new SequenceConfigurer(provider), config.body()).bind();
+			}
+		}
+		
+		@Override
+		public void setup(OperationSetup ops) {
+			if (body != null) {
+				if (name != null) ops.label(name);
+				ops.defer(body);
+			}
+		}
+		
+	}
+	
+	public static class BCryptCheckpwConfigurer implements OperationConfigurer {
+		
 		private final ConfigurerProvider provider;
 		
 		private Path readPwFrom = dots("bcrypt.pw");
@@ -189,14 +223,17 @@ public class BuiltinsModule extends ModuleConfigurer {
 		@Override
 		public void setup(OperationSetup ops) {
 			ops.router("bcrypt/checkpw", store -> new BCryptCheckpwOperation(readPwFrom, readHashFrom), router -> {
-				router.add("ok", ok);
-				router.add("fail", fail);
+				router.add(BCryptCheckpwOperation.OK, ok);
+				router.add(BCryptCheckpwOperation.FAIL, fail);
 			});
 		}
 		
 	}
 	
-	public static class BCryptCheckpwOperation implements RoutingOperation {
+	public static class BCryptCheckpwOperation implements RouterOperation {
+
+		private static final RouteKey OK = RouteKey.named("ok");
+		private static final RouteKey FAIL = RouteKey.named("fail");
 
 		private final Path readPwFrom;
 		private final Path readHashFrom;
@@ -208,10 +245,10 @@ public class BuiltinsModule extends ModuleConfigurer {
 		
 		@Override
 		public void call(MutableData data, RouteCollector router) {
-			router.defaultRoute("fail");
+			router.defaultRoute(FAIL);
 			data.getContent(readPwFrom).ifPresent(pw -> {
 				data.getContent(readHashFrom).ifPresent(hash -> {
-					router.routeTo("ok");
+					router.routeTo(OK);
 				});
 			});
 		}

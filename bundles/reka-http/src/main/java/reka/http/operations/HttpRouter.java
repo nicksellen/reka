@@ -26,12 +26,15 @@ import reka.api.Path;
 import reka.api.Path.Request;
 import reka.api.data.MutableData;
 import reka.api.run.RouteCollector;
-import reka.api.run.RoutingOperation;
+import reka.api.run.RouteKey;
+import reka.api.run.RouterOperation;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.Hasher;
 
-public class HttpRouter implements RoutingOperation {
+public class HttpRouter implements RouterOperation {
+	
+	public static final RouteKey MISSING = RouteKey.named("not found");
 	
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -47,26 +50,26 @@ public class HttpRouter implements RoutingOperation {
 	@SuppressWarnings("unused")
 	private static final Path ROUTE_FORMATTER_PATH = dots("route");
 
-	private final Set<String> connectionNames = new HashSet<>();
+	private final Set<RouteKey> connectionNames = new HashSet<>();
 	private final Collection<Route> routes;
-	private final String notFoundConnectionName;
+	private final boolean hasNotFoundRoute;
 
-	public HttpRouter(Collection<Route> incoming, String notFoundConnectionName) {
+	public HttpRouter(Collection<Route> incoming, boolean hasNotFoundRoute) {
 		
 		List<Route> sortedRoutes = new ArrayList<>(incoming);
 		
 		Collections.sort(sortedRoutes, routeComparator);
 		
 		this.routes = ImmutableList.copyOf(sortedRoutes);
-		this.notFoundConnectionName = notFoundConnectionName;
+		this.hasNotFoundRoute = hasNotFoundRoute;
 		
 		for (Route route : routes) {
-			log.debug("route: {}", route.name());
-			connectionNames.add(route.connectionName());
+			log.debug("route: {}", route.key());
+			connectionNames.add(route.key());
 		}
 		
-		if (notFoundConnectionName != null) {
-			connectionNames.add(notFoundConnectionName);
+		if (hasNotFoundRoute) {
+			connectionNames.add(MISSING);
 		}
 		
 	}
@@ -79,21 +82,20 @@ public class HttpRouter implements RoutingOperation {
 		
 		for (Route route : routes) {
 			if (route.matches(method, path, data)) {
-				router.routeTo(route.connectionName());
+				router.routeTo(route.key());
 				break;
 			}
 		}
 
-		if (notFoundConnectionName != null && router.routed().isEmpty()) {
-			router.routeTo(notFoundConnectionName);
+		if (hasNotFoundRoute && router.routed().isEmpty()) {
+			router.routeTo(MISSING);
 		}
 		
 	}
 	
 	public static interface Route {
-		public String connectionName();
+		public RouteKey key();
 		public boolean matches(HttpMethod method, String path, MutableData data);
-		public String name();
 		public RouteFormatter formatter();
 	}
 	
@@ -156,6 +158,7 @@ public class HttpRouter implements RoutingOperation {
 	
 	public static final class MountRoute implements Route {
 		
+		private final RouteKey key;
 		private final String prefix;
 		private final String prefixWithTrailingSlash;
 		
@@ -163,11 +166,12 @@ public class HttpRouter implements RoutingOperation {
 			if (prefix.endsWith("/")) prefix = prefix.substring(0, prefix.length() - 1);
 			this.prefix = prefix;
 			this.prefixWithTrailingSlash = prefix + '/';
+			key = RouteKey.named(format("prefix %s", prefix));
 		}
 
 		@Override
-		public String connectionName() {
-			return format("prefix %s", prefix);
+		public RouteKey key() {
+			return key;
 		}
 
 		@Override
@@ -186,11 +190,6 @@ public class HttpRouter implements RoutingOperation {
 		}
 
 		@Override
-		public String name() {
-			return connectionName();
-		}
-
-		@Override
 		public RouteFormatter formatter() {
 			throw unsupported();
 		}
@@ -199,36 +198,28 @@ public class HttpRouter implements RoutingOperation {
 	
 	public static final class StaticRoute implements Route {
 
-		private final String connectionName;
+		private final RouteKey key;
 		private final String path;
 		private final HttpMethod method;
-		private final String name;
 
 		private final RouteFormatter formatter;
 
-		public StaticRoute(String connectionName, String path,
-				HttpMethod method, String name, RouteFormatter formatter) {
-			this.connectionName = connectionName;
+		public StaticRoute(RouteKey key, String path, HttpMethod method, RouteFormatter formatter) {
+			this.key = key;
 			this.path = path;
 			this.method = method;
-			this.name = name;
 			this.formatter = formatter;
 		}
 
 		@Override
 		public String toString() {
 			return format("<%s connection=%s path=%s method=%s>",
-					getClass().getSimpleName(), connectionName, path, method);
+					getClass().getSimpleName(), key, path, method);
 		}
 
 		@Override
-		public String connectionName() {
-			return connectionName;
-		}
-
-		@Override
-		public String name() {
-			return name;
+		public RouteKey key() {
+			return key;
 		}
 
 		@Override
@@ -242,10 +233,10 @@ public class HttpRouter implements RoutingOperation {
 		}
 	}
 	
-	public static final class RouteKey {
+	public static final class HttpRouteVar {
 		private final int id;
 		private final Path path;
-		public RouteKey(int id, Path path) {
+		public HttpRouteVar(int id, Path path) {
 			this.id = id;
 			this.path = path;
 		}
@@ -253,11 +244,10 @@ public class HttpRouter implements RoutingOperation {
 	
 	public static final class RegexRoute implements Route {
 		
-		private final String connectionName;
+		private final RouteKey key;
 		private final Pattern pattern;
-		private final List<RouteKey> keys;
+		private final List<HttpRouteVar> keys;
 		private final HttpMethod method;
-		private final String name;
 		private final RouteFormatter formatter;
 		
 		private final ThreadLocal<Matcher> m = new ThreadLocal<Matcher>(){
@@ -269,29 +259,23 @@ public class HttpRouter implements RoutingOperation {
 			
 		};
 
-		public RegexRoute(String connectionName, Pattern pattern, List<RouteKey> keys,
-				HttpMethod method, String name, RouteFormatter formatter) {
-			this.connectionName = connectionName;
+		public RegexRoute(RouteKey key, Pattern pattern, List<HttpRouteVar> keys,
+				HttpMethod method, RouteFormatter formatter) {
+			this.key = key;
 			this.pattern = pattern;
 			this.keys = keys;
 			this.method = method;
-			this.name = name;
 			this.formatter = formatter;
 		}
 		
 		@Override
 		public String toString() {
-			return format("<%s connection=%s pattern=%s method=%s>", getClass().getSimpleName(), connectionName, pattern, method);
+			return format("<%s connection=%s pattern=%s method=%s>", getClass().getSimpleName(), key, pattern, method);
 		}
 
 		@Override
-		public String connectionName() {
-			return connectionName;
-		}
-		
-		@Override
-		public String name() {
-			return name;
+		public RouteKey key() {
+			return key;
 		}
 		
 		@Override
@@ -299,7 +283,7 @@ public class HttpRouter implements RoutingOperation {
 			if (method.equals(this.method)) {
 				Matcher matcher = m.get().reset(path);
 				if (matcher.matches()) {
-					for (RouteKey key : keys) {
+					for (HttpRouteVar key : keys) {
 						String value = matcher.group(key.id);
 						if (value != null) {
 							data.putString(key.path, value);

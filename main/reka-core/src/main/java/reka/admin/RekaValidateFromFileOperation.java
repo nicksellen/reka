@@ -12,14 +12,18 @@ import reka.ApplicationManager;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.run.RouteCollector;
-import reka.api.run.RoutingOperation;
+import reka.api.run.RouteKey;
+import reka.api.run.RouterOperation;
 import reka.config.FileSource;
 import reka.config.Source;
 import reka.config.SourceLinenumbers;
 import reka.config.configurer.Configurer.InvalidConfigurationException;
 import reka.util.Util;
 
-public class RekaValidateFromFileOperation implements RoutingOperation {
+public class RekaValidateFromFileOperation implements RouterOperation {
+	
+	public static final RouteKey OK = RouteKey.named("ok");
+	public static final RouteKey ERROR = RouteKey.named("error");
 	
 	private final ApplicationManager manager;
 	private final Function<Data,String> filenameFn;
@@ -37,7 +41,7 @@ public class RekaValidateFromFileOperation implements RoutingOperation {
 			checkArgument(file.exists(), "file does not exist [%s]", filename);
 			checkArgument(!file.isDirectory(), "path is a directory [%s]", filename);
 			manager.validate(FileSource.from(file));
-			router.routeTo("ok");
+			router.routeTo(OK);
 			return;
 		} catch (Throwable t) {
 			t = Util.unwrap(t);
@@ -59,7 +63,7 @@ public class RekaValidateFromFileOperation implements RoutingOperation {
 			} else {
 				data.putString("error", t.getMessage());
 			}
-			router.routeTo("error");
+			router.routeTo(ERROR);
 		}
 	}
 	

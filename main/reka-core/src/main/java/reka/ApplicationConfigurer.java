@@ -100,7 +100,7 @@ public class ApplicationConfigurer implements ErrorReporter {
     	Map<Path,Supplier<FlowSegment>> configuredFlows = new HashMap<>();
     	defs.forEach((config) -> 
 			configuredFlows.put(path(config.valueAsString()), 
-					configure(new SequenceConfigurer(provider), config).bind(null)));
+					configure(new SequenceConfigurer(provider), config).bind()));
 		
     	configuredFlows.forEach((name, segment) -> flowsBuilder.add(name, segment.get()));
     	
@@ -122,7 +122,7 @@ public class ApplicationConfigurer implements ErrorReporter {
     		trigger.supplier().apply(configurerProvider).bind(triggers.store()).get();
     	}));
     	defs.forEach(config -> {
-    		configure(new SequenceConfigurer(configurerProvider), config).bind(null).get();
+    		configure(new SequenceConfigurer(configurerProvider), config).bind().get();
     	});
     }
     
@@ -180,7 +180,7 @@ public class ApplicationConfigurer implements ErrorReporter {
 	    	
 	    	defs.forEach((config) -> 
 				flowBuilders.add(applicationName.add(config.valueAsString()), 
-						configure(new SequenceConfigurer(configurerProvider), config).bind(null).get()));
+						configure(new SequenceConfigurer(configurerProvider), config).bind().get()));
 	    	
 	    	// ok, run the app initializer
 	
@@ -268,6 +268,7 @@ public class ApplicationConfigurer implements ErrorReporter {
 					subscriber.error(data, t);
 					future.completeExceptionally(t);
 				}
+				
 			}).run();
     	
     	});

@@ -23,14 +23,10 @@ public class TimeLoggerAction implements ActionHandler {
 	public void call(MutableData data, FlowContext context) {
 		
 		if (log.isDebugEnabled()) {
-		
-			log.debug("f:{} c:{} t:{} n:{} > {} us", 
-				context.flowId(), 
-				context.id(), 
-				context.initialThreadId(), 
+			log.debug("f:{} n:{} > {} us", 
+				context.flowId(),
 				nodeId, 
 				Math.round((System.nanoTime() - context.started()) / 1E3));
-		
 		}
 		
 		next.call(data, context);

@@ -5,7 +5,7 @@ bundles = command http jade jdbc mustache smtp
 
 dist_dir = dist/reka
 
-.PHONY: clean clean-build clean-dist upload-s3-eu upload-s3-us test install-main build-main build-bundles
+.PHONY: clean clean-build clean-dist upload-s3 upload-s3-eu upload-s3-us test install-main build-main build-bundles
 
 all: build
 
@@ -45,7 +45,7 @@ dist: build
 	@for bundle in `ls $(dist_dir)/lib/bundles`; do\
 		echo "bundle ../lib/bundles/$$bundle" >> $(dist_dir)/etc/config.reka; \
 	done
-	@echo "app @include(apps/api.reka)" >> $(dist_dir)/etc/config.reka
+	@echo "app api @include(apps/api.reka)" >> $(dist_dir)/etc/config.reka
 	@cd dist && tar zcvf reka-server.tar.gz reka
 	@echo made dist/reka-server.tar.gz
 
@@ -57,6 +57,8 @@ run-nolog: dist
 
 run-debug: dist
 	@JAVA_OPTS=-Dlog4j.configurationFile=main/reka-main/log4j2-debug.xml dist/reka/bin/reka-server
+
+upload-s3: upload-s3-us upload-s3-eu
 
 upload-s3-eu: dist
 	@aws s3 \

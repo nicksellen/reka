@@ -11,9 +11,13 @@ import reka.api.Path.Request;
 import reka.api.Path.Response;
 import reka.api.data.MutableData;
 import reka.api.run.RouteCollector;
-import reka.api.run.RoutingOperation;
+import reka.api.run.RouteKey;
+import reka.api.run.RouterOperation;
 
-public class BasicAuthRouter implements RoutingOperation {
+public class BasicAuthRouter implements RouterOperation {
+	
+	public static final RouteKey OK = RouteKey.named("ok");
+	public static final RouteKey FAIL = RouteKey.named("fail");
 	
 	private static final String PREFIX = "Basic";
 	private final String unauthorized;
@@ -28,11 +32,11 @@ public class BasicAuthRouter implements RoutingOperation {
 	@Override
 	public void call(MutableData data, RouteCollector router) {
 		if (checkBasicAuth(data)) {
-			router.routeTo("ok");
+			router.routeTo(OK);
 		} else {
 			data.putInt(Response.STATUS, 401)
 				.putString(Response.HEADERS.add("WWW-Authenticate"), unauthorized);
-			router.routeTo("fail");
+			router.routeTo(FAIL);
 		}
 	}
 	

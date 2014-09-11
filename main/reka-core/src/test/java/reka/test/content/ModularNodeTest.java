@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import reka.api.data.Data;
 import reka.api.run.AsyncOperation;
 import reka.api.run.Operation;
+import reka.api.run.RouteKey;
 import reka.core.data.memory.MutableMemoryData;
 import reka.core.runtime.DefaultFlowContext;
 import reka.core.runtime.Node;
@@ -53,12 +54,14 @@ public class ModularNodeTest {
 						  latch.countDown();
 					  })), DoNothing.INSTANCE, DoNothing.INSTANCE);
 		
+		RouteKey somechild = RouteKey.named("some child");
+		
 		Node parent = new RuntimeNode(1, "parent", syncOperation((data) ->
 					data.putString(dots("example.from.parent"), "hello from parent"),
-					actionHandlers(asList(new NodeChild(child, false, "some child").node()), DoNothing.INSTANCE)), DoNothing.INSTANCE, DoNothing.INSTANCE);
+					actionHandlers(asList(new NodeChild(child, false, somechild).node()), DoNothing.INSTANCE)), DoNothing.INSTANCE, DoNothing.INSTANCE);
 		
 		parent.call(MutableMemoryData.create(), 
-					new DefaultFlowContext(1, Executors.newCachedThreadPool(), null));
+					DefaultFlowContext.get(1, Executors.newCachedThreadPool(), null));
 
 		if (latch.await(1, TimeUnit.SECONDS)) {
 			assertThat(result.get().getString(dots("example.from.child")).orElse("not found"), equalTo("hello from child"));
@@ -88,11 +91,13 @@ public class ModularNodeTest {
 			latch.countDown();
 		}), DoNothing.INSTANCE), DoNothing.INSTANCE, DoNothing.INSTANCE);
 		
+		RouteKey somechild = RouteKey.named("some child");
+		
 		Node parent = new RuntimeNode(1, "parent", syncOperation((data) ->
 					data.put(dots("example.from.parent"), utf8("hello from parent")),
-					actionHandlers(asList(new NodeChild(child, false, "some child").node()), DoNothing.INSTANCE)), DoNothing.INSTANCE, DoNothing.INSTANCE);
+					actionHandlers(asList(new NodeChild(child, false, somechild).node()), DoNothing.INSTANCE)), DoNothing.INSTANCE, DoNothing.INSTANCE);
 		
-		parent.call(MutableMemoryData.create(), new DefaultFlowContext(1, executor, null));
+		parent.call(MutableMemoryData.create(), DefaultFlowContext.get(1, executor, null));
 
 		
 

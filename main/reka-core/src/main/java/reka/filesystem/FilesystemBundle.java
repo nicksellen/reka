@@ -130,7 +130,7 @@ public class FilesystemBundle implements RekaBundle {
 	}
 
 	public static class FilesystemTypeConfigurer implements OperationConfigurer {
-
+		
 		private final ConfigurerProvider provider;
 
 		private final Path basedir;
@@ -174,9 +174,9 @@ public class FilesystemBundle implements RekaBundle {
 		@Override
 		public void setup(OperationSetup ops) {
 			ops.router("file/type", store -> new FilesystemType(basedir, pathFn), router -> {
-				if (whenDir != null) router.add("dir", whenDir);
-				if (whenFile != null) router.add("file", whenFile);
-				if (whenMissing != null) router.add("missing", whenMissing);
+				if (whenDir != null) router.add(FilesystemType.DIR, whenDir);
+				if (whenFile != null) router.add(FilesystemType.FILE, whenFile);
+				if (whenMissing != null) router.add(FilesystemType.MISSING, whenMissing);
 			});
 		}
 		

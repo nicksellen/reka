@@ -5,7 +5,7 @@ import java.util.function.Supplier;
 import reka.api.flow.FlowNode;
 import reka.api.flow.FlowOperation;
 import reka.api.flow.SimpleFlowOperation;
-import reka.api.run.RoutingOperation;
+import reka.api.run.RouterOperation;
 
 public class OperationFlowNode extends AbstractFlowNode implements FlowNode {
 	
@@ -27,7 +27,7 @@ public class OperationFlowNode extends AbstractFlowNode implements FlowNode {
 		return node;
 	}
 	
-	public static OperationFlowNode createRouterNode(String name, Supplier<? extends RoutingOperation> supplier) {
+	public static OperationFlowNode createRouterNode(String name, Supplier<? extends RouterOperation> supplier) {
 		OperationFlowNode node = new OperationFlowNode();
 		node.name(name).supplier(new OperationSupplier<FlowOperation>() {
 

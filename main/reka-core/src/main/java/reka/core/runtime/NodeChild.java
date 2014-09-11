@@ -1,18 +1,19 @@
 package reka.core.runtime;
 
 import static java.lang.String.format;
+import reka.api.run.RouteKey;
 
 public class NodeChild {
     
-	public NodeChild(Node node, boolean optional, String name) {
+	public NodeChild(Node node, boolean optional, RouteKey key) {
 		this.node = node;
 		this.optional = optional;
-		this.name = name;
+		this.key = key;
 	}
 	
 	private final Node node;
 	private final boolean optional;
-	private final String name;
+	private final RouteKey key;
 	
 	public Node node() {
 		return node;
@@ -22,8 +23,8 @@ public class NodeChild {
 		return optional;
 	}
 	
-	public String name() {
-		return name;
+	public RouteKey key() {
+		return key;
 	}
 	
 	@Override
