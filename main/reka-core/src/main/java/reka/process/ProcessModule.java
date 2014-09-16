@@ -91,7 +91,7 @@ public class ProcessModule extends ModuleConfigurer {
 		if (onLine != null) {
 			module.trigger("on line", onLine, registration -> {
 				Flow flow = registration.flow();
-				registration.store().get(PROCESS_MANAGER).addLineTrigger(line -> {
+				registration.store().get(PROCESS_MANAGER).addListener(line -> {
 					flow.prepare().data(MutableMemoryData.create().putString("out", line)).run();
 				});
 			});
@@ -156,7 +156,7 @@ public class ProcessModule extends ModuleConfigurer {
 		
 		@Override
 		public void call(MutableData data) {
-			manager.run(lineFn.apply(data));
+			manager.send(lineFn.apply(data));
 		}
 		
 	}
@@ -173,7 +173,7 @@ public class ProcessModule extends ModuleConfigurer {
 		
 		@Override
 		public void call(MutableData data, OperationResult ctx) {
-			manager.run(lineFn.apply(data), output -> {
+			manager.send(lineFn.apply(data), output -> {
 				data.putString("out", output);
 				ctx.done();
 			});

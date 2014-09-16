@@ -137,7 +137,7 @@ public class SingleProcessManager implements ProcessManager {
 	private static final byte[] NEW_LINE = "\n".getBytes(Charsets.UTF_8);
 	
 	@Override
-	public void run(String input, Consumer<String> consumer) {
+	public void send(String input, Consumer<String> consumer) {
 		if (!process.isAlive()) throw runtime("process is dead!");
 		q.offer(createEntry(input, consumer));
 	}
@@ -150,12 +150,12 @@ public class SingleProcessManager implements ProcessManager {
 	}
 
 	@Override
-	public void run(String input) {
-		run(input, null);
+	public void send(String input) {
+		send(input, null);
 	}
 
 	@Override
-	public void addLineTrigger(Consumer<String> consumer) {
+	public void addListener(Consumer<String> consumer) {
 		lineTriggers.add(consumer);
 	}
 	

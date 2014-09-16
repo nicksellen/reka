@@ -3,8 +3,8 @@ package reka.process;
 import java.util.function.Consumer;
 
 public interface ProcessManager {
-	void run(String input);
-	void run(String input, Consumer<String> consumer);
+	void send(String input);
+	void send(String input, Consumer<String> rely);
 	void kill();
-	void addLineTrigger(Consumer<String> consumer);
+	void addListener(Consumer<String> reply);
 }

@@ -23,14 +23,14 @@ public class MultiProcessManager implements ProcessManager {
 	}
 	
 	@Override
-	public void run(String input, Consumer<String> consumer) {
+	public void send(String input, Consumer<String> consumer) {
 		q.offer(createEntry(input, consumer));
 	}
 
 
 	@Override
-	public void run(String input) {
-		run(input, null);
+	public void send(String input) {
+		send(input, null);
 	}
 
 	@Override
@@ -39,8 +39,8 @@ public class MultiProcessManager implements ProcessManager {
 	}
 
 	@Override
-	public void addLineTrigger(Consumer<String> consumer) {
-		all.forEach(m -> m.addLineTrigger(consumer));
+	public void addListener(Consumer<String> consumer) {
+		all.forEach(m -> m.addListener(consumer));
 	}
 	
 }
