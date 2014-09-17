@@ -14,7 +14,7 @@ public class MultiProcessManager implements ProcessManager {
 	private final BlockingDeque<Entry<String,Consumer<String>>> q = new LinkedBlockingDeque<>();
 	private final ProcessBuilder builder;
 	private final Collection<SingleProcessManager> all = new ArrayList<>();
-	
+		
 	public MultiProcessManager(ProcessBuilder builder, int count, boolean noreply) {
 		this.builder = builder;
 		for (int i = 0; i < count; i++) {

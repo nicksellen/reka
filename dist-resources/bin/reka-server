@@ -6,6 +6,13 @@ REKA_HOME=`cd "$REKA_HOME"; pwd`
 ETC=$REKA_HOME/etc
 LIB=$REKA_HOME/lib
 
+if [ -z "$REKA_ENV" ]; then
+  REKA_ENV=development
+fi
+
+export REKA_HOME
+export REKA_ENV
+
 check_java() {
   if [ -x "$JAVA_HOME/bin/java" ]; then
     JAVA="$JAVA_HOME/bin/java"
