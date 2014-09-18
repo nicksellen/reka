@@ -11,7 +11,7 @@ import reka.api.run.RouteKey;
 
 public class DefaultRouteCollector implements RouteCollector {
 	
-	public static RouteCollector get(Collection<RouteKey> all) {
+	public static RouteCollector create(Collection<RouteKey> all) {
 		return new DefaultRouteCollector(all);
 	}
 	

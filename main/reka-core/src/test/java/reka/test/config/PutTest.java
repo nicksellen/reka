@@ -124,7 +124,7 @@ public class PutTest {
 	}
 	
 	private static void callRouting(RouterOperation op, MutableData data) {
-		op.call(data, DefaultRouteCollector.get(new ArrayList<>()));
+		op.call(data, DefaultRouteCollector.create(new ArrayList<>()));
 	}
 
 }

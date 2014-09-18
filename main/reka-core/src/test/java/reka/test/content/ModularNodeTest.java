@@ -61,7 +61,7 @@ public class ModularNodeTest {
 					actionHandlers(asList(new NodeChild(child, false, somechild).node()), DoNothing.INSTANCE)), DoNothing.INSTANCE, DoNothing.INSTANCE);
 		
 		parent.call(MutableMemoryData.create(), 
-					DefaultFlowContext.get(1, Executors.newCachedThreadPool(), null));
+					DefaultFlowContext.create(1, Executors.newCachedThreadPool(), null));
 
 		if (latch.await(1, TimeUnit.SECONDS)) {
 			assertThat(result.get().getString(dots("example.from.child")).orElse("not found"), equalTo("hello from child"));
@@ -97,7 +97,7 @@ public class ModularNodeTest {
 					data.put(dots("example.from.parent"), utf8("hello from parent")),
 					actionHandlers(asList(new NodeChild(child, false, somechild).node()), DoNothing.INSTANCE)), DoNothing.INSTANCE, DoNothing.INSTANCE);
 		
-		parent.call(MutableMemoryData.create(), DefaultFlowContext.get(1, executor, null));
+		parent.call(MutableMemoryData.create(), DefaultFlowContext.create(1, executor, null));
 
 		
 

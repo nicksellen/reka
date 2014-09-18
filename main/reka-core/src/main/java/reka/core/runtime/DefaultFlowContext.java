@@ -4,8 +4,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
+import reka.api.data.Data;
 import reka.api.data.MutableData;
-import reka.api.run.EverythingSubscriber;
+import reka.api.run.Subscriber;
 import reka.core.runtime.handlers.ActionHandler;
 import reka.core.runtime.handlers.ErrorHandler;
 import reka.core.runtime.handlers.stateful.DefaultNodeState;
@@ -13,17 +14,17 @@ import reka.core.runtime.handlers.stateful.NodeState;
 
 public class DefaultFlowContext implements FlowContext {
 	
-	public static FlowContext get(long flowId, ExecutorService executor, EverythingSubscriber subscriber) {
+	public static FlowContext create(long flowId, ExecutorService executor, Subscriber subscriber) {
 		return new DefaultFlowContext(flowId, executor, subscriber);
 	}
 
 	private final ExecutorService executor;
 	private final Map<Integer,NodeState> states = new HashMap<>();
-	private final EverythingSubscriber subscriber;
+	private final Subscriber subscriber;
 	private final long flowId;
 	private final long started;
 	
-	private DefaultFlowContext(long flowId, ExecutorService executor, EverythingSubscriber subscriber) {
+	private DefaultFlowContext(long flowId, ExecutorService executor, Subscriber subscriber) {
 		this.executor = executor;
 		this.subscriber = subscriber;
 		this.flowId = flowId;
@@ -51,11 +52,6 @@ public class DefaultFlowContext implements FlowContext {
 	}
 	
 	@Override
-    public EverythingSubscriber subscriber() {
-		return subscriber;
-	}
-	
-	@Override
     public ExecutorService executor() {
 		return executor;
 	}
@@ -77,7 +73,17 @@ public class DefaultFlowContext implements FlowContext {
 	}
 
 	@Override
-	public void end() {
-		// no-op
+	public void end(MutableData data) {
+		subscriber.ok(data);
+	}
+
+	@Override
+	public void error(Data data, Throwable t) {
+		subscriber.error(data, t);
+	}
+
+	@Override
+	public void halted() {
+		subscriber.halted();
 	}
 }

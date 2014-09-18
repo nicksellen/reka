@@ -26,11 +26,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import reka.api.IdentityKey;
-import reka.api.content.Content;
-import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.flow.Flow;
-import reka.api.run.EverythingSubscriber;
+import reka.api.run.Subscriber;
 import reka.core.data.memory.MutableMemoryData;
 import reka.http.server.HttpServerManager.WebsocketTriggers;
 
@@ -159,25 +157,12 @@ public class WebsocketHandler extends SimpleChannelInboundHandler<TextWebSocketF
 				data.putString("host", host);
 				data.putString("id", id);
 				
-				flow.run(ctx.executor(), data, new EverythingSubscriber(){
-
-					@Override
-					public void ok(MutableData data) {
-						Optional<Content> o = data.getContent("reply");
-						if (o.isPresent()) {
-							ctx.channel().writeAndFlush(new TextWebSocketFrame(o.get().asUTF8()));
-						}
-					}
-
-					@Override
-					public void halted() {
-					}
-
-					@Override
-					public void error(Data data, Throwable t) {
-					}
-					
+				flow.run(ctx.executor(), data, resultData -> {
+					resultData.getContent("reply").ifPresent(content -> {
+						ctx.channel().writeAndFlush(new TextWebSocketFrame(content.asUTF8()));
+					});
 				});
+				
 			}
 			
 		}
@@ -191,31 +176,13 @@ public class WebsocketHandler extends SimpleChannelInboundHandler<TextWebSocketF
 		log.debug("{} disconnected", id);
 		WebsocketHost wshost = hosts.get(host);
 		if (wshost != null) {
-			
 			wshost.channels.remove(id);
-		
 			for (Flow flow : wshost.onDisconnect) {
-				
-				MutableData data = MutableMemoryData.create();
-				
-				data.putString("host", host);
-				data.putString("id", id);
-				
-				flow.run(ctx.executor(), data, new EverythingSubscriber(){
-	
-					@Override
-					public void ok(MutableData data) {
-					}
-	
-					@Override
-					public void halted() {
-					}
-	
-					@Override
-					public void error(Data data, Throwable t) {
-					}
-					
-				});
+				flow.run(ctx.executor(), 
+						 MutableMemoryData.create()
+						 	.putString("host", host)
+						 	.putString("id", id),
+						 Subscriber.DO_NOTHING);
 			}
 
 		}
@@ -235,41 +202,14 @@ public class WebsocketHandler extends SimpleChannelInboundHandler<TextWebSocketF
 			data.putString("id", id);
 			data.putString("message", frame.text());
 			
-			flow.run(ctx.executor(), data, new EverythingSubscriber(){
-
-				@Override
-				public void ok(MutableData data) {
-					Optional<Content> o = data.getContent("response");
-					if (o.isPresent()) {
-						ctx.channel().writeAndFlush(new TextWebSocketFrame(o.get().asUTF8()));
-					}
-				}
-
-				@Override
-				public void halted() {
-				}
-
-				@Override
-				public void error(Data data, Throwable t) {
-				}
-				
+			flow.run(ctx.executor(), data, resultData -> {
+				resultData.getContent("response").ifPresent(content -> {
+					ctx.channel().writeAndFlush(new TextWebSocketFrame(content.asUTF8()));
+				});
 			});
 		
 		}
 		
-		
-		/*
-		String name = ctx.attr(nameAttr).get();
-		if (name == null) {
-			name = frame.text();
-			ctx.attr(nameAttr).set(name);
-			logger.info("added {}", name);
-			ctx.channel().writeAndFlush(new TextWebSocketFrame(format("welcome %s!", name)));
-			broadcast(host, "%s joined the room", name);
-		} else {
-			broadcast(host, "%s: %s", name, frame.text());
-		}
-		*/
     }
     
 }

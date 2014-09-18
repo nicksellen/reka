@@ -56,7 +56,7 @@ public class FlowSegments extends AbstractFlowNode {
 	}
 	
 	public static FlowNode createSubscribeableEndNode(String name) {
-		return new SubscribeableEndFlowNode(name);
+		return new EndFlowNode(name);
 	}
 	
 	public static FlowSegment createLabelSegment(String label, FlowSegment... segment) {

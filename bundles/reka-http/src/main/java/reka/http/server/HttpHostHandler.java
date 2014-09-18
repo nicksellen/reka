@@ -33,7 +33,7 @@ import reka.api.Path.Response;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.flow.Flow;
-import reka.api.run.EverythingSubscriber;
+import reka.api.run.Subscriber;
 import reka.core.data.memory.MutableMemoryData;
 
 @ChannelHandler.Sharable
@@ -96,7 +96,7 @@ public class HttpHostHandler extends SimpleChannelInboundHandler<MutableData> {
 		return flow != null ? flow : flows.get("*");
 	}
 	
-	private static class ChannelHandlerContextDataSubscriber implements EverythingSubscriber {
+	private static class ChannelHandlerContextDataSubscriber implements Subscriber {
 
 		private final long started = System.nanoTime();
 		private final ChannelHandlerContext context;
@@ -118,44 +118,42 @@ public class HttpHostHandler extends SimpleChannelInboundHandler<MutableData> {
 
 		@Override
 		public void halted() {
-
-            MutableData data = MutableMemoryData.create()
-				.put(Response.CONTENT, utf8("uh, oh it got halted :("))
-				.put(Response.Headers.CONTENT_TYPE, utf8("text/plain"))
-				.put(Response.STATUS, integer(500));
-			
-			context.writeAndFlush(data).addListener(ChannelFutureListener.CLOSE);
-			
+			context.writeAndFlush(MutableMemoryData.create()
+						.put(Response.CONTENT, utf8("not found"))
+						.put(Response.Headers.CONTENT_TYPE, utf8("text/plain"))
+						.put(Response.STATUS, integer(404)))
+					.addListener(ChannelFutureListener.CLOSE);
 		}
 
 		@Override
 		public void error(Data data, Throwable error) {
-			boolean acceptsHtml = data.getString(Request.Headers.ACCEPT).orElse("").contains("text/html");
-			if (acceptsHtml) {
-				context.writeAndFlush(htmlErrorMessage(data, error)).addListener(ChannelFutureListener.CLOSE);
-			} else {
-				context.writeAndFlush(jsonErrorMessage(data, error)).addListener(ChannelFutureListener.CLOSE);
-			}
+			context.writeAndFlush(acceptsHtml(data) ? 
+						htmlErrorMessage(data, error) : jsonErrorMessage(data, error))
+				   .addListener(ChannelFutureListener.CLOSE);
 		}
 		
-		private static Data jsonErrorMessage(Data data, Throwable error) {
-			Throwable t = unwrap(error);
-			StringWriter stackTrace = new StringWriter();
-			t.printStackTrace(new PrintWriter(stackTrace));
+		private static boolean acceptsHtml(Data data) {
+			return data.getString(Request.Headers.ACCEPT).orElse("").contains("text/html");
+		}
+		
+		private static String stacktrace(Throwable t) {
+			StringWriter writer = new StringWriter();
+			t.printStackTrace(new PrintWriter(writer));
+			return writer.toString();
+		}
+		
+		private static Data jsonErrorMessage(Data data, Throwable t) {
+			t = unwrap(t);
 			return MutableMemoryData.create()
 						.put(Response.CONTENT.add("data"), data)
 						.putString(Response.CONTENT.add("message"), rootExceptionMessage(t))
-						//.putString(Response.CONTENT.add("stacktrace"), stackTrace.toString())
 					.putString(Response.Headers.CONTENT_TYPE, "application/json")
 					.putInt(Response.STATUS, 500);
 
 		}
-
-
-		private static Data htmlErrorMessage(Data data, Throwable error) {
-			Throwable t = unwrap(error);
-			StringWriter stackTrace = new StringWriter();
-			t.printStackTrace(new PrintWriter(stackTrace));
+		
+		private static Data htmlErrorMessage(Data data, Throwable t) {
+			t = unwrap(t);
 			return MutableMemoryData.create()
 					.putString(Response.CONTENT, 
                             "<html><body>" +
@@ -165,7 +163,7 @@ public class HttpHostHandler extends SimpleChannelInboundHandler<MutableData> {
                                     "</h2>" +
                                     "<h3>Stack trace</h3>" +
                                     "<pre>" +
-                                    stackTrace +
+                                    stacktrace(t) +
                                     "</pre>" +
                                     "<h3>Data at time of error</h3>" +
                                     "<pre>" +

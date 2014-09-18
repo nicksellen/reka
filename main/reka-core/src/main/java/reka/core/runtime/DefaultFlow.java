@@ -8,7 +8,7 @@ import reka.api.Path;
 import reka.api.data.MutableData;
 import reka.api.flow.Flow;
 import reka.api.flow.FlowRun;
-import reka.api.run.EverythingSubscriber;
+import reka.api.run.Subscriber;
 import reka.core.data.memory.MutableMemoryData;
 
 public class DefaultFlow implements Flow {
@@ -31,12 +31,12 @@ public class DefaultFlow implements Flow {
 	
 	public class DefaultFlowRun implements FlowRun {
 		
-		private EverythingSubscriber subscriber;
+		private Subscriber subscriber;
 		private MutableData data;
 		private ExecutorService executor;
 		
 		@Override
-        public FlowRun complete(EverythingSubscriber subscriber) {
+        public FlowRun complete(Subscriber subscriber) {
 			this.subscriber = subscriber;
 			return this;
 		}
@@ -57,7 +57,7 @@ public class DefaultFlow implements Flow {
         public void run() {
 			if (data == null) data = MutableMemoryData.create();
 			if (executor == null) executor = DEFAULT_EXECUTOR;
-			if (subscriber == null) subscriber = EverythingSubscriber.wrap((data) -> {});
+			if (subscriber == null) subscriber = Subscriber.DO_NOTHING;
 			DefaultFlow.this.run(executor, data, subscriber);
 		}
 	}
@@ -73,13 +73,15 @@ public class DefaultFlow implements Flow {
 	}
 	
 	@Override
-	public void run(EverythingSubscriber subscriber) {
+	public void run(Subscriber subscriber) {
 		run(DEFAULT_EXECUTOR, MutableMemoryData.create(), subscriber);
 	}
 	
 	@Override
-	public void run(ExecutorService executor, MutableData data, EverythingSubscriber subscriber) {
-		head.call(data, DefaultFlowContext.get(id, executor, subscriber));
+	public void run(ExecutorService executor, MutableData data, Subscriber subscriber) {
+		DefaultFlowContext.create(id, executor, subscriber).call(head, (d, c, t) -> {
+			subscriber.error(d, t);
+		}, data);
 	}
 	
 	@Override

@@ -7,7 +7,7 @@ public class EndAction implements ActionHandler {
 
 	@Override
 	public void call(MutableData data, FlowContext context) {
-		context.end();
+		context.end(data);
 	}
 
 }

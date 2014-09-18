@@ -16,13 +16,15 @@ import com.google.common.collect.ImmutableSet;
 public class RouterAction implements ActionHandler {
 
 	private final RouterOperation operation;
+	private final ErrorHandler error;
 	
 	private final Collection<NodeChild> children;
 	private final Set<RouteKey> keys;
 	
-	public RouterAction(RouterOperation operation, Collection<NodeChild> children) {
+	public RouterAction(RouterOperation operation, Collection<NodeChild> children, ErrorHandler error) {
 		this.operation = operation;
 		this.children = children;
+		this.error = error;
 		
 		ImmutableSet.Builder<RouteKey> keys = ImmutableSet.builder();
 		for (NodeChild child : children) {
@@ -37,7 +39,7 @@ public class RouterAction implements ActionHandler {
 	@Override
 	public void call(MutableData data, FlowContext context) {
 		
-		RouteCollector collector = DefaultRouteCollector.get(keys);
+		RouteCollector collector = DefaultRouteCollector.create(keys);
 		
 		operation.call(data, collector);
 		
@@ -45,7 +47,7 @@ public class RouterAction implements ActionHandler {
 		
 		for (NodeChild child : children) {
 			if (collector.routed().contains(child.key())) {
-				child.node().call(copy ? data.mutableCopy() : data, context);
+				context.call(child.node(), error, copy ? data.mutableCopy() : data);
 			} else {
 				child.node().halted(context);
 			}

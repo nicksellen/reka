@@ -1,11 +1,11 @@
 JAVA_HOME := $(shell cat .java-home)
 export JAVA_HOME
 
-bundles = command http jade jdbc mustache smtp
+dist_bundles = command http jade jdbc mustache smtp less
 
 dist_dir = dist/reka
 
-.PHONY: clean clean-build clean-dist upload-s3 upload-s3-eu upload-s3-us test install-main build-main build-bundles
+.PHONY: clean clean-build clean-dist upload-s3 test install-main build-main build-bundles
 
 all: build
 
@@ -39,9 +39,12 @@ dist: build
 	@mkdir -p $(dist_dir)
 	@cp -r dist-resources/* $(dist_dir)/
 	@mkdir -p $(dist_dir)/lib/
+	@mkdir -p $(dist_dir)/lib/bundles
 	@mkdir -p $(dist_dir)/etc/apps
 	@cp build/reka-main*.jar $(dist_dir)/lib/reka-server.jar
-	@cp -r build/bundles $(dist_dir)/lib/
+	@for bundle in $(dist_bundles); do\
+		cp build/bundles/reka-$$bundle-* $(dist_dir)/lib/bundles/ ; \
+	done
 	@for bundle in `ls $(dist_dir)/lib/bundles`; do\
 		echo "bundle ../lib/bundles/$$bundle" >> $(dist_dir)/etc/config.reka; \
 	done
@@ -58,17 +61,9 @@ run-nolog: dist
 run-debug: dist
 	@JAVA_OPTS=-Dlog4j.configurationFile=main/reka-main/log4j2-debug.xml dist/reka/bin/reka-server
 
-upload-s3: upload-s3-us upload-s3-eu
-
-upload-s3-eu: dist
+upload-s3: dist
 	@aws s3 \
 		cp dist/reka-server.tar.gz s3://reka/reka-server.tar.gz	\
-		--grants \
-			read=uri=http://acs.amazonaws.com/groups/global/AllUsers
-
-upload-s3-us: dist
-	@aws s3 \
-		cp dist/reka-server.tar.gz s3://reka.us/reka-server.tar.gz	\
 		--grants \
 			read=uri=http://acs.amazonaws.com/groups/global/AllUsers
 

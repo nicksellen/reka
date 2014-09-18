@@ -51,12 +51,8 @@ public class DSL {
 		}
 	}
 	
-	public static RouterAction routing(RouterOperation operation, Collection<NodeChild> children) {
-		return new RouterAction(operation, children);
-	}
-	
-	public static ActionHandler subscribableAction(ActionHandler next) {
-		return new CallSubscriberAction(next);
+	public static RouterAction routing(RouterOperation operation, Collection<NodeChild> children, ErrorHandler error) {
+		return new RouterAction(operation, children, error);
 	}
 	
 	public static ActionHandler endAction(ActionHandler next) {
@@ -77,32 +73,15 @@ public class DSL {
 	}
 	
 	public static ActionHandler actionHandlers(Collection<? extends ActionHandler> handlers, ErrorHandler error) {
-		
-		handlers = handlers.stream().filter((f) -> !f.equals(DoNothing.INSTANCE)).collect(toList());
-		switch (handlers.size()) {
-		case 0: return DoNothing.INSTANCE;
-		case 1: return handlers.iterator().next();
-		default: return new ActionHandlers(handlers, error);
-		}
-		
+		return ActionHandlers.combine(handlers, error);
 	}
 
 	public static HaltedHandler haltedHandlers(Collection<? extends HaltedHandler> handlers) {
-		handlers = handlers.stream().filter((f) -> !f.equals(DoNothing.INSTANCE)).collect(toList());
-		switch (handlers.size()) {
-		case 0: return DoNothing.INSTANCE;
-		case 1: return handlers.iterator().next();
-		default: return new HaltedHandlers(handlers);
-		}
+		return HaltedHandlers.combine(handlers);
 	}
 	
 	public static ErrorHandler errorHandlers(Collection<? extends ErrorHandler> handlers) {
-		handlers = handlers.stream().filter((f) -> !f.equals(DoNothing.INSTANCE)).collect(toList());
-		switch (handlers.size()) {
-		case 0: return DoNothing.INSTANCE;
-		case 1: return handlers.iterator().next();
-		default: return new ErrorHandlers(handlers);
-		}
+		return ErrorHandlers.combine(handlers);
 	}
 	
 }

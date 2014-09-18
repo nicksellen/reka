@@ -1,5 +1,6 @@
 package reka.core.runtime.handlers;
 
+import static java.lang.String.format;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.core.runtime.FlowContext;
@@ -34,13 +35,7 @@ public class RuntimeNode implements Node {
 
 	@Override
 	public void call(MutableData data, FlowContext context) {
-		context.execute(() -> {
-			try {
-				next.call(data, context);
-			} catch (Throwable t) {
-				error.error(data, context, t);
-			}
-		});
+		context.call(next, error, data);
 	}
 
 	@Override
@@ -51,6 +46,17 @@ public class RuntimeNode implements Node {
 	@Override
 	public void error(Data data, FlowContext context, Throwable t) {
 		error.error(data, context, t);
+	}
+	
+	@Override
+	public String toString() {
+		return format("%s(id=%s,name=%s,next=%s,halted=%s,error=%s)", 
+				getClass().getSimpleName(), 
+				id, 
+				name, 
+				next.getClass().getSimpleName(),
+				halted.getClass().getSimpleName(),
+				error.getClass().getSimpleName());
 	}
 	
 }

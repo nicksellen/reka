@@ -24,7 +24,6 @@ import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.flow.Flow;
 import reka.api.flow.FlowSegment;
-import reka.api.run.EverythingSubscriber;
 import reka.api.run.Subscriber;
 import reka.config.Config;
 import reka.config.configurer.Configurer.ErrorCollector;
@@ -112,7 +111,7 @@ public class ApplicationConfigurer implements ErrorReporter {
     }
     
     public CompletableFuture<Application> build(String identity, int version, Application previous) {
-    	return build(identity, version, previous, EverythingSubscriber.DO_NOTHING);
+    	return build(identity, version, previous, Subscriber.DO_NOTHING);
     }
     
     public void checkValid() {
@@ -144,7 +143,7 @@ public class ApplicationConfigurer implements ErrorReporter {
     	return applicationName.add(trigger.base()).add(trigger.key().name());
     }
     
-    public CompletableFuture<Application> build(String identity, int applicationVersion, Application previous, final Subscriber s) {
+    public CompletableFuture<Application> build(String identity, int applicationVersion, Application previous, final Subscriber subscriber) {
 
     	CompletableFuture<Application> future = new CompletableFuture<>();
     	
@@ -183,10 +182,8 @@ public class ApplicationConfigurer implements ErrorReporter {
 						configure(new SequenceConfigurer(configurerProvider), config).bind().get()));
 	    	
 	    	// ok, run the app initializer
-	
-	    	EverythingSubscriber subscriber = EverythingSubscriber.wrap(s);
 	    	
-	    	initializer.flow().prepare().data(MutableMemoryData.create()).complete(new EverythingSubscriber() {
+	    	initializer.flow().prepare().data(MutableMemoryData.create()).complete(new Subscriber() {
 				
 				@Override
 				public void ok(MutableData data) {

@@ -1,14 +1,43 @@
 package reka.core.runtime.handlers;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+
+import com.google.common.collect.ImmutableList;
 
 import reka.core.runtime.FlowContext;
 
 public class HaltedHandlers implements HaltedHandler {
 	
-	private final Collection<? extends HaltedHandler> handlers;
+	public static HaltedHandler combine(Collection<? extends HaltedHandler> handlers) {
+		List<HaltedHandler> dst = new ArrayList<>();
+		addAll(handlers, dst);
+		if (dst.isEmpty()) {
+			return DoNothing.INSTANCE;
+		} else if (dst.size() == 1) {
+			return dst.get(0);
+		} else {
+			return new HaltedHandlers(ImmutableList.copyOf(dst));
+		}
+	}
+
+	// flattens all
 	
-	public HaltedHandlers(Collection<? extends HaltedHandler> handlers) {
+	private static void addAll(Collection<? extends HaltedHandler> src, List<HaltedHandler> dst) {
+		for (HaltedHandler handler : src) {
+			if (handler instanceof HaltedHandlers) {
+				HaltedHandlers inner = (HaltedHandlers) handler;
+				addAll(inner.handlers, dst);
+			} else if (!DoNothing.INSTANCE.equals(handler)){
+				dst.add(handler);
+			}
+		}
+	}
+	
+	private final Collection<HaltedHandler> handlers;
+	
+	private HaltedHandlers(Collection<HaltedHandler> handlers) {
 		this.handlers = handlers;
 	}
 

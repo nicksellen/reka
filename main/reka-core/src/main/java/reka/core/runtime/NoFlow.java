@@ -8,7 +8,7 @@ import reka.api.Path;
 import reka.api.data.MutableData;
 import reka.api.flow.Flow;
 import reka.api.flow.FlowRun;
-import reka.api.run.EverythingSubscriber;
+import reka.api.run.Subscriber;
 import reka.core.data.memory.MutableMemoryData;
 
 public class NoFlow implements Flow {
@@ -29,7 +29,7 @@ public class NoFlow implements Flow {
 	}
 
 	@Override
-	public void run(EverythingSubscriber run) {
+	public void run(Subscriber run) {
 		new NoFlowRun().complete(run).run();
 	}
 
@@ -46,10 +46,10 @@ public class NoFlow implements Flow {
 	private class NoFlowRun implements FlowRun {
 		
 		private MutableData data = MutableMemoryData.create();
-		private EverythingSubscriber subscriber;
+		private Subscriber subscriber;
 
 		@Override
-		public FlowRun complete(EverythingSubscriber subscriber) {
+		public FlowRun complete(Subscriber subscriber) {
 			this.subscriber = subscriber;
 			return this;
 		}
@@ -73,7 +73,7 @@ public class NoFlow implements Flow {
 	}
 
 	@Override
-	public void run(ExecutorService executor, MutableData data, EverythingSubscriber subscriber) {
+	public void run(ExecutorService executor, MutableData data, Subscriber subscriber) {
 		new NoFlowRun().executor(executor).data(data).complete(subscriber).run();
 	}
 	

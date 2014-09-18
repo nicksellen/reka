@@ -5,11 +5,11 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static reka.core.runtime.handlers.DSL.actionHandlers;
 import static reka.core.runtime.handlers.DSL.backgroundOp;
+import static reka.core.runtime.handlers.DSL.endAction;
 import static reka.core.runtime.handlers.DSL.errorHandlers;
 import static reka.core.runtime.handlers.DSL.haltedHandlers;
 import static reka.core.runtime.handlers.DSL.op;
 import static reka.core.runtime.handlers.DSL.routing;
-import static reka.core.runtime.handlers.DSL.subscribableAction;
 import static reka.util.Util.runtime;
 import static reka.util.Util.unwrap;
 
@@ -18,15 +18,17 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import reka.api.data.Data;
 import reka.api.flow.FlowNode;
 import reka.api.flow.FlowOperation;
-import reka.api.run.EverythingSubscriber;
 import reka.api.run.Execution;
 import reka.api.run.ExecutionChoosingOperation;
 import reka.api.run.RouteKey;
 import reka.api.run.RouterOperation;
-import reka.api.run.Subscriber;
+import reka.core.config.NoOp;
 import reka.core.runtime.FailureHandler;
 import reka.core.runtime.FlowContext;
 import reka.core.runtime.Node;
@@ -42,6 +44,8 @@ import reka.core.runtime.handlers.stateful.StatefulControl;
 import com.google.common.collect.ImmutableList;
 
 class NodeBuilder {
+	
+	private static final Logger log = LoggerFactory.getLogger(NodeBuilder.class);
 	
 	private final ExecutorService backgroundExecutor;
 	
@@ -116,36 +120,31 @@ class NodeBuilder {
         return result.build();
 	}
 	
-	private static class NotifySubscriberOnHalted implements HaltedHandler {
+	private static class ContextHalted implements HaltedHandler {
 
 		@Override
 		public void halted(FlowContext context) {
-			Subscriber subscriber = context.subscriber();
-			if (subscriber instanceof EverythingSubscriber) {
-				((EverythingSubscriber) subscriber).halted();
-			}
+			context.halted();
 		}
 		
 	}
 	
-	private static class NotifySubscriberOnError implements ErrorHandler {
+	private static class ContextError implements ErrorHandler {
 
 		@Override
 		public void error(Data data, FlowContext context, Throwable t) {
-			t = unwrap(t);
-			Subscriber subscriber = context.subscriber();
-			if (subscriber instanceof EverythingSubscriber) {
-				((EverythingSubscriber) subscriber).error(data, t);
-			}
+			context.error(data, unwrap(t));
 		}
 		
 	}
 	
-	private static final HaltedHandler NOTIFY_SUBSCRIBER_ON_HALTED = new NotifySubscriberOnHalted();
-	private static final ErrorHandler NOTIFY_SUBSCRIBER_ON_ERROR = new NotifySubscriberOnError();
+	private static final HaltedHandler CONTEXT_HALTED = new ContextHalted();
+	private static final ErrorHandler CONTEXT_ERROR = new ContextError();
 	
 	Node build(NodeFactory factory) {
 	    
+		StringBuilder sb = new StringBuilder();
+		
 		List<NodeChild> children = buildChildren(factory);
 		List<FailureHandler> listeners = buildListeners(factory);
 		
@@ -154,35 +153,41 @@ class NodeBuilder {
 		
 		final ActionHandler action;
 		
-		ErrorHandler error = NOTIFY_SUBSCRIBER_ON_ERROR;
+		ErrorHandler error = CONTEXT_ERROR;
 		HaltedHandler halted = DoNothing.INSTANCE;
 		
+		if (node.isEnd()) {
+			halted = CONTEXT_HALTED;
+		}
+		
 		if (hasListeners) {
+			sb.append("listeners(").append(listeners).append(") ");
 			error = errorHandlers(asList(errorHandlers(listeners), error));
 			halted = haltedHandlers(asList(haltedHandlers(listeners), halted));
-		}
-
-		if (node.isSubscribeable()) {
-			halted = haltedHandlers(asList(halted, NOTIFY_SUBSCRIBER_ON_HALTED));
 		}
 		
 		FlowOperation operation = null;
 		
 		if (node.hasOperationSupplier()) {
-			operation = node.operationSupplier().get();
-		} else if (node.isSubscribeable()) {
-			
-		} else if (!node.hasEmbeddedFlow()) {
-			throw new IllegalStateException(format("node [%s] must have supplier or embedded flow reference", name()));
+			operation = node.operationSupplier().get();	
+		} else if (!node.isEnd() && !node.hasEmbeddedFlow()) {
+			throw new IllegalStateException(format("node [%s] must have supplier, be subscribable, or embedded flow reference", name()));
 		}
 		
 		if (operation instanceof RouterOperation) {
-			action = routing((RouterOperation) operation, children);
+			sb.append("router ");
+			action = routing((RouterOperation) operation, children, error);
 		} else {
 			List<ActionHandler> childActions = children.stream().map(NodeChild::node).collect(toList());
 			ActionHandler next = actionHandlers(childActions, error);
 			
-			if (operation != null) {
+			if (!childActions.isEmpty()) {
+				sb.append("children(").append(childActions.size()).append(") ");
+			}
+			
+			if (operation != null && !NoOp.INSTANCE.equals(operation)) {
+				
+				sb.append("operation(").append(operation.getClass().getSimpleName()).append(") ");
 				
 				Execution execution = Execution.context;
 				
@@ -195,12 +200,14 @@ class NodeBuilder {
 					action = op(operation, next, error);
 					break;
 				case background:
+					sb.append("background ");
 					action = backgroundOp(operation, next, error, backgroundExecutor);
 				default:
 					throw runtime("unknown executor group %s", execution.toString());
 				}
 				
 			} else if (node.hasEmbeddedFlow()) {
+				sb.append("embedded ");
 				action = new EmbeddedFlowAction(factory.getFlow(node.embeddedFlowNode().flowName()), next, halted, error);
 			} else {
 				action = next;
@@ -209,25 +216,24 @@ class NodeBuilder {
 		
 		ActionHandler main = action;
 		
-		/*
 		if (node.isEnd()) {
+			sb.append("end ");
 			main = endAction(main);
 		}
-		*/
-		
-		if (node.isSubscribeable()) {
-			main = subscribableAction(main);
-		}
-
-		//main = new TimeLoggerAction(id, main);
 		
 		if (stateful) {
+			sb.append("stateful ");
 			ControlHandler stateHandler = new StatefulControl(id, initialCounter, main, halted, error);
 			main = stateHandler;
 			halted = stateHandler;
 		}
+
+		//main = new TimeLoggerAction(id, main, error);
+
+		RuntimeNode rtNode = new RuntimeNode(id, name, main, halted, error);
+		log.debug("\n  built node {} -> \n    {}\n    {}", id, sb.toString().trim(), rtNode);
 		
-		return new RuntimeNode(id, name, main, halted, error);
+		return rtNode;
 	}
 
 	@Override

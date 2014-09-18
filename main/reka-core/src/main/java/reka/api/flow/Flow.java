@@ -4,7 +4,6 @@ import java.util.concurrent.ExecutorService;
 
 import reka.api.Path;
 import reka.api.data.MutableData;
-import reka.api.run.EverythingSubscriber;
 import reka.api.run.Subscriber;
 
 public interface Flow extends Comparable<Flow> {
@@ -14,17 +13,9 @@ public interface Flow extends Comparable<Flow> {
     String fullName();
     
     void run();
-    void run(EverythingSubscriber run);
+    void run(Subscriber run);
 
     FlowRun prepare();
-
-    default void run(Subscriber run) {
-    	run(EverythingSubscriber.wrap(run));
-    }
-
-    default void run(ExecutorService executor, MutableData data, EverythingSubscriber subscriber) {
-    	run(executor, data, subscriber);
-    }
     
     default void run(ExecutorService executor, MutableData data, Subscriber subscriber) {
     	run(executor, data, subscriber);

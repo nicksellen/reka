@@ -3,7 +3,7 @@ package reka.core.builder;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.flow.Flow;
-import reka.api.run.EverythingSubscriber;
+import reka.api.run.Subscriber;
 import reka.core.runtime.FlowContext;
 import reka.core.runtime.handlers.ActionHandler;
 import reka.core.runtime.handlers.ErrorHandler;
@@ -31,7 +31,7 @@ public class EmbeddedFlowAction implements ActionHandler {
 			flow.prepare()
 					.executor(context.executor())
 					.data(data)
-					.complete(new EverythingSubscriber() {
+					.complete(new Subscriber() {
 						
 						@Override
 						public void ok(MutableData data) {

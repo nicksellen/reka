@@ -53,7 +53,11 @@ public class Reka {
 			log.info("module available {}", m);
 		});
 		
-		log.info("starting reka");
+		if (!System.getenv().containsKey("REKA_ENV")) {
+			System.getenv().put("REKA_ENV", "development");
+		}
+		
+		log.info("starting reka in {}", System.getenv("REKA_ENV"));
 
 		manager.restore();
 		

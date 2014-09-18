@@ -31,7 +31,6 @@ import org.slf4j.LoggerFactory;
 import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.flow.Flow;
-import reka.api.run.EverythingSubscriber;
 import reka.api.run.Subscriber;
 import reka.config.ConfigBody;
 import reka.config.FileSource;
@@ -156,7 +155,7 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 	}
 	
 	public void redeploy(String identity) {
-		redeploy(identity, EverythingSubscriber.DO_NOTHING);
+		redeploy(identity, Subscriber.DO_NOTHING);
 	}
 	
 	public void redeploy(String identity, Subscriber subscriber) {
@@ -166,11 +165,11 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 	}
 
 	public void deploy(String identity, Source source) {
-		deploySource(identity, false, source, false, EverythingSubscriber.DO_NOTHING);
+		deploySource(identity, false, source, false, Subscriber.DO_NOTHING);
 	}
 
 	public void deployTransient(String identity, Source source) {
-		deploySource(identity, false, source, true, EverythingSubscriber.DO_NOTHING);
+		deploySource(identity, false, source, true, Subscriber.DO_NOTHING);
 	}
 	
 	public void deployConfig(String identity, ConfigBody incomingConfig) {
@@ -194,7 +193,7 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 				}
 			
 				configure(new ApplicationConfigurer(bundles), config)
-					.build(identity, version, previous, EverythingSubscriber.DO_NOTHING)
+					.build(identity, version, previous, Subscriber.DO_NOTHING)
 					.whenComplete((app, ex) -> {
 					try {
 						if (app != null) {
@@ -231,9 +230,7 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 			boolean redeploy, 
 			Source source,
 			boolean isTransient, 
-			Subscriber s) {
-		
-		EverythingSubscriber subscriber = EverythingSubscriber.wrap(s);
+			Subscriber subscriber) {
 		
 		long stamp = lock.writeLock();
 		

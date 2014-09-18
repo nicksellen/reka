@@ -254,7 +254,7 @@ public class FlowBuilders {
 				current.node().incrementInitialCounter();	
 			}
 			
-			if (hasMultipleParents || current.optional() || current.node().node().isSubscribeable()) {
+			if (hasMultipleParents || current.optional() || current.node().node().isEnd()) {//current.node().node().isSubscribeable()) {
 				
 				// handle the trigger and make current the new trigger
 				

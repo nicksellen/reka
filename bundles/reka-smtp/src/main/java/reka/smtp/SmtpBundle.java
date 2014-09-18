@@ -31,8 +31,8 @@ import org.subethamail.smtp.server.SMTPServer;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.flow.Flow;
-import reka.api.run.EverythingSubscriber;
 import reka.api.run.Operation;
+import reka.api.run.Subscriber;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
@@ -334,7 +334,7 @@ public class SmtpBundle implements RekaBundle {
 				
 				flow.prepare()
 					.data(data)
-					.complete(new EverythingSubscriber(){
+					.complete(new Subscriber(){
 
 						@Override
 						public void ok(MutableData data) {

@@ -13,7 +13,7 @@ import reka.ApplicationManager;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.run.AsyncOperation;
-import reka.api.run.EverythingSubscriber;
+import reka.api.run.Subscriber;
 import reka.config.FileSource;
 
 public class RekaDeployFromFileOperation implements AsyncOperation {
@@ -44,7 +44,7 @@ public class RekaDeployFromFileOperation implements AsyncOperation {
 		
 		log.info("deploying {}", identity);
 		
-		manager.deploy(identity, FileSource.from(file), new EverythingSubscriber() {
+		manager.deploy(identity, FileSource.from(file), new Subscriber() {
 
 			@Override
 			public void ok(MutableData initializationData) {
