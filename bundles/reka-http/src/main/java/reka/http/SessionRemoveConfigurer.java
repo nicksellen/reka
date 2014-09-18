@@ -24,7 +24,7 @@ public class SessionRemoveConfigurer implements OperationConfigurer {
 
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("session/remove", store -> new SessionRemoveOperation(store.get(SESSION_STORE), keyFn));
+		ops.add("remove", store -> new SessionRemoveOperation(store.get(SESSION_STORE), keyFn));
 	}
 
 }

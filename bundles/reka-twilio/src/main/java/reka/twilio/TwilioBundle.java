@@ -100,7 +100,7 @@ public class TwilioBundle implements RekaBundle {
 
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add("send sms", store -> new TwilioSendOperation(sid, token, defaultFrom, msgFn, toFn, out));
+			ops.add("send", store -> new TwilioSendOperation(sid, token, defaultFrom, msgFn, toFn, out));
 		}
 		
 	}

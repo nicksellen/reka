@@ -14,8 +14,8 @@ import reka.api.flow.FlowSegment;
 import reka.api.run.RouteKey;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
+import reka.core.builder.OperationFlowNode;
 import reka.core.config.ConfigurerProvider;
-import reka.core.config.NoOp;
 import reka.core.config.SequenceConfigurer;
 import reka.core.setup.OperationSetup;
 import reka.http.configurers.HttpRouterConfigurer.RouteBuilder;
@@ -90,20 +90,20 @@ public class HttpRouteGroupConfigurer {
 
 		if (groupName != null) ops.label(groupName);
 
-		ops.parallel(par -> {
+		ops.parallel(op -> {
 
 			for (Entry<RouteKey, List<OperationConfigurer>> entry : segments.entrySet()) {
 				
 				RouteKey key = entry.getKey();
 				List<OperationConfigurer> operations = entry.getValue();
 				
-				par.namedInputSeq(key, route -> {
+				op.namedInputSeq(key, route -> {
 					operations.forEach(routeOperations -> route.add(routeOperations));
 				});
 			}
 
 			for (HttpRouteGroupConfigurer group : groups) {
-				par.sequential(g -> group.buildGroupSegment(g));
+				op.sequential(g -> group.buildGroupSegment(g));
 			}
 
 		});
@@ -126,12 +126,14 @@ public class HttpRouteGroupConfigurer {
 		routes.add(route);
 
 		OperationConfigurer segment = configToSegment(config);
-		
+		 
 		if (!segments.containsKey(route.key())) {
 			segments.put(route.key(), new ArrayList<>());
 		}
-
-		segments.get(route.key()).add(segment);
+			
+		if (segment != null) {
+			segments.get(route.key()).add(segment);
+		}
 		
 	}
 	
@@ -141,8 +143,7 @@ public class HttpRouteGroupConfigurer {
 		} else if (config.hasBody()) {
 			return configure(new SequenceConfigurer(provider), config);
 		} else {
-			// TODO: make it so we don't have to pass a NoOp here...
-			return ops -> { ops.add("-", store -> NoOp.INSTANCE); };
+			return ops -> ops.add(() -> OperationFlowNode.createNoOp());
 		}
 	}
 	

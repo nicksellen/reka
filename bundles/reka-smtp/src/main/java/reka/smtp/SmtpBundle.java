@@ -168,7 +168,7 @@ public class SmtpBundle implements RekaBundle {
 		
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add("smtp/send", store -> new SMTPSendOperation(
+			ops.add("send", store -> new SMTPSendOperation(
 					host, 
 					port, 
 					username, 

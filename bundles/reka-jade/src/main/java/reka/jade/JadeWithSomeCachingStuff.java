@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -80,7 +81,7 @@ public class JadeWithSomeCachingStuff implements Operation, JsonProvider {
 		mainResponse = outputPath.equals(Response.CONTENT);
 		
 		templateHash = hash.newHasher()
-			.putString(value)
+			.putString(value, StandardCharsets.UTF_8)
 			.putBytes(inputPath.toByteArray())
 			.putBytes(outputPath.toByteArray()).hash().asBytes();
 
@@ -246,7 +247,7 @@ public class JadeWithSomeCachingStuff implements Operation, JsonProvider {
 		if (value instanceof Hashable) {
 			((Hashable) value).hash(hasher);
 		} else if (value instanceof String) {
-			hasher.putString((String) value);
+			hasher.putString((String) value, StandardCharsets.UTF_8);
 		} else if (value instanceof Long) {
 			hasher.putLong((long) value);
 		} else if (value instanceof Integer) {

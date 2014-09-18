@@ -403,5 +403,14 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 			log.error("failed to save state", t);
 		}
 	}
+
+	public void shutdown() {
+		long stamp = lock.writeLock();
+		try {
+			applications.values().forEach(app -> app.undeploy());
+		} finally {
+			lock.unlock(stamp);
+		}
+	}
 	
 }

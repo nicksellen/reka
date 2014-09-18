@@ -15,6 +15,8 @@ public class HttpBundle implements RekaBundle {
 		bundle.module(slashes("http/sessions"), () -> new HttpSessionsModule());
 		bundle.module(path("websockets"), () -> new WebsocketModule(server));
 		//setup.use(slashes("admin/http"), () -> new HttpAdminModule(server));
+		
+		bundle.shutdown(() -> server.shutdown());
 	}
 
 }

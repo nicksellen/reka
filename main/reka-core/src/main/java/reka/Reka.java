@@ -24,7 +24,9 @@ import reka.core.bundle.RekaBundle;
 
 public class Reka {
 	
-	private final Logger log = LoggerFactory.getLogger(getClass());
+	public static final String REKA_ENV = "REKA_ENV";
+	
+	private static final Logger log = LoggerFactory.getLogger(Reka.class);
 	
 	private final File datadir;
 	private final List<RekaBundle> bundles = new ArrayList<>();
@@ -43,9 +45,19 @@ public class Reka {
 		if (!datadir.isDirectory() && !datadir.mkdirs()) throw runtime("couldn't create datadir %s", datadir); 
 		
 		BundleManager bundleManager = new BundleManager(bundles);
-		ApplicationManager manager  = new ApplicationManager(datadir, bundleManager, false);
+		ApplicationManager applicationManager  = new ApplicationManager(datadir, bundleManager, false);
 		
-		bundleManager.add(new RekaSystemBundle(manager));
+		Runtime.getRuntime().addShutdownHook(new Thread(){
+			
+			@Override
+			public void run() {
+				applicationManager.shutdown();
+				bundleManager.shutdown();
+			}
+			
+		});
+		
+		bundleManager.add(new RekaSystemBundle(applicationManager));
 		
 		Stream<String> bundlesNames = bundleManager.modulesKeys().stream().map(reka.api.Path::slashes);
 		
@@ -53,13 +65,13 @@ public class Reka {
 			log.info("module available {}", m);
 		});
 		
-		if (!System.getenv().containsKey("REKA_ENV")) {
-			System.getenv().put("REKA_ENV", "development");
+		if (!System.getenv().containsKey(REKA_ENV)) {
+			throw runtime("please ensure %s has been set in your environment", REKA_ENV);
 		}
 		
-		log.info("starting reka in {}", System.getenv("REKA_ENV"));
+		log.info("starting reka in {}", System.getenv(REKA_ENV));
 
-		manager.restore();
+		applicationManager.restore();
 		
 		for (String filename : filenames) {
 			File possibleFile = new File(filename);
@@ -74,18 +86,15 @@ public class Reka {
 			checkArgument(possibleFile.exists(), "can't find [%s]", filename);
 			
 			final File file = possibleFile;
-			
 			String identity = file.toPath().getFileName().toString().replaceFirst("\\.reka$", "");
-			
 			Source source = FileSource.from(file);
-			
-			manager.deployTransient(identity, source);
-			
+			applicationManager.deployTransient(identity, source);
 		}
 		
 		for (Entry<String, ConfigBody> e : configs.entrySet()) {
-			manager.deployConfig(e.getKey(), e.getValue());
+			applicationManager.deployConfig(e.getKey(), e.getValue());
 		}
+		
 	}
 	
 }

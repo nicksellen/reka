@@ -239,7 +239,7 @@ public class NashornModule extends ModuleConfigurer {
 
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add("jsdata", store -> new PutDataOperation(store.get(key), out));
+			ops.add("data", store -> new PutDataOperation(store.get(key), out));
 		}
 		
 	}

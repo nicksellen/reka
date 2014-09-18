@@ -89,6 +89,10 @@ public class HttpRouterConfigurer extends HttpRouteGroupConfigurer implements Op
 			
 			regex.append("^");
 			
+			if (!path.startsWith("/")) {
+				regex.append("\\/");
+			}
+			
 			Matcher matcher = PATH_VAR.matcher(path);
 
 			int pos = 0;
@@ -175,10 +179,10 @@ public class HttpRouterConfigurer extends HttpRouteGroupConfigurer implements Op
 	public void setup(OperationSetup ops) {
 		HttpRouter router = new HttpRouter(buildGroupRoutes(), missing != null);
 		
-		ops.router("http/router", store -> router, routes -> {
+		ops.router("router", store -> router, routes -> {
 			routes.parallel(par -> buildGroupSegment(par));
 			if (missing != null) {
-				routes.add(HttpRouter.MISSING, missing);
+				routes.add(HttpRouter.ELSE, missing);
 			}
 		});
 		

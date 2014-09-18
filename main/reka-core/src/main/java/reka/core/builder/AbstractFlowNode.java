@@ -25,9 +25,9 @@ public class AbstractFlowNode implements FlowNode {
 	private String name;
 	private OperationSupplier<?> supplier;
 	private FlowDependency embeddedFlowNode;
-	//private boolean subscribeable = false;
 	private boolean isStart = false;
 	private boolean isEnd = false;
+	private boolean isNoOp;
 	
 	protected AbstractFlowNode embeddedFlowNode(FlowDependency embeddedFlowNode) {
 		this.embeddedFlowNode = embeddedFlowNode;
@@ -54,12 +54,10 @@ public class AbstractFlowNode implements FlowNode {
 		return this;
 	}
 	
-	/*
-	protected AbstractFlowNode subscribeable(boolean subscribable) {
-		this.subscribeable = subscribable;
+	protected AbstractFlowNode isNoOp(boolean val) {
+		isNoOp = val;
 		return this;
 	}
-	*/
 	
 	public RouteKey key() {
 		return null;
@@ -132,13 +130,6 @@ public class AbstractFlowNode implements FlowNode {
 		return embeddedFlowNode;
 	}
 
-	/*
-	@Override
-	public boolean isSubscribeable() {
-		return subscribeable;
-	}
-	*/
-
 	@Override
 	public boolean isStart() {
 		return isStart;
@@ -147,6 +138,11 @@ public class AbstractFlowNode implements FlowNode {
 	@Override
 	public boolean isEnd() {
 		return isEnd;
+	}
+
+	@Override
+	public boolean isNoOp() {
+		return isNoOp;
 	}
 	
 

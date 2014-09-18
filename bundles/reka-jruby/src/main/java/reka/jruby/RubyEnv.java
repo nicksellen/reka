@@ -4,6 +4,7 @@ import static reka.util.Util.unchecked;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Base64;
 import java.util.HashMap;
@@ -38,7 +39,7 @@ public class RubyEnv {
 			
 			container.setClassLoader(container.getClass().getClassLoader());
 			
-			String gemFileHash = new String(Base64.getEncoder().encode(Hashing.sha1().newHasher().putString(gemFile).hash().asBytes()), Charsets.UTF_8);
+			String gemFileHash = new String(Base64.getEncoder().encode(Hashing.sha1().newHasher().putString(gemFile, StandardCharsets.UTF_8).hash().asBytes()), Charsets.UTF_8);
 
 			File gemFileEnv = new File("/tmp/jrubyenv-" + gemFileHash);
 

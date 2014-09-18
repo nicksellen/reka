@@ -3,13 +3,15 @@ package reka.core.builder;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 import static reka.core.builder.FlowSegments.noop;
+import static reka.util.Util.createEntry;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map.Entry;
 import java.util.Set;
-import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,34 +48,44 @@ public class FlowConnector {
 	private final SetMultimap<FlowNode,FlowNode> destinationsOf = HashMultimap.create();
 	private final SetMultimap<FlowNode,FlowNode> sourcesOf = HashMultimap.create();
 	
-	private final Set<Path> usesFlows = new HashSet<>();
+	private final List<FlowNodeConnection> noOpConnections = new ArrayList<>();
 	
-	public FlowConnector() {
-		this(Collections.emptyList());
-	}
+	private final Set<Path> usesFlows = new HashSet<>();
 	
 	private FlowConnector(Iterable<FlowSegment> segments) {
 		for (FlowSegment segment : segments) {
 			expand(segment);
 		}
+		fixupNoOps();
 	}
 	
-	private void expandNodes(FlowSegment segment) {
-		if (segment.isNode()) {
-			nodes.add(segment.node());
-		}
-		for (FlowSegment inner : segment.segments()) {
-			if (!inner.equals(segment)) {
-				expandNodes(inner);
+	private void fixupNoOps() {
+		for (FlowNodeConnection connection : noOpConnections) {
+			if (!connection.source().isNoOp() && connection.destination().isNoOp()) {
+				Entry<RouteKey, FlowNode> e = findNoOpReal(connection.key(), connection.destination());
+				add(connection.source(), e.getValue(), e.getKey(), false);
 			}
 		}
 	}
 	
-	public void expand(FlowSegment segment) {
+	private Entry<RouteKey,FlowNode> findNoOpReal(RouteKey key, FlowNode current) {
+		if (!current.isNoOp()) return createEntry(key, current);
+		for (FlowNodeConnection connection : noOpConnections) {
+			if (connection.source().equals(current)) {
+				current = connection.destination();
+				if (key == null) key = current.key();
+			}
+		}
+		return findNoOpReal(key, current);
+	}
+	
+	private void expand(FlowSegment segment) {
 		
 		segments.add(segment);
 		
-		expandNodes(segment);
+		if (segment.isNode() && !segment.node().isNoOp()) {
+			nodes.add(segment.node());
+		}
 		
 		for (FlowConnection connection : segment.connections()) {
 			connect(connection.source(), connection.destination(), null);
@@ -87,19 +99,19 @@ public class FlowConnector {
 		
 	}
 	
-	public void add(FlowSegment from, FlowSegment to) {
-		connect(from, to, null);
-	}
-	
 	private void add(FlowNode from, FlowNode to, RouteKey key, boolean optional) {
-		FlowNodeConnection connection = FlowNodeConnection.create(from, to, key, optional);
-		conns.add(connection);
-		nodes.add(from);
-		nodes.add(to);
-		destinationsOf.put(from, to);
-		sourcesOf.put(to, from);
-		if (from.hasEmbeddedFlow()) register(from.embeddedFlowNode());
-		if (to.hasEmbeddedFlow()) register(to.embeddedFlowNode());
+		if (from.isNoOp() || to.isNoOp()) {
+			noOpConnections.add(FlowNodeConnection.create(from, to, key, optional));			
+		} else {
+			FlowNodeConnection connection = FlowNodeConnection.create(from, to, key, optional);
+			conns.add(connection);
+			nodes.add(from);
+			nodes.add(to);
+			destinationsOf.put(from, to);
+			sourcesOf.put(to, from);
+			if (from.hasEmbeddedFlow()) register(from.embeddedFlowNode());
+			if (to.hasEmbeddedFlow()) register(to.embeddedFlowNode());	
+		}
 	}
 	
 	private void register(FlowDependency val) {
@@ -180,7 +192,7 @@ public class FlowConnector {
 			
 			// special case: multi output -> multi input, auto-create intermediate node
 
-			FlowSegment intermediate = noop(format("+ [%s]", UUID.randomUUID().toString()));
+			FlowSegment intermediate = noop();
 			
 			for (FlowSegment from : sourceSegment.destinations()) {
 				connect(from, intermediate, parentKey);

@@ -18,7 +18,7 @@ public class DefaultFlowVisualizer implements FlowVisualizer {
 
 	private final Path name;
 	
-	private final Map<Integer,String> nodes;
+	private final Map<Integer,String> nodeIdToName;
 	private final Collection<FlowSegment> segments;
 
 	private final FlowConnector connections;
@@ -38,21 +38,20 @@ public class DefaultFlowVisualizer implements FlowVisualizer {
 	public DefaultFlowVisualizer(
 			Path name, 
 			Map<FlowNode,Integer> nodeToId, 
-			Map<Integer,String> nodes, 
+			Map<Integer,String> nodeIdToNames, 
 			Map<Integer,NodeType> idToType,
 			Collection<FlowSegment> segments,
 			FlowConnector connections) {
-		
 		this.name = name;
 		this.nodeToId = nodeToId;
-		this.nodes = nodes;
+		this.nodeIdToName = nodeIdToNames;
 		this.idToType = idToType;
 		this.segments = segments;
+        this.connections = connections;
 		walkForLabels();
 		walkForMeta();
         labelPaths = extractLabelPaths();
         metaStacks = extractSomethingAboutMeta();
-        this.connections = connections;
 	}
 	
 	@Override
@@ -121,9 +120,10 @@ public class DefaultFlowVisualizer implements FlowVisualizer {
 		for (Entry<FlowNode, FlowSegment> entry : nodeMetaParents.entrySet()) {
 			
 			FlowNode flowNode = entry.getKey();
+			if (flowNode.isNoOp()) continue;
 
 			int id = nodeToId.get(flowNode);
-			if (!nodes.keySet().contains(id)) continue;
+			if (!nodeIdToName.keySet().contains(id)) continue;
 			
 			FlowSegment to = entry.getValue();
 			
@@ -157,9 +157,11 @@ public class DefaultFlowVisualizer implements FlowVisualizer {
 		for (Entry<FlowNode, FlowSegment> entry : nodeParents.entrySet()) {
 			
 			FlowNode flowNode = entry.getKey();
+			
+			if (flowNode.isNoOp()) continue;
 
 			int id = nodeToId.get(flowNode);
-			if (!nodes.keySet().contains(id)) continue;
+			if (!nodeIdToName.keySet().contains(id)) continue;
 			
 			FlowSegment to = entry.getValue();
 			
@@ -189,7 +191,7 @@ public class DefaultFlowVisualizer implements FlowVisualizer {
 			graph.meta(e.getKey(), e.getValue());
 		}
 	    
-	    for (Entry<Integer, String> node : nodes.entrySet()) {
+	    for (Entry<Integer, String> node : nodeIdToName.entrySet()) {
 	        graph.node(node.getKey(), node.getValue(), idToType.get(node.getKey()));
 	    }
 	    

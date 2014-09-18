@@ -51,7 +51,7 @@ public class JdbcQueryConfigurer implements OperationConfigurer {
 	@Override
 	public void setup(OperationSetup ops) {
 	    checkNotNull(queryFn, "you didn't pick a query!");
-		ops.add("jdbc/query", store -> new JdbcQuery(config, store.get(POOL), queryFn, out));
+		ops.add("run", store -> new JdbcQuery(config, store.get(POOL), queryFn, out));
 	}
 
 }

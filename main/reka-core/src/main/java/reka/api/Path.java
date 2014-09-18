@@ -12,6 +12,7 @@ import java.io.DataOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -287,7 +288,7 @@ public class Path implements Iterable<Path.PathElement>, Comparable<Path>, Hasha
 		
 		@Override
 		public Hasher hash(Hasher hasher) {
-			return hasher.putString(name);
+			return hasher.putString(name, StandardCharsets.UTF_8);
 		}
 		
 	}

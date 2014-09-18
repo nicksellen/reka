@@ -68,7 +68,7 @@ public class JsonBundle implements RekaBundle {
 
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add("json/parse", store -> new JsonParseOperation(inFn, outFn));
+			ops.add("parse", store -> new JsonParseOperation(inFn, outFn));
 		}
 		
 	}
@@ -97,7 +97,7 @@ public class JsonBundle implements RekaBundle {
 
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add("json/stringify", store -> new JsonStringifyOperation(inFn, outFn));
+			ops.add("stringify", store -> new JsonStringifyOperation(inFn, outFn));
 		}
 		
 	}

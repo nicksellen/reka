@@ -8,8 +8,8 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
-import io.netty.channel.ServerChannel;
 import io.netty.channel.epoll.Epoll;
+import io.netty.channel.epoll.EpollChannelOption;
 import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -142,13 +142,9 @@ public class HttpServerManager {
 		
 		private void start() {
 			
-			Class<? extends ServerChannel> serverChannelClass = epoll ? 
-					EpollServerSocketChannel.class : NioServerSocketChannel.class;
-			
 			ServerBootstrap bootstrap = new ServerBootstrap()
 				.localAddress(port)
 				.group(nettyEventGroup)
-				.channel(serverChannelClass)
 				.option(ChannelOption.SO_BACKLOG, 1024)
 		    	.option(ChannelOption.SO_REUSEADDR, true)
 				.option(ChannelOption.TCP_NODELAY, true)
@@ -159,6 +155,13 @@ public class HttpServerManager {
 				.childOption(ChannelOption.SO_REUSEADDR, true)
 				.childOption(ChannelOption.MAX_MESSAGES_PER_READ, Integer.MAX_VALUE)
 				.childHandler(initializer);
+			
+			if (epoll) {
+				bootstrap.option(EpollChannelOption.SO_REUSEPORT, true);
+				bootstrap.channel(EpollServerSocketChannel.class);
+			} else {
+				bootstrap.channel(NioServerSocketChannel.class);
+			}
 			
 			try {
 				
@@ -376,6 +379,12 @@ public class HttpServerManager {
 				handler.httpResume(settings.host());
 			}
 			
+		}
+	}
+
+	public void shutdown() {
+		synchronized(lock) {
+			handlers.values().forEach(port -> port.stop());
 		}
 	}
 

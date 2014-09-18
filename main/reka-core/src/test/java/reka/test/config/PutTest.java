@@ -14,6 +14,7 @@ import java.util.Collection;
 import org.junit.Test;
 
 import reka.api.IdentityStore;
+import reka.api.Path;
 import reka.api.Path.PathElement;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
@@ -89,7 +90,7 @@ public class PutTest {
 	}
 	
 	private static void configureThenCall(OperationConfigurer s, Config config, MutableData data) {
-		OperationSetup collector = OperationSetup.createSequentialCollector(IdentityStore.createConcurrentIdentityStore());
+		OperationSetup collector = OperationSetup.createSequentialCollector(Path.root(), IdentityStore.createConcurrentIdentityStore());
 		configure(s, config);
 		
 		s.setup(collector);

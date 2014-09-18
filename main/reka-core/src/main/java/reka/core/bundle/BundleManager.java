@@ -20,6 +20,7 @@ public class BundleManager {
 	
 	private final List<Entry<Path,Supplier<ModuleConfigurer>>> modules = new ArrayList<>();
 	private final List<ConfigConverter> converters = new ArrayList<>();
+	private final List<Runnable> shutdownHandlers = new ArrayList<>();
 	
 	public BundleManager(Collection<RekaBundle> incoming) {
 		
@@ -46,6 +47,7 @@ public class BundleManager {
 		for (RekaBundle extraBundle : setup.moreBundles()) {
 			add(extraBundle);
 		}
+		shutdownHandlers.addAll(setup.shutdownHandlers());
 	}
 	
 	public List<Entry<Path,Supplier<ModuleConfigurer>>> modules() {
@@ -62,6 +64,10 @@ public class BundleManager {
 			keys.add(e.getKey());
 		}
 		return keys; 
+	}
+	
+	public void shutdown() {
+		shutdownHandlers.forEach(handler -> handler.run());
 	}
 
 }

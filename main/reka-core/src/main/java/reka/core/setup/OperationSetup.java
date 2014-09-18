@@ -6,6 +6,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import reka.api.IdentityStore;
+import reka.api.Path;
 import reka.api.data.MutableData;
 import reka.api.flow.FlowSegment;
 import reka.api.flow.SimpleFlowOperation;
@@ -15,8 +16,8 @@ import reka.nashorn.OperationConfigurer;
 
 public interface OperationSetup extends Supplier<FlowSegment> {
 	
-	public static OperationSetup createSequentialCollector(IdentityStore store) {
-		return new SequentialCollector(store);
+	public static OperationSetup createSequentialCollector(Path basename, IdentityStore store) {
+		return new SequentialCollector(basename, store);
 	}
 	
 	public static interface RouterSetup {

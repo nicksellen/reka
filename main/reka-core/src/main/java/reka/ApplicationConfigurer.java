@@ -118,7 +118,7 @@ public class ApplicationConfigurer implements ErrorReporter {
     	ModuleInitializer initializer = ModuleConfigurer.buildInitializer(rootModule);
     	MultiConfigurerProvider configurerProvider = new MultiConfigurerProvider(initializer.providers());
     	initializer.triggers().forEach(triggers -> triggers.get().forEach(trigger -> {
-    		trigger.supplier().apply(configurerProvider).bind(triggers.store()).get();
+    		trigger.supplier().apply(configurerProvider).bind(trigger.base(), triggers.store()).get();
     	}));
     	defs.forEach(config -> {
     		configure(new SequenceConfigurer(configurerProvider), config).bind().get();
@@ -167,13 +167,13 @@ public class ApplicationConfigurer implements ErrorReporter {
 	    	
 	    	initializer.initflows().forEach(initflow -> {
 	    		initflowBuilders.add(initflow.name, 
-    					initflow.supplier.apply(configurerProvider).bind(initflow.store).get());
+    					initflow.supplier.apply(configurerProvider).bind(initflow.name, initflow.store).get());
 	    	});
 	    	
 	    	initializer.triggers().forEach(triggers -> {
 	    		triggers.get().forEach(trigger -> {
 	    			flowBuilders.add(triggerPath(trigger), 
-	    					trigger.supplier().apply(configurerProvider).bind(triggers.store()).get());
+	    					trigger.supplier().apply(configurerProvider).bind(trigger.base(), triggers.store()).get());
 	    		});
 	    	});
 	    	

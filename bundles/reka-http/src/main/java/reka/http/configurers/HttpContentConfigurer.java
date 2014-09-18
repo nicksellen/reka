@@ -64,7 +64,7 @@ public class HttpContentConfigurer implements OperationConfigurer {
 				contentType = utf8(ct);
 			}
 		}
-		ops.add("http/content", store -> new HttpContentWithETag(content, contentType));
+		ops.add("content", store -> new HttpContentWithETag(content, contentType));
 	}
 
 }

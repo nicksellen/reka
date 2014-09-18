@@ -170,7 +170,7 @@ class NodeBuilder {
 		
 		if (node.hasOperationSupplier()) {
 			operation = node.operationSupplier().get();	
-		} else if (!node.isEnd() && !node.hasEmbeddedFlow()) {
+		} else if (!node.isNoOp() && !node.isEnd() && !node.hasEmbeddedFlow()) {
 			throw new IllegalStateException(format("node [%s] must have supplier, be subscribable, or embedded flow reference", name()));
 		}
 		

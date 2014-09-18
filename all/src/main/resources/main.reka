@@ -3,7 +3,8 @@ app {
   http {
     listen localhost:5000
     on request {
-      http/auth {
+      put:response.content hey
+      //http/auth {
       	realm the magical land
         accounts {
           nick woo
@@ -18,4 +19,27 @@ app {
       }	
     }
   }
+  
+	def boo {
+		http/router {
+			group yay {
+				GET /
+				GET /other
+				
+				group what is this {
+					GET /a
+					GET /b
+					then {
+						put:response.content oh!
+					}
+				}
+				then {
+					put:response.content ok!
+				}
+			}
+		}
+	}
 }
+
+
+app api @include(api.reka)

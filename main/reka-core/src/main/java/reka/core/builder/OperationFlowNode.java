@@ -8,6 +8,13 @@ import reka.api.flow.SimpleFlowOperation;
 import reka.api.run.RouterOperation;
 
 public class OperationFlowNode extends AbstractFlowNode implements FlowNode {
+
+	public static OperationFlowNode createNoOp() {
+		OperationFlowNode node = new OperationFlowNode();
+		node.name(".");
+		node.isNoOp(true);
+		return node;
+	}
 	
 	public static OperationFlowNode createNode(String name, Supplier<? extends SimpleFlowOperation> supplier) {
 		OperationFlowNode node = new OperationFlowNode();

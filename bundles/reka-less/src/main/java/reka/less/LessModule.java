@@ -122,17 +122,17 @@ public class LessModule extends ModuleConfigurer {
 		}
 
 		public void setup(OperationSetup ops) {
-			ops.add("less", store -> new LessOperation(outFn, content));
+			ops.add("compile", store -> new LessCompileOperation(outFn, content));
 		}
 		
 	}
 	
-	public static class LessOperation implements Operation {
+	public static class LessCompileOperation implements Operation {
 		
 		private final Function<Data,Path> outFn;
 		private final Content content;
 		
-		public LessOperation(Function<Data,Path> outFn, Content content) {
+		public LessCompileOperation(Function<Data,Path> outFn, Content content) {
 			this.outFn = outFn;
 			this.content = content;
 		}

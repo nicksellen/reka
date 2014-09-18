@@ -20,7 +20,9 @@ import reka.core.bundle.BundleManager;
 import reka.core.bundle.RekaBundle;
 import reka.filesystem.FilesystemBundle;
 import reka.http.HttpBundle;
+import reka.jade.JadeBundle;
 import reka.main.Main;
+import reka.mustache.MustacheBundle;
 import reka.nashorn.NashornBundle;
 import reka.process.ProcessBundle;
 
@@ -47,6 +49,8 @@ public class All {
 			new FilesystemBundle(),
 			new NashornBundle(),
 			new ProcessBundle(),
+			new MustacheBundle(),
+			new JadeBundle(),
 			new JsonBundle()));
 		
 		defaultBundles.addAll(asList(

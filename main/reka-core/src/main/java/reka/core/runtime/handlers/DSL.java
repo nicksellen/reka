@@ -1,7 +1,6 @@
 package reka.core.runtime.handlers;
 
 import static java.lang.String.format;
-import static java.util.stream.Collectors.toList;
 import static reka.util.Util.unsupported;
 
 import java.util.Collection;

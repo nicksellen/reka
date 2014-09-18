@@ -1,6 +1,7 @@
 package reka.core.config;
 
 import static reka.api.Path.dots;
+import static reka.api.Path.root;
 import static reka.util.Util.createEntry;
 
 import java.util.ArrayList;
@@ -30,7 +31,7 @@ public class SequenceConfigurer implements OperationConfigurer {
     }
     
     public Supplier<FlowSegment> bind() {
-    	return bind(null);
+    	return bind(root(), null);
     }
     
 	@Override

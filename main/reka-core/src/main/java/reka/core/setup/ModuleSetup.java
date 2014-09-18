@@ -79,7 +79,7 @@ public class ModuleSetup {
 	}
 	
 	public ModuleSetup setupInitializer(Consumer<ModuleOperationSetup> init) {
-		OperationSetup e = new SequentialCollector(store);
+		OperationSetup e = new SequentialCollector(path, store);
 		init.accept(new ModuleOperationSetup(e));
 		segments.add(e);
 		return this;
@@ -137,7 +137,7 @@ public class ModuleSetup {
 	
 	public ModuleSetup operation(Path name, Function<ConfigurerProvider,OperationConfigurer> c) {
 		operations.put(path.add(name), (provider, config) -> {
-			return configure(c.apply(provider), config).bind(store);
+			return configure(c.apply(provider), config).bind(path, store);
 		});
 		return this;
 	}

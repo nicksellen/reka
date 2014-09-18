@@ -11,8 +11,13 @@ import java.io.DataOutput;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Base64;
+import java.util.Base64.Decoder;
+import java.util.Base64.Encoder;
 
+import org.apache.commons.io.Charsets;
 import org.codehaus.jackson.JsonGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,12 +27,13 @@ import reka.api.JsonProvider;
 import reka.core.data.ObjBuilder;
 import reka.util.Util;
 
-import com.google.common.base.Charsets;
 import com.google.common.hash.Hasher;
-import com.google.common.io.BaseEncoding;
 
 
 public interface Content extends Hashable, JsonProvider {
+	
+	static final Encoder BASE64_ENCODER = Base64.getEncoder();
+	static final Decoder BASE64_DECODER = Base64.getDecoder();
 	
 	public static final String CUSTOM_TYPE = "@type";
 	
@@ -529,7 +535,7 @@ public interface Content extends Hashable, JsonProvider {
 
 		@Override
 		public Hasher hash(Hasher hasher) {
-			return hasher.putString(value);
+			return hasher.putString(value, StandardCharsets.UTF_8);
 		}
 
 		@Override
@@ -611,7 +617,7 @@ public interface Content extends Hashable, JsonProvider {
 				json.writeFieldName("content");
 				switch (content.encoding()) {
 				case NONE: 
-					json.writeString(BaseEncoding.base64().encode(content.bytes()));
+					json.writeString(new String(BASE64_ENCODER.encode(content.bytes()), StandardCharsets.UTF_8));
 					break;
 				case BASE64: 
 					// it's already base64, don't need to do anything
@@ -726,8 +732,6 @@ public interface Content extends Hashable, JsonProvider {
 	
 	public abstract static class BinaryContent extends BaseContent {
 		
-		private static BaseEncoding BASE64_ENCODING = BaseEncoding.base64();
-		
 		public static enum Encoding { NONE, BASE64 };
 		
 		public static final String JSON_TYPE = "binary/1.0";
@@ -780,7 +784,7 @@ public interface Content extends Hashable, JsonProvider {
 		@Override
 		public Hasher hash(Hasher hasher) {
 			if (contentType != null) {
-				hasher.putString(contentType);
+				hasher.putString(contentType, StandardCharsets.UTF_8);
 			}
 			return hasher.putLong(size()).putBytes(bytes());
 		}
@@ -804,7 +808,7 @@ public interface Content extends Hashable, JsonProvider {
 			if (requiredEncoding == encoding) {
 				return bytes();
 			} else if (encoding == Encoding.BASE64 && requiredEncoding == Encoding.NONE) {
-				return BASE64_ENCODING.decode(new String(bytes(), Charsets.UTF_8));
+				return BASE64_DECODER.decode(bytes());
 			} else if (encoding == Encoding.NONE && requiredEncoding == Encoding.BASE64) {
 				return base64String().getBytes(Charsets.UTF_8);
 			} else {
@@ -816,7 +820,7 @@ public interface Content extends Hashable, JsonProvider {
 			if (encoding == Encoding.BASE64) {
 				return new String(bytes(), Charsets.UTF_8);
 			} else {
-				return BASE64_ENCODING.encode(bytes());
+				return new String(BASE64_ENCODER.encode(bytes()), StandardCharsets.UTF_8);
 			}
 		}
 		

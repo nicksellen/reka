@@ -10,7 +10,7 @@ public interface FlowNode extends FlowSegment {
 	boolean hasEmbeddedFlow();
 	FlowDependency embeddedFlowNode();
 	
-	//boolean isSubscribeable();
+	boolean isNoOp();
 	
 	boolean isStart();
 	boolean isEnd();

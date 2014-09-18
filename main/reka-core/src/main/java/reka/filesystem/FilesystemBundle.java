@@ -24,7 +24,7 @@ public class FilesystemBundle implements RekaBundle {
 
 	@Override
 	public void setup(BundleSetup bundle) {
-		bundle.module(path("filesystem"), () -> new FilesystemModule());
+		bundle.module(path("fs"), () -> new FilesystemModule());
 	}
 	
 	public static class FilesystemReadConfigurer implements OperationConfigurer {
@@ -57,7 +57,7 @@ public class FilesystemBundle implements RekaBundle {
 		
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add("files/read", store -> new FilesystemRead(basedir, dataPathFn, filenameFn, download));
+			ops.add("read", store -> new FilesystemRead(basedir, dataPathFn, filenameFn, download));
 		}
 		
 	}
@@ -80,7 +80,7 @@ public class FilesystemBundle implements RekaBundle {
 		
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add("filesystem/delete", store -> new FilesystemDelete(basedir, filenameFn));
+			ops.add("delete", store -> new FilesystemDelete(basedir, filenameFn));
 		}
 		
 	}
@@ -108,7 +108,7 @@ public class FilesystemBundle implements RekaBundle {
 		
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add("files/list", store -> new FilesystemList(basedir, dataPathFn, dirFn));
+			ops.add("list", store -> new FilesystemList(basedir, dataPathFn, dirFn));
 		}
 		
 	}
@@ -124,7 +124,7 @@ public class FilesystemBundle implements RekaBundle {
 		
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add("files/mktmpdir", store -> new FilesystemMktempDir(dirname));
+			ops.add("mktmpdir", store -> new FilesystemMktempDir(dirname));
 		}
 		
 	}
@@ -173,7 +173,7 @@ public class FilesystemBundle implements RekaBundle {
 
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.router("file/type", store -> new FilesystemType(basedir, pathFn), router -> {
+			ops.router("type", store -> new FilesystemType(basedir, pathFn), router -> {
 				if (whenDir != null) router.add(FilesystemType.DIR, whenDir);
 				if (whenFile != null) router.add(FilesystemType.FILE, whenFile);
 				if (whenMissing != null) router.add(FilesystemType.MISSING, whenMissing);

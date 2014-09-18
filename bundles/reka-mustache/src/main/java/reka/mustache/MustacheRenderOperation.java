@@ -11,14 +11,14 @@ import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 
-public class MustacheOp implements Operation {
+public class MustacheRenderOperation implements Operation {
 	
 	private final static MustacheFactory mf = new DefaultMustacheFactory();
 	
 	private final Mustache mustache;
 	private final Path in, out;
 	
-	public MustacheOp(String template, Path inputPath, Path outputPath) {
+	public MustacheRenderOperation(String template, Path inputPath, Path outputPath) {
 		mustache = mf.compile(new StringReader(template), "template");
 		this.in = inputPath;
 		this.out = outputPath;

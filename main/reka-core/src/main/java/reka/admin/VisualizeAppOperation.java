@@ -8,6 +8,7 @@ import static reka.util.Util.runtime;
 import static reka.util.Util.unchecked;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
@@ -71,16 +72,16 @@ public class VisualizeAppOperation implements Operation {
 		String format = formatFn.apply(data);
 		
 		Hasher hasher = Hashing.sha1().newHasher()
-			.putString(identity)
+			.putString(identity, StandardCharsets.UTF_8)
 			.putInt(manager.version(identity));
 
 		flowName.hash(hasher);
 		
-		hasher.putString(format);
+		hasher.putString(format, StandardCharsets.UTF_8);
 		
 		HashCode hash = hasher.hash();
 		
-		log.info("making visualization of {}:{} in {}", identity, flowName.slashes(), format);
+		log.debug("making visualization of {}:{} in {}", identity, flowName.slashes(), format);
 
 		try {
 			Entry<Content,Content> entry = cache.get(hash, () -> {

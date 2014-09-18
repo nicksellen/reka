@@ -23,7 +23,7 @@ public class SessionGetConfigurer implements OperationConfigurer {
 
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("session/get", store -> new SessionGetOperation(store.get(SESSION_STORE), keyFn));
+		ops.add("get", store -> new SessionGetOperation(store.get(SESSION_STORE), keyFn));
 	}
 
 }

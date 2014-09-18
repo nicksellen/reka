@@ -20,6 +20,7 @@ public interface RekaBundle {
 		private final List<Entry<Path,Supplier<ModuleConfigurer>>> uses = new ArrayList<>();
 		private final List<ConfigConverter> converters = new ArrayList<>();
 		private final List<RekaBundle> moreBundles = new ArrayList<>();
+		private final List<Runnable> shutdownHandlers = new ArrayList<>();
 		
 		public BundleSetup module(Path name, Supplier<ModuleConfigurer> supplier) {
 			uses.add(createEntry(name, supplier));
@@ -42,6 +43,10 @@ public interface RekaBundle {
 			}
 			return this;
 		}
+
+		public void shutdown(Runnable handler) {
+			shutdownHandlers.add(handler);
+		}
 		
 		protected List<Entry<Path,Supplier<ModuleConfigurer>>> modules() {
 			return uses;
@@ -53,6 +58,10 @@ public interface RekaBundle {
 		
 		protected List<RekaBundle> moreBundles() {
 			return moreBundles;
+		}
+		
+		protected List<Runnable> shutdownHandlers() {
+			return shutdownHandlers;
 		}
 	
 	}

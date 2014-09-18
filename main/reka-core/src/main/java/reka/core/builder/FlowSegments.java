@@ -26,8 +26,8 @@ import com.google.common.collect.Iterables;
 
 public class FlowSegments extends AbstractFlowNode {
 	
-	public static FlowNode noop(String name) {
-		return OperationFlowNode.createNode(name, () -> NoOp.INSTANCE);
+	public static FlowNode noop() {
+		return OperationFlowNode.createNoOp(); //(name, () -> NoOp.INSTANCE);
 	}
 	
 	public static FlowSegment seq(Collection<? extends FlowSegment> segments) {
@@ -76,8 +76,8 @@ public class FlowSegments extends AbstractFlowNode {
 		
 	}
 	
-	public static FlowSegment createNamedInputSegment(RouteKey key, FlowSegment... segment) {
-		return new NamedInput(key, Sequential.of(segment));
+	public static FlowSegment createNamedInputSegment(RouteKey key, FlowSegment... segments) {
+		return new NamedInput(key, Sequential.of(segments));
 	}
 	
 	public static class DefaultFlowConnection implements FlowConnection {
