@@ -1,0 +1,90 @@
+package reka.core.builder;
+
+import static reka.util.Util.unchecked;
+
+import java.io.IOException;
+
+import net.openhft.chronicle.ExcerptTailer;
+import net.openhft.chronicle.VanillaChronicle;
+import net.openhft.chronicle.VanillaChronicle.VanillaAppender;
+import reka.api.data.MutableData;
+import reka.core.runtime.FlowContext;
+import reka.core.runtime.handlers.ActionHandler;
+import reka.core.runtime.handlers.ErrorHandler;
+
+public class TimeLoggerAction implements ActionHandler {
+	
+	//private final Logger log = LoggerFactory.getLogger(getClass());
+
+	private final static VanillaChronicle chronicle;
+	
+	static {
+		chronicle = new VanillaChronicle("/tmp/rekatiming");
+	}
+	
+	public static void main(String[] args) {
+		try {
+			ExcerptTailer tailer = chronicle.createTailer();
+			long flowId, nodeId, micros;
+			while (tailer.nextIndex()) {
+				flowId = tailer.readLong();
+				nodeId = tailer.readLong();
+				micros = tailer.readLong();
+				System.out.printf("f:%s n:%s us:%s\n", flowId, nodeId, micros);
+			}
+		} catch (IOException e) {
+			throw unchecked(e);
+		}
+		
+	}
+	
+	private final int nodeId;
+	private final ActionHandler next;
+	private final ErrorHandler error;
+	private final ThreadLocal<VanillaAppender> appenders;
+	
+	public TimeLoggerAction(int nodeId, ActionHandler next, ErrorHandler error) {
+		this.nodeId = nodeId;
+		this.next = next;
+		this.error = error;
+		appenders = ThreadLocal.withInitial(() -> { 
+			try {
+				return chronicle.createAppender();
+			} catch (Exception e) {
+				throw unchecked(e);
+			}
+		});
+
+		/*
+		try {
+			dos = new DataOutputStream(new FileOutputStream(new File("/tmp/timing")));
+		} catch (FileNotFoundException e) {
+			throw unchecked(e);
+		}
+		*/
+	}
+
+	@Override
+	public void call(MutableData data, FlowContext context) {
+		
+		//dos.writeLong(context.flowId());
+		VanillaAppender appender = appenders.get();
+		appender.startExcerpt();
+		appender.writeLong(context.flowId());
+		appender.writeLong(nodeId);
+		appender.writeLong(Math.round((System.nanoTime() - context.started()) / 1E3));
+		appender.finish();
+		
+		
+		/*
+		if (log.isDebugEnabled()) {
+			log.debug("f:{} n:{} > {} us", 
+				context.flowId(),
+				nodeId, 
+				Math.round((System.nanoTime() - context.started()) / 1E3));
+		}
+		*/
+		context.call(next, error, data);
+	}
+
+}
