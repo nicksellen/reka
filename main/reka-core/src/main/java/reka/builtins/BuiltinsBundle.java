@@ -6,9 +6,9 @@ import reka.MarkdownConverter;
 import reka.config.processor.CommentConverter;
 import reka.config.processor.DocConverter;
 import reka.config.processor.IncludeConverter;
-import reka.core.bundle.RekaBundle;
+import reka.core.bundle.BundleConfigurer;
 
-public class BuiltinsBundle implements RekaBundle {
+public class BuiltinsBundle implements BundleConfigurer {
 
 	@Override
 	public void setup(BundleSetup bundle) {

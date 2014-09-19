@@ -1,9 +1,57 @@
 app {
   name hello
+  jsx {
+  
+  	template <<- jsx
+  	
+		var AppList = React.createClass({
+		  filterChanged: function(e) {
+		    this.setState({ query: e.target.value });
+		  },
+		  filter: function(app) {
+		    var q = this.state && this.state.query;
+		    if (!q) return true;
+		    return app.name.indexOf(q) !== -1 || app.id.indexOf(q) !== -1;
+		  },
+		  render: function() {
+		    return (
+		      <div className="app-list-container">
+		        <input className="app-filter" type="text" placeholder="filter apps" onChange={this.filterChanged}/>
+		        <ul className="app-list">
+		          {this.props.apps.filter(this.filter).map(function(app){
+		            var url = '/apps/' + app.id;
+		            var classes = classSet({
+		              title: true,
+		              active: this.props.selected === app.id
+		            });
+		            return <li key={app.id}>
+		              <a className={classes} href={url}>
+		                <span className="app-name">{app.name}</span>
+		                <span className="app-id">{app.id}</span>
+		              </a>
+		            </li>;
+		          }.bind(this))}
+		        </ul>
+		      </div>
+		    );
+		  }
+		});
+  	
+  	---
+  }
   http {
     listen localhost:5000
     on request {
-      put:response.content hey
+      http/router {
+        GET / {
+          put:response.content hey
+        }
+        GET /tml.js {
+          jsx
+          put:response.headers.Content-Type application/javascript
+        }
+      }
+      //put:response.content hey
       //http/auth {
       	realm the magical land
         accounts {

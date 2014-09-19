@@ -17,7 +17,7 @@ import reka.api.run.Operation;
 import reka.config.configurer.Configurer.ErrorCollector;
 import reka.config.configurer.ErrorReporter;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.RekaBundle;
+import reka.core.bundle.BundleConfigurer;
 import reka.core.data.memory.MutableMemoryData;
 import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
@@ -25,7 +25,7 @@ import reka.core.setup.OperationSetup;
 import reka.core.util.StringWithVars;
 import reka.nashorn.OperationConfigurer;
 
-public class JsonBundle implements RekaBundle {
+public class JsonBundle implements BundleConfigurer {
 	
 	private static final ObjectMapper jsonMapper = new ObjectMapper();
 

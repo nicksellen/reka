@@ -173,14 +173,14 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 	}
 	
 	public void deployConfig(String identity, ConfigBody incomingConfig) {
-		
-		long stamp = lock.writeLock();
-		
-		try {
-			Application previous = applications.remove(identity);
+		executor.execute(() -> {
 			
-			executor.execute(() -> {
-				
+			long stamp = lock.writeLock();
+			
+			try {
+					
+				Application previous = applications.remove(identity);
+					
 				log.info("deploying {}{}", "from config", " (transient)");
 				
 				NavigableConfig config = bundles.processor().process(incomingConfig);
@@ -207,12 +207,13 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 					}
 					
 				});
-				
-			});
-		} catch (Throwable t) {
-			lock.unlock(stamp);
-			throw t;
-		}
+			} catch (Throwable t) {
+				lock.unlock(stamp);
+				throw t;
+			}
+
+		
+		});
 		
 	}
 
@@ -232,22 +233,22 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 			boolean isTransient, 
 			Subscriber subscriber) {
 		
-		long stamp = lock.writeLock();
+		executor.execute(() -> {
 		
-		try {
+			long stamp = lock.writeLock();
 			
-			Application previous = applications.get(identity);
-			
-			File constrainTo = new File("/");
-			
-			if (source.isFile()) {
-				constrainTo = source.file().getParentFile();
-			}
-			
-			checkArgument(constrainTo.isDirectory(), "constraint dir %s is not a dir", constrainTo.getAbsolutePath());
-			
-			executor.execute(() -> {
+			try {
 				
+				Application previous = applications.get(identity);
+				
+				File constrainTo = new File("/");
+				
+				if (source.isFile()) {
+					constrainTo = source.file().getParentFile();
+				}
+				
+				checkArgument(constrainTo.isDirectory(), "constraint dir %s is not a dir", constrainTo.getAbsolutePath());
+					
 				try {
 				
 					log.info("deploying {}{}", source, isTransient ? " (transient)" : "");
@@ -313,13 +314,14 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 					}
 					throw t;
 				}
-				
-			});
-		} catch (Throwable t) {
-			lock.unlock(stamp);
-			subscriber.error(Data.NONE, t);
-			throw t;
-		}
+			} catch (Throwable t) {
+				lock.unlock(stamp);
+				subscriber.error(Data.NONE, t);
+				throw t;
+			}
+
+		
+		});
 	}
 	
 	private static final Path INITIALIZER_VISUALIZER_NAME = slashes("__initializer__");

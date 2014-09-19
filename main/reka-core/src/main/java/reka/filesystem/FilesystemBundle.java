@@ -13,14 +13,14 @@ import reka.api.data.Data;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.RekaBundle;
+import reka.core.bundle.BundleConfigurer;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.core.setup.OperationSetup;
 import reka.core.util.StringWithVars;
 import reka.nashorn.OperationConfigurer;
 
-public class FilesystemBundle implements RekaBundle {
+public class FilesystemBundle implements BundleConfigurer {
 
 	@Override
 	public void setup(BundleSetup bundle) {

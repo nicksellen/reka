@@ -2,9 +2,9 @@ package reka.admin;
 
 import static reka.api.Path.path;
 import reka.ApplicationManager;
-import reka.core.bundle.RekaBundle;
+import reka.core.bundle.BundleConfigurer;
 
-public class RekaSystemBundle implements RekaBundle {
+public class RekaSystemBundle implements BundleConfigurer {
 	
 	private final ApplicationManager manager;
 	

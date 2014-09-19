@@ -17,7 +17,7 @@ import reka.api.data.MutableData;
 import reka.api.run.AsyncOperation;
 import reka.api.run.Operation;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.RekaBundle;
+import reka.core.bundle.BundleConfigurer;
 import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
 import reka.core.setup.OperationSetup;
@@ -29,7 +29,7 @@ import com.twilio.sdk.TwilioRestException;
 import com.twilio.sdk.resource.factory.SmsFactory;
 import com.twilio.sdk.resource.instance.Sms;
 
-public class TwilioBundle implements RekaBundle {
+public class TwilioBundle implements BundleConfigurer {
 	
 	private static final Logger log = LoggerFactory.getLogger(TwilioBundle.class);
 

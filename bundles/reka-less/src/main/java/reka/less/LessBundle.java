@@ -4,9 +4,9 @@ import static reka.api.Path.path;
 
 import org.lesscss.LessCompiler;
 
-import reka.core.bundle.RekaBundle;
+import reka.core.bundle.BundleConfigurer;
 
-public class LessBundle implements RekaBundle {
+public class LessBundle implements BundleConfigurer {
 	
 	private static final LessCompiler compiler;
 	

@@ -1,7 +1,7 @@
 package reka.nashorn;
 
 import static reka.api.Path.path;
-import reka.core.bundle.RekaBundle;
+import reka.core.bundle.BundleConfigurer;
 
 // http://docs.oracle.com/javase/8/docs/technotes/guides/scripting/nashorn/intro.html#sthref14
 
@@ -9,7 +9,7 @@ import reka.core.bundle.RekaBundle;
 
 // threading: https://blogs.oracle.com/nashorn/entry/nashorn_multi_threading_and_mt
 
-public class NashornBundle implements RekaBundle {
+public class NashornBundle implements BundleConfigurer {
 
 	@Override
 	public void setup(BundleSetup bundle) {

@@ -1,9 +1,9 @@
 package reka.jade;
 
 import static reka.api.Path.path;
-import reka.core.bundle.RekaBundle;
+import reka.core.bundle.BundleConfigurer;
 
-public class JadeBundle implements RekaBundle {
+public class JadeBundle implements BundleConfigurer {
 
 	@Override
 	public void setup(BundleSetup bundle) {

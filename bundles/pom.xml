@@ -20,5 +20,6 @@
     <module>reka-smtp</module>
     <module>reka-twilio</module>
     <module>reka-less</module>
+    <module>reka-jsx</module>
   </modules>
 </project>

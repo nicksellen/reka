@@ -16,35 +16,35 @@ import reka.core.setup.ModuleConfigurer;
 
 public class BundleManager {
 	
-	private final Set<RekaBundle> bundles = new HashSet<>();
+	private final Set<BundleConfigurer> bundles = new HashSet<>();
 	
 	private final List<Entry<Path,Supplier<ModuleConfigurer>>> modules = new ArrayList<>();
 	private final List<ConfigConverter> converters = new ArrayList<>();
 	private final List<Runnable> shutdownHandlers = new ArrayList<>();
 	
-	public BundleManager(Collection<RekaBundle> incoming) {
+	public BundleManager(Collection<BundleConfigurer> incoming) {
 		
 		bundles.addAll(incoming);
 		
-		for (RekaBundle bundle : incoming) {
+		for (BundleConfigurer bundle : incoming) {
 			setupBundle(bundle);
 		}
 		
 	}
 	
-	public BundleManager add(RekaBundle bundle) {
+	public BundleManager add(BundleConfigurer bundle) {
 		if (bundles.add(bundle)) {
 			setupBundle(bundle);
 		}
 		return this;
 	}
 	
-	private void setupBundle(RekaBundle bundle) {
-		RekaBundle.BundleSetup setup = new RekaBundle.BundleSetup();
+	private void setupBundle(BundleConfigurer bundle) {
+		BundleConfigurer.BundleSetup setup = new BundleConfigurer.BundleSetup();
 		bundle.setup(setup);
 		modules.addAll(setup.modules());
 		converters.addAll(setup.converters());
-		for (RekaBundle extraBundle : setup.moreBundles()) {
+		for (BundleConfigurer extraBundle : setup.moreBundles()) {
 			add(extraBundle);
 		}
 		shutdownHandlers.addAll(setup.shutdownHandlers());

@@ -1,11 +1,11 @@
 package reka.jdbc;
 
 import static reka.api.Path.path;
-import reka.core.bundle.RekaBundle;
+import reka.core.bundle.BundleConfigurer;
 import reka.h2.H2Bundle;
 import reka.pg.PostgresBundle;
 
-public class JdbcBundle implements RekaBundle {
+public class JdbcBundle implements BundleConfigurer {
 
 	@Override
 	public void setup(BundleSetup bundle) {

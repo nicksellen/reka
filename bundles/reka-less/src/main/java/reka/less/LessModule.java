@@ -1,15 +1,20 @@
 package reka.less;
 
 import static java.lang.String.format;
+import static reka.api.Path.path;
 import static reka.api.Path.root;
 import static reka.api.Path.slashes;
 import static reka.api.content.Contents.utf8;
+import static reka.config.configurer.Configurer.Preconditions.checkConfig;
+import static reka.config.configurer.Configurer.Preconditions.invalidConfig;
 import static reka.util.Util.unchecked;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -107,14 +112,28 @@ public class LessModule extends ModuleConfigurer {
 					Map<Path,String> resources = new HashMap<>();
 					for (Config child : config.body()) {
 						String key = child.key();
-						if (!key.endsWith(".less")) key = key + ".less";
-						if ("main.less".equals(key)) {
-							resources.put(root(), child.documentContentAsString());
-						} else {
-							resources.put(slashes(key), child.documentContentAsString());
+						if (!key.endsWith(".less") && !key.endsWith(".css")) key = key + ".less";
+						resources.put(slashes(key), child.documentContentAsString());
+					}
+					checkConfig(resources.containsKey(path("main.less")), "must include a main");
+					java.nio.file.Path dir = Files.createTempDirectory("tmp.less");
+					try {
+						resources.forEach((path, content) -> {
+							try {
+								java.nio.file.Path resolved = dir.resolve(path.slashes()).normalize();
+								checkConfig(resolved.startsWith(dir), "invalid path %s", path.slashes());
+								Files.write(resolved, content.getBytes(StandardCharsets.UTF_8));
+							} catch (Exception e) {
+								throw unchecked(e);
+							}
+						});
+						content = utf8(compiler.compile(dir.resolve("main.less").toFile(), "main.less"));
+					} finally {
+						File f = dir.toFile();
+						if (f.exists()) {
+							f.delete();
 						}
 					}
-					content = utf8(compiler.compile(new LessSource(new ConfigResource(root(), resources))));
 				}
 			} catch (LessException | IOException e) {
 				throw unchecked(e);

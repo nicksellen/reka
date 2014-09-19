@@ -16,7 +16,7 @@ import reka.builtins.BuiltinsBundle;
 import reka.config.NavigableConfig;
 import reka.config.parser.ConfigParser;
 import reka.core.bundle.BundleManager;
-import reka.core.bundle.RekaBundle;
+import reka.core.bundle.BundleConfigurer;
 import reka.filesystem.FilesystemBundle;
 import reka.nashorn.NashornBundle;
 import reka.process.ProcessBundle;
@@ -39,7 +39,7 @@ public class Main {
 			return;
 		};
 		
-		List<RekaBundle> defaultBundles = asList(
+		List<BundleConfigurer> defaultBundles = asList(
 			new BuiltinsBundle(), 
 			new FilesystemBundle(),
 			new NashornBundle(),

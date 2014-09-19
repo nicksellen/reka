@@ -16,11 +16,12 @@ import reka.RekaConfigurer;
 import reka.builtins.BuiltinsBundle;
 import reka.config.NavigableConfig;
 import reka.config.parser.ConfigParser;
+import reka.core.bundle.BundleConfigurer;
 import reka.core.bundle.BundleManager;
-import reka.core.bundle.RekaBundle;
 import reka.filesystem.FilesystemBundle;
 import reka.http.HttpBundle;
 import reka.jade.JadeBundle;
+import reka.jsx.JsxBundle;
 import reka.main.Main;
 import reka.mustache.MustacheBundle;
 import reka.nashorn.NashornBundle;
@@ -44,12 +45,13 @@ public class All {
 			return;
 		};
 		
-		List<RekaBundle> defaultBundles = new ArrayList<>(asList(
+		List<BundleConfigurer> defaultBundles = new ArrayList<>(asList(
 			new BuiltinsBundle(), 
 			new FilesystemBundle(),
 			new NashornBundle(),
 			new ProcessBundle(),
 			new MustacheBundle(),
+			new JsxBundle(),
 			new JadeBundle(),
 			new JsonBundle()));
 		

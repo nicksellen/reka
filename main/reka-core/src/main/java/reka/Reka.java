@@ -20,7 +20,7 @@ import reka.config.ConfigBody;
 import reka.config.FileSource;
 import reka.config.Source;
 import reka.core.bundle.BundleManager;
-import reka.core.bundle.RekaBundle;
+import reka.core.bundle.BundleConfigurer;
 
 public class Reka {
 	
@@ -29,11 +29,11 @@ public class Reka {
 	private static final Logger log = LoggerFactory.getLogger(Reka.class);
 	
 	private final File datadir;
-	private final List<RekaBundle> bundles = new ArrayList<>();
+	private final List<BundleConfigurer> bundles = new ArrayList<>();
 	private final List<String> filenames = new ArrayList<>();
 	private final Map<String,ConfigBody> configs = new HashMap<>();
 	
-	public Reka(File datadir, List<RekaBundle> bundles, List<String> filenames, Map<String,ConfigBody> configs) {
+	public Reka(File datadir, List<BundleConfigurer> bundles, List<String> filenames, Map<String,ConfigBody> configs) {
 		this.datadir = datadir;
 		this.bundles.addAll(bundles);
 		this.filenames.addAll(filenames);

@@ -34,6 +34,11 @@
 			<artifactId>reka-jade</artifactId>
 			<version>0.1.0</version>
 		</dependency>
+		<dependency>
+			<groupId>io.reka</groupId>
+			<artifactId>reka-jsx</artifactId>
+			<version>0.1.0</version>
+		</dependency>
 	</dependencies>
 
 	<build>

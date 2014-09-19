@@ -2,10 +2,10 @@ package reka.http;
 
 import static reka.api.Path.path;
 import static reka.api.Path.slashes;
-import reka.core.bundle.RekaBundle;
+import reka.core.bundle.BundleConfigurer;
 import reka.http.server.HttpServerManager;
 
-public class HttpBundle implements RekaBundle {
+public class HttpBundle implements BundleConfigurer {
 	
 	private final HttpServerManager server = new HttpServerManager();
 	

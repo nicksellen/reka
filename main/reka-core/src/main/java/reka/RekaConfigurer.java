@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.RekaBundle;
+import reka.core.bundle.BundleConfigurer;
 
 public class RekaConfigurer {
 	
@@ -36,13 +36,13 @@ public class RekaConfigurer {
 	
 	private String datadir = "data";
 
-	private final List<RekaBundle> defaultBundles = new ArrayList<>();
+	private final List<BundleConfigurer> defaultBundles = new ArrayList<>();
 	
 	private final Map<URL, String> addedBundles = new HashMap<>();
 	
 	private final Path bundleBasedir;
 	
-	public RekaConfigurer(Path bundleBasedir, List<RekaBundle> defaultBundles) {
+	public RekaConfigurer(Path bundleBasedir, List<BundleConfigurer> defaultBundles) {
 		this.bundleBasedir = bundleBasedir;
 		this.defaultBundles.addAll(defaultBundles);
 	}
@@ -103,7 +103,7 @@ public class RekaConfigurer {
 	
 	public Reka build() {
 		
-		List<RekaBundle> bundles = new ArrayList<>();
+		List<BundleConfigurer> bundles = new ArrayList<>();
 		
 		bundles.addAll(defaultBundles);
 		
@@ -119,7 +119,7 @@ public class RekaConfigurer {
 			String classname = e.getValue();
 			try {
 				Object obj = cl.loadClass(classname).newInstance();
-				bundles.add((RekaBundle) obj);
+				bundles.add((BundleConfigurer) obj);
 			} catch (ClassCastException | ClassNotFoundException | InstantiationException | IllegalAccessException error) {
 				error.printStackTrace();
 				log.error("couldn't load {} from {}", classname, e.getKey());

@@ -11,7 +11,7 @@ import reka.api.Path;
 import reka.config.processor.ConfigConverter;
 import reka.core.setup.ModuleConfigurer;
 
-public interface RekaBundle {
+public interface BundleConfigurer {
 	
 	void setup(BundleSetup bundle);
 	
@@ -19,7 +19,7 @@ public interface RekaBundle {
 		
 		private final List<Entry<Path,Supplier<ModuleConfigurer>>> uses = new ArrayList<>();
 		private final List<ConfigConverter> converters = new ArrayList<>();
-		private final List<RekaBundle> moreBundles = new ArrayList<>();
+		private final List<BundleConfigurer> moreBundles = new ArrayList<>();
 		private final List<Runnable> shutdownHandlers = new ArrayList<>();
 		
 		public BundleSetup module(Path name, Supplier<ModuleConfigurer> supplier) {
@@ -32,13 +32,13 @@ public interface RekaBundle {
 			return this;
 		}
 		
-		public BundleSetup bundle(RekaBundle bundle) {
+		public BundleSetup bundle(BundleConfigurer bundle) {
 			moreBundles.add(bundle);
 			return this;
 		}
 		
-		public BundleSetup bundles(RekaBundle... bundles) {
-			for (RekaBundle bundle : bundles) {
+		public BundleSetup bundles(BundleConfigurer... bundles) {
+			for (BundleConfigurer bundle : bundles) {
 				moreBundles.add(bundle);
 			}
 			return this;
@@ -56,7 +56,7 @@ public interface RekaBundle {
 			return converters;
 		}
 		
-		protected List<RekaBundle> moreBundles() {
+		protected List<BundleConfigurer> moreBundles() {
 			return moreBundles;
 		}
 		
