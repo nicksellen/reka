@@ -60,7 +60,7 @@ public class JsxModule extends ModuleConfigurer {
 						data.put("src", jsx);
 						Map<String,Object> map = new HashMap<>();
 						map.put("data", data);
-						JsxBundle.runner.run(JsxBundle.jsxCompiler, map);
+						JsxBundle.runner().run(JsxBundle.jsxCompiler(), map);
 						compiled = data.get("code").toString();
 						Files.write(cacheFile.toPath(), compiled.getBytes(StandardCharsets.UTF_8));
 					}

@@ -17,10 +17,22 @@ import com.google.common.io.Resources;
 
 public class JsxBundle implements BundleConfigurer {
 	
-	protected static final NashornRunner runner;
-	protected static final CompiledScript jsxCompiler;
+	private static NashornRunner runner;
+	private static CompiledScript jsxCompiler;
 	
-	static {
+	private static boolean initialized = false;
+	
+	public static NashornRunner runner() {
+		if (!initialized) initialize();
+		return runner;
+	}
+	
+	public static CompiledScript jsxCompiler() {
+		if (!initialized) initialize();
+		return jsxCompiler;
+	}
+	
+	private static void initialize() {
 		try {
 			String init = Resources.toString(JsxBundle.class.getResource("/env.js"), StandardCharsets.UTF_8);
 			String jsxTransformer = Resources.toString(JsxBundle.class.getResource("/JSXTransformer-0.11.2.js"), StandardCharsets.UTF_8);
