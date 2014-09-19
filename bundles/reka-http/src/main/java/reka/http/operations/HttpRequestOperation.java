@@ -12,7 +12,6 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.DefaultHttpRequest;
 import io.netty.handler.codec.http.HttpClientCodec;
 import io.netty.handler.codec.http.HttpHeaders;
@@ -40,14 +39,15 @@ public class HttpRequestOperation implements AsyncOperation {
 	private final String host;
 	private final Path out;
 
-	public HttpRequestOperation(EventLoopGroup group, String url, Path out) {
+	public HttpRequestOperation(EventLoopGroup group, Class<? extends Channel> channelType, String url, Path out) {
 		uri = makeURI(url);
 		this.out = out;
 		port = uri.getPort();
 		host = uri.getHost();
 		final ChannelHandler decoder = new HttpResponseToDatasetDecoder();
-		bootstrap = new Bootstrap().group(group)
-				.channel(NioSocketChannel.class)
+		bootstrap = new Bootstrap()
+				.group(group)
+				.channel(channelType)
 				.handler(new ChannelInitializer<SocketChannel>() {
 
 					@Override

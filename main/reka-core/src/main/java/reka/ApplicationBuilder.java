@@ -28,12 +28,20 @@ public class ApplicationBuilder {
 		this.name = name;
 	}
 	
+	public Path name() {
+		return name;
+	}
+	
 	public void meta(Data meta) {
 		this.meta = meta;
 	}
 	
 	public void version(int version) {
 		this.version = version;
+	}
+	
+	public int version() {
+		return version;
 	}
 	
 	public void flows(Flows flows) {

@@ -111,8 +111,8 @@ public class HttpModule extends ModuleConfigurer {
 		module.operation(path("router"), provider -> new HttpRouterConfigurer(provider));
 		module.operation(path("redirect"), provider -> new HttpRedirectConfigurer());
 		module.operation(path("content"), provider -> new HttpContentConfigurer());
-		module.operation(path("request"), provider -> new HttpRequestConfigurer(server.nettyEventGroup()));
-		module.operation(path("req"), provider -> new HttpRequestConfigurer(server.nettyEventGroup()));
+		module.operation(path("request"), provider -> new HttpRequestConfigurer(server.nettyEventGroup(), server.nettyChannelType()));
+		module.operation(path("req"), provider -> new HttpRequestConfigurer(server.nettyEventGroup(), server.nettyChannelType()));
 		module.operation(path("auth"), provider -> new BasicAuthConfigurer(provider));
 		
 		for (Function<ConfigurerProvider, OperationConfigurer> h : requestHandlers) {

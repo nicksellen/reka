@@ -22,6 +22,7 @@ import reka.filesystem.FilesystemBundle;
 import reka.http.HttpBundle;
 import reka.jade.JadeBundle;
 import reka.jsx.JsxBundle;
+import reka.less.LessBundle;
 import reka.main.Main;
 import reka.mustache.MustacheBundle;
 import reka.nashorn.NashornBundle;
@@ -52,6 +53,7 @@ public class All {
 			new ProcessBundle(),
 			new MustacheBundle(),
 			new JsxBundle(),
+			new LessBundle(),
 			new JadeBundle(),
 			new JsonBundle()));
 		

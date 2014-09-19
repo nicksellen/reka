@@ -8,13 +8,16 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
+import io.netty.channel.ServerChannel;
 import io.netty.channel.epoll.Epoll;
 import io.netty.channel.epoll.EpollChannelOption;
 import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollServerSocketChannel;
+import io.netty.channel.epoll.EpollSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.channel.socket.nio.NioSocketChannel;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -48,13 +51,32 @@ public class HttpServerManager {
 	
 	private final boolean epoll;
 	
+	private final Class<? extends ServerChannel> nettyServerChannelType;
+	private final Class<? extends Channel> nettyChannelType;
+	
 	public HttpServerManager() {
 		epoll = Epoll.isAvailable();
-		nettyEventGroup = epoll ? new EpollEventLoopGroup() : new NioEventLoopGroup();
+		if (epoll) {
+			nettyServerChannelType = EpollServerSocketChannel.class;
+			nettyChannelType = EpollSocketChannel.class;
+			nettyEventGroup = new EpollEventLoopGroup();
+		} else {
+			nettyServerChannelType = NioServerSocketChannel.class;
+			nettyChannelType = NioSocketChannel.class;
+			nettyEventGroup = new NioEventLoopGroup();
+		}
 	}
 	
 	public EventLoopGroup nettyEventGroup() {
 		return nettyEventGroup;
+	}
+	
+	public Class<? extends ServerChannel> nettyServerChannelType() {
+		return nettyServerChannelType;
+	}
+	
+	public Class<? extends Channel> nettyChannelType() {
+		return nettyChannelType;
 	}
 	
 	private class PortHandler {
@@ -145,6 +167,7 @@ public class HttpServerManager {
 			ServerBootstrap bootstrap = new ServerBootstrap()
 				.localAddress(port)
 				.group(nettyEventGroup)
+				.channel(nettyServerChannelType)
 				.option(ChannelOption.SO_BACKLOG, 1024)
 		    	.option(ChannelOption.SO_REUSEADDR, true)
 				.option(ChannelOption.TCP_NODELAY, true)
@@ -158,9 +181,6 @@ public class HttpServerManager {
 			
 			if (epoll) {
 				bootstrap.option(EpollChannelOption.SO_REUSEPORT, true);
-				bootstrap.channel(EpollServerSocketChannel.class);
-			} else {
-				bootstrap.channel(NioServerSocketChannel.class);
 			}
 			
 			try {

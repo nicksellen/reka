@@ -1,5 +1,6 @@
 package reka;
 
+import static java.lang.String.format;
 import static reka.api.Path.path;
 import static reka.api.Path.slashes;
 import static reka.config.configurer.Configurer.configure;
@@ -12,7 +13,13 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 import org.slf4j.Logger;
@@ -20,7 +27,9 @@ import org.slf4j.LoggerFactory;
 
 import reka.api.IdentityKey;
 import reka.api.Path;
+import reka.api.content.Content;
 import reka.api.data.Data;
+import reka.api.data.DiffContentConsumer.DiffContentType;
 import reka.api.data.MutableData;
 import reka.api.flow.Flow;
 import reka.api.flow.FlowSegment;
@@ -44,6 +53,8 @@ import reka.core.setup.ModuleSetup.TriggerCollection;
 
 public class ApplicationConfigurer implements ErrorReporter {
 	
+	private static final ExecutorService executor = Executors.newCachedThreadPool(); // just used for app configure/deployments
+	
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	
     private Path applicationName;
@@ -56,6 +67,7 @@ public class ApplicationConfigurer implements ErrorReporter {
     }
     
     private final List<Config> defs = new ArrayList<>();
+    private final List<Config> testConfigs = new ArrayList<>();
     
     private final ModuleConfigurer rootModule;
     
@@ -63,7 +75,7 @@ public class ApplicationConfigurer implements ErrorReporter {
     public void name(String val) {
         applicationName = slashes(val);
     }
-
+    
     @Conf.At("meta")
     public void meta(Config val) {
     	checkConfig(val.hasBody(), "must have a body");
@@ -80,6 +92,12 @@ public class ApplicationConfigurer implements ErrorReporter {
     public void def(Config config) {
     	checkConfig(config.hasValue(), "you must provide a value/name");
     	defs.add(config);
+    }
+    
+    @Conf.Each("test")
+    public void test(Config config) {
+    	checkConfig(config.hasValue(), "you must provide a value/name");
+    	testConfigs.add(config);
     }
 
 	@Override
@@ -100,18 +118,13 @@ public class ApplicationConfigurer implements ErrorReporter {
     	defs.forEach((config) -> 
 			configuredFlows.put(path(config.valueAsString()), 
 					configure(new SequenceConfigurer(provider), config).bind()));
-		
     	configuredFlows.forEach((name, segment) -> flowsBuilder.add(name, segment.get()));
     	
     	return flowsBuilder.buildVisualizers();
     }
 
     public CompletableFuture<Application> build(String identity, int version) {
-    	return build(identity, version, null);
-    }
-    
-    public CompletableFuture<Application> build(String identity, int version, Application previous) {
-    	return build(identity, version, previous, Subscriber.DO_NOTHING);
+    	return build(identity, version);
     }
     
     public void checkValid() {
@@ -122,6 +135,9 @@ public class ApplicationConfigurer implements ErrorReporter {
     	}));
     	defs.forEach(config -> {
     		configure(new SequenceConfigurer(configurerProvider), config).bind().get();
+    	});
+    	testConfigs.forEach(config -> {
+    		configure(new TestConfigurer(configurerProvider), config).build();
     	});
     }
     
@@ -139,11 +155,11 @@ public class ApplicationConfigurer implements ErrorReporter {
     	
     }
     
-    private Path triggerPath(Trigger trigger) {
-    	return applicationName.add(trigger.base()).add(trigger.key().name());
+    private static Path triggerPath(Path appname, Trigger trigger) {
+    	return appname.add(trigger.base()).add(trigger.key().name());
     }
     
-    public CompletableFuture<Application> build(String identity, int applicationVersion, Application previous, final Subscriber subscriber) {
+    public CompletableFuture<Application> build(String identity, int applicationVersion, final Subscriber subscriber) {
 
     	CompletableFuture<Application> future = new CompletableFuture<>();
     	
@@ -163,6 +179,8 @@ public class ApplicationConfigurer implements ErrorReporter {
 	    	
 	    	List<Runnable> shutdownHandlers = initializer.shutdownHandlers();
 	    	
+	    	Map<Path,FlowTest> tests = new HashMap<>();
+	    	
 	    	MultiConfigurerProvider configurerProvider = new MultiConfigurerProvider(initializer.providers());
 	    	
 	    	initializer.initflows().forEach(initflow -> {
@@ -172,103 +190,193 @@ public class ApplicationConfigurer implements ErrorReporter {
 	    	
 	    	initializer.triggers().forEach(triggers -> {
 	    		triggers.get().forEach(trigger -> {
-	    			flowBuilders.add(triggerPath(trigger), 
+	    			flowBuilders.add(triggerPath(applicationBuilder.name(), trigger), 
 	    					trigger.supplier().apply(configurerProvider).bind(trigger.base(), triggers.store()).get());
 	    		});
 	    	});
 	    	
-	    	defs.forEach((config) -> 
+	    	defs.forEach(config -> 
 				flowBuilders.add(applicationName.add(config.valueAsString()), 
 						configure(new SequenceConfigurer(configurerProvider), config).bind().get()));
 	    	
-	    	// ok, run the app initializer
+	    	AtomicInteger num = new AtomicInteger();
+	    	testConfigs.forEach(config -> {
+	    		Path testName = applicationName.add("test").add(config.hasValue() ? config.valueAsString() : String.valueOf(num.incrementAndGet()));
+	    		FlowTest test = configure(new TestConfigurer(configurerProvider), config).build();
+	    		flowBuilders.add(testName, test.run().get());
+	    		tests.put(testName, test);
+	    	});
 	    	
-	    	initializer.flow().prepare().data(MutableMemoryData.create()).complete(new Subscriber() {
-				
-				@Override
-				public void ok(MutableData data) {
-					
-					log.debug("initialized app");
-					
-					log.debug("NOT building init flows");
-
-          /*
-					
-					Flows initFlows = initflowBuilders.build();
-					
-					initializer.initflows().forEach(initflow -> {
-						log.debug("passing build initflow to {}", initflow.name.slashes());
-						initflow.consumer.accept(initFlows.flow(initflow.name));
-					});
-          */
-					
-			    	try {
-			    		
-			    		log.debug("building main flows");
-			    		
-						Flows flows = flowBuilders.build();
-						
-						applicationBuilder.flows(flows);
-						
-						initializer.triggers().forEach(triggers -> {
-							
-							Map<IdentityKey<Flow>,Flow> m = new HashMap<>();
-							
-							triggers.get().forEach(trigger -> {
-								m.put(trigger.key(), flows.flow(triggerPath(trigger)));
-							});
-							
-							MultiFlowRegistration mr = new MultiFlowRegistration(applicationVersion, identity, triggers.store(), m);
-							triggers.consumer().accept(mr);
-							
-							applicationBuilder.network().addAll(mr.network());
-							applicationBuilder.undeployConsumers().addAll(mr.undeployConsumers());
-							applicationBuilder.pauseConsumers().addAll(mr.pauseConsumers());
-							applicationBuilder.resumeConsumers().addAll(mr.resumeConsumers());
-							
-				    	});
-						
-						applicationBuilder.undeployConsumers().add(version -> {
-							for (Runnable handler : shutdownHandlers) {
-								try {
-									handler.run();
-								} catch (Throwable t) {
-									t.printStackTrace();
-								}
-							}
-						});
-			    		
-				    	future.complete(applicationBuilder.build());
-				    	
-				    	subscriber.ok(data);
-			    	
-			    	} catch (Throwable t) {
-			    		t.printStackTrace();
-			    		subscriber.error(data, t);
-			    		if (!future.isDone()) {
-			    			future.completeExceptionally(t);
-			    		}
-			    	}
-				}
-				
-				@Override
-				public void halted() {
-					log.debug("halted whilst initializing app :(");
-					subscriber.halted();
-					future.cancel(true);
-				}
-				
-				@Override
-				public void error(Data data, Throwable t) {
-					log.debug("error whilst initializing app :( {} {}", t.getMessage(), data.toPrettyJson());
-					t.printStackTrace();
-					subscriber.error(data, t);
-					future.completeExceptionally(t);
-				}
-				
-			}).run();
+	    	// ok, initializer this thing!
+	    	
+	    	ApplicationInitializer appi = new ApplicationInitializer(subscriber, future, identity, flowBuilders, applicationBuilder, initializer, tests, shutdownHandlers);
+	    	initializer.flow().prepare().executor(executor).data(MutableMemoryData.create()).complete(appi).run();
     	
     	});
+    }
+    
+    private static class ApplicationInitializer implements Subscriber {
+    	
+    	@Override
+		public void halted() {
+    		log.debug("halted whilst initializing app :(");
+			subscriber.halted();
+			future.cancel(true);
+		}
+
+		@Override
+		public void error(Data data, Throwable t) {
+			log.debug("error whilst initializing app :( {} {}", t.getMessage(), data.toPrettyJson());
+			t.printStackTrace();
+			subscriber.error(data, t);
+			future.completeExceptionally(t);
+		}
+
+		private final Subscriber subscriber;
+    	private final CompletableFuture<Application> future;
+    	private final String identity;
+    	private final FlowBuilders flowBuilders;
+    	
+    	public ApplicationInitializer(Subscriber subscriber,
+				CompletableFuture<Application> future, String identity,
+				FlowBuilders flowBuilders,
+				ApplicationBuilder applicationBuilder,
+				ModuleInitializer initializer, Map<Path, FlowTest> tests,
+				List<Runnable> shutdownHandlers) {
+			this.subscriber = subscriber;
+			this.future = future;
+			this.identity = identity;
+			this.flowBuilders = flowBuilders;
+			this.applicationBuilder = applicationBuilder;
+			this.initializer = initializer;
+			this.tests = tests;
+			this.shutdownHandlers = shutdownHandlers;
+		}
+
+		private final ApplicationBuilder applicationBuilder;
+    	private final ModuleInitializer initializer;
+    	private final Map<Path,FlowTest> tests;
+    	private final List<Runnable> shutdownHandlers;
+    	
+    	private final Logger log = LoggerFactory.getLogger(getClass());
+
+		@Override
+		public void ok(MutableData data) {
+			log.debug("initialized app");
+			
+			log.debug("NOT building init flows");
+
+  /*
+			
+			Flows initFlows = initflowBuilders.build();
+			
+			initializer.initflows().forEach(initflow -> {
+				log.debug("passing build initflow to {}", initflow.name.slashes());
+				initflow.consumer.accept(initFlows.flow(initflow.name));
+			});
+  */
+			
+	    	try {
+	    		
+	    		log.debug("building main flows");
+	    		
+				Flows flows = flowBuilders.build();
+				
+				// run tests!
+				
+				CountDownLatch latch = new CountDownLatch(tests.size());
+				
+				AtomicBoolean failed = new AtomicBoolean(false);
+				
+				tests.forEach((name, test) -> {
+					Flow flow = flows.flow(name);
+					MutableData initialData = MutableMemoryData.create();
+					initialData.merge(test.initial());
+					flow.run(executor, initialData, new Subscriber(){
+						
+						@Override
+						public void ok(MutableData data) {
+							data.diffContentFrom(test.expect(), (path, type, expected, actual) -> {
+								if (type == DiffContentType.ADDED) return; // don't mind extra data for now...
+								Optional<Content> initvalue = test.initial().getContent(path);
+								if (!initvalue.isPresent() || !initvalue.get().equals(actual)) {
+									log.error("content at {} {} - expected [{}] got [{}]", path.dots(), type, expected, actual);
+									failed.set(true);
+								}
+							});
+							latch.countDown();
+						}
+						
+						@Override
+						public void halted() {
+							log.error("test halted");
+							failed.set(true);
+							latch.countDown();
+						}
+						
+						@Override
+						public void error(Data data, Throwable t) {
+							log.error("test failed to run", t);
+							failed.set(true);
+							latch.countDown();
+						}
+						
+					});
+				});
+				
+				latch.await();
+				
+				if (failed.get()) {
+					String msg = format("failed to deploy [%s] because tests failed", identity);
+					log.error(msg);
+					Throwable t = new RuntimeException(msg);
+			    	future.completeExceptionally(t);
+			    	subscriber.error(Data.NONE, t);
+					return;
+				}
+				
+				applicationBuilder.flows(flows);
+				
+				initializer.triggers().forEach(triggers -> {
+					
+					Map<IdentityKey<Flow>,Flow> m = new HashMap<>();
+					
+					triggers.get().forEach(trigger -> {
+						m.put(trigger.key(), flows.flow(triggerPath(applicationBuilder.name(), trigger)));
+					});
+					
+					MultiFlowRegistration mr = new MultiFlowRegistration(applicationBuilder.version(), identity, triggers.store(), m);
+					triggers.consumer().accept(mr);
+					
+					applicationBuilder.network().addAll(mr.network());
+					applicationBuilder.undeployConsumers().addAll(mr.undeployConsumers());
+					applicationBuilder.pauseConsumers().addAll(mr.pauseConsumers());
+					applicationBuilder.resumeConsumers().addAll(mr.resumeConsumers());
+					
+		    	});
+				shutdownHandlers.forEach(runnable -> {
+					applicationBuilder.undeployConsumers().add(version -> {
+						try {
+							runnable.run();
+						} catch (Throwable t) {
+							t.printStackTrace();
+						}
+					});
+				});
+	    		
+		    	future.complete(applicationBuilder.build());
+		    	
+		    	subscriber.ok(data);
+	    	
+	    	} catch (Throwable t) {
+	    		t.printStackTrace();
+	    		subscriber.error(data, t);
+	    		if (!future.isDone()) {
+	    			future.completeExceptionally(t);
+	    		}
+	    	}
+		}
+    	
     }
 
 }

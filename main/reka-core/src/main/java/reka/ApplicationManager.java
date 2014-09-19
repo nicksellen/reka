@@ -193,7 +193,7 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 				}
 			
 				configure(new ApplicationConfigurer(bundles), config)
-					.build(identity, version, previous, Subscriber.DO_NOTHING)
+					.build(identity, version, Subscriber.DO_NOTHING)
 					.whenComplete((app, ex) -> {
 					try {
 						if (app != null) {
@@ -272,7 +272,7 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 					}
 				
 					configurer
-						.build(identity, version, previous, subscriber)
+						.build(identity, version, subscriber)
 						.whenComplete((app, ex) -> {
 						try {
 							if (app != null) {
@@ -324,7 +324,7 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 		});
 	}
 	
-	private static final Path INITIALIZER_VISUALIZER_NAME = slashes("__initializer__");
+	public static final Path INITIALIZER_VISUALIZER_NAME = slashes("app/initialize");
 	
 	public Optional<FlowVisualizer> visualize(String identity, Path flowName) {
 		long stamp = lock.readLock();

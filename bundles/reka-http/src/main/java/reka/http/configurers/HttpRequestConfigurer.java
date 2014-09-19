@@ -2,6 +2,7 @@ package reka.http.configurers;
 
 import static reka.api.Path.dots;
 import static reka.api.Path.path;
+import io.netty.channel.Channel;
 import io.netty.channel.EventLoopGroup;
 import reka.api.Path;
 import reka.config.configurer.annotations.Conf;
@@ -12,12 +13,14 @@ import reka.nashorn.OperationConfigurer;
 public class HttpRequestConfigurer implements OperationConfigurer {
 	
 	private final EventLoopGroup group;
+	private final Class<? extends Channel> channelType;
 	
 	private String url;
 	private Path out = path("response");
 	
-	public HttpRequestConfigurer(EventLoopGroup group) {
+	public HttpRequestConfigurer(EventLoopGroup group, Class<? extends Channel> channelType) {
 		this.group = group;
+		this.channelType = channelType;
 	}
 
 	@Conf.Val
@@ -34,7 +37,7 @@ public class HttpRequestConfigurer implements OperationConfigurer {
 
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("request", store -> new HttpRequestOperation(group, url, out));
+		ops.add("request", store -> new HttpRequestOperation(group, channelType, url, out));
 	}
 
 }
