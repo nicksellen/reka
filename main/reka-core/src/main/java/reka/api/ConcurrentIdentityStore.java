@@ -26,5 +26,11 @@ public class ConcurrentIdentityStore implements IdentityStore {
 	public <T> Optional<T> lookup(IdentityKey<T> key) {
 		return Optional.ofNullable((T) map.get(identityHashCode(key)));
 	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public <T> Optional<T> remove(IdentityKey<T> key) {
+		return Optional.ofNullable((T) map.remove(key));
+	}
 	
 }

@@ -50,10 +50,7 @@ public class RekaVisualizeOperation implements Operation {
 		this.in = in;
 		this.format = format;
 		this.out = out;
-		
-		cache = CacheBuilder.newBuilder()
-					.maximumSize(100)
-				.build();
+		cache = CacheBuilder.newBuilder().maximumSize(100).build();
 	}
 	
 	@Override

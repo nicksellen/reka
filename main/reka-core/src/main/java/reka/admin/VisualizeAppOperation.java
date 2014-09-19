@@ -59,9 +59,7 @@ public class VisualizeAppOperation implements Operation {
 		this.formatFn = format;
 		this.out = out;
 		
-		cache = CacheBuilder.newBuilder()
-					.maximumSize(100)
-				.build();
+		cache = CacheBuilder.newBuilder().maximumSize(200).build();
 	}
 	
 	@Override
@@ -90,7 +88,6 @@ public class VisualizeAppOperation implements Operation {
 					runtime("no visualization available for %s:%s :(", identity, flowName.slashes()));
 				
 				if ("json".equals(format)) {
-					log.debug("is json!");
 					return createEntry(utf8("application/json"), 
 							           utf8(vis.build(new JsonGraphVisualizer())));
 				}
@@ -98,7 +95,6 @@ public class VisualizeAppOperation implements Operation {
 				String dotcontent = vis.build(new DotGraphVisualizer());
 				
 				if ("dot".equals(format)) {
-					log.debug("is dot!");
 					return createEntry(utf8("text/dot+plain"), 
 							           utf8(dotcontent));
 				}

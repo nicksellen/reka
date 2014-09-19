@@ -1,7 +1,9 @@
 package reka.admin;
 
 import reka.Application;
+import reka.ApplicationManager;
 import reka.api.data.MutableData;
+import reka.core.runtime.NoFlowVisualizer;
 
 public class AdminUtils {
 
@@ -44,6 +46,11 @@ public class AdminUtils {
 					m.putString("name", flow.name().subpath(app.name().length()).slashes());
 				});
 			});
+			if (!(app.initializerVisualizer() instanceof NoFlowVisualizer)) {
+				list.addMap(m -> {
+					m.putString("name", ApplicationManager.INITIALIZER_VISUALIZER_NAME.slashes());
+				});
+			}
 		});
 		
 		return data;

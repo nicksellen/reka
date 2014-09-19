@@ -142,6 +142,11 @@ public class MutableDataWrapper<T> extends DataWrapper<T> implements Data, Mutab
 		return new MutableDataWrapper<T>(copy, provider);
 	}
 	
+	@Override
+	public String toString() {
+		return toJson();
+	}
+	
 	private final class BatchMutateList implements ListMutation {
 		
 		private final List<PathElement> removed = new ArrayList<>();
