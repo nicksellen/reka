@@ -86,6 +86,7 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 			app.undeploy();
 			log.info("undeployed [{}]", app.fullName());
 			notifyUndeployListeners(identity, app);
+			executor.submit(new WaitForNextTask());
 		}
 		
 	}
