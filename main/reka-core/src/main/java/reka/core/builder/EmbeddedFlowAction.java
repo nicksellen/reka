@@ -25,40 +25,24 @@ public class EmbeddedFlowAction implements ActionHandler {
 	
 	@Override
 	public void call(MutableData data, FlowContext context) {
-		
-		try {
-		
-			flow.prepare()
-					.executor(context.executor())
-					.data(data)
-					.complete(new Subscriber() {
-						
-						@Override
-						public void ok(MutableData data) {
-							try {
-								next.call(data, context);
-							} catch (Throwable t) {
-								error.error(data, context, t);
-							}
-						}
-						
-						@Override
-						public void halted() {
-							halted.halted(context);
-						}
-						
-						@Override
-						public void error(Data data, Throwable t) {
-							error.error(data, context, t);
-						}
-					})
-				.run();
-		
-		} catch (Throwable t) {
-			error.error(data, context, t);
+		flow.run(context.executor(), data, new Subscriber() {
+				
+			@Override
+			public void ok(MutableData data) {
+				context.call(next, error, data);
+			}
 			
-		}
-		
+			@Override
+			public void halted() {
+				halted.halted(context);
+			}
+			
+			@Override
+			public void error(Data data, Throwable t) {
+				error.error(data, context, t);
+			}
+			
+		});	
 	}
 
 }

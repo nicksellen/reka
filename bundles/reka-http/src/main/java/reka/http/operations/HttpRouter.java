@@ -34,7 +34,7 @@ import com.google.common.hash.Hasher;
 
 public class HttpRouter implements RouterOperation {
 	
-	public static final RouteKey ELSE = RouteKey.named("else");
+	public static final RouteKey OTHERWISE = RouteKey.named("otherwise");
 	
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -52,7 +52,7 @@ public class HttpRouter implements RouterOperation {
 
 	private final Set<RouteKey> connectionNames = new HashSet<>();
 	private final Collection<Route> routes;
-	private final boolean hasElseRoute;
+	private final boolean hasOtherwiseRoute;
 
 	public HttpRouter(Collection<Route> incoming, boolean hasElseRoute) {
 		
@@ -61,7 +61,7 @@ public class HttpRouter implements RouterOperation {
 		Collections.sort(sortedRoutes, routeComparator);
 		
 		this.routes = ImmutableList.copyOf(sortedRoutes);
-		this.hasElseRoute = hasElseRoute;
+		this.hasOtherwiseRoute = hasElseRoute;
 		
 		for (Route route : routes) {
 			log.debug("route: {}", route.key());
@@ -69,7 +69,7 @@ public class HttpRouter implements RouterOperation {
 		}
 		
 		if (hasElseRoute) {
-			connectionNames.add(ELSE);
+			connectionNames.add(OTHERWISE);
 		}
 		
 	}
@@ -87,8 +87,8 @@ public class HttpRouter implements RouterOperation {
 			}
 		}
 
-		if (hasElseRoute && router.routed().isEmpty()) {
-			router.routeTo(ELSE);
+		if (hasOtherwiseRoute && router.routed().isEmpty()) {
+			router.routeTo(OTHERWISE);
 		}
 		
 	}

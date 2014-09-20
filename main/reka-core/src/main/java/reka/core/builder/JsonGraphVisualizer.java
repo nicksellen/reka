@@ -40,6 +40,7 @@ public class JsonGraphVisualizer implements GraphVisualizer<String> {
 		data.putMap(path(name("connections"), nextIndex()), map -> {
 			map.putInt("from", from);
 			map.putInt("to", to);
+			map.putBool("optional", optional);
 			if (label != null) {
 				map.putString("label", label);
 			}

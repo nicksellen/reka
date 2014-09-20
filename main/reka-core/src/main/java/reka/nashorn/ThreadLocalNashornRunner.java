@@ -46,6 +46,17 @@ public class ThreadLocalNashornRunner implements NashornRunner {
 	
 	private final ThreadLocal<Bindings> global;
 	
+	private static void recursivelyFreezeAndSeal(ScriptObjectMirror o) {
+		o.freeze();
+		o.seal();
+		o.values().forEach(v -> {
+			if (v instanceof ScriptObjectMirror) {
+				recursivelyFreezeAndSeal((ScriptObjectMirror) v);
+			}
+		});
+
+	}
+	
 	public ThreadLocalNashornRunner(List<String> initializationScripts) {
 		Bindings initBindings = engine.createBindings(); // this creates a new global
 		
@@ -60,9 +71,7 @@ public class ThreadLocalNashornRunner implements NashornRunner {
 			// we just take the values out and leave the global behind
 			initBindings.forEach((k, o) -> {
 				if (o instanceof ScriptObjectMirror) {
-					ScriptObjectMirror som = (ScriptObjectMirror) o;
-					som.freeze();
-					som.seal();
+					recursivelyFreezeAndSeal((ScriptObjectMirror) o);
 				}
 				builder.put(k, o);
 			});
@@ -143,13 +152,13 @@ public class ThreadLocalNashornRunner implements NashornRunner {
 		System.out.printf("output: %s\n", runner.run(runner.compile("var a = 3; b = 6; out.result = a + b;"), justOut()));
 
 		System.out.printf("c\n");
-		System.out.printf("output: %s\n", runner.run(runner.compile("out.result = a + b;"), justOut()));
+		System.out.printf("output: %s\n", runner.run(runner.compile("out.result = a + b; c.woah = 'yeah changed';"), justOut()));
 		
 
 		ThreadLocalNashornRunner runner2 = new ThreadLocalNashornRunner(scripts);
 
 		System.out.printf("a2\n");
-		System.out.printf("output: %s\n", runner2.run(runner2.compile("out.result = a + b;"), justOut()));
+		System.out.printf("output: %s\n", runner2.run(runner2.compile("out.result = a + b; out.woah = c.woah;"), justOut()));
 	}
 	
 	private static Map<String,Object> justOut() {

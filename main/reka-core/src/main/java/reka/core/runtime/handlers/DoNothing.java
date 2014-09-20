@@ -10,10 +10,14 @@ public final class DoNothing implements ControlHandler, ActionHandler, HaltedHan
 	public static final DoNothing INSTANCE = new DoNothing();
 
 	@Override
-	public void error(Data data, FlowContext context, Throwable t) { /* nothing! */ }
+	public void error(Data data, FlowContext context, Throwable t) {
+		System.err.printf("errored! but we did nothing! - %s\n", t.getMessage());
+	}
 
 	@Override
-	public void halted(FlowContext context) { /* nothing! */ }
+	public void halted(FlowContext context) { 
+		System.err.printf("application halted but we did nothing!\n");
+	}
 
 	@Override
 	public void call(MutableData data, FlowContext context) { /* nothing! */ }

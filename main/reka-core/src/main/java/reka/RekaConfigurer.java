@@ -2,7 +2,6 @@ package reka;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
-import static java.util.Collections.emptyList;
 import static reka.util.Util.unchecked;
 
 import java.io.File;
@@ -13,9 +12,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.Map.Entry;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -129,7 +128,7 @@ public class RekaConfigurer {
 		
 		checkState(!classLoadingError, "failed to load all bundles");
 		
-		return new Reka(new File(datadir), bundles, emptyList(), apps);
+		return new Reka(new File(datadir), bundles, apps);
 	}
 
 }

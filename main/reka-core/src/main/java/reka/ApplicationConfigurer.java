@@ -6,6 +6,7 @@ import static reka.api.Path.slashes;
 import static reka.config.configurer.Configurer.configure;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import static reka.core.config.ConfigUtils.configToData;
+import static reka.util.Util.runtime;
 import static reka.util.Util.safelyCompletable;
 
 import java.util.ArrayList;
@@ -122,10 +123,6 @@ public class ApplicationConfigurer implements ErrorReporter {
     	
     	return flowsBuilder.buildVisualizers();
     }
-
-    public CompletableFuture<Application> build(String identity, int version) {
-    	return build(identity, version);
-    }
     
     public void checkValid() {
     	ModuleInitializer initializer = ModuleConfigurer.buildInitializer(rootModule);
@@ -159,7 +156,7 @@ public class ApplicationConfigurer implements ErrorReporter {
     	return appname.add(trigger.base()).add(trigger.key().name());
     }
     
-    public CompletableFuture<Application> build(String identity, int applicationVersion, final Subscriber subscriber) {
+    public CompletableFuture<Application> build(String identity, int applicationVersion) {
 
     	CompletableFuture<Application> future = new CompletableFuture<>();
     	
@@ -207,43 +204,26 @@ public class ApplicationConfigurer implements ErrorReporter {
 	    		tests.put(testName, test);
 	    	});
 	    	
-	    	// ok, initializer this thing!
+	    	// ok, initialize this thing!
 	    	
-	    	ApplicationInitializer appi = new ApplicationInitializer(subscriber, future, identity, flowBuilders, applicationBuilder, initializer, tests, shutdownHandlers);
+	    	ApplicationInitializer appi = new ApplicationInitializer(future, identity, flowBuilders, applicationBuilder, initializer, tests, shutdownHandlers);
 	    	initializer.flow().prepare().executor(executor).data(MutableMemoryData.create()).complete(appi).run();
     	
     	});
     }
     
     private static class ApplicationInitializer implements Subscriber {
-    	
-    	@Override
-		public void halted() {
-    		log.debug("halted whilst initializing app :(");
-			subscriber.halted();
-			future.cancel(true);
-		}
 
-		@Override
-		public void error(Data data, Throwable t) {
-			log.debug("error whilst initializing app :( {} {}", t.getMessage(), data.toPrettyJson());
-			t.printStackTrace();
-			subscriber.error(data, t);
-			future.completeExceptionally(t);
-		}
-
-		private final Subscriber subscriber;
     	private final CompletableFuture<Application> future;
     	private final String identity;
     	private final FlowBuilders flowBuilders;
     	
-    	public ApplicationInitializer(Subscriber subscriber,
+    	public ApplicationInitializer(
 				CompletableFuture<Application> future, String identity,
 				FlowBuilders flowBuilders,
 				ApplicationBuilder applicationBuilder,
 				ModuleInitializer initializer, Map<Path, FlowTest> tests,
 				List<Runnable> shutdownHandlers) {
-			this.subscriber = subscriber;
 			this.future = future;
 			this.identity = identity;
 			this.flowBuilders = flowBuilders;
@@ -259,7 +239,20 @@ public class ApplicationConfigurer implements ErrorReporter {
     	private final List<Runnable> shutdownHandlers;
     	
     	private final Logger log = LoggerFactory.getLogger(getClass());
+    	
+    	@Override
+		public void halted() {
+    		log.debug("halted whilst initializing app :(");
+			future.cancel(true);
+		}
 
+		@Override
+		public void error(Data data, Throwable t) {
+			log.debug("error whilst initializing app :( {} {}", t.getMessage(), data.toPrettyJson());
+			t.printStackTrace();
+			future.completeExceptionally(t);
+		}
+		
 		@Override
 		public void ok(MutableData data) {
 			log.debug("initialized app");
@@ -329,9 +322,7 @@ public class ApplicationConfigurer implements ErrorReporter {
 				if (failed.get()) {
 					String msg = format("failed to deploy [%s] because tests failed", identity);
 					log.error(msg);
-					Throwable t = new RuntimeException(msg);
-			    	future.completeExceptionally(t);
-			    	subscriber.error(Data.NONE, t);
+			    	future.completeExceptionally(runtime(msg));
 					return;
 				}
 				
@@ -365,15 +356,9 @@ public class ApplicationConfigurer implements ErrorReporter {
 				});
 	    		
 		    	future.complete(applicationBuilder.build());
-		    	
-		    	subscriber.ok(data);
 	    	
 	    	} catch (Throwable t) {
-	    		t.printStackTrace();
-	    		subscriber.error(data, t);
-	    		if (!future.isDone()) {
-	    			future.completeExceptionally(t);
-	    		}
+	    		future.completeExceptionally(t);
 	    	}
 		}
     	

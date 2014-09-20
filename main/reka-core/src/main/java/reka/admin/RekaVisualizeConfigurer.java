@@ -24,11 +24,17 @@ public class RekaVisualizeConfigurer implements OperationConfigurer {
 	private Function<Data,String> formatFn = (data) -> "dot";
 	private Function<Data,String> appIdentityFn;
 	private Function<Data,String> flowNameFn;
+	private String stylesheet;
 	private Path out = Response.CONTENT;
 	
 	@Conf.At("out")
 	public void out(String val) {
 		out = dots(val);
+	}
+	
+	@Conf.At("stylesheet")
+	public void stylesheet(String val) {
+		stylesheet = val;
 	}
 	
 	@Conf.At("app")
@@ -49,7 +55,7 @@ public class RekaVisualizeConfigurer implements OperationConfigurer {
 	@Override
 	public void setup(OperationSetup ops) {
 		if (appIdentityFn != null) {
-			ops.add("visualize", store -> new VisualizeAppOperation(manager, appIdentityFn, flowNameFn, formatFn, out));
+			ops.add("visualize", store -> new VisualizeAppOperation(manager, appIdentityFn, flowNameFn, formatFn, out, stylesheet));
 		} else {
 			throw new RuntimeException("put the errors in the proper place nick!");
 		}

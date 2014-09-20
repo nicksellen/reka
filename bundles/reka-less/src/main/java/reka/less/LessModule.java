@@ -6,7 +6,6 @@ import static reka.api.Path.root;
 import static reka.api.Path.slashes;
 import static reka.api.content.Contents.utf8;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
-import static reka.config.configurer.Configurer.Preconditions.invalidConfig;
 import static reka.util.Util.unchecked;
 
 import java.io.ByteArrayInputStream;
@@ -21,7 +20,6 @@ import java.util.function.Function;
 
 import org.lesscss.LessCompiler;
 import org.lesscss.LessException;
-import org.lesscss.LessSource;
 import org.lesscss.Resource;
 
 import reka.api.Path;

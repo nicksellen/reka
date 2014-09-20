@@ -9,11 +9,12 @@ import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import reka.Application;
 import reka.ApplicationManager;
+import reka.ApplicationManager.DeploySubscriber;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.run.AsyncOperation;
-import reka.api.run.Subscriber;
 import reka.config.FileSource;
 
 public class RekaDeployFromFileOperation implements AsyncOperation {
@@ -44,26 +45,17 @@ public class RekaDeployFromFileOperation implements AsyncOperation {
 		
 		log.info("deploying {}", identity);
 		
-		manager.deploy(identity, FileSource.from(file), new Subscriber() {
+		manager.deploySource(identity, FileSource.from(file), new DeploySubscriber() {
 
 			@Override
-			public void ok(MutableData initializationData) {
+			public void ok(String identity, int version, Application application) {
 				log.info("deploying {} ok", identity);
 				data.putString("message", "created application!");
 				ctx.done();
 			}
 
 			@Override
-			public void halted() {
-				log.info("deploying {} halt", identity);
-				String msg = "failed to deploy application; initialization halted";
-				log.debug(msg);
-				data.putString("message", msg);
-				ctx.error(new RuntimeException("halted!"));
-			}
-
-			@Override
-			public void error(Data initializationData, Throwable t) {
+			public void error(String identity, Throwable t) {
 				log.info("deploying {} error", identity);
 				t = unwrap(t);
 				log.error("failed to deploy application",  t);

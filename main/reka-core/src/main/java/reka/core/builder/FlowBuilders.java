@@ -254,23 +254,20 @@ public class FlowBuilders {
 				current.node().incrementInitialCounter();	
 			}
 			
-			if (hasMultipleParents || current.optional() || current.node().node().isEnd()) {//current.node().node().isSubscribeable()) {
-				
-				// handle the trigger and make current the new trigger
-				
+			if (hasMultipleParents || current.optional() || current.node().node().isEnd()) {
 				trigger.addListener(current.node().id());
 				current.node().isTrigger(true);
 			}
 		}
 		
-		if (current.optional()) {
+		if (current.optional() || current.node().node().hasEmbeddedFlow()) {
 			current.node().isTrigger(true);
 		}
 		
 		boolean processChildren = true;
 		
 		if (current.node().parentCount() > 1) {
-			if (current.node().parentCount() != current.node().initialRemainingCount()) {
+			if (current.node().parentCount() != current.node().initialCounter()) {
 				processChildren = false;
 			}
 		}
@@ -289,7 +286,7 @@ public class FlowBuilders {
 					}
 				}
 				
-				if (current.node().isRouterNode()) {
+				if (current.node().node().isRouterNode()) {
 					child.optional(true);
 				}
 				

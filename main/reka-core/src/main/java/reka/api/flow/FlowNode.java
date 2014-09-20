@@ -15,4 +15,8 @@ public interface FlowNode extends FlowSegment {
 	boolean isStart();
 	boolean isEnd();
 	
+	default boolean isRouterNode() {
+		return hasOperationSupplier() && operationSupplier().isRouter();
+	}
+	
 }

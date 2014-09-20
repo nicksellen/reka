@@ -74,7 +74,7 @@ class NodeBuilder {
 		initialCounter++;
 	}
 	
-	public int initialRemainingCount() {
+	public int initialCounter() {
 		return initialCounter;
 	}
 
@@ -93,11 +93,6 @@ class NodeBuilder {
 	
 	public FlowNode node() {
 		return node;
-	}
-
-	public boolean isRouterNode() {
-		if (!node.hasOperationSupplier()) return false;
-		return node.operationSupplier().isRouter();
 	}
 	
 	public Collection<NodeChildBuilder> children() {

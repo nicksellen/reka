@@ -1,8 +1,10 @@
 package reka.api.data;
 
 import static reka.api.Path.path;
+import static reka.api.content.Contents.falseValue;
 import static reka.api.content.Contents.integer;
 import static reka.api.content.Contents.longValue;
+import static reka.api.content.Contents.trueValue;
 import static reka.api.content.Contents.utf8;
 
 import java.util.function.Consumer;
@@ -46,6 +48,10 @@ public interface MapMutation {
 	
 	default MapMutation putLong(String key, long val) {
 		return put(key, longValue(val));
+	}
+	
+	default MapMutation putBool(String key, boolean val) {
+		return put(key, val ? trueValue() : falseValue());
 	}
 	
 	default MapMutation putString(String key, String val) {

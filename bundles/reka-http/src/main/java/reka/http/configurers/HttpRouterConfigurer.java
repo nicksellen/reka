@@ -182,7 +182,7 @@ public class HttpRouterConfigurer extends HttpRouteGroupConfigurer implements Op
 		ops.router("router", store -> router, routes -> {
 			routes.parallel(par -> buildGroupSegment(par));
 			if (missing != null) {
-				routes.add(HttpRouter.ELSE, missing);
+				routes.add(HttpRouter.OTHERWISE, missing);
 			}
 		});
 		

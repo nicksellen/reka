@@ -15,7 +15,6 @@ import io.netty.handler.codec.http.Cookie;
 import io.netty.handler.codec.http.DefaultCookie;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.DefaultHttpResponse;
-import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -56,24 +55,19 @@ public class DataToHttpEncoder extends MessageToMessageEncoder<Data> {
 	
 	private static final String TEXT_PLAIN = "text/plain";
 	private static final String APPLICATION_JSON = "application/json";
+	private static final byte[] NOT_FOUND = "not found\n".getBytes(StandardCharsets.UTF_8);
 
 	private final Logger logger = LoggerFactory.getLogger("http-encoder");
 	private final boolean ssl;
 	
 	private static volatile CharSequence date;
 	private static final SimpleDateFormat sdf = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss z");
+	private static final Runnable setdate = () -> date = HttpHeaders.newEntity(sdf.format(new Date()));
 	private static final ScheduledExecutorService e = Executors.newSingleThreadScheduledExecutor();
 	
 	static {
-		date = HttpHeaders.newEntity(sdf.format(new Date()));
-		e.scheduleWithFixedDelay(new Runnable() {
-
-			@Override
-			public void run() {
-				date = HttpHeaders.newEntity(sdf.format(new Date()));
-			}
-			
-		}, 1000, 1000, TimeUnit.MILLISECONDS);
+		setdate.run();
+		e.scheduleWithFixedDelay(setdate, 1000, 1000, TimeUnit.MILLISECONDS);
 	}
 	
 	private DataToHttpEncoder(boolean ssl) {
@@ -105,10 +99,7 @@ public class DataToHttpEncoder extends MessageToMessageEncoder<Data> {
 				
 					Content content = maybeContent.content();
 					
-					switch (content.type()) {
-					case UTF8: 
-						buffer = context.alloc().buffer().writeBytes(content.asUTF8().getBytes(StandardCharsets.UTF_8));
-						break;
+					switch (content.type()) { 
 					case BINARY:
 						if (content.hasFile()) {
 							file = content.asFile();
@@ -118,25 +109,11 @@ public class DataToHttpEncoder extends MessageToMessageEncoder<Data> {
 							buffer = Unpooled.wrappedBuffer(content.asBytes());
 						}
 						break;
-					case DOUBLE:
-						buffer = context.alloc().buffer().writeDouble(content.asDouble());
-						break;
-					case INTEGER:
-						buffer = context.alloc().buffer().writeInt(content.asInt());
-						break;
-					case LONG:
-						buffer = context.alloc().buffer().writeLong(content.asLong());
-						break;
-					case TRUE:
-						buffer = context.alloc().buffer().writeBoolean(true);
-						break;
-					case FALSE:
-						buffer = context.alloc().buffer().writeBoolean(false);
-						break;
 					case NULL:
 						break;
 					default:
-						break;	
+						buffer = context.alloc().buffer().writeBytes(content.asUTF8().getBytes(StandardCharsets.UTF_8));
+						break;
 					}
 				
 				}
@@ -156,14 +133,9 @@ public class DataToHttpEncoder extends MessageToMessageEncoder<Data> {
 				contentType = APPLICATION_JSON;
 				
 			} else if (!responseStatus.equals(HttpResponseStatus.NO_CONTENT)) {
-				
 				// 404
-				FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.NOT_FOUND);
-				response.headers().set(HttpHeaders.Names.CONTENT_TYPE, TEXT_PLAIN);
-				response.content().writeBytes("no page here!\n\n".getBytes(StandardCharsets.UTF_8));
-				response.content().writeBytes(data.toPrettyJson().getBytes(StandardCharsets.UTF_8));
-				out.add(response);
-				return;
+				buffer = context.alloc().buffer();
+				buffer.writeBytes(NOT_FOUND);
 			}
 
 			HttpResponse response;
@@ -184,6 +156,10 @@ public class DataToHttpEncoder extends MessageToMessageEncoder<Data> {
 			data.at(Response.HEADERS).forEachContent((p, c) -> {
 				response.headers().set(p.last().toString(), c);
 			});
+			
+			if (!response.headers().contains(HttpHeaders.Names.CONTENT_TYPE)) {
+				response.headers().set(HttpHeaders.Names.CONTENT_TYPE, TEXT_PLAIN);
+			}
 			
 			Collection<Cookie> cookies = new ArrayList<>();
 			

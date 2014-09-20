@@ -1,4 +1,4 @@
-//app {
+app {
   name hello
   
   test basic things {
@@ -50,3 +50,29 @@
 
 
 app api @include(api.reka)
+
+app two {
+  name two levels of router
+  http {
+    listen localhost:7000
+    on request {
+      http/router {
+        GET / {
+          put:response.content heya
+        }
+        otherwise {
+          run other
+        }
+      }
+    }
+  }
+  
+  def other {
+  	http/router {
+      GET /yay {
+        put:response.content yay
+      }
+    }
+  }
+
+}

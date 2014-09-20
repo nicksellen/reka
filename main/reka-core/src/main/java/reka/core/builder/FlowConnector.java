@@ -63,7 +63,7 @@ public class FlowConnector {
 		for (FlowNodeConnection connection : noOpConnections) {
 			if (!connection.source().isNoOp() && connection.destination().isNoOp()) {
 				Entry<RouteKey, FlowNode> e = findNoOpReal(connection.key(), connection.destination());
-				add(connection.source(), e.getValue(), e.getKey(), false);
+				add(connection.source(), e.getValue(), e.getKey());
 			}
 		}
 	}
@@ -99,7 +99,8 @@ public class FlowConnector {
 		
 	}
 	
-	private void add(FlowNode from, FlowNode to, RouteKey key, boolean optional) {
+	private void add(FlowNode from, FlowNode to, RouteKey key) {
+		boolean optional = from.node().isRouterNode();
 		if (from.isNoOp() || to.isNoOp()) {
 			noOpConnections.add(FlowNodeConnection.create(from, to, key, optional));			
 		} else {
@@ -223,8 +224,7 @@ public class FlowConnector {
 						}
 						logger.debug("node connection [{}] {} [{}]", from.label(), middle, to.label());
 						
-						// TODO: work out how to know if it's optional here? (I don't think I can)
-						add(from.node(), to.node(), key, false);
+						add(from.node(), to.node(), key);
 						
 					} else {
 						

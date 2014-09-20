@@ -12,7 +12,6 @@ public interface FlowContext {
 	long flowId();
 	long started();
     NodeState stateFor(int id);
-    //Subscriber subscriber();
     ExecutorService executor();
     void execute(Runnable runnable);
 	void call(ActionHandler next, ErrorHandler error, MutableData data);

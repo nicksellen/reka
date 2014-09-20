@@ -45,6 +45,7 @@ public class VisualizeAppOperation implements Operation {
 	private final Function<Data,String> appIdentityFn;
 	private final Function<Data,String> flowNameFn;
 	private final Path out;
+	private final String stylesheet;
 	
 	private final Cache<HashCode,Entry<Content,Content>> cache;
 	
@@ -52,12 +53,14 @@ public class VisualizeAppOperation implements Operation {
 						  Function<Data,String> appIdentityFn,
 						  Function<Data,String> flowNameFn, 
 						  Function<Data,String> format,
-						  Path out) {
+						  Path out,
+						  String stylesheet) {
 		this.manager = manager;
 		this.appIdentityFn = appIdentityFn;
 		this.flowNameFn = flowNameFn;
 		this.formatFn = format;
 		this.out = out;
+		this.stylesheet = stylesheet;
 		
 		cache = CacheBuilder.newBuilder().maximumSize(200).build();
 	}
@@ -109,7 +112,16 @@ public class VisualizeAppOperation implements Operation {
 					
 					switch (format) {
 					case "svg":
-						return createEntry(utf8("image/svg+xml"), utf8(new String(img, Charsets.UTF_8)));
+						String svg = new String(img, Charsets.UTF_8);
+						if (stylesheet != null) {
+							int i = svg.indexOf("<svg ");
+							if (i > -1) {
+								StringBuilder sb = new StringBuilder(svg);
+								sb.insert(i, String.format("<?xml-stylesheet type=\"text/css\" href=\"%s\" ?>\n", stylesheet));
+								svg = sb.toString();
+							}
+						}
+						return createEntry(utf8("image/svg+xml"), utf8(svg));
 					default:
 						String type = String.format("image/%s", format);
 						return createEntry(utf8(type), binary(type, img));
