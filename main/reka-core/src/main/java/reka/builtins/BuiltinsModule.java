@@ -325,11 +325,6 @@ public class BuiltinsModule extends ModuleConfigurer {
 		@Override
 		public void call(MutableData data) {
 			log.info(data.at(at).toPrettyJson());
-			/*
-			data.forEachContent((path, content) -> {
-				log.info("{} ->|{}|<- ({})", path.dots(), content, content.getClass());
-			});
-			*/
 		}
 		
 	}
