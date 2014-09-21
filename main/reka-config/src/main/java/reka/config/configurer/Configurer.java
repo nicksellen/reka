@@ -358,7 +358,7 @@ public class Configurer {
 		
 		if (config.hasBody()) {
 			for (Config c : config.body()) {
-				if (!status.matchedKeys.contains(c.key())) {
+				if (c.hasKey() && !status.matchedKeys.contains(c.key())) {
 					errors.add(new ConfigurationError(new WrappedConfig(c), format("invalid option %s", c.key())));		
 				}
 			}
@@ -1007,7 +1007,10 @@ public class Configurer {
 
 	private static Set<String> allKeys(ConfigOrNavigableConfig config) {
 		if (config.hasBody()) {
-			return asList(Iterables.toArray(config.body(), Config.class)).stream().map(Config::key).collect(toSet());
+			return asList(Iterables.toArray(config.body(), Config.class)).stream()
+					.filter(Config::hasKey)
+					.map(Config::key)
+					.collect(toSet());
 		} else {
 			return Collections.emptySet();
 		}

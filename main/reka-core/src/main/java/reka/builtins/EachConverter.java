@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.config.Config;
-import reka.config.parser.values.KeyVal;
+import reka.config.parser.values.KeyAndSubkey;
 import reka.config.processor.ConfigConverter;
 import reka.config.processor.Processor;
 import reka.core.data.memory.MutableMemoryData;
@@ -91,13 +91,13 @@ public final class EachConverter implements ConfigConverter {
 			if (config.hasDocument()) {
 				String docType = replaceVars(config.documentType());
 				byte[] docContent = replaceVars(new String(config.documentContentAsString())).getBytes(Charsets.UTF_8);
-				out.doc(new KeyVal(key, subkey), value, docType, docContent);
+				out.doc(new KeyAndSubkey(key, subkey), value, docType, docContent);
 			} else if (config.hasBody()) {
-				out.obj(new KeyVal(key, subkey), value, config.body());
+				out.obj(new KeyAndSubkey(key, subkey), value, config.body());
 			} else if (config.hasValue()){
-				out.keyvalue(new KeyVal(key, subkey), value);
+				out.keyvalue(new KeyAndSubkey(key, subkey), value);
 			} else {
-				out.key(new KeyVal(key, subkey));
+				out.key(new KeyAndSubkey(key, subkey));
 			}
 		}
 		

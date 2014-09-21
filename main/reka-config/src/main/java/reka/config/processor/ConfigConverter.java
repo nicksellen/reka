@@ -1,29 +1,29 @@
 package reka.config.processor;
 
 import reka.config.Config;
-import reka.config.parser.values.KeyVal;
+import reka.config.parser.values.KeyAndSubkey;
 
 public interface ConfigConverter {
 
-	public interface Output {
-		public void mark();
-	    public Output reset();
-        public Output add(Config config);
-        public Output add(Iterable<Config> configs);
-		public Output embed(Config config);
-		public Output key(KeyVal keyword);
-		public Output keyvalue(KeyVal key, String value);
-		public Output doc(KeyVal key, String type, byte[] content);
-		public Output doc(KeyVal key, Object value, String type, byte[] content);
-        public Output obj(KeyVal key, Config... children);
-        public Output obj(KeyVal key, Iterable<Config> children);
-        public Output obj(KeyVal key, Object value, Config... children);
-		public Output obj(KeyVal key, Object value, Iterable<Config> children);
-		public Output toplevel();
-		public boolean isTopLevel();
-		public String[] path();
+	interface Output {
+		void mark();
+	    Output reset();
+        Output add(Config config);
+        Output add(Iterable<Config> configs);
+		Output embed(Config config);
+		Output key(KeyAndSubkey keyword);
+		Output keyvalue(KeyAndSubkey key, String value);
+		Output doc(KeyAndSubkey key, String type, byte[] content);
+		Output doc(KeyAndSubkey key, Object value, String type, byte[] content);
+        Output obj(KeyAndSubkey key, Config... children);
+        Output obj(KeyAndSubkey key, Iterable<Config> children);
+        Output obj(KeyAndSubkey key, Object value, Config... children);
+		Output obj(KeyAndSubkey key, Object value, Iterable<Config> children);
+		Output toplevel();
+		boolean isTopLevel();
+		int depth();
     }
 	
-	public void convert(Config config, Output out);
+	void convert(Config config, Output out);
 	
 }

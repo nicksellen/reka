@@ -1,12 +1,12 @@
 package reka.config;
 
-import reka.config.parser.values.KeyVal;
+import reka.config.parser.values.KeyAndSubkey;
 
 class KeyWithBody extends KeyAndOptionalValue implements Config {
 
     private final ConfigBody body; 
     
-    KeyWithBody(Source source, KeyVal key, Object value, Iterable<Config> children) {
+    KeyWithBody(Source source, KeyAndSubkey key, Object value, Iterable<Config> children) {
         super(source, key, value);
         this.body = ConfigBody.of(source, children);
     }

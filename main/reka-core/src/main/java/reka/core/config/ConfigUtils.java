@@ -15,32 +15,36 @@ import reka.core.data.memory.MutableMemoryData;
 public class ConfigUtils {
 
 	public static Data configToData(Config config) {
-		return addConfigToData(config, MutableMemoryData.create(), root()).immutable();
+		Path path = config.hasKey() ? root().add(dots(config.key())) : root().add(0);
+		return addConfigToData(config, MutableMemoryData.create(), path).immutable();
 	}
 	
 	public static Data configToData(Iterable<Config> body) {
-		MutableData data = MutableMemoryData.create();
+		return addConfigToData(body, MutableMemoryData.create(), root()).immutable();	
+	}
+	
+	private static MutableData addConfigToData(Iterable<Config> body, MutableData data, Path path) {
+		int idx = 0;
 		for (Config child : body) {
-			addConfigToData(child, data, root());
+			if (child.hasKey()) {
+				addConfigToData(child, data, path.add(dots(child.key())));	
+			} else {
+				addConfigToData(child, data, path.add(idx));
+				idx++;
+			}
 		}
-		return data.immutable();	
+		return data;
 	}
 
-	private static MutableData addConfigToData(Config config, MutableData data, Path base) {
-		Path path = base.add(dots(config.key()));
+	private static MutableData addConfigToData(Config config, MutableData data, Path path) {
 		if (config.hasBody()) {
-			if (config.hasValue()) {
-				data.putOrAppend(path.add("@"), utf8(config.valueAsString()));
-			}
-			for (Config child : config.body()) {
-				addConfigToData(child, data, path);
-			}
+			addConfigToData(config.body(), data, path);
 		} else if (config.hasValue()) {
 			data.putOrAppend(path, utf8(config.valueAsString()));
 		} else if (config.hasDocument()) {
 			checkConfig(!config.hasValue(), "you can't include a value and a document");
 			data.putOrAppend(path, utf8(config.documentContentAsString()));
-		} else {
+		} else if (config.hasKey()) {
 			String key = config.key();
 			if (key.startsWith("!")) {
 				data.putOrAppend(dots(key.substring(1)), falseValue());

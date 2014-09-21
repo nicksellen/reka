@@ -8,14 +8,14 @@ import reka.config.Config;
 
 import com.google.common.base.Splitter;
 
-public class KeyVal {
+public class KeyAndSubkey {
 
 	private final String key;
 	private final String subkey;
 
 	private final static Splitter s = Splitter.on(":").limit(2);
 	
-	public static KeyVal parse(String value) {
+	public static KeyAndSubkey parse(String value) {
 		Iterator<String> it = s.split(value).iterator();
 		String key = it.next();
 		String subkey;
@@ -24,20 +24,20 @@ public class KeyVal {
 		} else {
 			subkey = null;
 		}
-		return new KeyVal(key, subkey);
+		return new KeyAndSubkey(key, subkey);
 	}
 	
-	public KeyVal(String key, String subkey) {
+	public KeyAndSubkey(String key, String subkey) {
 		this.key = key;
 		this.subkey = subkey;
 	}
 	
-	public KeyVal(String key) {
+	public KeyAndSubkey(String key) {
 		this(key, null);
 	}
 	
-	public KeyVal(Config config) {
-		this(config.key(), config.subkey());
+	public KeyAndSubkey(Config config) {
+		this(config.hasKey() ? config.key() : null, config.hasSubkey() ? config.subkey() : null);
 	}
 
 	public String key() {

@@ -20,13 +20,7 @@ public class HttpContentConfigurer implements OperationConfigurer {
 	
 	@Conf.Config
 	public void config(Config config) {
-		if (config.hasData()) {
-			checkConfig(config.dataType() != null, "no data type!");
-			content = Contents.binary(config.dataType(), config.data());
-			if (config.dataType() != null) {
-				contentType = Contents.utf8(config.dataType());
-			}
-		} else if (config.hasDocument()) {
+		if (config.hasDocument()) {
 			checkConfig(config.documentType() != null, "no document type!");
 			content = binary(config.documentType(), config.documentContent());
 			if (config.documentType() != null) {

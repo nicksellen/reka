@@ -300,20 +300,36 @@ public class BuiltinsModule extends ModuleConfigurer {
 	
 	public static class InspectConfigurer implements OperationConfigurer {
 
+		private Path at = Path.root();
+
+		@Conf.Val
+		public void at(String val) {
+			at = dots(val);
+		}
+
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add("inspect", store -> new InspectOperation());
+			ops.add("inspect", store -> new InspectOperation(at));
 		}
 		
 	}
 	
 	public static class InspectOperation implements Operation {
 
+		private final Path at;
+
+		public InspectOperation(Path at) {
+			this.at = at;
+		}
+
 		@Override
 		public void call(MutableData data) {
+			log.info(data.at(at).toPrettyJson());
+			/*
 			data.forEachContent((path, content) -> {
-				log.debug("{} ->|{}|<- ({})", path.dots(), content, content.getClass());
+				log.info("{} ->|{}|<- ({})", path.dots(), content, content.getClass());
 			});
+			*/
 		}
 		
 	}

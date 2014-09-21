@@ -6,7 +6,7 @@ import java.util.List;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.NavigableConfig;
-import reka.config.parser.values.KeyVal;
+import reka.config.parser.values.KeyAndSubkey;
 import reka.config.processor.ConfigConverter.Output;
 
 import com.google.common.collect.Iterables;
@@ -22,41 +22,35 @@ public class Processor {
     }
 	
 	public NavigableConfig process(NavigableConfig original) {
-		ProcessorOutput toplevel = new ProcessorOutput(null, original.source(), new String[]{});
+		ProcessorOutput toplevel = new ProcessorOutput(null, original.source(), 0);
 	    NavigableConfig from = null, to = original;
 	    for (int i = 0; from != to && i < MAX_ITERATIONS; i++) {
             from = to;
-            to = rebuild(toplevel, from, new String[]{});
+            to = rebuild(toplevel, from, 0);
 	    }
 	    return to;
 	}
     
-	private void processChildren(ProcessorOutput toplevel, Config config, ProcessorOutput out, String[] path) {
-	    ProcessorOutput out2 = new ProcessorOutput(toplevel, config.source(), path);
+	private void processChildren(ProcessorOutput toplevel, Config config, ProcessorOutput out, int depth) {
+	    ProcessorOutput out2 = new ProcessorOutput(toplevel, config.source(), depth);
         boolean changed = false;
         for (Config child : config.body()) {
             NavigableConfig originalChild = ConfigBody.of(child.source(), child);
-            NavigableConfig rebuiltChild = rebuild(toplevel, originalChild, append(path, child.key()));
+            NavigableConfig rebuiltChild = rebuild(toplevel, originalChild, depth + 1);
             if (!originalChild.equals(rebuiltChild)) {
                 changed = true;
             }
             out2.add(rebuiltChild);
         }
         if (changed) {
-            out.obj(new KeyVal(config), config.value(), out2.configs());
+            out.obj(new KeyAndSubkey(config), config.value(), out2.configs());
         } else {
             out.add(config);
         }
 	}
 	
-	private static String[] append(String[] arr, String v) {
-		String[] out = new String[arr.length + 1];
-		out[out.length - 1] = v;
-		return out;
-	}
-	
-	private ConfigBody convert(Output toplevel, ConfigBody body, String[] path) {
-	    ProcessorOutput out = new ProcessorOutput(toplevel, new ConvertedSource(converter, body.source()), path);
+	private ConfigBody convert(Output toplevel, ConfigBody body, int depth) {
+	    ProcessorOutput out = new ProcessorOutput(toplevel, new ConvertedSource(converter, body.source()), depth);
 	    for (Config config : body) {
 	        out.mark();
             converter.convert(config, out);
@@ -64,16 +58,16 @@ public class Processor {
 	    return ConfigBody.of(body.source(), out.configs());
 	}
 	
-    private NavigableConfig rebuild(ProcessorOutput toplevel, NavigableConfig input, String[] path) {
+    private NavigableConfig rebuild(ProcessorOutput toplevel, NavigableConfig input, int depth) {
 
-		input = convert(toplevel, ConfigBody.of(input.source(), input), path);
+		input = convert(toplevel, ConfigBody.of(input.source(), input), depth);
 		
-        ProcessorOutput out = new ProcessorOutput(toplevel, input.source(), path);
+        ProcessorOutput out = new ProcessorOutput(toplevel, input.source(), depth);
         
     	for (Config config : input.each()) {
     		
             if (config.hasBody()) {
-               processChildren(toplevel, config, out, path);
+               processChildren(toplevel, config, out, depth);
             } else {
                 out.add(config);
             } 
@@ -83,7 +77,7 @@ public class Processor {
     	
     	NavigableConfig result = ConfigBody.of(input.source(), out.configs());
     	
-    	if (path.length == 0) {
+    	if (depth == 0) {
         	List<Config> finaloutput = new ArrayList<>();
         	Iterables.addAll(finaloutput, result);
         	Iterables.addAll(finaloutput, toplevel.changed());

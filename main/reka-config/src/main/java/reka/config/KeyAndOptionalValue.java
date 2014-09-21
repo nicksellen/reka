@@ -5,16 +5,16 @@ import java.math.BigInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import reka.config.parser.values.KeyVal;
+import reka.config.parser.values.KeyAndSubkey;
 
 public class KeyAndOptionalValue extends AbstractConfig implements Config {
 
-    private final KeyVal key;
+    private final KeyAndSubkey key;
     private final Object value;
     
     private final Pattern NUMBER = Pattern.compile("\\-?[0-9]+(\\.[0-9]+)?"); 
     
-    public KeyAndOptionalValue(Source source, KeyVal key, Object value) {
+    public KeyAndOptionalValue(Source source, KeyAndSubkey key, Object value) {
         super(source);
         this.key = key;
         this.value = value;

@@ -1,8 +1,6 @@
 package reka.config.processor;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static reka.config.ConfigUtil.k;
-import static reka.config.ConfigUtil.kv;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -10,9 +8,8 @@ import java.util.List;
 
 import reka.config.Config;
 import reka.config.ConfigBody;
-import reka.config.ConfigUtil;
 import reka.config.Source;
-import reka.config.parser.values.KeyVal;
+import reka.config.parser.values.KeyAndSubkey;
 import reka.config.processor.ConfigConverter.Output;
 
 class ProcessorOutput implements ConfigConverter.Output {
@@ -20,17 +17,17 @@ class ProcessorOutput implements ConfigConverter.Output {
 	private final Output toplevel;
 	private final List<Config> configs;
 	private final Source source;
-	private final String[] path;
+	private final int depth;
     
-	public ProcessorOutput(Output toplevel, Source source, String[] path) {
-	    this(toplevel, source, null, path);
+	public ProcessorOutput(Output toplevel, Source source, int depth) {
+	    this(toplevel, source, null, depth);
 	}
 	
-	private ProcessorOutput(Output toplevel, Source source, List<Config> configs, String[] path) {
+	private ProcessorOutput(Output toplevel, Source source, List<Config> configs, int depth) {
 		this.toplevel = toplevel != null ? toplevel : this;
 	    this.source = source;
 	    this.configs = configs != null ? configs : new ArrayList<Config>();
-	    this.path = path;
+	    this.depth = depth;
 	}
 	
 	private int mark;
@@ -72,33 +69,47 @@ class ProcessorOutput implements ConfigConverter.Output {
     }
 
 	@Override
-	public Output key(KeyVal keyword) {
-		return add(k(source, keyword));
+	public Output key(KeyAndSubkey key) {
+		return add(Config.newBuilder().source(source).keyAndSubkey(key).build());
 	}
 
 	@Override
-	public Output keyvalue(KeyVal key, String value) {
-		return add(kv(source, key, value));
+	public Output keyvalue(KeyAndSubkey key, String value) {
+		return add(Config.newBuilder()
+        		.source(source)
+        		.keyAndSubkey(key)
+        		.value(value).build());
 	}
 
 	@Override
-	public Output doc(KeyVal key, String type, byte[] content) {
-		return add(ConfigUtil.doc(source, key, type, content));
+	public Output doc(KeyAndSubkey key, String type, byte[] content) {
+		return add(Config.newBuilder()
+    			.source(source)
+    			.keyAndSubkey(key)
+    			.document(type, content).build());
 	}
 
 	@Override
-	public Output doc(KeyVal key, Object value, String type, byte[] content) {
-		return add(ConfigUtil.doc(source, key, value, type, content));
+	public Output doc(KeyAndSubkey key, Object value, String type, byte[] content) {
+		return add(Config.newBuilder()
+    			.source(source)
+    			.keyAndSubkey(key)
+    			.value(value)
+    			.document(type, content).build());
 	}
 
     @Override
-    public Output obj(KeyVal key, Iterable<Config> children) {
+    public Output obj(KeyAndSubkey key, Iterable<Config> children) {
     	return obj(key, null, children);
     }
     
     @Override
-    public Output obj(KeyVal key, Object value, Iterable<Config> children) {
-        return add(ConfigUtil.obj(source, key, value, children));
+    public Output obj(KeyAndSubkey key, Object value, Iterable<Config> children) {
+        return add(Config.newBuilder()
+        		.source(source)
+        		.keyAndSubkey(key)
+        		.value(value)
+        		.body(ConfigBody.of(source, children)).build());
     }
 
 	@Override
@@ -118,12 +129,12 @@ class ProcessorOutput implements ConfigConverter.Output {
     }
 
     @Override
-    public Output obj(KeyVal key, Config... children) {
+    public Output obj(KeyAndSubkey key, Config... children) {
         return obj(key, ConfigBody.of(source, children));
     }
 
     @Override
-    public Output obj(KeyVal key, Object value, Config... children) {
+    public Output obj(KeyAndSubkey key, Object value, Config... children) {
         return obj(key, value, ConfigBody.of(source, children));
     }
     
@@ -138,7 +149,7 @@ class ProcessorOutput implements ConfigConverter.Output {
 	}
 	
 	@Override
-	public String[] path() {
-		return path;
+	public int depth() {
+		return depth;
 	}
 }

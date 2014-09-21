@@ -51,7 +51,7 @@ public class DocConverter implements ConfigConverter {
 	
 	@Override
 	public void convert(Config config, Output out) {
-		if (asList("@doc").contains(config.key())) {
+		if (config.hasKey() && asList("@doc").contains(config.key())) {
 			if (config.hasValue()) {
 				add("text/plain", config.valueAsString().getBytes(Charsets.UTF_8));
 			} else if (config.hasDocument()) {

@@ -1,13 +1,13 @@
 package reka.config;
 
-import reka.config.parser.values.KeyVal;
+import reka.config.parser.values.KeyAndSubkey;
 
 
 public class Keyword extends AbstractConfig {
 
-    private final KeyVal key;
+    private final KeyAndSubkey key;
     
-    public Keyword(Source source, KeyVal key) {
+    public Keyword(Source source, KeyAndSubkey key) {
         super(source);
         this.key = key;
     }

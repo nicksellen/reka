@@ -17,6 +17,7 @@ class ValueHandler implements ParseHandler {
 		
 		boolean doc = false;
 		boolean body = false;
+		boolean arrayBody = false;
 		
 		while (!ctx.isEOF() && ctx.peekChar() != '\n') {
 			sb.append(ctx.popChar());
@@ -33,6 +34,11 @@ class ValueHandler implements ParseHandler {
 			body = true;
 		}
 		
+		if (sb.length() > 0 && sb.charAt(sb.length() - 1) == '[') {
+			sb.setLength(sb.length() - 1);
+			arrayBody = true;
+		}
+		
 		if (sb.length() > 0) {
 			String str = sb.toString().trim();
 			ctx.emit("value", new ValueVal(str), 1, str.length());
@@ -43,6 +49,9 @@ class ValueHandler implements ParseHandler {
 		} else if (body) {
 			ctx.eat(ParseHandlers.WHITESPACE);
 			ctx.next(new BodyHandler(false));
+		} else if (arrayBody) {
+			ctx.eat(ParseHandlers.WHITESPACE);
+			ctx.next(new ArrayBodyHandler(false));
 		}
 		
 	}

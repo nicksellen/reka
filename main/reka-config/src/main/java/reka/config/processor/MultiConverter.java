@@ -24,8 +24,8 @@ public final class MultiConverter implements ConfigConverter {
         this.converters = ImmutableList.copyOf(converters);
     }
 
-    private ConfigBody internalConvert(Output toplevel, ConfigConverter converter, ConfigBody body, String[] path) {
-        ProcessorOutput out = new ProcessorOutput(toplevel, new ConvertedSource(converter, body.source()), path);
+    private ConfigBody internalConvert(Output toplevel, ConfigConverter converter, ConfigBody body, int depth) {
+        ProcessorOutput out = new ProcessorOutput(toplevel, new ConvertedSource(converter, body.source()), depth);
         for (Config config : body) {
             if (converted.containsEntry(converter, config)) {
                 out.add(config);
@@ -42,7 +42,7 @@ public final class MultiConverter implements ConfigConverter {
     public void convert(Config config, Output out) {
         ConfigBody current = ConfigBody.of(config.source(), config);
         for (ConfigConverter converter : converters) {
-            current = internalConvert(out.toplevel(), converter, current, out.path());
+            current = internalConvert(out.toplevel(), converter, current, out.depth());
         }
         out.add(current);
     }

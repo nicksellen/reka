@@ -7,7 +7,7 @@ import java.util.Optional;
 import reka.config.parser.EatHandler;
 import reka.config.parser.ParseContext;
 import reka.config.parser.SynchronousParseHandler;
-import reka.config.parser.values.KeyVal;
+import reka.config.parser.values.KeyAndSubkey;
 
 final class ParseHandlers {
 	
@@ -16,19 +16,19 @@ final class ParseHandlers {
 	public static final WhitespaceEater WHITESPACE = new WhitespaceEater();
 	public static final SpaceEater SPACE = new SpaceEater();
 	
-	public static final SynchronousParseHandler<KeyVal> KEY = new KeyHandler();
+	public static final SynchronousParseHandler<KeyAndSubkey> KEY = new KeyHandler();
 	public static final SynchronousParseHandler<Optional<String>> OPTIONAL_WORD = new OptionalWordHandler();
 	
-	private static class KeyHandler implements SynchronousParseHandler<KeyVal> {
+	private static class KeyHandler implements SynchronousParseHandler<KeyAndSubkey> {
 
 		@Override
-		public KeyVal apply(ParseContext ctx) {
+		public KeyAndSubkey apply(ParseContext ctx) {
 			StringBuilder sb = new StringBuilder();
 			while (!ctx.isEOF() && !isWhitespace(ctx.peekChar())) {
 				sb.append(ctx.popChar());
 			}
 			ctx.eat(SPACE);
-			return KeyVal.parse(sb.toString());
+			return KeyAndSubkey.parse(sb.toString());
 		}
 		
 	}

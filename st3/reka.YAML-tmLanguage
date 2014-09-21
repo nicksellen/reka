@@ -31,11 +31,25 @@ repository:
       - include: '#rekaAt'
       - include: '#entry'
 
+  arrayBody:
+    patterns:
+      - include: '#leadingSpace'
+      - include: '#arrayInvalid'
+      - include: '#comment'
+      - include: '#rekaAt'
+      - include: '#arrayEntry'
+
   leadingSpace:
     match: "^\\s*"
 
   invalid:
     match: "(\\})\\s*"
+    captures:
+      "0":
+        name: invalid.reka
+
+  arrayInvalid:
+    match: "(\\])\\s*"
     captures:
       "0":
         name: invalid.reka
@@ -58,6 +72,7 @@ repository:
     patterns:
       - include: '#doc'
       - include: '#nested'
+      - include: '#nestedArray'
       - include: '#val'
 
     end: "$"
@@ -87,10 +102,24 @@ repository:
     patterns:
       - include: '#doc'
       - include: '#nested'
+      - include: '#nestedArray'
       - include: '#rekaAt'
       - include: '#val'
 
     end: "$"
+
+  arrayEntry:
+    name: arrayEntry.reka
+    begin: ""
+
+    patterns:
+      - include: '#doc'
+      - include: '#nested'
+      - include: '#nestedArray'
+      - include: '#rekaAt'
+      - include: '#val'
+
+    end: ""
 
   doc:
     patterns:
@@ -248,6 +277,21 @@ repository:
       "1":
         name: punctuation.reka
 
+  nestedArray:
+    name: nestedArray.reka
+    begin: "(\\[)\\s*$"
+    beginCaptures:
+      "1":
+        name: punctuation.reka
+
+    patterns:
+      - include: '#arrayBody'
+
+    end: "^\\s*(\\])\\s*$"
+    endCaptures:
+      "1":
+        name: punctuation.reka
+
   val:
     name: string.quoted.double.val.reka
     match: "."
@@ -258,6 +302,7 @@ repository:
     patterns:
       - include: '#docInComment'
       - include: '#nestedInComment'
+      - include: '#nestedArrayInComment'
       - include: '#valInComment'
     end: "$"
 
@@ -267,8 +312,19 @@ repository:
     patterns:
       - include: '#docInComment'
       - include: '#nestedInComment'
+      - include: '#nestedArrayInComment'
       - include: '#valInComment'
     end: "$"
+
+  arrayEntryInComment:
+    name: comment.reka
+    begin: ""
+    patterns:
+      - include: '#docInComment'
+      - include: '#nestedInComment'
+      - include: '#nestedArrayInComment'
+      - include: '#valInComment'
+    end: ""
 
   docInComment:
     name: comment.reka
@@ -283,6 +339,13 @@ repository:
       - include: '#bodyInComment'
     end: "^\\s*\\}\\s*$"
 
+  nestedArrayInComment:
+    name: comment.reka
+    begin: "\\[\\s*$"
+    patterns:
+      - include: '#arrayBodyInComment'
+    end: "^\\s*\\]\\s*$"
+
   valInComment:
     name: comment.reka
     match: "."
@@ -292,4 +355,10 @@ repository:
       - include: '#leadingSpace'
       - include: '#invalid'
       - include: '#entryInComment'
+
+  arrayBodyInComment:
+    patterns:
+      - include: '#leadingSpace'
+      - include: '#invalid'
+      - include: '#arrayEntryInComment'
 

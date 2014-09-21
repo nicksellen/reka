@@ -21,7 +21,7 @@ import reka.config.NavigableConfig;
 import reka.config.Source;
 import reka.config.StringSource;
 import reka.config.parser.ConfigParser;
-import reka.config.parser.values.KeyVal;
+import reka.config.parser.values.KeyAndSubkey;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -63,9 +63,9 @@ public final class IncludeConverter implements ConfigConverter {
     				checkArgument(loc == null, 
     						"if you use @include with a body, you must not include the location like @include(<location>), "
     						+ "put it in the body as a 'from' key");
-    				includeFromValueWithBody(new KeyVal(config), val, config.source(), config.body(), out);
+    				includeFromValueWithBody(new KeyAndSubkey(config), val, config.source(), config.body(), out);
     			} else {
-    				includeFromValueWithoutBody(new KeyVal(config), val, config.source(), loc, out);
+    				includeFromValueWithoutBody(new KeyAndSubkey(config), val, config.source(), loc, out);
     			}
     			return;
     		}
@@ -80,7 +80,7 @@ public final class IncludeConverter implements ConfigConverter {
 		
     }
 
-    private void includeFromValueWithoutBody(KeyVal key, String val, Source source, String location, Output out) {
+    private void includeFromValueWithoutBody(KeyAndSubkey key, String val, Source source, String location, Output out) {
     	String type = locationToType(location);
     	if (CONFIG_TYPES.contains(type)) {
     		includeNestedConfig(key, val, source, location, out);
@@ -90,7 +90,7 @@ public final class IncludeConverter implements ConfigConverter {
     	
 	}
     
-	private void includeFromValueWithBody(KeyVal key, String val, Source source, ConfigBody body, Output out) {
+	private void includeFromValueWithBody(KeyAndSubkey key, String val, Source source, ConfigBody body, Output out) {
 		
 		Optional<Config> fromO = body.at("from");
 		checkArgument(fromO.isPresent(), "must include a 'from' key");
@@ -114,7 +114,7 @@ public final class IncludeConverter implements ConfigConverter {
     	
 	}
 	
-	private void includeDocument(KeyVal key, Object val, String contentType, Source source, String location, Output out) {
+	private void includeDocument(KeyAndSubkey key, Object val, String contentType, Source source, String location, Output out) {
 
 		log.debug("including doc [{}] [{}] from {}\n", location, contentType, source);
 		
@@ -139,7 +139,7 @@ public final class IncludeConverter implements ConfigConverter {
 		out.add(loadNestedConfig(source, location));
 	}
 
-	private void includeNestedConfig(KeyVal key, String val, Source source, String location, Output out) {
+	private void includeNestedConfig(KeyAndSubkey key, String val, Source source, String location, Output out) {
 		log.debug("including nested conf [{}] with key/val [{}] / [{}] from {}\n", location, key, val, source);
 		out.obj(key, val, loadNestedConfig(source, location));
 	}
@@ -183,7 +183,10 @@ public final class IncludeConverter implements ConfigConverter {
 			if (CONFIG_TYPES.contains(ext)) {
 				return "config";
 			} else {
+				// TODO: get a better source of extension->content-type mappings
 				switch (ext) {
+				case "svg":
+					return "image/svg+xml";
 				case "css":
 				case "html":
 					return format("text/%s", ext);

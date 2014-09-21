@@ -48,8 +48,6 @@ public class RhinoModule extends ModuleConfigurer {
 	public void script2(Config config) {
 		if (config.hasDocument()) {
 			scripts.add(compileJavascript(config.documentContentAsString(), optimization));
-		} else if (config.hasData()) {
-			scripts.add(compileJavascript(new String(config.data(), Charsets.UTF_8), optimization));
 		} else if (config.hasValue()) {
 			scripts.add(compileJavascript(config.valueAsString(), optimization));
 		}

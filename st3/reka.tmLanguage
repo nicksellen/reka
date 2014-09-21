@@ -17,6 +17,123 @@
 	</array>
 	<key>repository</key>
 	<dict>
+		<key>arrayBody</key>
+		<dict>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>include</key>
+					<string>#leadingSpace</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#arrayInvalid</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#comment</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#rekaAt</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#arrayEntry</string>
+				</dict>
+			</array>
+		</dict>
+		<key>arrayBodyInComment</key>
+		<dict>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>include</key>
+					<string>#leadingSpace</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#invalid</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#arrayEntryInComment</string>
+				</dict>
+			</array>
+		</dict>
+		<key>arrayEntry</key>
+		<dict>
+			<key>begin</key>
+			<string></string>
+			<key>end</key>
+			<string></string>
+			<key>name</key>
+			<string>arrayEntry.reka</string>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>include</key>
+					<string>#doc</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#nested</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#nestedArray</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#rekaAt</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#val</string>
+				</dict>
+			</array>
+		</dict>
+		<key>arrayEntryInComment</key>
+		<dict>
+			<key>begin</key>
+			<string></string>
+			<key>end</key>
+			<string></string>
+			<key>name</key>
+			<string>comment.reka</string>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>include</key>
+					<string>#docInComment</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#nestedInComment</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#nestedArrayInComment</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#valInComment</string>
+				</dict>
+			</array>
+		</dict>
+		<key>arrayInvalid</key>
+		<dict>
+			<key>captures</key>
+			<dict>
+				<key>0</key>
+				<dict>
+					<key>name</key>
+					<string>invalid.reka</string>
+				</dict>
+			</dict>
+			<key>match</key>
+			<string>(\])\s*</string>
+		</dict>
 		<key>body</key>
 		<dict>
 			<key>patterns</key>
@@ -78,6 +195,10 @@
 				<dict>
 					<key>include</key>
 					<string>#nestedInComment</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#nestedArrayInComment</string>
 				</dict>
 				<dict>
 					<key>include</key>
@@ -458,6 +579,10 @@
 				</dict>
 				<dict>
 					<key>include</key>
+					<string>#nestedArray</string>
+				</dict>
+				<dict>
+					<key>include</key>
 					<string>#rekaAt</string>
 				</dict>
 				<dict>
@@ -483,6 +608,10 @@
 				<dict>
 					<key>include</key>
 					<string>#nestedInComment</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#nestedArrayInComment</string>
 				</dict>
 				<dict>
 					<key>include</key>
@@ -537,6 +666,54 @@
 				<dict>
 					<key>include</key>
 					<string>#body</string>
+				</dict>
+			</array>
+		</dict>
+		<key>nestedArray</key>
+		<dict>
+			<key>begin</key>
+			<string>(\[)\s*$</string>
+			<key>beginCaptures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.reka</string>
+				</dict>
+			</dict>
+			<key>end</key>
+			<string>^\s*(\])\s*$</string>
+			<key>endCaptures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.reka</string>
+				</dict>
+			</dict>
+			<key>name</key>
+			<string>nestedArray.reka</string>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>include</key>
+					<string>#arrayBody</string>
+				</dict>
+			</array>
+		</dict>
+		<key>nestedArrayInComment</key>
+		<dict>
+			<key>begin</key>
+			<string>\[\s*$</string>
+			<key>end</key>
+			<string>^\s*\]\s*$</string>
+			<key>name</key>
+			<string>comment.reka</string>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>include</key>
+					<string>#arrayBodyInComment</string>
 				</dict>
 			</array>
 		</dict>
@@ -601,6 +778,10 @@
 				<dict>
 					<key>include</key>
 					<string>#nested</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#nestedArray</string>
 				</dict>
 				<dict>
 					<key>include</key>

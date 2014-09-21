@@ -1,33 +1,62 @@
 package reka.config;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.NoSuchElementException;
+import java.math.BigInteger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import reka.config.formatters.ConfigFormatter;
 import reka.config.formatters.Formatter;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Objects;
 
-public abstract class AbstractConfig implements Config {
-    
+public class DefaultConfig implements Config {
+	
+	private final Pattern NUMBER = Pattern.compile("\\-?[0-9]+(\\.[0-9]+)?");
+	
     private final Source source;
+    private final String key;
+    private final String subkey;
+    private final ConfigBody body;
+    private final Object value;
+    private final String documentType;
+    private final byte[] documentContent;
     
-    protected AbstractConfig(Source source) {
-        this.source = source;
-    }
+	public DefaultConfig(Source source, String key, String subkey,
+			ConfigBody body, Object value, String documentType,
+			byte[] documentContent) {
+		this.source = source;
+		this.key = key;
+		this.subkey = subkey;
+		this.body = body;
+		this.value = value;
+		this.documentType = documentType;
+		this.documentContent = documentContent;
+	}
+
+	@Override
+	public String key() {
+		checkNotNull(key, "missing key");
+		return key;
+	}
+
+	@Override
+	public String subkey() {
+		checkNotNull(subkey, "missing subkey");
+		return subkey;
+	}
     
     @Override
     public boolean hasKey() {
-    	return key() != null;
+    	return key != null;
     }
     
     @Override
     public boolean hasSubkey() {
-    	return subkey() != null;
+    	return subkey != null;
     }
     
     @Override
@@ -37,67 +66,99 @@ public abstract class AbstractConfig implements Config {
 
     @Override
     public boolean hasBody() {
-        return false;
+        return body != null;
     }
     
     @Override
     public ConfigBody body() {
-        return null;
+        return body;
     }
     
     @Override
     public boolean hasValue() {
-        return false;
+        return value != null;
     }
 
     @Override
     public Object value() {
-        return null;
-    }
-    
-    @Override
-    public BigDecimal valueAsBigDecimal() {
-        throw new NoSuchElementException();
-    }
-    
-    @Override
-    public String valueAsString() {
-        throw new NoSuchElementException();
-    }
-
-    @Override
-    public Number valueAsNumber() {
-        throw new NoSuchElementException();
-    }
-
-    @Override
-    public int valueAsInt() {
-        throw new NoSuchElementException();
-    }
-
-    @Override
-    public long valueAsLong() {
-        throw new NoSuchElementException();
-    }
-
-    @Override
-    public double valueAsDouble() {
-        throw new NoSuchElementException();
+        return value;
     }
 
     @Override
     public boolean hasDocument() {
-        return false;
+        return documentContent != null;
     }
 
     @Override
     public String documentType() {
-        return null;
+    	checkNotNull(documentType);
+        return documentType;
     }
 
     @Override
     public byte[] documentContent() {
-        return null;
+    	checkNotNull(documentContent);
+        return documentContent;
+    }
+    
+    @Override
+    public BigDecimal valueAsBigDecimal() {
+    	checkNotNull(value, "value is missing");
+        if (value instanceof BigDecimal) {
+    		return (BigDecimal) value;
+    	} else if (value instanceof String) {
+    		return new BigDecimal((String) value);
+    	} else {
+    		throw new RuntimeException(String.format("[%s] (%s) cannot be made as a BigDecimal", 
+    				value, value != null ? value.getClass() : "null"));
+    	}
+    }
+    
+    @Override
+    public Number valueAsNumber() {
+    	checkNotNull(value, "value is missing");
+    	if (value instanceof Number) {
+    		return (Number) value;
+    	} else if (value instanceof String) {
+    		String str = (String) value;
+			Matcher match = NUMBER.matcher(str);
+			if (match.matches()) {
+				if (match.group(1) != null) {
+					return new BigDecimal(str);
+				} else {
+					BigInteger big = new BigInteger(str);
+					if (big.compareTo(BigInteger.valueOf(Integer.MAX_VALUE)) < 0) {
+						return big.intValue();
+					} else if (big.compareTo(BigInteger.valueOf(Long.MAX_VALUE)) < 0) {
+						return big.longValue();
+					} else {
+						return big;
+					}
+				}
+			}
+		}
+    	throw new RuntimeException(String.format("can't make a number from [%s] (%s)", value, value != null ? value.getClass() : null));
+    }
+    
+    @Override
+    public int valueAsInt() {
+    	return valueAsNumber().intValue();
+    }
+    
+    @Override
+    public long valueAsLong() {
+    	return valueAsNumber().longValue();
+    }
+    
+    @Override
+    public double valueAsDouble() {
+    	return valueAsNumber().doubleValue();
+    }
+    
+    @Override
+    public String valueAsString() {
+    	checkNotNull(value, "value is missing");
+    	return value.toString();
     }
     
     @Override
@@ -163,6 +224,8 @@ public abstract class AbstractConfig implements Config {
         }
     }
     
+    /*
+    
     @Override
     public boolean equals(Object obj) {
         if (obj == null) return false;
@@ -186,5 +249,6 @@ public abstract class AbstractConfig implements Config {
         return Objects.hashCode(key(), hasBody(), hasDocument(), hasValue(),
                 body(), documentType(), documentContent(), value());
     }
+    */
 
 }

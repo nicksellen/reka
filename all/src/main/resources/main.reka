@@ -19,6 +19,35 @@ app {
   http {
     listen localhost:5000
     on request {
+      put tags [
+      	a nice tag
+      	another nice tag
+      ]
+      put stuff {
+      	inside [
+  	  	  oh my
+  	  	  god it works
+  	  	  {
+  	  	    would it work?
+  	  	    it [
+  	  	      sure
+  	  	      does
+  	  	      {
+  	  	        all complexity
+  	  	      }
+  	  	    ]
+  	  	  }
+  	  	  [
+  	  	    and this
+  	  	    too?
+  	  	  ]
+  	  	]
+  	  	tags [
+  	  	 special thing
+  	  	 something else
+  	  	]
+  	  }
+  	  inspect
       http/router {
         GET / {
           put:response.content hey
