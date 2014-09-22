@@ -1,4 +1,4 @@
-package nicksellen.config;
+package reka.config.test;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertFalse;
@@ -74,8 +74,8 @@ public class ConfigTest {
         
         log.debug("--- after procssing ---\n\n{}\n\n--- ---\n", root);
 		
-        String rootFileContents = read(filename);
-		String importedFileContents = read(filename, "config-test/import.conf");
+        String rootFileContents = readFileContents(filename);
+		String importedFileContents = readFileContents(filename, "config-test/import.conf");
 		
 		Config singleImported = root.at("thing.which").get();
 		
@@ -94,11 +94,11 @@ public class ConfigTest {
 		
 	}
 	
-	private static String read(String base, String filename) {
-	    return read(new File(base).toPath().getParent().resolve(filename).toString());
+	private static String readFileContents(String base, String filename) {
+	    return readFileContents(new File(base).toPath().getParent().resolve(filename).toString());
 	}
 	
-	private static String read(String filename) {
+	private static String readFileContents(String filename) {
         try {
             return new String(Files.readAllBytes(new File(filename).toPath()));
         } catch (IOException e) {

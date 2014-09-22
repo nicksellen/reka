@@ -11,7 +11,6 @@ public class OperationFlowNode extends AbstractFlowNode implements FlowNode {
 
 	public static OperationFlowNode createNoOp() {
 		OperationFlowNode node = new OperationFlowNode();
-		node.name(".");
 		node.isNoOp(true);
 		return node;
 	}

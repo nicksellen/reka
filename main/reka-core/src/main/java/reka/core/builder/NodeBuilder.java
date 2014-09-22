@@ -41,8 +41,6 @@ import reka.core.runtime.handlers.HaltedHandler;
 import reka.core.runtime.handlers.RuntimeNode;
 import reka.core.runtime.handlers.stateful.StatefulControl;
 
-import com.google.common.collect.ImmutableList;
-
 class NodeBuilder {
 	
 	private static final Logger log = LoggerFactory.getLogger(NodeBuilder.class);
@@ -100,19 +98,11 @@ class NodeBuilder {
 	}
 	
 	private List<NodeChild> buildChildren(NodeFactory factory) {
-        ImmutableList.Builder<NodeChild> result = new ImmutableList.Builder<>();
-        for (NodeChildBuilder child : children) {
-            result.add(child.build(factory));
-        }
-        return result.build();   
+		return children.stream().map(child -> child.build(factory)).collect(toList());   
 	}
 	
 	private List<FailureHandler> buildListeners(NodeFactory factory) {
-        ImmutableList.Builder<FailureHandler> result = new ImmutableList.Builder<>();
-        for (Integer listener : listeners) {
-            result.add(factory.get(listener));
-        }
-        return result.build();
+        return listeners.stream().map(factory::get).collect(toList());
 	}
 	
 	private static class ContextHalted implements HaltedHandler {

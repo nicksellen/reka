@@ -1,4 +1,4 @@
-package nicksellen.config;
+package reka.config.test;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
@@ -25,7 +25,6 @@ public class ConfigFormattingTest {
     	for (int i = 0; i < 100; i++) {
     		String formatted = current.toString();
     		assertThat(formatted, equalTo(original));
-    		//assertThat(current.childCount(), equalTo(root.childCount()));
     		current = ConfigParser.fromString(formatted);
     	}
     }

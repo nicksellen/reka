@@ -1,4 +1,4 @@
-package nicksellen.config;
+package reka.config.test;
 
 import static com.google.common.collect.Iterables.toArray;
 import static org.hamcrest.CoreMatchers.equalTo;

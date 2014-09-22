@@ -95,6 +95,8 @@ public class BuiltinsModule extends ModuleConfigurer {
     	module.operation(path("unzip"), provider -> new UnzipConfigurer());
     	module.operation(path("split"), provider -> new SplitConfigurer());
 		
+    	module.operation(path("janino"), provider -> new JaninoConfigurer());
+    	
 	}
 	
 	public static class SplitConfigurer implements OperationConfigurer, ErrorReporter {

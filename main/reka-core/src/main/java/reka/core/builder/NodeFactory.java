@@ -22,15 +22,12 @@ public class NodeFactory {
         this.embeddableFlows = embeddedableFlows;
     }
     
-    public Node get(int id) {
-        Node node = nodes.get(id);
-        if (node == null) {
-            NodeBuilder builder = builders.get(id);
+    public Node get(int nodeId) {
+    	return nodes.computeIfAbsent(nodeId, id -> {
+    		NodeBuilder builder = builders.get(id);
             checkNotNull(builder, "no builder for node %d", id);
-            node = builder.build(this);
-            nodes.put(id, node);
-        }
-        return node;
+            return builder.build(this);
+    	});
     }
     
     public Flow getFlow(Path name) {

@@ -1,4 +1,4 @@
-package nicksellen.config;
+package reka.config.test;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertFalse;

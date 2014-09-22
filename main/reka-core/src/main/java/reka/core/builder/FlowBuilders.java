@@ -240,53 +240,52 @@ public class FlowBuilders {
 		
 		NodeChildBuilder current = path.last();
 		
-		boolean hasMultipleParents = current.node().parentCount() > 1;
+		boolean hasMultipleParents = current.builder().parentCount() > 1;
 		
 		if (trigger == null) {
 			
 			if (hasMultipleParents || current.optional()) {
-				current.node().incrementInitialCounter();
+				current.builder().incrementInitialCounter();
 			}
 			
 		} else {
 			
 			if (hasMultipleParents) {
-				current.node().incrementInitialCounter();	
+				current.builder().incrementInitialCounter();	
 			}
 			
-			if (hasMultipleParents || current.optional() || current.node().node().isEnd()) {
-				trigger.addListener(current.node().id());
-				current.node().isTrigger(true);
+			if (hasMultipleParents || current.optional() || current.builder().node().isEnd()) {
+				trigger.addListener(current.builder().id());
+				current.builder().isTrigger(true);
 			}
+			
 		}
 		
-		if (current.optional() || current.node().node().hasEmbeddedFlow()) {
-			current.node().isTrigger(true);
+		if (current.optional() || current.builder().node().hasEmbeddedFlow()) {
+			current.builder().isTrigger(true);
 		}
 		
 		boolean processChildren = true;
 		
-		if (current.node().parentCount() > 1) {
-			if (current.node().parentCount() != current.node().initialCounter()) {
-				processChildren = false;
-			}
+		if (hasMultipleParents && current.builder().parentCount() != current.builder().initialCounter()) {
+			processChildren = false;
 		}
 		
 		if (processChildren) {
 			
-			if (current.node().isTrigger()) {
-				trigger = current.node();
+			if (current.builder().isTrigger()) {
+				trigger = current.builder();
 			}
 		
-			for (NodeChildBuilder child : current.node().children()) {
+			for (NodeChildBuilder child : current.builder().children()) {
 				
 				for (NodeChildBuilder c : path.path) {
-					if (c.node().equals(child.node())) {
-						throw runtime("circular path detected trying to add %s to the end of %s", child.node(), path);
+					if (c.builder().equals(child.builder())) {
+						throw runtime("circular path detected trying to add %s to the end of %s", child.builder(), path);
 					}
 				}
 				
-				if (current.node().node().isRouterNode()) {
+				if (current.builder().node().isRouterNode()) {
 					child.optional(true);
 				}
 				

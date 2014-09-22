@@ -28,7 +28,7 @@ class NodeChildBuilder {
 		return new NodeChild(factory.get(node.id()), optional, key);
 	}
 	
-	public NodeBuilder node() {
+	public NodeBuilder builder() {
 		return node;
 	}
 	

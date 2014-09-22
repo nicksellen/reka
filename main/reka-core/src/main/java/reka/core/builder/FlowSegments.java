@@ -52,6 +52,7 @@ public class FlowSegments extends AbstractFlowNode {
 	}
 
 	public static FlowNode createStartNode(String name) {
+		//return OperationFlowNode.createNoOp().isStart(true);
 		return OperationFlowNode.createNode(name, () -> NoOp.INSTANCE).isStart(true);
 	}
 	
