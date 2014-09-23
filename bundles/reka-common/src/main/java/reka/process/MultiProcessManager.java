@@ -2,12 +2,18 @@ package reka.process;
 
 import static reka.util.Util.createEntry;
 
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map.Entry;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.function.Consumer;
+
+
+import reka.api.data.MutableData;
+import reka.core.data.memory.MutableMemoryData;
+import reka.core.setup.StatusDataProvider;
 
 public class MultiProcessManager implements ProcessManager {
 
@@ -18,7 +24,7 @@ public class MultiProcessManager implements ProcessManager {
 	public MultiProcessManager(ProcessBuilder builder, int count, boolean noreply) {
 		this.builder = builder;
 		for (int i = 0; i < count; i++) {
-			all.add(new SingleProcessManager(this.builder, q, noreply));
+			all.add(new SingleProcessManager(this.builder, noreply, q));
 		}
 	}
 	
@@ -41,6 +47,27 @@ public class MultiProcessManager implements ProcessManager {
 	@Override
 	public void addListener(Consumer<String> consumer) {
 		all.forEach(m -> m.addListener(consumer));
+	}
+
+	@Override
+	public boolean up() {
+		return all.stream().anyMatch(StatusDataProvider::up);
+	}
+	
+	@Override
+	public void statusData(MutableData data) {
+		data.putList("processes", list -> {
+			all.forEach(item -> {
+				list.addMap(map -> {
+					MutableData itemData = MutableMemoryData.create();
+					item.statusData(itemData);
+					itemData.forEachContent((path, content) -> {
+						map.put(path, content);
+					});
+					map.putBool("up", item.up());
+				});
+			});
+		});
 	}
 	
 }

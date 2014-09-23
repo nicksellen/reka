@@ -11,7 +11,7 @@ public class JdbcBundle implements BundleConfigurer {
 	public void setup(BundleSetup bundle) {
 		bundle.bundle(new H2Bundle());
 		bundle.bundle(new PostgresBundle());
-		bundle.module(path("jdbc"), () -> new JdbcModule());
+		bundle.module(path("jdbc"), "0.1.0", () -> new JdbcModule());
 	}
 
 }

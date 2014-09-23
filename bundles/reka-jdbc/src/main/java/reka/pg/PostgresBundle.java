@@ -8,7 +8,7 @@ public class PostgresBundle implements BundleConfigurer {
 
 	@Override
 	public void setup(BundleSetup bundle) {
-		bundle.module(path("postgres"), () -> new PostgresModule());
+		bundle.module(path("postgres"), "0.1.0", () -> new PostgresModule());
 	}
 
 }

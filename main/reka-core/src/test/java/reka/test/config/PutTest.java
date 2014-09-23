@@ -29,8 +29,8 @@ import reka.config.NavigableConfig;
 import reka.config.configurer.Configurer.InvalidConfigurationException;
 import reka.core.data.memory.MutableMemoryData;
 import reka.core.runtime.DefaultRouteCollector;
+import reka.core.setup.OperationConfigurer;
 import reka.core.setup.OperationSetup;
-import reka.nashorn.OperationConfigurer;
 
 public class PutTest {
 	

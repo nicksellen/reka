@@ -18,8 +18,6 @@ import reka.api.run.Operation;
 import reka.core.util.StringWithVars;
 import reka.core.util.StringWithVars.Variable;
 
-import com.google.common.collect.ImmutableList;
-
 public class JdbcInsert implements Operation {
 	
 	private final JdbcConnectionProvider jdbc;
@@ -29,7 +27,7 @@ public class JdbcInsert implements Operation {
 	public JdbcInsert(JdbcConnectionProvider jdbc, String table, List<Data> values) {
 		this.jdbc = jdbc;
 		this.table = table;
-		this.values = ImmutableList.copyOf(values);
+		this.values = new ArrayList<>(values);
 	}
 
 	@Override

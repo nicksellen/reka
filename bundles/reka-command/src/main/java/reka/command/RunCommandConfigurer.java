@@ -2,8 +2,8 @@ package reka.command;
 
 import java.util.List;
 
+import reka.core.setup.OperationConfigurer;
 import reka.core.setup.OperationSetup;
-import reka.nashorn.OperationConfigurer;
 
 public class RunCommandConfigurer implements OperationConfigurer {
 	

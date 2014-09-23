@@ -19,6 +19,12 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
+			<groupId>io.reka</groupId>
+			<artifactId>reka-common</artifactId>
+			<version>0.1.0</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.11</version>

@@ -12,8 +12,8 @@ import java.util.function.Supplier;
 import reka.api.flow.FlowSegment;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
+import reka.core.setup.OperationConfigurer;
 import reka.core.setup.OperationSetup;
-import reka.nashorn.OperationConfigurer;
 
 public class SequenceConfigurer implements OperationConfigurer {
 	

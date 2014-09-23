@@ -45,7 +45,7 @@ public class JsxBundle implements BundleConfigurer {
 	}
 
 	public void setup(BundleSetup bundle) {
-		bundle.module(path("jsx"), () -> new JsxModule());
+		bundle.module(path("jsx"), "0.1.0", () -> new JsxModule());
 	}
 
 }

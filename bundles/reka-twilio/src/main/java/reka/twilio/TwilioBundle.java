@@ -20,9 +20,9 @@ import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.BundleConfigurer;
 import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
+import reka.core.setup.OperationConfigurer;
 import reka.core.setup.OperationSetup;
 import reka.core.util.StringWithVars;
-import reka.nashorn.OperationConfigurer;
 
 import com.twilio.sdk.TwilioRestClient;
 import com.twilio.sdk.TwilioRestException;
@@ -34,7 +34,7 @@ public class TwilioBundle implements BundleConfigurer {
 	private static final Logger log = LoggerFactory.getLogger(TwilioBundle.class);
 
 	public void setup(BundleSetup bundle) {
-		bundle.module(path("twilio"), () -> new TwilioModule());
+		bundle.module(path("twilio"), "0.1.0", () -> new TwilioModule());
 	}
 	
 	public static class TwilioModule extends ModuleConfigurer {

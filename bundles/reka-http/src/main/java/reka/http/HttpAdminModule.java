@@ -10,10 +10,10 @@ import reka.api.data.MutableData;
 import reka.api.run.Operation;
 import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
+import reka.core.setup.OperationConfigurer;
 import reka.core.setup.OperationSetup;
 import reka.http.server.HttpServerManager;
 import reka.http.server.HttpSettings;
-import reka.nashorn.OperationConfigurer;
 
 public class HttpAdminModule extends ModuleConfigurer {
 

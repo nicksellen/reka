@@ -21,9 +21,9 @@ import reka.core.bundle.BundleConfigurer;
 import reka.core.data.memory.MutableMemoryData;
 import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
+import reka.core.setup.OperationConfigurer;
 import reka.core.setup.OperationSetup;
 import reka.core.util.StringWithVars;
-import reka.nashorn.OperationConfigurer;
 
 public class JsonBundle implements BundleConfigurer {
 	
@@ -31,7 +31,7 @@ public class JsonBundle implements BundleConfigurer {
 
 	@Override
 	public void setup(BundleSetup bundle) {
-		bundle.module(path("json"), () -> new UseJson());
+		bundle.module(path("json"), "0.1.0", () -> new UseJson());
 	}
 	
 	public static class UseJson extends ModuleConfigurer {

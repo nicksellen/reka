@@ -1,15 +1,15 @@
 package reka.jdbc;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Objects.requireNonNull;
 import static reka.api.Path.dots;
 import static reka.api.Path.root;
 import static reka.jdbc.JdbcModule.POOL;
 import reka.api.Path;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
+import reka.core.setup.OperationConfigurer;
 import reka.core.setup.OperationSetup;
 import reka.core.util.StringWithVars;
-import reka.nashorn.OperationConfigurer;
 
 public class JdbcQueryConfigurer implements OperationConfigurer {
 
@@ -50,7 +50,7 @@ public class JdbcQueryConfigurer implements OperationConfigurer {
 	
 	@Override
 	public void setup(OperationSetup ops) {
-	    checkNotNull(queryFn, "you didn't pick a query!");
+	    requireNonNull(queryFn, "you didn't pick a query!");
 		ops.add("run", store -> new JdbcQuery(config, store.get(POOL), queryFn, out));
 	}
 

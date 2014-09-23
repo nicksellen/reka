@@ -12,7 +12,6 @@ import reka.api.flow.FlowSegment;
 import reka.api.flow.SimpleFlowOperation;
 import reka.api.run.RouteKey;
 import reka.api.run.RouterOperation;
-import reka.nashorn.OperationConfigurer;
 
 public interface OperationSetup extends Supplier<FlowSegment> {
 	

@@ -19,6 +19,7 @@ import reka.core.config.SequenceConfigurer;
 import reka.core.data.memory.MutableMemoryData;
 import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
+import reka.core.setup.OperationConfigurer;
 import reka.http.configurers.HttpContentConfigurer;
 import reka.http.configurers.HttpRedirectConfigurer;
 import reka.http.configurers.HttpRequestConfigurer;
@@ -28,7 +29,6 @@ import reka.http.server.HttpServerManager;
 import reka.http.server.HttpSettings;
 import reka.http.server.HttpSettings.SslSettings;
 import reka.http.server.HttpSettings.Type;
-import reka.nashorn.OperationConfigurer;
 
 public class HttpModule extends ModuleConfigurer {
 	

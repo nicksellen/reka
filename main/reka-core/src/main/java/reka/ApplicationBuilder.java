@@ -9,6 +9,7 @@ import reka.api.data.Data;
 import reka.core.builder.FlowVisualizer;
 import reka.core.builder.Flows;
 import reka.core.setup.NetworkInfo;
+import reka.core.setup.StatusProvider;
 
 public class ApplicationBuilder {
 
@@ -17,6 +18,7 @@ public class ApplicationBuilder {
 	private final List<IntConsumer> undeployConsumers = new ArrayList<>();
 	private final List<IntConsumer> pauseConsumers = new ArrayList<>();
 	private final List<IntConsumer> resumeConsumers = new ArrayList<>();
+	private final List<StatusProvider> statusProviders = new ArrayList<>();
 
 	private Path name;
 	private Data meta;
@@ -67,9 +69,13 @@ public class ApplicationBuilder {
 	public List<IntConsumer> resumeConsumers() {
 		return resumeConsumers;
 	}
+	
+	public List<StatusProvider> statusProviders() {
+		return statusProviders;
+	}
 
 	public Application build() {
-		return new Application(name, meta, version, flows, network, visualizer, undeployConsumers, pauseConsumers, resumeConsumers);
+		return new Application(name, meta, version, flows, network, visualizer, undeployConsumers, pauseConsumers, resumeConsumers, statusProviders);
 	}
 
 }

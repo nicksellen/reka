@@ -8,8 +8,10 @@ import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import static reka.core.config.ConfigUtils.configToData;
 import static reka.util.Util.unchecked;
 
-import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -38,8 +40,6 @@ import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
 import reka.core.util.StringWithVars;
 import reka.core.util.StringWithVars.Variable;
-
-import com.google.common.io.Files;
 
 public class JdbcModule extends ModuleConfigurer {
 	
@@ -129,8 +129,9 @@ public class JdbcModule extends ModuleConfigurer {
 
 			if (!migrations.isEmpty()) {
 				init.run("run migrations", store -> {
-					File tmpdir = Files.createTempDir();
+					Path tmpdir = null;
 					try {
+						tmpdir = Files.createTempDirectory("jdbc");
 					
 						for (Entry<String, String> e : migrations.entrySet()) {
 							Pattern VERSION_BIT = Pattern.compile("^[\\._0-9]+");
@@ -140,9 +141,9 @@ public class JdbcModule extends ModuleConfigurer {
 							String num = m.group();
 							String rest = name.substring(m.end());
 							rest = rest.replaceFirst(" ", "__").replaceAll(" ", "_");
-							java.nio.file.Path tmp = tmpdir.toPath().resolve(format("V%s%s.sql", num, rest));
+							java.nio.file.Path tmp = tmpdir.resolve(format("V%s%s.sql", num, rest));
 							try {
-								Files.write(e.getValue(), tmp.toFile(), StandardCharsets.UTF_8);
+								Files.write(tmp, e.getValue().getBytes(StandardCharsets.UTF_8));
 							} catch (Exception e2) {
 								throw unchecked(e2);
 							}
@@ -150,14 +151,18 @@ public class JdbcModule extends ModuleConfigurer {
 						Flyway flyway = new Flyway();
 						flyway.setClassLoader(Flyway.class.getClassLoader());
 						flyway.setDataSource(store.get(POOL).dataSource());
-						flyway.setLocations(format("filesystem:%s", tmpdir.getAbsolutePath()));
+						flyway.setLocations(format("filesystem:%s", tmpdir.toFile().getAbsolutePath()));
 						flyway.migrate();
-					
+						
+					} catch (IOException e) {
+						throw unchecked(e);
 					} finally {
-						try {
-							FileUtils.deleteDirectory(tmpdir);
-						} catch (Exception e) {
-							e.printStackTrace();
+						if (tmpdir != null) {
+							try { 
+								FileUtils.deleteDirectory(tmpdir.toFile());
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
 						}
 					}
 				});

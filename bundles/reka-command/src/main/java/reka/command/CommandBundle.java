@@ -7,7 +7,7 @@ public class CommandBundle implements BundleConfigurer {
 
 	@Override
 	public void setup(BundleSetup bundle) {
-		bundle.module(path("command"), () -> new CommandModule());
+		bundle.module(path("command"), "0.1.0", () -> new CommandModule());
 	}
 
 }

@@ -40,17 +40,17 @@ import reka.core.bundle.BundleConfigurer;
 import reka.core.data.memory.MutableMemoryData;
 import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
+import reka.core.setup.OperationConfigurer;
 import reka.core.setup.OperationSetup;
 import reka.core.util.StringWithVars;
-import reka.nashorn.OperationConfigurer;
 
 public class SmtpBundle implements BundleConfigurer {
 	
 	private static final Logger log = LoggerFactory.getLogger(SmtpBundle.class);
 
 	public void setup(BundleSetup bundle) {
-		bundle.module(path("smtp"), () -> new UseSMTPConfigurer());
-		bundle.module(path("smtp/server"), () -> new UseSMTPServerConfigurer());
+		bundle.module(path("smtp"), "0.1.0", () -> new UseSMTPConfigurer());
+		bundle.module(path("smtp/server"), "0.1.0", () -> new UseSMTPServerConfigurer());
 	}
 	
 	public static class UseSMTPServerConfigurer extends ModuleConfigurer {

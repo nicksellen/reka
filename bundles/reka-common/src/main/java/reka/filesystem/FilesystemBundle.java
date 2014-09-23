@@ -16,15 +16,15 @@ import reka.config.configurer.annotations.Conf;
 import reka.core.bundle.BundleConfigurer;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
+import reka.core.setup.OperationConfigurer;
 import reka.core.setup.OperationSetup;
 import reka.core.util.StringWithVars;
-import reka.nashorn.OperationConfigurer;
 
 public class FilesystemBundle implements BundleConfigurer {
 
 	@Override
 	public void setup(BundleSetup bundle) {
-		bundle.module(path("fs"), () -> new FilesystemModule());
+		bundle.module(path("fs"), "0.1.0", () -> new FilesystemModule());
 	}
 	
 	public static class FilesystemReadConfigurer implements OperationConfigurer {

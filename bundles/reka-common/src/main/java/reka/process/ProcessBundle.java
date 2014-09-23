@@ -7,7 +7,7 @@ public class ProcessBundle implements BundleConfigurer {
 
 	@Override
 	public void setup(BundleSetup bundle) {
-		bundle.module(path("process"), () -> new ProcessModule());
+		bundle.module(path("process"), "0.1.0", () -> new ProcessModule());
 	}
 
 }

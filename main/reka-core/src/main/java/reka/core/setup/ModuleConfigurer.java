@@ -2,6 +2,8 @@ package reka.core.setup;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
+import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.unmodifiableMap;
 import static reka.api.Path.slashes;
 import static reka.config.configurer.Configurer.configure;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
@@ -28,14 +30,12 @@ import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.builder.FlowVisualizer;
 import reka.core.builder.SingleFlow;
+import reka.core.bundle.BundleConfigurer.ModuleInfo;
 import reka.core.runtime.NoFlow;
 import reka.core.runtime.NoFlowVisualizer;
 import reka.core.setup.ModuleSetup.FlowSegmentBiFunction;
 import reka.core.setup.ModuleSetup.InitFlow;
 import reka.core.setup.ModuleSetup.TriggerCollection;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 public abstract class ModuleConfigurer {
 	
@@ -43,23 +43,12 @@ public abstract class ModuleConfigurer {
 		
 		private final Flow flow;
 		private final FlowVisualizer visualizer;
-		private final Map<Path,FlowSegmentBiFunction> providers;
-		private final List<InitFlow> initflows;
-		private final List<TriggerCollection> triggers;
-		private final List<Runnable> shutdownHandlers;
+		private final ModuleCollector collector;
 		
-		ModuleInitializer(Flow initialize, FlowVisualizer visualizer, 
-				Map<Path,FlowSegmentBiFunction> providers,
-				List<InitFlow> initflows,
-				List<TriggerCollection> triggers,
-				List<Runnable> shutdownHandlers) {
+		ModuleInitializer(Flow initialize, FlowVisualizer visualizer, ModuleCollector collector) {
 			this.flow = initialize;
 			this.visualizer = visualizer;
-			this.providers = ImmutableMap.copyOf(providers);
-			this.initflows = ImmutableList.copyOf(initflows);
-			this.triggers = ImmutableList.copyOf(triggers);
-			this.shutdownHandlers = ImmutableList.copyOf(shutdownHandlers);
-			
+			this.collector = collector;
 		}
 		
 		public Flow flow() {
@@ -70,20 +59,8 @@ public abstract class ModuleConfigurer {
 			return visualizer;
 		}
 		
-		public Map<Path,FlowSegmentBiFunction> providers() {
-			return providers;
-		}
-		
-		public List<InitFlow> initflows() {
-			return initflows;
-		}
-		
-		public List<TriggerCollection> triggers() {
-			return triggers;
-		}
-		
-		public List<Runnable> shutdownHandlers() {
-			return shutdownHandlers;
+		public ModuleCollector collector() {
+			return collector;
 		}
 		
 	}
@@ -92,40 +69,66 @@ public abstract class ModuleConfigurer {
 		return Utils.process(root);
 	}
 	
+	public static class ModuleCollector {
+		
+		public final Map<Path,FlowSegmentBiFunction> providers;
+		public final List<InitFlow> initflows;
+		public final List<TriggerCollection> triggers;
+		public final List<Runnable> shutdownHandlers;
+		public final List<Supplier<StatusProvider>> statuses;
+		
+		public ModuleCollector() {
+			providers = new HashMap<>();
+			initflows = new ArrayList<>();
+			triggers = new ArrayList<>();
+			shutdownHandlers = new ArrayList<>();
+			statuses = new ArrayList<>();	
+		}
+		
+		private ModuleCollector(ModuleCollector parent) {
+			this.providers = immutable(parent.providers);
+			this.initflows = immutable(parent.initflows);
+			this.triggers = immutable(parent.triggers);
+			this.shutdownHandlers = immutable(parent.shutdownHandlers);
+			this.statuses = immutable(parent.statuses);	
+		}
+		
+		public ModuleCollector immutable() {
+			return new ModuleCollector(this);
+		}
+		
+		private static <K,V> Map<K,V> immutable(Map<K,V> in) {
+			return unmodifiableMap(new HashMap<>(in));
+		}
+		
+		private static <T> List<T> immutable(List<T> in) {
+			return unmodifiableList(new ArrayList<>(in));
+		}
+		
+	}
+	
 	private static class Utils {
 		
 		public static ModuleInitializer process(ModuleConfigurer root) {
+			
+			ModuleCollector collector = new ModuleCollector();
 			
 			Set<ModuleConfigurer> all = collect(root, new HashSet<>());
 			Set<ModuleConfigurer> toplevel = findTopLevel(all);
 			Map<String,ModuleConfigurer> rootsMap = map(root.uses);
 			
 			resolveNamedDependencies(all, rootsMap);
-			
-			Map<Path,FlowSegmentBiFunction> providers = new HashMap<>();
-			List<InitFlow> initflows = new ArrayList<>();
-			List<TriggerCollection> triggers = new ArrayList<>();
-			List<Runnable> shutdownHandlers = new ArrayList<>();
 			Map<ModuleConfigurer,FlowSegment> segments = new HashMap<>();
 			
 			for (ModuleConfigurer module : all) {
 				
 				IdentityStore store = IdentityStore.createConcurrentIdentityStore();
 				
-				ModuleSetup init = new ModuleSetup(module.fullPath(), store);
+				ModuleSetup init = new ModuleSetup(module.fullPath(), store, collector);
 				module.setup(init);
 				
 				init.buildFlowSegment().ifPresent(segment -> {
 					segments.put(module, segment);
-				});
-				
-				providers.putAll(init.providers());
-				
-				initflows.addAll(init.initflows());
-				triggers.addAll(init.triggers());
-				
-				init.shutdownHandlers().forEach(h -> {
-					shutdownHandlers.add(() -> h.accept(store));
 				});
 				
 			}
@@ -144,7 +147,7 @@ public abstract class ModuleConfigurer {
 				visualizer = new NoFlowVisualizer();
 			}
 			
-			return new ModuleInitializer(flow, visualizer, providers, initflows, triggers, shutdownHandlers);
+			return new ModuleInitializer(flow, visualizer, collector.immutable());
 		}
 		
 		private static Optional<FlowSegment> buildSegment(Set<ModuleConfigurer> modules, Map<ModuleConfigurer, FlowSegment> built) {
@@ -211,7 +214,7 @@ public abstract class ModuleConfigurer {
 		
 	}
 	
-	private List<Entry<Path, Supplier<ModuleConfigurer>>> modules = new ArrayList<>();
+	private List<ModuleInfo> modules = new ArrayList<>();
 	
 	private String type;
 	private String name;
@@ -226,7 +229,7 @@ public abstract class ModuleConfigurer {
 	private final Set<ModuleConfigurer> usedBy = new HashSet<>();
 	private final Set<ModuleConfigurer> uses = new HashSet<>();
 
-	public ModuleConfigurer modules(List<Entry<Path, Supplier<ModuleConfigurer>>> modules) {
+	public ModuleConfigurer modules(List<ModuleInfo> modules) {
 		this.modules = modules;
 		
 		if (isRoot()) {
@@ -237,15 +240,15 @@ public abstract class ModuleConfigurer {
 	}
 
 	private void findRootConfigurers() {
-		for (Entry<Path, Supplier<ModuleConfigurer>> e : modules) {
+		for (ModuleInfo e : modules) {
 			// all the ones with a root path need to be added automatically
 			// we don't need to explicitly load these...
-			if (e.getKey().isEmpty()) {
-				uses.add(e.getValue().get());
+			if (e.name().isEmpty()) {
+				uses.add(e.get());
 			}
 		}
 	}
-
+	
 	public abstract void setup(ModuleSetup module);
 	
 	public boolean isRoot() {
@@ -327,9 +330,9 @@ public abstract class ModuleConfigurer {
 	}
 
 	private Supplier<ModuleConfigurer> mappingFor(Path path) {
-		for (Entry<Path,Supplier<ModuleConfigurer>> e : modules) {
-			if (e.getKey().equals(path)) {
-				return e.getValue();
+		for (ModuleInfo m : modules) {
+			if (m.name().equals(path)) {
+				return m;
 			}
 		}
 		return null;
@@ -337,9 +340,9 @@ public abstract class ModuleConfigurer {
 	
 	private Collection<String> mappingNames() {
 		List<String> result = new ArrayList<>();
-		for (Entry<Path,Supplier<ModuleConfigurer>> e : modules) {
-			if (!e.getKey().isEmpty()) {
-				result.add(e.getKey().slashes());
+		for (ModuleInfo e : modules) {
+			if (!e.name().isEmpty()) {
+				result.add(e.name().slashes());
 			}
 		}
 		return result;

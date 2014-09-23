@@ -13,7 +13,7 @@ public class NashornBundle implements BundleConfigurer {
 
 	@Override
 	public void setup(BundleSetup bundle) {
-		bundle.module(path("nashorn"), () -> new NashornModule());
+		bundle.module(path("nashorn"), "0.1.0", () -> new NashornModule());
 	}
 
 }

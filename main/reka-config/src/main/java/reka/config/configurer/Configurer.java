@@ -10,6 +10,7 @@ import static java.util.stream.StreamSupport.stream;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,14 +35,14 @@ import com.google.common.base.Splitter;
 
 public class Configurer {
 	
-	private final Logger log = LoggerFactory.getLogger(getClass());
+	protected final Logger log = LoggerFactory.getLogger(getClass());
 	
-	private static final Map<Class<?>,Configurer> configurers = new HashMap<>();
+	protected static final Map<Class<?>,Configurer> configurers = new HashMap<>();
 	
-	private final Class<?> klass;
-	private final List<ConfOption> options = new ArrayList<>();
-	private final Map<Method,Conf.Deprecated> deprecatedMethods = new HashMap<>();
-	private final Map<Method,Conf.Deprecated.Warning> deprecatedWarningMethods = new HashMap<>();
+	protected final Class<?> klass;
+	protected final List<ConfOption> options = new ArrayList<>();
+	protected final Map<Method,Conf.Deprecated> deprecatedMethods = new HashMap<>();
+	protected final Map<Method,Conf.Deprecated.Warning> deprecatedWarningMethods = new HashMap<>();
 	
 	public interface Preconditions {
 	
@@ -61,10 +62,10 @@ public class Configurer {
 
 	public static class ErrorCollector {
 		
-		private final ConfigOrNavigableConfig config;
-		private final List<ConfigurationError> errors;
+		protected final ConfigOrNavigableConfig config;
+		protected final List<ConfigurationError> errors;
 		
-		private ErrorCollector(ConfigOrNavigableConfig config, List<ConfigurationError> errors) {
+		protected ErrorCollector(ConfigOrNavigableConfig config, List<ConfigurationError> errors) {
 			this.config = config;
 			this.errors = errors;
 		}
@@ -82,7 +83,7 @@ public class Configurer {
 		}
 	}
 
-	private static PreconditionConfigurationException preconditionError(String msg, Object... objs) {
+	protected static PreconditionConfigurationException preconditionError(String msg, Object... objs) {
 		return new PreconditionConfigurationException(format(msg, objs));
 	}
 
@@ -95,13 +96,13 @@ public class Configurer {
     }
     
     @SuppressWarnings("unchecked")
-	private static <T> Configured<T> configure(T target, ConfigOrNavigableConfig c) {
+	protected static <T> Configured<T> configure(T target, ConfigOrNavigableConfig c) {
     	return (Configured<T>) findConfigurer(target.getClass()).apply(c, target);
     }
 
-    private static class PreconditionConfigurationException extends RuntimeException {
+    protected static class PreconditionConfigurationException extends RuntimeException {
 
-		private static final long serialVersionUID = -5535432203358657347L;
+		protected static final long serialVersionUID = -5535432203358657347L;
 
 		public PreconditionConfigurationException(String msg) {
 			super(msg);
@@ -111,18 +112,18 @@ public class Configurer {
     
     public static class ConfigurationError {
 
-    	private final ConfigOrNavigableConfig config;
-    	private final String msg;
+    	protected final ConfigOrNavigableConfig config;
+    	protected final String msg;
     	
-		private final Throwable cause;
+		protected final Throwable cause;
     	
-    	private ConfigurationError(ConfigOrNavigableConfig config, String msg, Throwable cause) {
+    	protected ConfigurationError(ConfigOrNavigableConfig config, String msg, Throwable cause) {
     		this.config = config;
     		this.msg = msg;
     		this.cause = cause;
 		}
     	
-    	private ConfigurationError(ConfigOrNavigableConfig config, String msg) {
+    	protected ConfigurationError(ConfigOrNavigableConfig config, String msg) {
     		this(config, msg, null);
     	}
     	
@@ -166,12 +167,12 @@ public class Configurer {
     	
     }
     
-    private static class Configured<T> {
+    protected static class Configured<T> {
 
     	@SuppressWarnings("unused")
-		private final ConfigOrNavigableConfig config;
-    	private final T value;
-    	private final List<ConfigurationError> errors;
+		protected final ConfigOrNavigableConfig config;
+    	protected final T value;
+    	protected final List<ConfigurationError> errors;
     	
     	Configured(ConfigOrNavigableConfig config, T value, List<ConfigurationError> errors) {
     		this.config = config;
@@ -192,9 +193,9 @@ public class Configurer {
     
     public static class InvalidConfigurationException extends RuntimeException {
     	
-		private static final long serialVersionUID = 8018639942600973192L;
+		protected static final long serialVersionUID = 8018639942600973192L;
 
-		private final Collection<ConfigurationError> errors;
+		protected final Collection<ConfigurationError> errors;
 		
 		InvalidConfigurationException(Collection<ConfigurationError> errors) {
     		super();
@@ -226,9 +227,9 @@ public class Configurer {
 	    public Source source();
 	}
 	
-	private static class WrappedNavigableConfig implements ConfigOrNavigableConfig {
+	protected static class WrappedNavigableConfig implements ConfigOrNavigableConfig {
 		
-	    private final NavigableConfig body;
+	    protected final NavigableConfig body;
 	    
 	    WrappedNavigableConfig(NavigableConfig body) {
 	        this.body = body;
@@ -260,9 +261,9 @@ public class Configurer {
         }
 	}
 	
-	private static class WrappedConfig implements ConfigOrNavigableConfig {
+	protected static class WrappedConfig implements ConfigOrNavigableConfig {
 	    
-		private final Config config;
+		protected final Config config;
 	    
 	    WrappedConfig(Config config) {
 	        this.config = config;
@@ -306,7 +307,7 @@ public class Configurer {
 		void apply(Method method);
 	}
 	
-	private void applyToClassHierarchy(MethodFunction... mfs) {
+	protected void applyToClassHierarchy(MethodFunction... mfs) {
 		for (MethodFunction mf : mfs) {
 			Class<?> k = klass;
 			while (k != null) {
@@ -316,7 +317,7 @@ public class Configurer {
 		}
 	}
  	
-	private Configurer(Class<?> klass) {
+	protected Configurer(Class<?> klass) {
 		
 		this.klass = klass;
 		
@@ -335,7 +336,7 @@ public class Configurer {
 		Collections.sort(options, comparing(ConfOption::order));
 	}
 
-	private Configured<Object> apply(ConfigOrNavigableConfig config, Object instance) {
+	protected Configured<Object> apply(ConfigOrNavigableConfig config, Object instance) {
 		Status status = new Status();
 		List<ConfigurationError> errors = new ArrayList<>();
 		for (ConfOption option : options) {
@@ -371,7 +372,7 @@ public class Configurer {
 		return new Configured<Object>(config, instance, errors);
 	}
 	
-	private static InvalidConfigurationException findInvalidConfigurationException(Throwable t) {
+	protected static InvalidConfigurationException findInvalidConfigurationException(Throwable t) {
 		while (t != null) {
 			if (t instanceof InvalidConfigurationException) {
 				return ((InvalidConfigurationException) t);
@@ -381,12 +382,12 @@ public class Configurer {
 		return null;
 	}
 	
-	private static String rootExceptionMessage(Throwable t) {
+	protected static String rootExceptionMessage(Throwable t) {
 		Collection<String> msgs = allExceptionMessages(t);
 		return msgs.isEmpty() ? "unknown" : msgs.iterator().next();
 	}
 	
-	private static Throwable rootCause(Throwable t) {
+	protected static Throwable rootCause(Throwable t) {
 		Throwable cause = t.getCause();
 		while (cause != null) {
 			t = cause;
@@ -395,7 +396,7 @@ public class Configurer {
 		return t;
 	}
 	
-	private static Collection<String> allExceptionMessages(Throwable original) {
+	protected static Collection<String> allExceptionMessages(Throwable original) {
 		List<String> result = new ArrayList<>();
 		
 		Throwable t = original;
@@ -412,7 +413,7 @@ public class Configurer {
 		return result;
 	}
 
-	private void checkDeprecation(Method method, Config config) {
+	protected void checkDeprecation(Method method, Config config) {
 		
 		Conf.Deprecated deprecated = deprecatedMethods.get(method);
 		if (deprecated != null) {
@@ -433,9 +434,9 @@ public class Configurer {
 		}
 	}
 
-	private static class Status {
+	protected static class Status {
 		final Set<String> matchedKeys = new HashSet<>();
-		private void addFirstAsMatched(String val) {
+		protected void addFirstAsMatched(String val) {
 			matchedKeys.add(val);
 			Iterator<String> it = dotSplitter.split(val).iterator();
 			if (it.hasNext()) {
@@ -444,7 +445,7 @@ public class Configurer {
 		}
 	}
 	
-	private abstract class ConfOption {
+	protected static abstract class ConfOption {
 		
 		protected final Method method;
 		
@@ -456,9 +457,9 @@ public class Configurer {
 		public abstract int order();
 	}
 	
-	private class EachChildOfOption extends ConfOption {
+	protected class EachChildOfOption extends ConfOption {
 		
-		private final String path;
+		protected final String path;
 		
 		EachChildOfOption(Method method, String path) {
 			super(method);
@@ -486,9 +487,9 @@ public class Configurer {
 		}
 	}
 	
-	private class EachStringValOption extends ConfOption {
+	protected class EachStringValOption extends ConfOption {
 
-	    private final String match;
+	    protected final String match;
 	    
         EachStringValOption(Method method, String match) {
             super(method);
@@ -531,9 +532,9 @@ public class Configurer {
 	    
 	}
 	
-	private class EachOption extends ConfOption {
+	protected class EachOption extends ConfOption {
 		
-		private final String match;
+		protected final String match;
 		
 		EachOption(Method method, String match) {
 			super(method);
@@ -573,7 +574,7 @@ public class Configurer {
 		}
 	}
 
-	private class EachUnmatchedKeyOption extends ConfOption {
+	protected class EachUnmatchedKeyOption extends ConfOption {
 		
 		EachUnmatchedKeyOption(Method method) {
 			super(method);
@@ -604,7 +605,7 @@ public class Configurer {
 		}
 	}
 	
-	private abstract class AtOption extends ConfOption {
+	protected abstract class AtOption extends ConfOption {
 		
 		protected final String path;
 		
@@ -620,7 +621,7 @@ public class Configurer {
 		
 	}
 	
-	private class ConfigOption extends ConfOption {
+	protected class ConfigOption extends ConfOption {
 		
 		ConfigOption(Method method) {
 			super(method);
@@ -646,7 +647,7 @@ public class Configurer {
 		
 	}
 
-	private class KeyOption extends ConfOption {
+	protected class KeyOption extends ConfOption {
 		
 		KeyOption(Method method) {
 			super(method);
@@ -672,7 +673,7 @@ public class Configurer {
 		
 	}
 	
-	private class SubkeyOption extends ConfOption {
+	protected class SubkeyOption extends ConfOption {
 		
 		SubkeyOption(Method method) {
 			super(method);
@@ -698,7 +699,7 @@ public class Configurer {
 		
 	}
 		
-	private class StringValOption extends ConfOption {
+	protected class StringValOption extends ConfOption {
 		
 		StringValOption(Method method) {
 			super(method);
@@ -725,10 +726,10 @@ public class Configurer {
 		
 	}
 	
-	private static final List<String> trueValues = asList("true", "yes", "on");
-	private static final List<String> falseValues = asList("false", "no", "off");
+	protected static final List<String> trueValues = asList("true", "yes", "on");
+	protected static final List<String> falseValues = asList("false", "no", "off");
 	
-	private class BooleanAtOption extends AtOption {
+	protected class BooleanAtOption extends AtOption {
 
 		BooleanAtOption(Method method, String path) {
 			super(method, path);
@@ -775,11 +776,13 @@ public class Configurer {
 		
 	}
 	
-	private class IntegerAtOption extends AtOption {
+	protected abstract class NumberAtOption extends AtOption {
 		
-		IntegerAtOption(Method method, String path) {
+		NumberAtOption(Method method, String path) {
 			super(method, path);
 		}
+		
+		abstract void handleNumber(Method method, Object instance, Number number) throws Exception;
 
 		@Override
 		public void apply(ConfigOrNavigableConfig config, Object instance, Status status) {
@@ -791,7 +794,7 @@ public class Configurer {
     					status.addFirstAsMatched(path);
 	    				try {
 	    					checkDeprecation(method, conf);
-	    					method.invoke(instance, conf.valueAsBigDecimal());
+	    					handleNumber(method, instance, conf.valueAsNumber());
 		                } catch (Throwable t) {
 		                	t.printStackTrace();
 							throw asInvalidConfigurationException(conf, t);
@@ -807,10 +810,62 @@ public class Configurer {
 		}
 	}
 	
-	private static final Splitter dotSplitter = Splitter.on(".");
+	protected class IntegerAtOption extends NumberAtOption {
+
+		IntegerAtOption(Method method, String path) {
+			super(method, path);
+		}
+
+		@Override
+		void handleNumber(Method method, Object instance, Number number) throws Exception {
+			method.invoke(instance, number.intValue());
+		}
+		
+	}
+	
+	protected class LongAtOption extends NumberAtOption {
+
+		LongAtOption(Method method, String path) {
+			super(method, path);
+		}
+
+		@Override
+		void handleNumber(Method method, Object instance, Number number) throws Exception {
+			method.invoke(instance, number.longValue());
+		}
+		
+	}
+
+	protected class DoubleAtOption extends NumberAtOption {
+
+		DoubleAtOption(Method method, String path) {
+			super(method, path);
+		}
+
+		@Override
+		void handleNumber(Method method, Object instance, Number number) throws Exception {
+			method.invoke(instance, number.doubleValue());
+		}
+		
+	}
+
+	protected class FloatAtOption extends NumberAtOption {
+
+		FloatAtOption(Method method, String path) {
+			super(method, path);
+		}
+
+		@Override
+		void handleNumber(Method method, Object instance, Number number) throws Exception {
+			method.invoke(instance, number.floatValue());
+		}
+		
+	}
+	
+	protected static final Splitter dotSplitter = Splitter.on(".");
 	
 
-	private class StringAtOption extends AtOption {
+	protected class StringAtOption extends AtOption {
 		
 		StringAtOption(Method method, String path) {
 			super(method, path);
@@ -841,7 +896,7 @@ public class Configurer {
 		}
 	}
 	
-	private class ConfigAtOption extends AtOption {
+	protected class ConfigAtOption extends AtOption {
 		
 		ConfigAtOption(Method method, String path) {
 			super(method, path);
@@ -870,14 +925,14 @@ public class Configurer {
 		}
 	}
 	
-	private static InvalidConfigurationException asInvalidConfigurationException(Config conf, Throwable t) {
+	protected static InvalidConfigurationException asInvalidConfigurationException(Config conf, Throwable t) {
 		t.printStackTrace();
 		InvalidConfigurationException e = findInvalidConfigurationException(t);
 		if (e != null) return e;
 		return new InvalidConfigurationException(asList(new ConfigurationError(new WrappedConfig(conf), rootExceptionMessage(t),t)));
 	}
 	
-	private void configureEachChildOf(Method method, Conf.EachChildOf[] annotations) {
+	protected void configureEachChildOf(Method method, Conf.EachChildOf[] annotations) {
 		if (annotations == null || annotations.length == 0) return;
 		checkArgument(method.getParameterTypes().length == 1 && method.getParameterTypes()[0].equals(Config.class), 
 			"@%s %s must accept a single %s parameter",
@@ -890,7 +945,7 @@ public class Configurer {
 		}
 	}
 	
-	private void configureEach(Method method, Conf.Each[] annotations) {
+	protected void configureEach(Method method, Conf.Each[] annotations) {
 		if (annotations == null || annotations.length == 0) return;
 		checkArgument(method.getParameterTypes().length == 1 && (
 		        method.getParameterTypes()[0].equals(Config.class) ||
@@ -913,7 +968,7 @@ public class Configurer {
 		}
 	}
 	
-	private void configureEachUnmatchedKey(Method method, Conf.EachUnmatched annotation) {
+	protected void configureEachUnmatchedKey(Method method, Conf.EachUnmatched annotation) {
 		if (annotation == null) return;
 		checkArgument(method.getParameterTypes().length == 1 && method.getParameterTypes()[0].equals(Config.class), 
 			"@%s %s must accept a single %s parameter",
@@ -924,7 +979,7 @@ public class Configurer {
 		options.add(new EachUnmatchedKeyOption(method));
 	}
 
-	private void configureConfig(Method method, Conf.Config annotation) {
+	protected void configureConfig(Method method, Conf.Config annotation) {
 		if (annotation == null) return;
 		Class<?> requiredClass = Config.class;
 		checkArgument(method.getParameterTypes().length == 1 && method.getParameterTypes()[0].equals(requiredClass), 
@@ -936,17 +991,17 @@ public class Configurer {
 		options.add(new ConfigOption(method));
 	}
 
-	private void configureDeprecated(Method method, Conf.Deprecated annotation) {
+	protected void configureDeprecated(Method method, Conf.Deprecated annotation) {
 		if (annotation == null) return;
 		deprecatedMethods.put(method, annotation);
 	}
 	
-	private void configureDeprecatedWarning(Method method, Conf.Deprecated.Warning annotation) {
+	protected void configureDeprecatedWarning(Method method, Conf.Deprecated.Warning annotation) {
 		if (annotation == null) return;
 		deprecatedWarningMethods.put(method, annotation);
 	}
 	
-	private void configureKey(Method method, Conf.Key annotation) {
+	protected void configureKey(Method method, Conf.Key annotation) {
 		if (annotation == null) return;
 		checkArgument(method.getParameterTypes().length == 1 && method.getParameterTypes()[0].equals(String.class), 
 				"@%s %s must accept a single %s parameter",
@@ -957,7 +1012,7 @@ public class Configurer {
 		options.add(new KeyOption(method));
 	}
 	
-	private void configureSubkey(Method method, Conf.Subkey annotation) {
+	protected void configureSubkey(Method method, Conf.Subkey annotation) {
 		if (annotation == null) return;
 		checkArgument(method.getParameterTypes().length == 1 && method.getParameterTypes()[0].equals(String.class), 
 				"@%s %s must accept a single %s parameter",
@@ -968,7 +1023,7 @@ public class Configurer {
 		options.add(new SubkeyOption(method));
 	}
 
-	private void configureVal(Method method, Conf.Val annotation) {
+	protected void configureVal(Method method, Conf.Val annotation) {
 		if (annotation == null) return;
 		checkArgument(method.getParameterTypes().length == 1 && method.getParameterTypes()[0].equals(String.class), 
 				"@%s %s must accept a single %s parameter",
@@ -978,8 +1033,17 @@ public class Configurer {
 		
 		options.add(new StringValOption(method));
 	}
+	
+	private static boolean assignable(Class<?> valueClass, Class<?>... others) {
+		for (Class<?> other : others) {
+			if (other.isAssignableFrom(valueClass)) {
+				return true;
+			}
+		}
+		return false;
+	}
 
-	private void configureAt(Method method, Conf.At[] annotations) {
+	protected void configureAt(Method method, Conf.At[] annotations) {
 		if (annotations == null || annotations.length == 0) return;
 		checkArgument(method.getParameterTypes().length == 1, 
 				"@%s %s must accept a single parameter",
@@ -989,13 +1053,19 @@ public class Configurer {
 		for (Conf.At annotation : annotations) {
 			Class<?> valueClass = method.getParameterTypes()[0];
 			
-			if (Number.class.isAssignableFrom(valueClass)) {
+			if (assignable(valueClass, int.class, Integer.class)) {
 				options.add(new IntegerAtOption(method, annotation.value()));
-			} else if (Boolean.class.isAssignableFrom(valueClass)) {
+			} else if (assignable(valueClass, long.class, Long.class)) {
+				options.add(new LongAtOption(method, annotation.value()));
+			} else if (assignable(valueClass, double.class, Double.class)) {
+				options.add(new DoubleAtOption(method, annotation.value()));
+			} else if (assignable(valueClass, float.class, Float.class)) {
+				options.add(new FloatAtOption(method, annotation.value()));
+			} else if (assignable(valueClass, boolean.class, Boolean.class)) {
 				options.add(new BooleanAtOption(method, annotation.value()));
-			} else if (valueClass.equals(String.class)) {
+			} else if (assignable(valueClass, String.class)) {
 				options.add(new StringAtOption(method, annotation.value()));
-			} else if (valueClass.equals(Config.class)) {
+			} else if (assignable(valueClass, Config.class)) {
 				options.add(new ConfigAtOption(method, annotation.value()));
 			} else {
 				throw new RuntimeException(format("@%s %s - don't know how to extract %s value from Config", 
@@ -1005,7 +1075,7 @@ public class Configurer {
 		}
 	}
 
-	private static Set<String> allKeys(ConfigOrNavigableConfig config) {
+	protected static Set<String> allKeys(ConfigOrNavigableConfig config) {
 		if (config.hasBody()) {
 			return stream(config.body().spliterator(), false)
 				.filter(Config::hasKey)

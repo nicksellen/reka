@@ -14,7 +14,7 @@ public class RekaSystemBundle implements BundleConfigurer {
 
 	@Override
 	public void setup(BundleSetup bundle) {
-		bundle.module(path("reka"), () -> new RekaModule(manager));
+		bundle.module(path("reka"), "0.1.0", () -> new RekaModule(manager));
 	}
 
 }

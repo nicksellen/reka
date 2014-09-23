@@ -1,10 +1,7 @@
 package reka.core.bundle;
 
-import static reka.util.Util.createEntry;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.function.Supplier;
 
 import reka.api.Path;
@@ -15,15 +12,42 @@ public interface BundleConfigurer {
 	
 	void setup(BundleSetup bundle);
 	
+	public static class ModuleInfo implements Supplier<ModuleConfigurer> {
+		
+		private final Path name;
+		private final String version;
+		private final Supplier<ModuleConfigurer> supplier;
+		
+		public ModuleInfo(Path name, String version, Supplier<ModuleConfigurer> supplier) {
+			this.name = name;
+			this.version = version;
+			this.supplier = supplier;
+		}
+		
+		public Path name() {
+			return name;
+		}
+		
+		public String version() {
+			return version;
+		}
+
+		@Override
+		public ModuleConfigurer get() {
+			return supplier.get();
+		}
+		
+	}
+	
 	public static class BundleSetup {
 		
-		private final List<Entry<Path,Supplier<ModuleConfigurer>>> uses = new ArrayList<>();
+		private final List<ModuleInfo> modules = new ArrayList<>();
 		private final List<ConfigConverter> converters = new ArrayList<>();
 		private final List<BundleConfigurer> moreBundles = new ArrayList<>();
 		private final List<Runnable> shutdownHandlers = new ArrayList<>();
 		
-		public BundleSetup module(Path name, Supplier<ModuleConfigurer> supplier) {
-			uses.add(createEntry(name, supplier));
+		public BundleSetup module(Path name, String version, Supplier<ModuleConfigurer> supplier) {
+			modules.add(new ModuleInfo(name, version, supplier));
 			return this;
 		}
 		
@@ -48,8 +72,8 @@ public interface BundleConfigurer {
 			shutdownHandlers.add(handler);
 		}
 		
-		protected List<Entry<Path,Supplier<ModuleConfigurer>>> modules() {
-			return uses;
+		protected List<ModuleInfo> modules() {
+			return modules;
 		}
 		
 		protected List<ConfigConverter> converters() {

@@ -7,7 +7,7 @@ public class JadeBundle implements BundleConfigurer {
 
 	@Override
 	public void setup(BundleSetup bundle) {
-		bundle.module(path("jade"), () -> new JadeModule());
+		bundle.module(path("jade"), "0.1.0", () -> new JadeModule());
 	}
 
 }

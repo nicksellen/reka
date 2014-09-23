@@ -1,11 +1,10 @@
-package reka.nashorn;
+package reka.core.setup;
 
 import java.util.function.Supplier;
 
 import reka.api.IdentityStore;
 import reka.api.Path;
 import reka.api.flow.FlowSegment;
-import reka.core.setup.OperationSetup;
 
 public interface OperationConfigurer {
 	

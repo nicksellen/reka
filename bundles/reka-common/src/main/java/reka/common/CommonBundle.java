@@ -9,7 +9,7 @@ public class CommonBundle implements BundleConfigurer {
 
 	@Override
 	public void setup(BundleSetup bundle) {
-		bundle.module(path("bcrypt"), () -> new BCryptModule());
+		bundle.module(path("bcrypt"), "0.1.0", () -> new BCryptModule());
 		bundle.bundle(new MarkdownBundle());
 	}
 	

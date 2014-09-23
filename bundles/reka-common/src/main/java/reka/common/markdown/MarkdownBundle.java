@@ -13,7 +13,7 @@ public class MarkdownBundle implements BundleConfigurer {
 
 	@Override
 	public void setup(BundleSetup bundle) {
-		bundle.module(path("markdown"), () -> new MarkdownModule());
+		bundle.module(path("markdown"), "0.1.0", () -> new MarkdownModule());
 		bundle.converter(new MarkdownConverter());
 	}
 

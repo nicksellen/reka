@@ -6,9 +6,9 @@ import io.netty.channel.Channel;
 import io.netty.channel.EventLoopGroup;
 import reka.api.Path;
 import reka.config.configurer.annotations.Conf;
+import reka.core.setup.OperationConfigurer;
 import reka.core.setup.OperationSetup;
 import reka.http.operations.HttpRequestOperation;
-import reka.nashorn.OperationConfigurer;
 
 public class HttpRequestConfigurer implements OperationConfigurer {
 	

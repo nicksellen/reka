@@ -7,7 +7,7 @@ public class RhinoBundle implements BundleConfigurer {
 
 	@Override
 	public void setup(BundleSetup bundle) {
-		bundle.module(path("rhino"), () -> new RhinoModule());
+		bundle.module(path("rhino"), "0.1.0", () -> new RhinoModule());
 	}
 
 }

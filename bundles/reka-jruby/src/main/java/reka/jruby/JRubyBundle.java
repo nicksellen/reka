@@ -7,7 +7,7 @@ public class JRubyBundle implements BundleConfigurer {
 	
 	@Override
 	public void setup(BundleSetup bundle) {
-		bundle.module(slashes("jruby"), () -> new JRubyModule());
+		bundle.module(slashes("jruby"), "0.1.0", () -> new JRubyModule());
 	}
 
 }

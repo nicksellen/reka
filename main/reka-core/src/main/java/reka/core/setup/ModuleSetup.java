@@ -31,21 +31,19 @@ import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
-import reka.nashorn.OperationConfigurer;
+import reka.core.setup.ModuleConfigurer.ModuleCollector;
 
 public class ModuleSetup {
 	
+	private final ModuleCollector collector;
 	private final Path path;
 	private final IdentityStore store;
-	private final List<Supplier<FlowSegment>> segments = new ArrayList<>();
-	private final List<Consumer<IdentityStore>> shutdownHandlers = new ArrayList<>();
-	private final List<TriggerCollection> triggers = new ArrayList<>();
-	private final Map<Path,FlowSegmentBiFunction> operations = new HashMap<>();
-	private final List<InitFlow> initflows = new ArrayList<>();
+	private final List<Supplier<FlowSegment>> segments = new ArrayList<>();	
 	
-	public ModuleSetup(Path path, IdentityStore store) {
+	public ModuleSetup(Path path, IdentityStore store, ModuleCollector collector) {
 		this.path = path;
 		this.store = store;
+		this.collector = collector;
 	}
 	
 	public Path path() {
@@ -132,11 +130,11 @@ public class ModuleSetup {
 	}
 	
 	public void shutdown(String name, Consumer<IdentityStore> handler) {
-		shutdownHandlers.add(handler);
+		collector.shutdownHandlers.add(() -> handler.accept(store));
 	}
 	
 	public ModuleSetup operation(Path name, Function<ConfigurerProvider,OperationConfigurer> c) {
-		operations.put(path.add(name), (provider, config) -> {
+		collector.providers.put(path.add(name), (provider, config) -> {
 			return configure(c.apply(provider), config).bind(path, store);
 		});
 		return this;
@@ -329,10 +327,14 @@ public class ModuleSetup {
 		}
 		
 	}
+
+	public void status(Function<IdentityStore, StatusDataProvider> c) {
+		collector.statuses.add(() -> StatusProvider.create(path.slashes(), c.apply(store)));
+	}
 	
 	public ModuleSetup initflow(String name, ConfigBody body, Consumer<InitFlowSetup> init) {
 		Function<ConfigurerProvider, OperationConfigurer> supplier = provider -> configure(new SequenceConfigurer(provider), body);
-		initflows.add(new InitFlow(path.add(name), supplier, store, flow -> {
+		collector.initflows.add(new InitFlow(path.add(name), supplier, store, flow -> {
 			init.accept(new InitFlowSetup(flow, store));
 		}));
 		return this;
@@ -347,7 +349,7 @@ public class ModuleSetup {
 	}
 	
 	public ModuleSetup triggers(Map<IdentityKey<Flow>,Function<ConfigurerProvider, OperationConfigurer>> suppliers, Consumer<MultiFlowRegistration> cs) {
-		triggers.add(new TriggerCollection(suppliers.entrySet().stream().map(e -> new Trigger(path, e.getKey(), e.getValue())).collect(toList()), cs, store));
+		collector.triggers.add(new TriggerCollection(suppliers.entrySet().stream().map(e -> new Trigger(path, e.getKey(), e.getValue())).collect(toList()), cs, store));
 		return this;
 	}
 
@@ -365,22 +367,6 @@ public class ModuleSetup {
 		if (segments.isEmpty()) return Optional.empty();
 		List<FlowSegment> built = segments.stream().map(Supplier<FlowSegment>::get).collect(toList());
 		return Optional.of(createLabelSegment(path.slashes(), seq(built)));
-	}
-	
-	protected Map<Path,FlowSegmentBiFunction> providers() {
-		return operations;
-	}
-
-	protected List<InitFlow> initflows() {
-		return initflows;
-	}
-	
-	protected List<TriggerCollection> triggers() {
-		return triggers;
-	}
-	
-	protected List<Consumer<IdentityStore>> shutdownHandlers() {
-		return shutdownHandlers;
 	}
 	
 }

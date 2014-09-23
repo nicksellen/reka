@@ -1,5 +1,6 @@
 package reka.process;
 
+import static java.lang.String.format;
 import static reka.util.Util.createEntry;
 import static reka.util.Util.runtime;
 import static reka.util.Util.unchecked;
@@ -10,6 +11,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -18,18 +20,36 @@ import java.util.Deque;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import reka.api.data.MutableData;
+
 public class SingleProcessManager implements ProcessManager {
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	
+	private static final Class<?> unixProcessClass;
+	
+	static {
+		Class<?> clazz = null;
+		try {
+			clazz = Class.forName("java.lang.UNIXProcess");
+		} catch (ClassNotFoundException e) {
+			// oh well
+			e.printStackTrace();
+		}
+		unixProcessClass = clazz;
+	}
+	
 	@SuppressWarnings("unused")
 	private final ProcessBuilder builder;
 	private final Process process;
+	
+	private final int pid;
 
 	@SuppressWarnings("unused")
 	private final boolean noreply;
@@ -47,10 +67,14 @@ public class SingleProcessManager implements ProcessManager {
 	
 	private final List<Consumer<String>> lineTriggers = Collections.synchronizedList(new ArrayList<>());
 	
-	public SingleProcessManager(
+	public SingleProcessManager(ProcessBuilder builder, boolean noreply) {
+		this(builder, noreply, new LinkedBlockingDeque<>());
+	}
+	
+	protected SingleProcessManager(
 			ProcessBuilder builder, 
-			BlockingDeque<Entry<String,Consumer<String>>> q, 
-			boolean noreply) {
+			boolean noreply,
+			BlockingDeque<Entry<String,Consumer<String>>> q) {
 		this.q = q;
 		this.builder = builder;
 		this.noreply = noreply;
@@ -59,6 +83,21 @@ public class SingleProcessManager implements ProcessManager {
 		} catch (IOException e1) {
 			throw unchecked(e1);
 		}
+		int tryPid = -1;
+		if (unixProcessClass != null && unixProcessClass.isInstance(process)) {
+			try {
+				Field field = unixProcessClass.getDeclaredField("pid");
+				boolean b = field.isAccessible();
+				field.setAccessible(true);
+				tryPid = (int) field.get(process);
+				field.setAccessible(b);
+			} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
+				// oh well
+				e.printStackTrace();
+			}
+		}
+		
+		pid = tryPid;
 		
 		stdin = process.getOutputStream();
 		stdout = process.getInputStream();
@@ -81,13 +120,11 @@ public class SingleProcessManager implements ProcessManager {
 						if (!noreply) consumerq.offer(entry.getValue());
 					}
 				} catch (InterruptedException | IOException e) {
-					throw unchecked(e);
+					log.error("writer thread stopped");
 				}
 			}
 			
 		};
-		
-		writerThread.start();
 		
 		readerThread = new Thread() {
 			
@@ -108,11 +145,23 @@ public class SingleProcessManager implements ProcessManager {
 						drain(stderr);
 					}	
 				} catch (IOException e) {
-					log.error("process thread stopped :(", e);
+					log.error("reader thread stopped :(", e);
+				} finally {
+					writerThread.interrupt();
 				}
 			}
 		};
+
 		
+		if (pid != -1) {
+			writerThread.setName(format("process-writer-%s", pid));
+			readerThread.setName(format("process-reader-%s", pid));
+		} else {
+			writerThread.setName(format("process-writer"));
+			readerThread.setName(format("process-reader"));
+		}
+		
+		writerThread.start();
 		readerThread.start();
 	}
 	
@@ -156,6 +205,18 @@ public class SingleProcessManager implements ProcessManager {
 	@Override
 	public void addListener(Consumer<String> consumer) {
 		lineTriggers.add(consumer);
+	}
+
+	@Override
+	public boolean up() {
+		return process.isAlive();
+	}
+	
+	@Override
+	public void statusData(MutableData data) {
+		if (pid != -1) {
+			data.putInt("pid", pid);
+		}
 	}
 	
 }

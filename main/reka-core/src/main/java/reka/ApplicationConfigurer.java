@@ -1,6 +1,7 @@
 package reka;
 
 import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
 import static reka.api.Path.path;
 import static reka.api.Path.slashes;
 import static reka.config.configurer.Configurer.configure;
@@ -19,6 +20,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
@@ -54,7 +56,7 @@ import reka.core.setup.ModuleSetup.TriggerCollection;
 
 public class ApplicationConfigurer implements ErrorReporter {
 	
-	private static final ExecutorService executor = Executors.newCachedThreadPool(); // just used for app configure/deployments
+	private static final ExecutorService executor = Executors.newSingleThreadExecutor(); // just used for app configure/deployments
 	
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	
@@ -114,7 +116,7 @@ public class ApplicationConfigurer implements ErrorReporter {
         FlowBuilders flowsBuilder = new FlowBuilders();
     	ModuleInitializer initializer = ModuleConfigurer.buildInitializer(rootModule);
     	
-    	MultiConfigurerProvider provider = new MultiConfigurerProvider(initializer.providers());
+    	MultiConfigurerProvider provider = new MultiConfigurerProvider(initializer.collector().providers);
     	Map<Path,Supplier<FlowSegment>> configuredFlows = new HashMap<>();
     	defs.forEach((config) -> 
 			configuredFlows.put(path(config.valueAsString()), 
@@ -126,8 +128,8 @@ public class ApplicationConfigurer implements ErrorReporter {
     
     public void checkValid() {
     	ModuleInitializer initializer = ModuleConfigurer.buildInitializer(rootModule);
-    	MultiConfigurerProvider configurerProvider = new MultiConfigurerProvider(initializer.providers());
-    	initializer.triggers().forEach(triggers -> triggers.get().forEach(trigger -> {
+    	MultiConfigurerProvider configurerProvider = new MultiConfigurerProvider(initializer.collector().providers);
+    	initializer.collector().triggers.forEach(triggers -> triggers.get().forEach(trigger -> {
     		trigger.supplier().apply(configurerProvider).bind(trigger.base(), triggers.store()).get();
     	}));
     	defs.forEach(config -> {
@@ -174,18 +176,18 @@ public class ApplicationConfigurer implements ErrorReporter {
 	    	applicationBuilder.version(applicationVersion);
 	    	applicationBuilder.initializerVisualizer(initializer.visualizer());
 	    	
-	    	List<Runnable> shutdownHandlers = initializer.shutdownHandlers();
+	    	List<Runnable> shutdownHandlers = initializer.collector().shutdownHandlers;
 	    	
 	    	Map<Path,FlowTest> tests = new HashMap<>();
 	    	
-	    	MultiConfigurerProvider configurerProvider = new MultiConfigurerProvider(initializer.providers());
+	    	MultiConfigurerProvider configurerProvider = new MultiConfigurerProvider(initializer.collector().providers);
 	    	
-	    	initializer.initflows().forEach(initflow -> {
+	    	initializer.collector().initflows.forEach(initflow -> {
 	    		initflowBuilders.add(initflow.name, 
     					initflow.supplier.apply(configurerProvider).bind(initflow.name, initflow.store).get());
 	    	});
 	    	
-	    	initializer.triggers().forEach(triggers -> {
+	    	initializer.collector().triggers.forEach(triggers -> {
 	    		triggers.get().forEach(trigger -> {
 	    			flowBuilders.add(triggerPath(applicationBuilder.name(), trigger), 
 	    					trigger.supplier().apply(configurerProvider).bind(trigger.base(), triggers.store()).get());
@@ -206,7 +208,7 @@ public class ApplicationConfigurer implements ErrorReporter {
 	    	
 	    	// ok, initialize this thing!
 	    	
-	    	ApplicationInitializer appi = new ApplicationInitializer(future, identity, flowBuilders, applicationBuilder, initializer, tests, shutdownHandlers);
+	    	ApplicationInitializer appi = new ApplicationInitializer(future, identity, flowBuilders, applicationBuilder, initializer, tests);
 	    	initializer.flow().prepare().executor(executor).data(MutableMemoryData.create()).complete(appi).run();
     	
     	});
@@ -215,6 +217,7 @@ public class ApplicationConfigurer implements ErrorReporter {
     private static class ApplicationInitializer implements Subscriber {
 
     	private final CompletableFuture<Application> future;
+    	
     	private final String identity;
     	private final FlowBuilders flowBuilders;
     	
@@ -222,21 +225,18 @@ public class ApplicationConfigurer implements ErrorReporter {
 				CompletableFuture<Application> future, String identity,
 				FlowBuilders flowBuilders,
 				ApplicationBuilder applicationBuilder,
-				ModuleInitializer initializer, Map<Path, FlowTest> tests,
-				List<Runnable> shutdownHandlers) {
+				ModuleInitializer initializer, Map<Path, FlowTest> tests) {
 			this.future = future;
 			this.identity = identity;
 			this.flowBuilders = flowBuilders;
 			this.applicationBuilder = applicationBuilder;
 			this.initializer = initializer;
 			this.tests = tests;
-			this.shutdownHandlers = shutdownHandlers;
 		}
 
 		private final ApplicationBuilder applicationBuilder;
     	private final ModuleInitializer initializer;
     	private final Map<Path,FlowTest> tests;
-    	private final List<Runnable> shutdownHandlers;
     	
     	private final Logger log = LoggerFactory.getLogger(getClass());
     	
@@ -277,58 +277,70 @@ public class ApplicationConfigurer implements ErrorReporter {
 				
 				// run tests!
 				
-				CountDownLatch latch = new CountDownLatch(tests.size());
+				if (!tests.isEmpty()) {
 				
-				AtomicBoolean failed = new AtomicBoolean(false);
-				
-				tests.forEach((name, test) -> {
-					Flow flow = flows.flow(name);
-					MutableData initialData = MutableMemoryData.create();
-					initialData.merge(test.initial());
-					flow.run(executor, initialData, new Subscriber(){
-						
-						@Override
-						public void ok(MutableData data) {
-							data.diffContentFrom(test.expect(), (path, type, expected, actual) -> {
-								if (type == DiffContentType.ADDED) return; // don't mind extra data for now...
-								Optional<Content> initvalue = test.initial().getContent(path);
-								if (!initvalue.isPresent() || !initvalue.get().equals(actual)) {
-									log.error("content at {} {} - expected [{}] got [{}]", path.dots(), type, expected, actual);
-									failed.set(true);
+					CountDownLatch latch = new CountDownLatch(tests.size());
+					
+					AtomicBoolean failed = new AtomicBoolean(false);
+					
+					tests.forEach((name, test) -> {
+						Flow flow = flows.flow(name);
+						MutableData initialData = MutableMemoryData.create();
+						initialData.merge(test.initial());
+						flow.run(executor, initialData, new Subscriber(){
+							
+							@Override
+							public void ok(MutableData data) {
+								try {
+									data.diffContentFrom(test.expect(), (path, type, expected, actual) -> {
+										if (type == DiffContentType.ADDED) return; // don't mind extra data for now...
+										Optional<Content> initvalue = test.initial().getContent(path);
+										if (!initvalue.isPresent() || !initvalue.get().equals(actual)) {
+											log.error("content at {} {} - expected [{}] got [{}]", path.dots(), type, expected, actual);
+											failed.set(true);
+										}
+									});
+								} catch (Throwable t) {
+									t.printStackTrace();
+								} finally {
+									latch.countDown();
 								}
-							});
-							latch.countDown();
-						}
-						
-						@Override
-						public void halted() {
-							log.error("test halted");
-							failed.set(true);
-							latch.countDown();
-						}
-						
-						@Override
-						public void error(Data data, Throwable t) {
-							log.error("test failed to run", t);
-							failed.set(true);
-							latch.countDown();
-						}
-						
+							}
+							
+							@Override
+							public void halted() {
+								log.error("test halted");
+								failed.set(true);
+								latch.countDown();
+							}
+							
+							@Override
+							public void error(Data data, Throwable t) {
+								log.error("test failed to run", t);
+								failed.set(true);
+								latch.countDown();
+							}
+							
+						});
 					});
-				});
-				
-				latch.await();
-				
-				if (failed.get()) {
-					String msg = format("failed to deploy [%s] because tests failed", identity);
-					log.error(msg);
-			    	future.completeExceptionally(runtime(msg));
-					return;
+					
+					if (!latch.await(10, TimeUnit.SECONDS)) {
+						String msg = format("failed to deploy [%s] because tests timed out", identity);
+						log.error(msg);
+				    	future.completeExceptionally(runtime(msg));
+						return;
+					} else if (failed.get()) {
+						String msg = format("failed to deploy [%s] because tests failed", identity);
+						log.error(msg);
+				    	future.completeExceptionally(runtime(msg));
+						return;
+					}
+					
 				}
 				
 				applicationBuilder.flows(flows);
 				
-				initializer.triggers().forEach(triggers -> {
+				initializer.collector().triggers.forEach(triggers -> {
 					
 					Map<IdentityKey<Flow>,Flow> m = new HashMap<>();
 					
@@ -345,7 +357,8 @@ public class ApplicationConfigurer implements ErrorReporter {
 					applicationBuilder.resumeConsumers().addAll(mr.resumeConsumers());
 					
 		    	});
-				shutdownHandlers.forEach(runnable -> {
+				
+				initializer.collector().shutdownHandlers.forEach(runnable -> {
 					applicationBuilder.undeployConsumers().add(version -> {
 						try {
 							runnable.run();
@@ -354,7 +367,9 @@ public class ApplicationConfigurer implements ErrorReporter {
 						}
 					});
 				});
-	    		
+				
+				applicationBuilder.statusProviders().addAll(initializer.collector().statuses.stream().map(Supplier::get).collect(toList()));
+				
 		    	future.complete(applicationBuilder.build());
 	    	
 	    	} catch (Throwable t) {

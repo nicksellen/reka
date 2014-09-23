@@ -23,7 +23,6 @@ import reka.api.flow.SimpleFlowOperation;
 import reka.api.run.RouteKey;
 import reka.api.run.RouterOperation;
 import reka.core.data.memory.MutableMemoryData;
-import reka.nashorn.OperationConfigurer;
 
 abstract class AbstractOperationCollector implements OperationSetup {
 	

@@ -131,13 +131,13 @@ public class MutableMemoryData implements MutableDataProvider<Object> {
 		o = put(o, dots("things2.in.here-again"), utf8("another nice string!"));
 		o = putOrAppend(o, dots("things2"), utf8("what about this?"));
 		
-		log.debug("root: {}", o);
-		log.debug("get: {}", get(o, dots("things2.in.here-again[0]")));
-		log.debug("json: {}", toPrettyJson(o));
+		log.info("root: {}", o);
+		log.info("get: {}", get(o, dots("things2.in.here-again[0]")));
+		log.info("json: {}", toPrettyJson(o));
 		
 		o = put(o, root(), utf8("at the root :)"));
 		
-		log.debug("root!: {}", o);
+		log.info("root!: {}", o);
 		
 		MutableData w = MutableMemoryData.create();
 
@@ -162,16 +162,16 @@ public class MutableMemoryData implements MutableDataProvider<Object> {
 		
 		w.put(dots("and.here"), utf8("bom"));
 		
-		log.debug("w: {}", w.toPrettyJson());
-		//log.debug("wa: {}", w.at(dots("lovely.not.here")).toPrettyJson());
+		log.info("w: {}", w.toPrettyJson());
+		//log.info("wa: {}", w.at(dots("lovely.not.here")).toPrettyJson());
 		
 		w.remove(dots("lovely"));
 		
-		log.debug("w: {}", w.toPrettyJson());
+		log.info("w: {}", w.toPrettyJson());
 		
 		/*
 		w.visitContent((path, content) -> {
-			log.debug("c: {} -> {}", path.dots(), content);
+			log.info("c: {} -> {}", path.dots(), content);
 		});
 		*/
 		

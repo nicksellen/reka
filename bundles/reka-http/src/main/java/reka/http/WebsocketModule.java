@@ -28,13 +28,13 @@ import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
+import reka.core.setup.OperationConfigurer;
 import reka.core.setup.OperationSetup;
 import reka.core.util.StringWithVars;
 import reka.http.server.HttpServerManager;
 import reka.http.server.HttpSettings;
 import reka.http.server.HttpSettings.SslSettings;
 import reka.http.server.HttpSettings.Type;
-import reka.nashorn.OperationConfigurer;
 
 public class WebsocketModule extends ModuleConfigurer {
 	

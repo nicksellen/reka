@@ -32,8 +32,8 @@ import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
+import reka.core.setup.OperationConfigurer;
 import reka.core.setup.OperationSetup;
-import reka.nashorn.OperationConfigurer;
 
 public class LessModule extends ModuleConfigurer {
 	

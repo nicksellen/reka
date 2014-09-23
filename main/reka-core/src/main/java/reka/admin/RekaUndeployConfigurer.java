@@ -5,9 +5,9 @@ import java.util.function.Function;
 import reka.ApplicationManager;
 import reka.api.data.Data;
 import reka.config.configurer.annotations.Conf;
+import reka.core.setup.OperationConfigurer;
 import reka.core.setup.OperationSetup;
 import reka.core.util.StringWithVars;
-import reka.nashorn.OperationConfigurer;
 
 public class RekaUndeployConfigurer implements OperationConfigurer {
 

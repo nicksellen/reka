@@ -20,19 +20,6 @@ http {
   }
 }
 
-//test an actual http request {
-
- run {
-   println making request to google
-   http/req http://nicksellen.co.uk
- }
- 
- expect {
-   boo yeah
- }
-
-}
-
 test home page {
   data {
     request {

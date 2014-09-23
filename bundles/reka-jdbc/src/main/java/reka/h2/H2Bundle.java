@@ -8,7 +8,7 @@ public class H2Bundle implements BundleConfigurer {
 
 	@Override
 	public void setup(BundleSetup bundle) {
-		bundle.module(path("h2"), () -> new H2Module());
+		bundle.module(path("h2"), "0.1.0", () -> new H2Module());
 	}
 
 }

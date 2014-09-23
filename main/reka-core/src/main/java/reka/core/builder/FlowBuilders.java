@@ -14,6 +14,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import reka.api.Path;
 import reka.api.flow.Flow;
@@ -27,7 +29,25 @@ import com.google.common.collect.ImmutableMap;
 
 public class FlowBuilders {
 	
-	private final ExecutorService executor = Executors.newCachedThreadPool();
+	private static class BackgroundThreadFactory implements ThreadFactory {
+		
+        private final AtomicInteger threadNumber = new AtomicInteger(1);
+
+		@Override
+		public Thread newThread(Runnable r) {
+			  Thread t = new Thread(Thread.currentThread().getThreadGroup(), r,
+                      "reka-background-" + threadNumber.getAndIncrement(),
+                      0);
+				if (t.isDaemon())
+				    t.setDaemon(false);
+				if (t.getPriority() != Thread.NORM_PRIORITY)
+				    t.setPriority(Thread.NORM_PRIORITY);
+				return t;
+		}
+		
+	}
+	
+	private static final ExecutorService BACKGROUND_EXECUTOR = Executors.newCachedThreadPool(new BackgroundThreadFactory());
 	
 	private final Map<Path,FlowInfo> roots = new HashMap<>();
 	
@@ -187,7 +207,7 @@ public class FlowBuilders {
 		
 		for (FlowNode node : connections.nodes()) {
 		    int id = nextId++;
-		    NodeBuilder builder = new NodeBuilder(id, node.label(), node, executor);
+		    NodeBuilder builder = new NodeBuilder(id, node.label(), node, BACKGROUND_EXECUTOR);
 			idToNodeBuilder.put(id, builder);
 			nodeToId.put(node, id);
 			idToName.put(id, builder.name());

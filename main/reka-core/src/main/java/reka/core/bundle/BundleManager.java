@@ -4,21 +4,19 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Set;
-import java.util.function.Supplier;
 
 import reka.api.Path;
 import reka.config.processor.ConfigConverter;
 import reka.config.processor.MultiConverter;
 import reka.config.processor.Processor;
-import reka.core.setup.ModuleConfigurer;
+import reka.core.bundle.BundleConfigurer.ModuleInfo;
 
 public class BundleManager {
 	
 	private final Set<BundleConfigurer> bundles = new HashSet<>();
 	
-	private final List<Entry<Path,Supplier<ModuleConfigurer>>> modules = new ArrayList<>();
+	private final List<ModuleInfo> modules = new ArrayList<>();
 	private final List<ConfigConverter> converters = new ArrayList<>();
 	private final List<Runnable> shutdownHandlers = new ArrayList<>();
 	
@@ -50,7 +48,7 @@ public class BundleManager {
 		shutdownHandlers.addAll(setup.shutdownHandlers());
 	}
 	
-	public List<Entry<Path,Supplier<ModuleConfigurer>>> modules() {
+	public List<ModuleInfo> modules() {
 		return modules;
 	}
 	
@@ -60,8 +58,8 @@ public class BundleManager {
 	
 	public Collection<Path> modulesKeys() {
 		Set<Path> keys = new HashSet<>();
-		for (Entry<Path, Supplier<ModuleConfigurer>> e : modules) {
-			keys.add(e.getKey());
+		for (ModuleInfo e : modules) {
+			keys.add(e.name());
 		}
 		return keys; 
 	}

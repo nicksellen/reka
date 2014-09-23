@@ -17,7 +17,7 @@ public class LessBundle implements BundleConfigurer {
 	
 	@Override
 	public void setup(BundleSetup bundle) {
-		bundle.module(path("less"), () -> new LessModule(compiler));
+		bundle.module(path("less"), "0.1.0", () -> new LessModule(compiler));
 	}
 
 }

@@ -18,8 +18,8 @@ import reka.api.data.MutableData;
 import reka.api.run.Operation;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
+import reka.core.setup.OperationConfigurer;
 import reka.core.setup.OperationSetup;
-import reka.nashorn.OperationConfigurer;
 
 import com.google.common.collect.ImmutableList;
 

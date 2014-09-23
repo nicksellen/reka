@@ -1,9 +1,14 @@
 package reka.admin;
 
+import static java.util.Comparator.comparing;
+
+import java.util.List;
+
 import reka.Application;
 import reka.ApplicationManager;
 import reka.api.data.MutableData;
 import reka.core.runtime.NoFlowVisualizer;
+import reka.core.setup.StatusProvider.StatusReport;
 
 public class AdminUtils {
 
@@ -51,6 +56,18 @@ public class AdminUtils {
 					m.putString("name", ApplicationManager.INITIALIZER_VISUALIZER_NAME.slashes());
 				});
 			}
+		});
+		
+		data.putList("status", list -> {
+			List<StatusReport> statuses = app.status();
+			statuses.sort(comparing(StatusReport::name));
+			statuses.forEach(status -> {
+				list.addMap(report -> {
+					status.data().forEachContent((path, content) -> report.put(path, content));
+					report.putBool("up", status.up());
+					report.putString("name", status.name());
+				});
+			});
 		});
 		
 		return data;

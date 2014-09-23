@@ -17,11 +17,11 @@ import reka.config.configurer.annotations.Conf;
 import reka.core.builder.OperationFlowNode;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
+import reka.core.setup.OperationConfigurer;
 import reka.core.setup.OperationSetup;
 import reka.http.configurers.HttpRouterConfigurer.RouteBuilder;
 import reka.http.operations.HttpRouter;
 import reka.http.operations.HttpRouter.Route;
-import reka.nashorn.OperationConfigurer;
 
 public class HttpRouteGroupConfigurer {
 

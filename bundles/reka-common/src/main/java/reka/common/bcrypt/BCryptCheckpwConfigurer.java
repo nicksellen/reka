@@ -7,8 +7,8 @@ import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
+import reka.core.setup.OperationConfigurer;
 import reka.core.setup.OperationSetup;
-import reka.nashorn.OperationConfigurer;
 
 public class BCryptCheckpwConfigurer implements OperationConfigurer {
 	

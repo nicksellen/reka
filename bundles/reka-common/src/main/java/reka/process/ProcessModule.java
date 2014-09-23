@@ -11,26 +11,18 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import reka.api.IdentityKey;
-import reka.api.data.Data;
-import reka.api.data.MutableData;
 import reka.api.flow.Flow;
-import reka.api.run.AsyncOperation;
-import reka.api.run.Operation;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
 import reka.core.data.memory.MutableMemoryData;
 import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
-import reka.core.setup.OperationSetup;
-import reka.core.util.StringWithVars;
-import reka.nashorn.OperationConfigurer;
 
 import com.google.common.base.Splitter;
 
@@ -42,6 +34,8 @@ public class ProcessModule extends ModuleConfigurer {
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	
 	private String[] command;
+	
+	private int processes = Runtime.getRuntime().availableProcessors();
 	
 	private boolean noreply = false;
 	
@@ -55,6 +49,12 @@ public class ProcessModule extends ModuleConfigurer {
 	@Conf.At("noreply")
 	public void noreply(Config unused) {
 		noreply = true;
+	}
+	
+	@Conf.At("processes")
+	public void processes(int val) {
+		checkConfig(val > 0, "must specifcy at least one");
+		processes = val;
 	}
 	
 	@Conf.At("script")
@@ -104,81 +104,26 @@ public class ProcessModule extends ModuleConfigurer {
 					builder.command(command);
 					log.info("starting {}\n", asList(command));
 					builder.environment().clear();
-					store.put(PROCESS_MANAGER, new MultiProcessManager(builder, Runtime.getRuntime().availableProcessors(), noreply));
+					ProcessManager manager;
+					if (processes == 1) {
+						manager = new SingleProcessManager(builder, noreply);
+					} else {
+						manager = new MultiProcessManager(builder, processes, noreply);
+					}
+					store.put(PROCESS_MANAGER, manager);
 				} catch (Exception e) {
 					throw unchecked(e);
 				}
 			});
 		});
 		
+		module.status(store -> store.get(PROCESS_MANAGER));
+		
 		module.shutdown("kill process", store -> {
 			store.lookup(PROCESS_MANAGER).ifPresent(manager -> manager.kill());
 		});
 		
 		module.operation(root(), provider -> new ProcessCallConfigurer(noreply));
-	}
-	
-	public static class ProcessCallConfigurer implements OperationConfigurer {
-
-		private final boolean noreply;
-		
-		private Function<Data,String> lineFn = (data) -> data.toJson();
-		
-		public ProcessCallConfigurer(boolean noreply) {
-			this.noreply = noreply;
-		}
-		
-		@Conf.Val
-		public void line(String val) {
-			lineFn = StringWithVars.compile(val);
-		}
-		
-		@Override
-		public void setup(OperationSetup ops) {
-			if (noreply) {
-				ops.add("call (noreply)", store -> new ProcessCallNoreplyOperation(store.get(PROCESS_MANAGER), lineFn));
-			} else {
-				ops.add("call", store -> new ProcessCallOperation(store.get(PROCESS_MANAGER), lineFn));
-			}
-		}
-		
-	}
-	
-	public static class ProcessCallNoreplyOperation implements Operation {
-
-		private final ProcessManager manager;
-		private final Function<Data,String> lineFn;
-		
-		public ProcessCallNoreplyOperation(ProcessManager manager, Function<Data,String> lineFn) {
-			this.manager = manager;
-			this.lineFn = lineFn;
-		}
-		
-		@Override
-		public void call(MutableData data) {
-			manager.send(lineFn.apply(data));
-		}
-		
-	}
-	
-	public static class ProcessCallOperation implements AsyncOperation {
-
-		private final ProcessManager manager;
-		private final Function<Data,String> lineFn;
-		
-		public ProcessCallOperation(ProcessManager manager, Function<Data,String> lineFn) {
-			this.manager = manager;
-			this.lineFn = lineFn;
-		}
-		
-		@Override
-		public void call(MutableData data, OperationResult ctx) {
-			manager.send(lineFn.apply(data), output -> {
-				data.putString("out", output);
-				ctx.done();
-			});
-		}
-		
 	}
 
 }

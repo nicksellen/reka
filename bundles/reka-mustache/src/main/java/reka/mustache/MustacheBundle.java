@@ -7,7 +7,7 @@ public class MustacheBundle implements BundleConfigurer {
 
 	@Override
 	public void setup(BundleSetup bundle) {
-		bundle.module(path("mustache"), () -> new MustacheModule());
+		bundle.module(path("mustache"), "0.1.0", () -> new MustacheModule());
 	}
 
 }

@@ -4,8 +4,8 @@ import static reka.api.Path.dots;
 import reka.ApplicationManager;
 import reka.api.Path;
 import reka.config.configurer.annotations.Conf;
+import reka.core.setup.OperationConfigurer;
 import reka.core.setup.OperationSetup;
-import reka.nashorn.OperationConfigurer;
 
 public class RekaListConfigurer implements OperationConfigurer {
 	

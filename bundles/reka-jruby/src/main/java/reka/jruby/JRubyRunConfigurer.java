@@ -5,8 +5,8 @@ import static reka.jruby.JRubyModule.RUBY_ENV;
 import reka.api.Path;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
+import reka.core.setup.OperationConfigurer;
 import reka.core.setup.OperationSetup;
-import reka.nashorn.OperationConfigurer;
 
 public class JRubyRunConfigurer implements OperationConfigurer {
 	
