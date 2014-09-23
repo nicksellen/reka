@@ -3,11 +3,12 @@ package reka.config.parser.handlers;
 import static com.google.common.base.Preconditions.checkState;
 import static java.lang.Character.isWhitespace;
 import static reka.config.formatters.FormattingUtil.removeIndentation;
+
+import java.nio.charset.StandardCharsets;
+
 import reka.config.parser.ParseContext;
 import reka.config.parser.ParseHandler;
 import reka.config.parser.values.DocVal;
-
-import com.google.common.base.Charsets;
 
 class DocHandler implements ParseHandler {
 	
@@ -50,7 +51,7 @@ class DocHandler implements ParseHandler {
 					if (inEnd == 3) {
 						foundEnd = true;
 						String str = removeIndentation(sb.toString());
-						ctx.emit("doc", new DocVal(contentType, str.getBytes(Charsets.UTF_8)), offset + 1, str.length());
+						ctx.emit("doc", new DocVal(contentType, str.getBytes(StandardCharsets.UTF_8)), offset + 1, str.length());
 						break;
 					}
 				} else if (isWhitespace(c) && inEnd == 0) {

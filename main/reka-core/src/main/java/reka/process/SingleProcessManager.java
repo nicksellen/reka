@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,8 +22,6 @@ import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Charsets;
 
 public class SingleProcessManager implements ProcessManager {
 
@@ -65,7 +64,7 @@ public class SingleProcessManager implements ProcessManager {
 		stdout = process.getInputStream();
 		stderr = process.getErrorStream();
 		
-		stdoutReader = new BufferedReader(new InputStreamReader(stdout, Charsets.UTF_8));
+		stdoutReader = new BufferedReader(new InputStreamReader(stdout, StandardCharsets.UTF_8));
 		
 		writerThread = new Thread() {
 			
@@ -75,7 +74,7 @@ public class SingleProcessManager implements ProcessManager {
 					while (process.isAlive()) {
 						Entry<String, Consumer<String>> entry = q.take();
 						String input = entry.getKey();
-						byte[] bytes = input.getBytes(Charsets.UTF_8);
+						byte[] bytes = input.getBytes(StandardCharsets.UTF_8);
 						stdin.write(bytes);
 						stdin.write(NEW_LINE);
 						stdin.flush();
@@ -126,7 +125,7 @@ public class SingleProcessManager implements ProcessManager {
 				while ((readLength = stream.read(buf, 0, buf.length)) > 0) { 
 					baos.write(buf, 0, readLength);
 				}
-				System.err.printf("stderr: %s\n", new String(baos.toByteArray(), Charsets.UTF_8));
+				System.err.printf("stderr: %s\n", new String(baos.toByteArray(), StandardCharsets.UTF_8));
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -134,7 +133,7 @@ public class SingleProcessManager implements ProcessManager {
 		}
 	}
 	
-	private static final byte[] NEW_LINE = "\n".getBytes(Charsets.UTF_8);
+	private static final byte[] NEW_LINE = "\n".getBytes(StandardCharsets.UTF_8);
 	
 	@Override
 	public void send(String input, Consumer<String> consumer) {

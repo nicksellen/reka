@@ -8,14 +8,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
 
 import reka.api.data.Data;
 import reka.core.data.memory.MutableMemoryData;
-
-import com.google.common.base.Charsets;
 
 public class MoreDataUtils {
 
@@ -62,7 +61,7 @@ public class MoreDataUtils {
 	@Deprecated
 	private static String writeToStringAsJson(Data store, boolean pretty) {
 		return new String(writeAsJsonToOutputStream(store, 
-			new ByteArrayOutputStream(), pretty).toByteArray(), Charsets.UTF_8);
+			new ByteArrayOutputStream(), pretty).toByteArray(), StandardCharsets.UTF_8);
 	}
 
 	public static <S extends OutputStream> S writeToOutputStreamAsJson(Data store, S stream) {

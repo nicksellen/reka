@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import reka.JsonBundle;
 import reka.RekaConfigurer;
 import reka.builtins.BuiltinsBundle;
+import reka.common.CommonBundle;
 import reka.config.NavigableConfig;
 import reka.config.parser.ConfigParser;
 import reka.core.bundle.BundleConfigurer;
@@ -53,6 +54,7 @@ public class All {
 			new ProcessBundle(),
 			new MustacheBundle(),
 			new JsxBundle(),
+			new CommonBundle(),
 			new LessBundle(),
 			new JadeBundle(),
 			new JsonBundle()));

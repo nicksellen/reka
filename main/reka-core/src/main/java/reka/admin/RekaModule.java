@@ -4,6 +4,7 @@ import static reka.api.Path.path;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import static reka.util.Util.runtime;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -22,14 +23,12 @@ import reka.config.NavigableConfig;
 import reka.config.configurer.annotations.Conf;
 import reka.config.parser.ConfigParser;
 import reka.config.processor.CommentConverter;
-import reka.config.processor.DocConverter;
+import reka.config.processor.DocumentationConverter;
 import reka.config.processor.IncludeConverter;
 import reka.config.processor.MultiConverter;
 import reka.config.processor.Processor;
 import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
-
-import com.google.common.base.Charsets;
 
 public class RekaModule extends ModuleConfigurer {
 	
@@ -101,7 +100,7 @@ public class RekaModule extends ModuleConfigurer {
 		Content content = o.get();
 		
 		if (content.hasByteBuffer()) {
-			return new String(content.asBytes(), Charsets.UTF_8);
+			return new String(content.asBytes(), StandardCharsets.UTF_8);
 		} else if (content.hasValue()) {
 			return content.asUTF8();
 		} else {
@@ -120,7 +119,7 @@ public class RekaModule extends ModuleConfigurer {
 		Processor processor = new Processor(new MultiConverter(
 				new CommentConverter(),
 				new IncludeConverter(), 
-				new DocConverter()));
+				new DocumentationConverter()));
 		
 		return processor.process(config);
 		

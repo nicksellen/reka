@@ -7,15 +7,13 @@ import static reka.util.Util.unchecked;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 
 import reka.api.Path;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.setup.OperationSetup;
 import reka.nashorn.OperationConfigurer;
-
-import com.google.common.base.Charsets;
-
 import de.neuland.jade4j.JadeConfiguration;
 import de.neuland.jade4j.exceptions.JadeException;
 import de.neuland.jade4j.template.JadeTemplate;
@@ -35,7 +33,7 @@ public class JadeConfigurer implements OperationConfigurer {
 	public void template(Config config) {
 	    if (config.hasDocument()) {
 	        checkArgument("jade".equals(config.documentType()), "template must be of type [jade]");
-            template = compile(new String(config.documentContent(), Charsets.UTF_8));
+            template = compile(new String(config.documentContent(), StandardCharsets.UTF_8));
             if (config.hasValue() && out == null) {
             	out = dots(config.valueAsString());
             }

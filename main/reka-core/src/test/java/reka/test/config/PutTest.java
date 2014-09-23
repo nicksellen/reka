@@ -101,8 +101,9 @@ public class PutTest {
 			callSync((Operation) op, data);
 		} else if (op instanceof RouterOperation) {
 			callRouting((RouterOperation) op, data);
+		} else {
+			throw runtime("couldn't work out %s", op);
 		}
-		throw runtime("couldn't work out %s", op);
 	}
 	
 	private static FlowNode firstNode(FlowSegment segment) {

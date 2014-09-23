@@ -38,6 +38,9 @@ public class ConfigUtils {
 
 	private static MutableData addConfigToData(Config config, MutableData data, Path path) {
 		if (config.hasBody()) {
+			if (config.hasValue()) {
+				data.putString(path.add("@"), config.valueAsString());
+			}
 			addConfigToData(config.body(), data, path);
 		} else if (config.hasValue()) {
 			data.putOrAppend(path, utf8(config.valueAsString()));

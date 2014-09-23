@@ -7,6 +7,7 @@ import static reka.util.Util.unchecked;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Optional;
 import java.util.function.Function;
@@ -19,8 +20,6 @@ import reka.api.content.Content;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.run.Operation;
-
-import com.google.common.base.Charsets;
 
 public class FilesystemWrite implements Operation {
 	
@@ -77,7 +76,7 @@ public class FilesystemWrite implements Operation {
 							output.getChannel());
 					}
 				} else {
-					Files.write(to, content.asUTF8().getBytes(Charsets.UTF_8));
+					Files.write(to, content.asUTF8().getBytes(StandardCharsets.UTF_8));
 				}
 				
 			} else {

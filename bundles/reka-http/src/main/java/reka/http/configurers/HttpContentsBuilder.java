@@ -1,5 +1,6 @@
 package reka.http.configurers;
 
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -7,8 +8,6 @@ import reka.api.data.Data;
 import reka.api.flow.FlowOperationConfigurer;
 import reka.config.configurer.annotations.Conf;
 import reka.http.operations.HttpContents;
-
-import com.google.common.base.Charsets;
 
 public class HttpContentsBuilder implements FlowOperationConfigurer<HttpContents> {
 
@@ -60,7 +59,7 @@ public class HttpContentsBuilder implements FlowOperationConfigurer<HttpContents
 		}
 		
 		public HttpContents.ContentItem build() {
-			return new HttpContents.ContentItem(content.getBytes(Charsets.UTF_8), contentType);
+			return new HttpContents.ContentItem(content.getBytes(StandardCharsets.UTF_8), contentType);
 		}
 		
 	}

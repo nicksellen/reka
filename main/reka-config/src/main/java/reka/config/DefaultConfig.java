@@ -2,19 +2,20 @@ package reka.config;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static java.util.Objects.requireNonNull;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import reka.config.formatters.ConfigFormatter;
 import reka.config.formatters.Formatter;
 
-import com.google.common.base.Charsets;
-
 public class DefaultConfig implements Config {
-	
+
 	private final Pattern NUMBER = Pattern.compile("\\-?[0-9]+(\\.[0-9]+)?");
 	
     private final Source source;
@@ -39,13 +40,13 @@ public class DefaultConfig implements Config {
 
 	@Override
 	public String key() {
-		checkNotNull(key, "missing key");
+		requireNonNull(key, "missing key");
 		return key;
 	}
 
 	@Override
 	public String subkey() {
-		checkNotNull(subkey, "missing subkey");
+		requireNonNull(subkey, "missing subkey");
 		return subkey;
 	}
     
@@ -97,13 +98,13 @@ public class DefaultConfig implements Config {
 
     @Override
     public byte[] documentContent() {
-    	checkNotNull(documentContent);
+    	requireNonNull(documentContent);
         return documentContent;
     }
     
     @Override
     public BigDecimal valueAsBigDecimal() {
-    	checkNotNull(value, "value is missing");
+    	requireNonNull(value, "value is missing");
         if (value instanceof BigDecimal) {
     		return (BigDecimal) value;
     	} else if (value instanceof String) {
@@ -116,7 +117,7 @@ public class DefaultConfig implements Config {
     
     @Override
     public Number valueAsNumber() {
-    	checkNotNull(value, "value is missing");
+    	requireNonNull(value, "value is missing");
     	if (value instanceof Number) {
     		return (Number) value;
     	} else if (value instanceof String) {
@@ -164,7 +165,7 @@ public class DefaultConfig implements Config {
     @Override
     public String documentContentAsString() {
     	checkState(hasDocument(), "this config does not have a document");
-    	return new String(documentContent(), Charsets.UTF_8);
+    	return new String(documentContent(), StandardCharsets.UTF_8);
     }
     
     @Override
@@ -195,8 +196,12 @@ public class DefaultConfig implements Config {
     }
     
     private void formatted(Formatter<?> out, FormattingOptions opts) {
-        
-        out.startEntry(key(), hasBody());
+    	
+    	if (hasKey()) {
+    		out.startEntry(key(), hasBody());
+    	} else {
+    		out.startEntry(hasBody());
+    	}
         
         if (hasValue()) out.value(valueAsString());
         
@@ -223,32 +228,64 @@ public class DefaultConfig implements Config {
             }
         }
     }
-    
-    /*
-    
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null) return false;
-        if (obj == this) return true;
-        if (!(obj instanceof Config)) return false;
-        Config other = (Config) obj;
-        if (!key().equals(other.key())) return false;
-        if (hasBody() != other.hasBody()) return false;
-        if (hasDocument() != other.hasDocument()) return false;
-        if (hasValue() != other.hasValue()) return false;
-        if (hasValue() && !value().equals(other.value())) return false;
-        if (hasDocument() && (
-                !documentType().equals(other.documentType()) ||
-                !Arrays.equals(documentContent(), other.documentContent()))) return false;
-        if (hasBody() && !body().equals(other.body())) return false;
-        return true; // phew
-    }
-    
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(key(), hasBody(), hasDocument(), hasValue(),
-                body(), documentType(), documentContent(), value());
-    }
-    */
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((body == null) ? 0 : body.hashCode());
+		result = prime * result + Arrays.hashCode(documentContent);
+		result = prime * result
+				+ ((documentType == null) ? 0 : documentType.hashCode());
+		result = prime * result + ((key == null) ? 0 : key.hashCode());
+		result = prime * result + ((source == null) ? 0 : source.hashCode());
+		result = prime * result + ((subkey == null) ? 0 : subkey.hashCode());
+		result = prime * result + ((value == null) ? 0 : value.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		DefaultConfig other = (DefaultConfig) obj;
+		if (body == null) {
+			if (other.body != null)
+				return false;
+		} else if (!body.equals(other.body))
+			return false;
+		if (!Arrays.equals(documentContent, other.documentContent))
+			return false;
+		if (documentType == null) {
+			if (other.documentType != null)
+				return false;
+		} else if (!documentType.equals(other.documentType))
+			return false;
+		if (key == null) {
+			if (other.key != null)
+				return false;
+		} else if (!key.equals(other.key))
+			return false;
+		if (source == null) {
+			if (other.source != null)
+				return false;
+		} else if (!source.equals(other.source))
+			return false;
+		if (subkey == null) {
+			if (other.subkey != null)
+				return false;
+		} else if (!subkey.equals(other.subkey))
+			return false;
+		if (value == null) {
+			if (other.value != null)
+				return false;
+		} else if (!value.equals(other.value))
+			return false;
+		return true;
+	}
 
 }

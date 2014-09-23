@@ -9,6 +9,7 @@ import static reka.core.config.ConfigUtils.configToData;
 import static reka.util.Util.unchecked;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -38,7 +39,6 @@ import reka.core.setup.ModuleSetup;
 import reka.core.util.StringWithVars;
 import reka.core.util.StringWithVars.Variable;
 
-import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 public class JdbcModule extends ModuleConfigurer {
@@ -142,7 +142,7 @@ public class JdbcModule extends ModuleConfigurer {
 							rest = rest.replaceFirst(" ", "__").replaceAll(" ", "_");
 							java.nio.file.Path tmp = tmpdir.toPath().resolve(format("V%s%s.sql", num, rest));
 							try {
-								Files.write(e.getValue(), tmp.toFile(), Charsets.UTF_8);
+								Files.write(e.getValue(), tmp.toFile(), StandardCharsets.UTF_8);
 							} catch (Exception e2) {
 								throw unchecked(e2);
 							}

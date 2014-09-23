@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import com.google.common.collect.ImmutableList;
-
 import reka.core.runtime.FlowContext;
+
+import com.google.common.collect.ImmutableList;
 
 public class HaltedHandlers implements HaltedHandler {
 	

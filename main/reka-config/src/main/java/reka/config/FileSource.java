@@ -3,7 +3,6 @@ package reka.config;
 import static java.lang.String.format;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.FileSystems;
@@ -18,8 +17,6 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.io.ByteStreams;
 
 public class FileSource extends AbstractSource {
 
@@ -142,20 +139,6 @@ public class FileSource extends AbstractSource {
     	files.sort((a, b) -> a.compareTo(b));
     	
     	return files;
-    }
-
-	@Override
-    public boolean supportsNestedData() {
-        return true;
-    }
-
-    @Override
-    public byte[] nestedData(String location) {
-    	try (FileInputStream fis = new FileInputStream(nestedFile(location).toFile())) {
-    		return ByteStreams.toByteArray(fis);
-    	} catch (IOException e) {
-    		throw new RuntimeException(e);
-		}
     }
 
     @Override

@@ -34,16 +34,6 @@ public abstract class AbstractSource implements Source {
 	public Path nestedFile(String location) {
 		return null;
 	}
-
-	@Override
-	public boolean supportsNestedData() {
-		return false;
-	}
-
-	@Override
-	public byte[] nestedData(String location) {
-		return null;
-	}
 	
 	@Override
 	public SourceLinenumbers linenumbers() {

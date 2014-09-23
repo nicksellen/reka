@@ -8,6 +8,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import io.netty.handler.codec.http.FullHttpResponse;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map.Entry;
 
@@ -18,8 +19,6 @@ import reka.api.Path;
 import reka.api.Path.Response;
 import reka.api.data.MutableData;
 import reka.core.data.memory.MutableMemoryData;
-
-import com.google.common.base.Charsets;
 
 @Sharable
 public class HttpResponseToDatasetDecoder extends MessageToMessageDecoder<FullHttpResponse> {
@@ -40,7 +39,7 @@ public class HttpResponseToDatasetDecoder extends MessageToMessageDecoder<FullHt
 		
 		data
 			.put(Response.STATUS, integer(response.getStatus().code()))
-			.put(Response.CONTENT, utf8(new String(contentBytes, Charsets.UTF_8)));
+			.put(Response.CONTENT, utf8(new String(contentBytes, StandardCharsets.UTF_8)));
 		
 		MutableData headers = data.createMapAt(Response.HEADERS);
 

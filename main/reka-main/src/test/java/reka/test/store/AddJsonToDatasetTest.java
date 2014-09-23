@@ -3,6 +3,7 @@ package reka.test.store;
 import static reka.api.content.Contents.binary;
 
 import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
@@ -12,8 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import reka.api.data.MutableData;
 import reka.core.data.memory.MutableMemoryData;
-
-import com.google.common.base.Charsets;
 
 public class AddJsonToDatasetTest {
 	
@@ -38,7 +37,7 @@ public class AddJsonToDatasetTest {
 		ds.writeJsonTo(json);
 		json.flush();
 		
-		log.debug("json -> {}\n", new String(baos.toByteArray(), Charsets.UTF_8));
+		log.debug("json -> {}\n", new String(baos.toByteArray(), StandardCharsets.UTF_8));
 		
 		/* not made yet TODO: make it and reinstate test!
 		Data ds2 = MutableMemoryData.readJson(factory.createJsonParser(baos.toByteArray()));

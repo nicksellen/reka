@@ -1,18 +1,16 @@
 package reka.config;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.StreamSupport.stream;
 
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Spliterator;
-import java.util.function.Consumer;
 
 import reka.config.formatters.ConfigFormatter;
 import reka.config.formatters.Formatter;
-
-import com.google.common.collect.ImmutableList;
 
 public class BaseConfigBody extends ConfigBody {
     
@@ -26,7 +24,7 @@ public class BaseConfigBody extends ConfigBody {
     private BaseConfigBody(Source source, Iterable<Config> incoming) {
     	checkNotNull(source);
         this.source = source;
-        this.configs = ImmutableList.copyOf(incoming);
+        this.configs = stream(incoming.spliterator(), false).collect(toList());
     }
     
     public int elementCount() {
@@ -139,17 +137,5 @@ public class BaseConfigBody extends ConfigBody {
     public Source source() {
         return source;
     }
-
-	@Override
-	public void forEach(Consumer<? super Config> action) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public Spliterator<Config> spliterator() {
-		// TODO Auto-generated method stub
-		return null;
-	}
     
 }

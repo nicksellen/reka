@@ -18,7 +18,6 @@ import org.jruby.embed.LocalContextScope;
 import org.jruby.embed.LocalVariableBehavior;
 import org.jruby.embed.ScriptingContainer;
 
-import com.google.common.base.Charsets;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Resources;
 
@@ -39,7 +38,7 @@ public class RubyEnv {
 			
 			container.setClassLoader(container.getClass().getClassLoader());
 			
-			String gemFileHash = new String(Base64.getEncoder().encode(Hashing.sha1().newHasher().putString(gemFile, StandardCharsets.UTF_8).hash().asBytes()), Charsets.UTF_8);
+			String gemFileHash = new String(Base64.getEncoder().encode(Hashing.sha1().newHasher().putString(gemFile, StandardCharsets.UTF_8).hash().asBytes()), StandardCharsets.UTF_8);
 
 			File gemFileEnv = new File("/tmp/jrubyenv-" + gemFileHash);
 
@@ -63,7 +62,7 @@ public class RubyEnv {
 				Files.createDirectory(gemhome);
 				Files.createDirectories(workhome);
 				container.setCurrentDirectory(workhome.toFile().getAbsolutePath());
-				Files.write(workhome.resolve("Gemfile"), gemFile.getBytes(Charsets.UTF_8));
+				Files.write(workhome.resolve("Gemfile"), gemFile.getBytes(StandardCharsets.UTF_8));
 				execResource("/gem-install-bundler.rb");
 				
 				ZipFile zip = new ZipFile(gemFileEnv);
@@ -90,7 +89,7 @@ public class RubyEnv {
 	
 	private void execResource(String name) {
 		try {
-			container.runScriptlet(Resources.toString(JRubyModule.class.getResource(name), Charsets.UTF_8));
+			container.runScriptlet(Resources.toString(JRubyModule.class.getResource(name), StandardCharsets.UTF_8));
 		} catch (IOException e) {
 			throw unchecked(e);
 		}

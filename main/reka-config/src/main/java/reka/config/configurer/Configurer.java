@@ -6,6 +6,7 @@ import static java.util.Arrays.asList;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
+import static java.util.stream.StreamSupport.stream;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -30,7 +31,6 @@ import reka.config.Source;
 import reka.config.configurer.annotations.Conf;
 
 import com.google.common.base.Splitter;
-import com.google.common.collect.Iterables;
 
 public class Configurer {
 	
@@ -1007,10 +1007,10 @@ public class Configurer {
 
 	private static Set<String> allKeys(ConfigOrNavigableConfig config) {
 		if (config.hasBody()) {
-			return asList(Iterables.toArray(config.body(), Config.class)).stream()
-					.filter(Config::hasKey)
-					.map(Config::key)
-					.collect(toSet());
+			return stream(config.body().spliterator(), false)
+				.filter(Config::hasKey)
+				.map(Config::key)
+				.collect(toSet());
 		} else {
 			return Collections.emptySet();
 		}

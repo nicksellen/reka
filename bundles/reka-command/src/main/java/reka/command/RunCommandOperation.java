@@ -6,6 +6,7 @@ import static reka.util.Util.unchecked;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -16,7 +17,6 @@ import org.slf4j.LoggerFactory;
 import reka.api.data.MutableData;
 import reka.api.run.Operation;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 
 public class RunCommandOperation implements Operation {
@@ -59,8 +59,8 @@ public class RunCommandOperation implements Operation {
 			
 			process.waitFor(5, TimeUnit.SECONDS);
 			
-			data.putString("stderr", new String(errBytes.toByteArray(), Charsets.UTF_8));
-			data.putString("stdout", new String(outBytes.toByteArray(), Charsets.UTF_8));
+			data.putString("stderr", new String(errBytes.toByteArray(), StandardCharsets.UTF_8));
+			data.putString("stdout", new String(outBytes.toByteArray(), StandardCharsets.UTF_8));
 			data.putInt("exit", process.exitValue());
 			
 		} catch (IOException | InterruptedException e) {

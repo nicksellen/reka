@@ -22,9 +22,6 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang3.ArrayUtils;
-
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
@@ -50,7 +47,7 @@ public class Path implements Iterable<Path.PathElement>, Comparable<Path>, Hasha
 		try {
 			for (PathElement e : slashes(url)) {
 				if (e.isKey()) {
-					builder.add(URLDecoder.decode(e.name(), Charsets.UTF_8.name()));
+					builder.add(URLDecoder.decode(e.name(), StandardCharsets.UTF_8.name()));
 				} else {
 					builder.add(e);
 				}
@@ -62,8 +59,24 @@ public class Path implements Iterable<Path.PathElement>, Comparable<Path>, Hasha
 	public Path reverse() {
 		PathElement[] newElements = new PathElement[elements.length];
 		System.arraycopy(elements, 0, newElements, 0, elements.length);
-		ArrayUtils.reverse(newElements);
+		reverse(newElements);
 		return new Path(newElements);
+	}
+	
+	private static void reverse(Object[] array) {
+		if (array == null) {
+            return;
+        }
+        int i = 0;
+        int j = array.length - 1;
+        Object tmp;
+        while (j > i) {
+            tmp = array[j];
+            array[j] = array[i];
+            array[i] = tmp;
+            j--;
+            i++;
+        }
 	}
 	
 	public boolean containsNextIndex() {
@@ -94,7 +107,7 @@ public class Path implements Iterable<Path.PathElement>, Comparable<Path>, Hasha
 		try {
 			for (PathElement e : this) {
 				if (e.isKey()) {
-					s.append(URLEncoder.encode(e.name(), Charsets.UTF_8.name()).replaceAll("\\+", "%20"));
+					s.append(URLEncoder.encode(e.name(), StandardCharsets.UTF_8.name()).replaceAll("\\+", "%20"));
 				} else {
 					s.append(e.toString());
 				}
@@ -722,7 +735,7 @@ public class Path implements Iterable<Path.PathElement>, Comparable<Path>, Hasha
 			for (int i = 0; i < size; i++) {
 				PathElement element = elements[i];
 				if (element.isKey()) {
-					sb.append(URLEncoder.encode(element.name(), Charsets.UTF_8.name()));
+					sb.append(URLEncoder.encode(element.name(), StandardCharsets.UTF_8.name()));
 				} else {
 					sb.append(element.toString());
 				}

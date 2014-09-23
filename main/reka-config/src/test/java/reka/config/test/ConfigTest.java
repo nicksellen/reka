@@ -8,6 +8,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Optional;
 
@@ -20,8 +21,6 @@ import reka.config.NavigableConfig;
 import reka.config.parser.ConfigParser;
 import reka.config.processor.IncludeConverter;
 import reka.config.processor.Processor;
-
-import com.google.common.base.Charsets;
 
 public class ConfigTest {
 	
@@ -57,7 +56,7 @@ public class ConfigTest {
 		
 		assertFalse(keyword3.hasValue());
 		assertTrue(keyword3.hasDocument());
-		assertThat(new String(keyword3.documentContent(), Charsets.UTF_8), equalTo("and heredoc\nwith multiple lines"));
+		assertThat(new String(keyword3.documentContent(), StandardCharsets.UTF_8), equalTo("and heredoc\nwith multiple lines"));
 		
 		Config nested = root.at("nested").get();
 		assertTrue(nested.hasBody());

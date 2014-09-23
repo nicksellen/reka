@@ -3,6 +3,7 @@ package reka.config.formatters;
 public interface Formatter<T> {
     public void reset();
 	public void comment(String text);
+	public void startEntry(boolean hasBody);
 	public void startEntry(String key, boolean hasBody);
 	public void endEntry();
 	public void value(String text);

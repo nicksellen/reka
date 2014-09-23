@@ -6,6 +6,7 @@ import static reka.util.Util.unchecked;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -16,7 +17,6 @@ import java.util.regex.Pattern;
 import reka.api.Hashable;
 import reka.http.operations.HttpRouter.RouteFormatter;
 
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.Hasher;
@@ -64,7 +64,7 @@ public abstract class RouteFormatters implements Hashable {
 
 		@Override
 		public Hasher hash(Hasher hasher) {
-			return hasher.putString(value);
+			return hasher.putString(value, StandardCharsets.UTF_8);
 		}
 		
 		
@@ -102,7 +102,7 @@ public abstract class RouteFormatters implements Hashable {
 			}
 			@Override
 			public Hasher hash(Hasher hasher) {
-				return hasher.putString(name).putBoolean(starred).putBoolean(optional);
+				return hasher.putString(name, StandardCharsets.UTF_8).putBoolean(starred).putBoolean(optional);
 			}
 		}
 		
@@ -201,7 +201,7 @@ public abstract class RouteFormatters implements Hashable {
 					return value;
 				} else {
 					try {
-						return URLEncoder.encode(value.toString(), Charsets.UTF_8.name());
+						return URLEncoder.encode(value.toString(), StandardCharsets.UTF_8.name());
 					} catch (UnsupportedEncodingException e) {
 						throw unchecked(e);
 					}
@@ -224,7 +224,7 @@ public abstract class RouteFormatters implements Hashable {
 		}
 
 		public Hasher hash(Hasher hasher) {
-			hasher.putString(format);
+			hasher.putString(format, StandardCharsets.UTF_8);
 			hasher.putInt(keys.size());
 			for (Key key : keys) {
 				key.hash(hasher);

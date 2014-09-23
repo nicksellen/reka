@@ -16,22 +16,22 @@ app {
   	put:response.content hello
   }
   
+  markdown
+  
   http __ {
   	listen localhost:5001
   	on request {
-  	  janino <<- java
-        data.putString(reka.api.Path.dots("response.content"), "yay janino!");
-      ---
+      markdown {
+      	in request.params.md
+      	out response.content
+      }
+      put:response.headers.Content-Type text/html
   	}
   }
-  
   http {
+  
     listen localhost:5000
     on request {
-    
-      janino <<- java
-        data.putString("from", "janino!");
-      ---
     
       put tags [
       	a nice tag

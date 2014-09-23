@@ -6,6 +6,7 @@ import static reka.util.Util.unchecked;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.function.Function;
 import java.util.zip.ZipEntry;
@@ -15,8 +16,6 @@ import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.run.Operation;
-
-import com.google.common.base.Charsets;
 
 public class UnzipOperation implements Operation {
 	
@@ -41,7 +40,7 @@ public class UnzipOperation implements Operation {
 		try {
 			
 			byte[] bytes = val.content().asBytes();
-			ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(bytes), Charsets.UTF_8);
+			ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(bytes), StandardCharsets.UTF_8);
 			ZipEntry e;
 			while ((e = zip.getNextEntry()) != null) {
 				java.nio.file.Path filepath = outputDir.resolve(e.getName());

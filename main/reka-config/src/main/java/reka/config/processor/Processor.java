@@ -1,5 +1,8 @@
 package reka.config.processor;
 
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.StreamSupport.stream;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,8 +11,6 @@ import reka.config.ConfigBody;
 import reka.config.NavigableConfig;
 import reka.config.parser.values.KeyAndSubkey;
 import reka.config.processor.ConfigConverter.Output;
-
-import com.google.common.collect.Iterables;
 
 public class Processor {
 	
@@ -78,10 +79,10 @@ public class Processor {
     	NavigableConfig result = ConfigBody.of(input.source(), out.configs());
     	
     	if (depth == 0) {
-        	List<Config> finaloutput = new ArrayList<>();
-        	Iterables.addAll(finaloutput, result);
-        	Iterables.addAll(finaloutput, toplevel.changed());
-		    result = ConfigBody.of(result.source(), finaloutput);
+        	List<Config> all = new ArrayList<>();
+        	all.addAll(stream(result.spliterator(), false).collect(toList()));
+        	all.addAll(stream(toplevel.changed().spliterator(), false).collect(toList()));
+		    result = ConfigBody.of(result.source(), all);
     	}
     	
     	return input.equals(result) ? input : result;

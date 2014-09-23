@@ -13,10 +13,11 @@ import org.slf4j.LoggerFactory;
 import reka.JsonBundle;
 import reka.RekaConfigurer;
 import reka.builtins.BuiltinsBundle;
+import reka.common.CommonBundle;
 import reka.config.NavigableConfig;
 import reka.config.parser.ConfigParser;
-import reka.core.bundle.BundleManager;
 import reka.core.bundle.BundleConfigurer;
+import reka.core.bundle.BundleManager;
 import reka.filesystem.FilesystemBundle;
 import reka.nashorn.NashornBundle;
 import reka.process.ProcessBundle;
@@ -43,6 +44,7 @@ public class Main {
 			new BuiltinsBundle(), 
 			new FilesystemBundle(),
 			new NashornBundle(),
+			new CommonBundle(),
 			new ProcessBundle(),
 			new JsonBundle());
 		

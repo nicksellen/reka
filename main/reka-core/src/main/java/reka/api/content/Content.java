@@ -17,7 +17,6 @@ import java.util.Base64;
 import java.util.Base64.Decoder;
 import java.util.Base64.Encoder;
 
-import org.apache.commons.io.Charsets;
 import org.codehaus.jackson.JsonGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,7 +75,7 @@ public interface Content extends Hashable, JsonProvider {
 			public Content in(DataInput in) throws IOException {
 				byte[] bytes = new byte[in.readInt()];
 				in.readFully(bytes);
-				return new UTF8Content(new String(bytes, Charsets.UTF_8));
+				return new UTF8Content(new String(bytes, StandardCharsets.UTF_8));
 			}
 			
 		},
@@ -508,7 +507,7 @@ public interface Content extends Hashable, JsonProvider {
 
 		@Override
 		public void out(DataOutput out) throws IOException {
-			byte[] bytes = value.getBytes(Charsets.UTF_8);
+			byte[] bytes = value.getBytes(StandardCharsets.UTF_8);
 			out.writeInt(bytes.length);
 			out.write(bytes);
 		}
@@ -621,7 +620,7 @@ public interface Content extends Hashable, JsonProvider {
 					break;
 				case BASE64: 
 					// it's already base64, don't need to do anything
-					json.writeString(new String(content.bytes(), Charsets.UTF_8));
+					json.writeString(new String(content.bytes(), StandardCharsets.UTF_8));
 					break;
 				default:
 					throw Util.runtime("don't know how to write %s encoded content to json", content.encoding());
@@ -751,7 +750,7 @@ public interface Content extends Hashable, JsonProvider {
 		@Override
 		public void writeObj(ObjBuilder obj) {
 			if (contentType != null && (contentType.startsWith("text/") || contentType.startsWith("application/"))) {
-				obj.writeValue(new String(as(Encoding.NONE).bytes(), Charsets.UTF_8));
+				obj.writeValue(new String(as(Encoding.NONE).bytes(), StandardCharsets.UTF_8));
 			} else {
 				obj.writeValue(as(Encoding.NONE).bytes()); // ? this might not really want a byte array...
 			}
@@ -760,7 +759,7 @@ public interface Content extends Hashable, JsonProvider {
 		@Override
 		public Object value() {
 			if (contentType != null && (contentType.startsWith("text/") || contentType.startsWith("application/"))) {
-				return new String(as(Encoding.NONE).bytes(), Charsets.UTF_8);
+				return new String(as(Encoding.NONE).bytes(), StandardCharsets.UTF_8);
 			} else {
 				return as(Encoding.NONE).bytes();
 			}
@@ -810,7 +809,7 @@ public interface Content extends Hashable, JsonProvider {
 			} else if (encoding == Encoding.BASE64 && requiredEncoding == Encoding.NONE) {
 				return BASE64_DECODER.decode(bytes());
 			} else if (encoding == Encoding.NONE && requiredEncoding == Encoding.BASE64) {
-				return base64String().getBytes(Charsets.UTF_8);
+				return base64String().getBytes(StandardCharsets.UTF_8);
 			} else {
 				throw Util.runtime("don't know how to turn [%s] -> [%s]", encoding, requiredEncoding);
 			}
@@ -818,7 +817,7 @@ public interface Content extends Hashable, JsonProvider {
 		
 		public String base64String() {
 			if (encoding == Encoding.BASE64) {
-				return new String(bytes(), Charsets.UTF_8);
+				return new String(bytes(), StandardCharsets.UTF_8);
 			} else {
 				return new String(BASE64_ENCODER.encode(bytes()), StandardCharsets.UTF_8);
 			}
@@ -859,7 +858,7 @@ public interface Content extends Hashable, JsonProvider {
 		
 		@Override
 		public String asUTF8() {
-			return new String(bytes(), Charsets.UTF_8);
+			return new String(bytes(), StandardCharsets.UTF_8);
 		}
 		
 	}

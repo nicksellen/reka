@@ -29,7 +29,6 @@ import reka.core.builder.FlowVisualizer;
 import reka.core.builder.JsonGraphVisualizer;
 import reka.util.Graphviz;
 
-import com.google.common.base.Charsets;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.hash.HashCode;
@@ -112,7 +111,7 @@ public class VisualizeAppOperation implements Operation {
 					
 					switch (format) {
 					case "svg":
-						String svg = new String(img, Charsets.UTF_8);
+						String svg = new String(img, StandardCharsets.UTF_8);
 						if (stylesheet != null) {
 							int i = svg.indexOf("<svg ");
 							if (i > -1) {

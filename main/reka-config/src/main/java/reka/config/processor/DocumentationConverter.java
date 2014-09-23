@@ -2,6 +2,7 @@ package reka.config.processor;
 
 import static java.util.Arrays.asList;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,9 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import reka.config.Config;
 
-import com.google.common.base.Charsets;
-
-public class DocConverter implements ConfigConverter {
+public class DocumentationConverter implements ConfigConverter {
 	
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -53,7 +52,7 @@ public class DocConverter implements ConfigConverter {
 	public void convert(Config config, Output out) {
 		if (config.hasKey() && asList("@doc").contains(config.key())) {
 			if (config.hasValue()) {
-				add("text/plain", config.valueAsString().getBytes(Charsets.UTF_8));
+				add("text/plain", config.valueAsString().getBytes(StandardCharsets.UTF_8));
 			} else if (config.hasDocument()) {
 				add(config.documentType(), config.documentContent());
 			} else {

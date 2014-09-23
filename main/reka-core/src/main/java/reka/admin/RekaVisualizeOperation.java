@@ -7,6 +7,7 @@ import static reka.util.Util.runtime;
 import static reka.util.Util.unchecked;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Collection;
 import java.util.Iterator;
@@ -28,7 +29,6 @@ import reka.core.builder.DotGraphVisualizer;
 import reka.core.builder.FlowVisualizer;
 import reka.util.Graphviz;
 
-import com.google.common.base.Charsets;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.hash.HashCode;
@@ -92,7 +92,7 @@ public class RekaVisualizeOperation implements Operation {
 					
 					switch (formatStr) {
 					case "svg":
-						return createEntry(utf8("image/svg+xml"), utf8(new String(img, Charsets.UTF_8)));
+						return createEntry(utf8("image/svg+xml"), utf8(new String(img, StandardCharsets.UTF_8)));
 					default:
 						String type = String.format("image/%s", formatStr);
 						return createEntry(utf8(type), binary(type, img));

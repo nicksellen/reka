@@ -20,8 +20,6 @@ import reka.config.configurer.annotations.Conf;
 import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
 
-import com.google.common.base.Charsets;
-
 public class RhinoModule extends ModuleConfigurer {
 	
 	protected static final IdentityKey<ScriptableObject> SCOPE = IdentityKey.named("scope");

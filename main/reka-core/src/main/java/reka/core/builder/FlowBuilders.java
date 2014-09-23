@@ -3,9 +3,9 @@ package reka.core.builder;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static reka.core.builder.FlowConnector.connectSegments;
-import static reka.core.builder.FlowSegments.seq;
 import static reka.core.builder.FlowSegments.createStartNode;
 import static reka.core.builder.FlowSegments.createSubscribeableEndNode;
+import static reka.core.builder.FlowSegments.seq;
 import static reka.util.Util.runtime;
 
 import java.util.Collection;

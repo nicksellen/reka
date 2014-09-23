@@ -2,12 +2,11 @@ package reka.config.formatters;
 
 import static reka.config.formatters.FormattingUtil.addIndent;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
 import reka.config.FormattingOptions;
-
-import com.google.common.base.Charsets;
 
 public class ConfigFormatter implements Formatter<String> {
 
@@ -57,6 +56,13 @@ public class ConfigFormatter implements Formatter<String> {
 	}
 
 	@Override
+	public void startEntry(boolean hasBody) {
+		current().idxStartEntry = sb.length();
+		current().idxEntry++;
+		indent();
+	}
+
+	@Override
 	public void startEntry(String text, boolean hasBody) {
 		current().idxStartEntry = sb.length();
 		current().idxEntry++;
@@ -81,7 +87,7 @@ public class ConfigFormatter implements Formatter<String> {
 		if (current().idxEntry == 0) current().firstWasPadded = true;
         if (!opts.compact() && !current().lastWasPadded) sb.insert(current().idxStartEntry, '\n');
 		sb.append(" <<- ").append(type).append('\n')
-			.append(documentContent(new String(content, Charsets.UTF_8))).append('\n');
+			.append(documentContent(new String(content, StandardCharsets.UTF_8))).append('\n');
 		indent();
 		sb.append("---");
 		if (!opts.compact()) sb.append('\n');

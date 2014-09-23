@@ -6,6 +6,7 @@ import static java.util.Arrays.asList;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -19,12 +20,8 @@ import reka.config.ConfigBody;
 import reka.config.FileSource;
 import reka.config.NavigableConfig;
 import reka.config.Source;
-import reka.config.StringSource;
 import reka.config.parser.ConfigParser;
 import reka.config.parser.values.KeyAndSubkey;
-
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
 
 public final class IncludeConverter implements ConfigConverter {
 	
@@ -120,12 +117,10 @@ public final class IncludeConverter implements ConfigConverter {
 		
 		if (source.supportsNestedFile()) {
 			try {
-				out.doc(key, val, contentType, Files.toByteArray(source.nestedFile(location).toFile()));
+				out.doc(key, val, contentType, Files.readAllBytes(source.nestedFile(location)));
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
-		} else if (source.supportsNestedData()) {
-			out.doc(key, val, contentType, source.nestedData(location));
 		} else {
 			throw new IllegalArgumentException(format(
 					"you cannot use @include's unless the config source supports nested sources (e.g. file), you were using a %s", 
@@ -164,8 +159,6 @@ public final class IncludeConverter implements ConfigConverter {
 			File nestedFile = source.nestedFile(location).toFile();
 			File constraint = source.isConstrained() ? source.constraint() : nestedFile.getParentFile();
 			nestedSource = FileSource.from(nestedFile, constraint, source);
-		} else if (source.supportsNestedData()) {
-			nestedSource = StringSource.from(new String(source.nestedData(location), Charsets.UTF_8), source);
 		} else {
 			throw new IllegalArgumentException(format(
 					"you cannot use @include's unless the config source supports nested sources (e.g. file), you were using a %s", 

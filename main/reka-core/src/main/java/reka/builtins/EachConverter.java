@@ -3,6 +3,7 @@ package reka.builtins;
 import static java.util.Collections.reverseOrder;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -16,8 +17,6 @@ import reka.config.processor.ConfigConverter;
 import reka.config.processor.Processor;
 import reka.core.data.memory.MutableMemoryData;
 import reka.core.util.StringWithVars;
-
-import com.google.common.base.Charsets;
 
 public final class EachConverter implements ConfigConverter {
 
@@ -90,7 +89,7 @@ public final class EachConverter implements ConfigConverter {
 			if (config.hasValue()) value = replaceVars(config.valueAsString());
 			if (config.hasDocument()) {
 				String docType = replaceVars(config.documentType());
-				byte[] docContent = replaceVars(new String(config.documentContentAsString())).getBytes(Charsets.UTF_8);
+				byte[] docContent = replaceVars(new String(config.documentContentAsString())).getBytes(StandardCharsets.UTF_8);
 				out.doc(new KeyAndSubkey(key, subkey), value, docType, docContent);
 			} else if (config.hasBody()) {
 				out.obj(new KeyAndSubkey(key, subkey), value, config.body());

@@ -1,8 +1,9 @@
 package reka.config.processor;
 
-import static com.google.common.base.Preconditions.checkArgument;
+import static java.util.Objects.requireNonNull;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -26,7 +27,7 @@ class ProcessorOutput implements ConfigConverter.Output {
 	private ProcessorOutput(Output toplevel, Source source, List<Config> configs, int depth) {
 		this.toplevel = toplevel != null ? toplevel : this;
 	    this.source = source;
-	    this.configs = configs != null ? configs : new ArrayList<Config>();
+	    this.configs = configs != null ? configs : new ArrayList<>();
 	    this.depth = depth;
 	}
 	
@@ -49,13 +50,13 @@ class ProcessorOutput implements ConfigConverter.Output {
 	    }
 	}
 	
-	public Iterable<Config> configs() {
+	public Collection<Config> configs() {
 	    return configs;
 	}
 	
 	@Override
 	public Output add(Config config) {
-	    checkArgument(config.source() != null, "cannot add a config without a source [%s]", config);
+		requireNonNull(config.source(), "cannot add a config without a source");
 		configs.add(config);
 		return this;
 	}

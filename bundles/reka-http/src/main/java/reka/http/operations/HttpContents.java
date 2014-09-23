@@ -7,6 +7,7 @@ import static reka.api.content.Contents.integer;
 import static reka.api.content.Contents.utf8;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -88,7 +89,7 @@ public abstract class HttpContents implements FlowOperation {
 			String path = entry.getKey();
 			
 			// hash is made of path + content
-			byte[] hashBytes = entry.getValue().hash(hash.newHasher().putString(path)).hash().asBytes();
+			byte[] hashBytes = entry.getValue().hash(hash.newHasher().putString(path, StandardCharsets.UTF_8)).hash().asBytes();
 			String etag = HEX_ENCODING.encode(hashBytes);
 			String uniquePath = format("/%s/-%s", etag, path); 
 			_pathToEtag.put(path, etag);
@@ -169,7 +170,7 @@ public abstract class HttpContents implements FlowOperation {
 		}
 		
 		public Hasher hash(Hasher hasher) {
-			return hasher.putBytes(hashed).putString(contentType.asUTF8());
+			return hasher.putBytes(hashed).putString(contentType.asUTF8(), StandardCharsets.UTF_8);
 		}
 	}
 	

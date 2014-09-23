@@ -27,7 +27,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import org.mindrot.jbcrypt.BCrypt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,9 +39,6 @@ import reka.api.data.MutableData;
 import reka.api.flow.FlowSegment;
 import reka.api.run.AsyncOperation;
 import reka.api.run.Operation;
-import reka.api.run.RouteCollector;
-import reka.api.run.RouteKey;
-import reka.api.run.RouterOperation;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.Configurer.ErrorCollector;
@@ -75,16 +71,12 @@ public class BuiltinsModule extends ModuleConfigurer {
     	module.operation(path("runp"), provider -> new RunParallelConfigurer(provider));
     	module.operation(path("then"), provider -> new RunConfigurer(provider));
     	module.operation(path("log"), provider -> new LogConfigurer());
-    	module.operation(path("stringwithvariables"), provider -> new StringWithVariablesConfigurer());
     	module.operation(path("sleep"), provider -> new SleepConfigurer());
     	module.operation(path("halt!"), provider -> new HaltConfigurer());
     	module.operation(slashes("uuid/generate"), provider -> new GenerateUUIDConfigurer());
     	module.operation(path("println"), provider -> new PrintlnConfigurer());
-    	
     	module.operation(path("defer"), provider -> new DeferConfigurer(provider));
     	
-    	module.operation(slashes("bcrypt/hashpw"), provider -> new BCryptHashpwConfigurer());
-    	module.operation(slashes("bcrypt/checkpw"), provider -> new BCryptCheckpwConfigurer(provider));
     	
     	module.operation(path("throw"), provider -> new ThrowConfigurer());
     	module.operation(path("inspect"), provider -> new InspectConfigurer());
@@ -94,8 +86,6 @@ public class BuiltinsModule extends ModuleConfigurer {
     	module.operation(slashes("coerce/bool"), provider -> new Coercion.CoerceBooleanConfigurer());
     	module.operation(path("unzip"), provider -> new UnzipConfigurer());
     	module.operation(path("split"), provider -> new SplitConfigurer());
-		
-    	module.operation(path("janino"), provider -> new JaninoConfigurer());
     	
 	}
 	
@@ -184,116 +174,6 @@ public class BuiltinsModule extends ModuleConfigurer {
 				if (name != null) ops.label(name);
 				ops.defer(body);
 			}
-		}
-		
-	}
-	
-	public static class BCryptCheckpwConfigurer implements OperationConfigurer {
-		
-		private final ConfigurerProvider provider;
-		
-		private Path readPwFrom = dots("bcrypt.pw");
-		private Path readHashFrom = dots("bcrypt.hash");
-		
-		private OperationConfigurer ok;
-		private OperationConfigurer fail;
-		
-		public BCryptCheckpwConfigurer(ConfigurerProvider provider) {
-			this.provider = provider;
-		}
-
-		@Conf.At("read-pw-from")
-		public void readPwFrom(String val) {
-			readPwFrom = dots(val);
-		}
-		
-		@Conf.At("read-hash-from")
-		public void readHashFrom(String val) {
-			readHashFrom = dots(val);
-		}
-		
-		@Conf.At("ok")
-		public void ok(Config config) {
-			ok = configure(new SequenceConfigurer(provider), config);
-		}
-		
-		@Conf.At("fail")
-		public void fail(Config config) {
-			fail = configure(new SequenceConfigurer(provider), config);
-		}
-		
-		@Override
-		public void setup(OperationSetup ops) {
-			ops.router("bcrypt/checkpw", store -> new BCryptCheckpwOperation(readPwFrom, readHashFrom), router -> {
-				router.add(BCryptCheckpwOperation.OK, ok);
-				router.add(BCryptCheckpwOperation.FAIL, fail);
-			});
-		}
-		
-	}
-	
-	public static class BCryptCheckpwOperation implements RouterOperation {
-
-		private static final RouteKey OK = RouteKey.named("ok");
-		private static final RouteKey FAIL = RouteKey.named("fail");
-
-		private final Path readPwFrom;
-		private final Path readHashFrom;
-
-		public BCryptCheckpwOperation(Path readPwFrom, Path readHashFrom) {
-			this.readPwFrom = readPwFrom;
-			this.readHashFrom = readHashFrom;
-		}
-		
-		@Override
-		public void call(MutableData data, RouteCollector router) {
-			router.defaultRoute(FAIL);
-			data.getContent(readPwFrom).ifPresent(pw -> {
-				data.getContent(readHashFrom).ifPresent(hash -> {
-					router.routeTo(OK);
-				});
-			});
-		}
-		
-	}
-	
-	public static class BCryptHashpwConfigurer implements OperationConfigurer {
-
-		private Path in = dots("bcrypt.pw");
-		private Path out = dots("bcrypt.hash");
-		
-		@Conf.At("in")
-		public void in(String val) {
-			in = dots(val);
-		}
-		
-		@Conf.At("out")
-		public void out(String val) {
-			out = dots(val);
-		}
-		
-		@Override
-		public void setup(OperationSetup ops) {
-			ops.add("bcrypt/hashpw", store -> new BCryptHashpwOperation(in, out));
-		}
-		
-	}
-	
-	public static class BCryptHashpwOperation implements Operation {
-
-		private final Path in;
-		private final Path out;
-
-		public BCryptHashpwOperation(Path in, Path out) {
-			this.in = in;
-			this.out = out;
-		}
-		
-		@Override
-		public void call(MutableData data) {
-			data.getContent(in).ifPresent(content -> {
-				data.putString(out, BCrypt.hashpw(content.asUTF8(), BCrypt.gensalt()));
-			});
 		}
 		
 	}

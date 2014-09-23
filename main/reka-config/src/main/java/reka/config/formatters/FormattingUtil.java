@@ -23,24 +23,6 @@ public class FormattingUtil {
 		}
 		return sb.toString();
 	}
-	
-	/*
-	public static String addIndent(String indent, String val) {
-		String[] lines = val.split("\n", Integer.MAX_VALUE);
-		if (lines.length == 0) {
-			return indent + val;
-		}
-		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < lines.length; i++) {
-			sb.append(indent);
-			sb.append(lines[i]);
-			if (i < lines.length - 1) {
-				sb.append('\n');
-			}
-		}
-		return sb.toString();
-	}
-	*/
 
     private static final Pattern leadingWS = Pattern.compile("^([\\ \t]+)\\S+");
 

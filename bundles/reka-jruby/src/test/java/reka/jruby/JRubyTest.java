@@ -6,6 +6,7 @@ import static reka.api.Path.dots;
 import static reka.api.Path.path;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 import org.junit.Test;
 
@@ -13,7 +14,6 @@ import reka.api.data.MutableData;
 import reka.api.run.Operation;
 import reka.core.data.memory.MutableMemoryData;
 
-import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
 public class JRubyTest {
@@ -36,8 +36,8 @@ public class JRubyTest {
 	@Test
 	public void test2() throws IOException {
 
-		String test2initrb = Resources.toString(getClass().getResource("/test2-init.rb"), Charsets.UTF_8);
-		String test2rb = Resources.toString(getClass().getResource("/test2.rb"), Charsets.UTF_8);
+		String test2initrb = Resources.toString(getClass().getResource("/test2-init.rb"), StandardCharsets.UTF_8);
+		String test2rb = Resources.toString(getClass().getResource("/test2.rb"), StandardCharsets.UTF_8);
 		
 		env.exec(test2initrb);
 		
@@ -51,7 +51,7 @@ public class JRubyTest {
 	
 	@Test
 	public void test3() throws IOException {
-		String test3rb = Resources.toString(getClass().getResource("/test3.rb"), Charsets.UTF_8);
+		String test3rb = Resources.toString(getClass().getResource("/test3.rb"), StandardCharsets.UTF_8);
 		env.exec(test3rb);
 	}
 	

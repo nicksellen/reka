@@ -20,9 +20,6 @@ public interface Source {
     Path nestedFile(String location);
 	List<Path> nestedFiles(String location);
     
-    boolean supportsNestedData();
-    byte[] nestedData(String location);
-    
     boolean hasParent();
     Source parent();
     

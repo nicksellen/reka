@@ -2,7 +2,6 @@ package reka.config;
 
 import java.io.File;
 import java.math.BigDecimal;
-import java.util.regex.Pattern;
 
 import reka.config.formatters.Formattable;
 import reka.config.parser.Parser;

@@ -1,8 +1,8 @@
 package reka.config.parser;
 
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.Lists.reverse;
 import static java.lang.String.format;
+import static java.util.Collections.reverse;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
@@ -11,6 +11,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Iterator;
+import java.util.List;
 import java.util.function.Supplier;
 
 import org.slf4j.Logger;
@@ -60,8 +61,9 @@ public final class ParseContext {
 		
 		@Override
 		public String toString() {
-			return reverse(stack.stream().collect(toList())).stream()
-					.map(StackItem::name).collect(joining(" >> "));
+			List<StackItem> items = stack.stream().collect(toList());
+			reverse(items);
+			return items.stream().map(StackItem::name).collect(joining(" >> "));
 		}
 		
 	};

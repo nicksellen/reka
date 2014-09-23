@@ -66,18 +66,8 @@ public class SubsetSource extends AbstractSource {
 	}
 
     @Override
-    public boolean supportsNestedData() {
-        return parent.supportsNestedData();
-    }
-
-    @Override
-    public byte[] nestedData(String location) {
-    	return parent.nestedData(location);
-    }
-
-    @Override
     public boolean supportsNestedFile() {
-        return parent.supportsNestedData();
+        return parent.supportsNestedFile();
     }
 
     @Override

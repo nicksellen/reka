@@ -22,6 +22,7 @@ import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
 import io.netty.handler.codec.http.multipart.InterfaceHttpData;
 
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -37,7 +38,6 @@ import reka.api.Path.Response;
 import reka.api.data.MutableData;
 import reka.core.data.memory.MutableMemoryData;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 
 @Sharable
@@ -155,7 +155,7 @@ public class FullHttpToDatasetDecoder extends MessageToMessageDecoder<FullHttpRe
 			} else if ("text/plain".equals(requestContentType)) {
 				byte[] bytes = new byte[request.content().readableBytes()];
 				request.content().readBytes(bytes);
-				data.putString(Request.CONTENT, new String(bytes, Charsets.UTF_8));
+				data.putString(Request.CONTENT, new String(bytes, StandardCharsets.UTF_8));
 			
 			} else if ("application/x-www-form-urlencoded".equals(requestContentType)) {
 				logger.debug("got urlencoded form data");

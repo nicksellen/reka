@@ -5,6 +5,7 @@ import static reka.api.content.Contents.integer;
 import static reka.api.content.Contents.utf8;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -13,7 +14,6 @@ import reka.api.content.Content;
 import reka.api.data.MutableData;
 import reka.api.run.Operation;
 
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 
 public class HttpResponseOperation implements Operation {
@@ -24,7 +24,7 @@ public class HttpResponseOperation implements Operation {
 	private final Map<String,Content> headers;
 	
 	public HttpResponseOperation(String content, String contentType, int status, Map<String,String> headers) {
-		byte[] contentBytes = content.getBytes(Charsets.UTF_8);
+		byte[] contentBytes = content.getBytes(StandardCharsets.UTF_8);
 		ByteBuffer bb = ByteBuffer.allocateDirect(contentBytes.length).put(contentBytes);
 		bb.flip();
 		this.content = binary(contentType, bb);
