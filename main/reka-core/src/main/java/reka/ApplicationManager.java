@@ -3,6 +3,7 @@ package reka;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 import static reka.api.Path.slashes;
 import static reka.config.configurer.Configurer.configure;
 
@@ -17,9 +18,10 @@ import java.util.Optional;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
@@ -33,10 +35,12 @@ import reka.config.parser.ConfigParser;
 import reka.core.builder.FlowVisualizer;
 import reka.core.bundle.BundleManager;
 import reka.core.data.memory.MutableMemoryData;
+import reka.core.setup.StatusProvider;
+import reka.core.setup.StatusProvider.StatusReport;
 
 public class ApplicationManager implements Iterable<Entry<String,Application>> {
 	
-	private final ExecutorService executor = Executors.newSingleThreadExecutor();
+	private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 	
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	
@@ -44,6 +48,8 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 	
 	private final ConcurrentMap<String,Application> applications = new ConcurrentHashMap<>();
 	private final ConcurrentMap<String,AtomicInteger> versions = new ConcurrentHashMap<>();
+	
+	private final ConcurrentMap<String,List<StatusReport>> status = new ConcurrentHashMap<>();
 	
 	private final List<Flow> deployListeners = Collections.synchronizedList(new ArrayList<>());
 	private final List<Flow> undeployListeners = Collections.synchronizedList(new ArrayList<>());
@@ -53,6 +59,7 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 	public ApplicationManager(File datadir, BundleManager bundles) {
 		this.bundles = bundles;
 		executor.submit(new WaitForNextTask());
+		executor.scheduleAtFixedRate(new UpdateStatus(), 0, 5, TimeUnit.SECONDS);
 	}
 	
 	private static interface ApplicationTask extends Runnable { }
@@ -62,9 +69,30 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 		@Override
 		public void run() {
 			try {
-				executor.submit(q.take());
+				ApplicationTask task = q.poll(3, TimeUnit.SECONDS);
+				if (task != null) {
+					executor.submit(task);
+				} else {
+					executor.submit(new WaitForNextTask());
+				}
 			} catch (InterruptedException e) {
 				e.printStackTrace();
+			}
+		}
+		
+	}
+	
+	private class UpdateStatus implements ApplicationTask {
+
+		@Override
+		public void run() {
+			System.out.printf("collecting status\n");
+			try {
+				applications.forEach((identity, app) -> {
+					status.put(identity, app.statusProviders().stream().map(StatusProvider::report).collect(toList()));
+				});
+			} catch (Throwable t) {
+				t.printStackTrace();
 			}
 		}
 		
@@ -84,6 +112,7 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 			versions.remove(identity);
 			if (app == null) return;
 			app.undeploy();
+			status.remove(identity);
 			log.info("undeployed [{}]", app.fullName());
 			notifyUndeployListeners(identity, app);
 			executor.submit(new WaitForNextTask());
@@ -133,6 +162,7 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 					if (app != null) {
 						applications.put(identity, app);
 						previous.ifPresent(Application::undeploy);
+						status.put(identity, app.statusProviders().stream().map(StatusProvider::report).collect(toList()));
 						log.info("deployed [{}] listening on {}", app.fullName(), app.network().stream().map(Object::toString).collect(joining(", ")));
 						notifyDeployListeners(identity, app);
 						subscriber.ok(identity, version, app);
@@ -243,6 +273,10 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 	
 	public Optional<Application> get(String identity) {
 		return Optional.ofNullable(applications.get(identity));
+	}
+	
+	public Optional<List<StatusReport>> statusFor(String identity) {
+		return Optional.ofNullable(status.get(identity));
 	}
 	
 	public int version(String identity) {

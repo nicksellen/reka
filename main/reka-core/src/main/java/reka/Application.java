@@ -83,10 +83,9 @@ public class Application {
 	public List<NetworkInfo> network() {
 		return network;
 	}
-
-	public List<StatusReport> status() {
-		// TODO: the app should not be running these, the manager should. the app should have no state about itself
-		return statusProviders.stream().map(StatusProvider::report).collect(toList());
+	
+	public List<StatusProvider> statusProviders() {
+		return statusProviders;
 	}
 	
 	public FlowVisualizer initializerVisualizer() {

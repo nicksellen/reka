@@ -27,7 +27,7 @@ public class RekaListOperation implements Operation {
 				Application app = e.getValue();	
 				MutableData item = MutableMemoryData.create();
 				item.putString("id", identity);
-				AdminUtils.putAppDetails(item.createMapAt("app"), app);
+				AdminUtils.putAppDetails(item.createMapAt("app"), app, manager.statusFor(identity));
 				list.add(item);
 			});
 		});

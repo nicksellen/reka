@@ -3,6 +3,7 @@ package reka.admin;
 import static java.util.Comparator.comparing;
 
 import java.util.List;
+import java.util.Optional;
 
 import reka.Application;
 import reka.ApplicationManager;
@@ -12,7 +13,7 @@ import reka.core.setup.StatusProvider.StatusReport;
 
 public class AdminUtils {
 
-	public static MutableData putAppDetails(MutableData data, Application app) {
+	public static MutableData putAppDetails(MutableData data, Application app, Optional<List<StatusReport>> statusMaybe) {
 		
 		data.putString("name", app.name().slashes());
 		data.putInt("version", app.version());
@@ -57,15 +58,15 @@ public class AdminUtils {
 				});
 			}
 		});
-		
-		data.putList("status", list -> {
-			List<StatusReport> statuses = app.status();
-			statuses.sort(comparing(StatusReport::name));
-			statuses.forEach(status -> {
-				list.addMap(report -> {
-					status.data().forEachContent((path, content) -> report.put(path, content));
-					report.putBool("up", status.up());
-					report.putString("name", status.name());
+		statusMaybe.ifPresent(status -> {
+			data.putList("status", list -> {
+				status.sort(comparing(StatusReport::name));
+				status.forEach(statusItem -> {
+					list.addMap(report -> {
+						statusItem.data().forEachContent((path, content) -> report.put(path, content));
+						report.putBool("up", statusItem.up());
+						report.putString("name", statusItem.name());
+					});
 				});
 			});
 		});

@@ -22,7 +22,9 @@ public class RekaDetailsOperation implements Operation {
 
 	@Override
 	public void call(MutableData data) {
-		manager.get(idFn.apply(data)).ifPresent(app -> AdminUtils.putAppDetails(data.createMapAt(out), app));
+		String identity = idFn.apply(data);
+		manager.get(identity).ifPresent(app -> 
+			AdminUtils.putAppDetails(data.createMapAt(out), app, manager.statusFor(identity)));
 	}
 
 }
