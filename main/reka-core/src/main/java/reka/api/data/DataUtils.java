@@ -113,7 +113,7 @@ final class DataUtils {
 		Collection<PathElement> aElements = a.elements();
 		Collection<PathElement> bElements = b.elements();
 		
-		if (!aElements.equals(bElements)) {
+		if (aElements.size() != bElements.size() || !aElements.equals(bElements)) {
 			return false;
 		}
 		

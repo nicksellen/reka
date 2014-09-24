@@ -35,6 +35,7 @@ public interface Flow extends Comparable<Flow> {
 
 	public static class FlowStats {
 		public final LongAdder requests = new LongAdder();
+		public final LongAdder completed = new LongAdder();
 		public final LongAdder errors = new LongAdder();
 		public final LongAdder halts = new LongAdder();
 	}

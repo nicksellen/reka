@@ -38,8 +38,8 @@ public class MultiProcessManager implements ProcessManager {
 	}
 
 	@Override
-	public void kill() {
-		all.forEach(m -> m.kill());
+	public void shutdown() {
+		all.forEach(m -> m.shutdown());
 	}
 
 	@Override
@@ -54,13 +54,16 @@ public class MultiProcessManager implements ProcessManager {
 	
 	@Override
 	public void statusData(MutableData data) {
+		data.putInt(Q_PATH, q.size());
 		data.putList("processes", list -> {
 			all.forEach(item -> {
 				list.addMap(map -> {
 					MutableData itemData = MutableMemoryData.create();
 					item.statusData(itemData);
 					itemData.forEachContent((path, content) -> {
-						map.put(path, content);
+						if (!path.equals(Q_PATH)) {
+							map.put(path, content);
+						}
 					});
 					map.putBool("up", item.up());
 				});

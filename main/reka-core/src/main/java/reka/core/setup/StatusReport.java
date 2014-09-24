@@ -3,17 +3,23 @@ package reka.core.setup;
 import reka.api.data.Data;
 
 public class StatusReport {
-	
+
+	private final String type;
 	private final String name;
 	private final String version;
 	private final boolean up;
 	private final Data data;
 	
-	public StatusReport(String name, String version, boolean up, Data data) {
+	public StatusReport(String type, String name, String version, boolean up, Data data) {
+		this.type = type;
 		this.name = name;
 		this.version = version;
 		this.up = up;
 		this.data = data;
+	}
+	
+	public String type() {
+		return type;
 	}
 	
 	public String name() {
@@ -38,6 +44,7 @@ public class StatusReport {
 		int result = 1;
 		result = prime * result + ((data == null) ? 0 : data.hashCode());
 		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		result = prime * result + ((type == null) ? 0 : type.hashCode());
 		result = prime * result + (up ? 1231 : 1237);
 		result = prime * result + ((version == null) ? 0 : version.hashCode());
 		return result;
@@ -62,6 +69,11 @@ public class StatusReport {
 				return false;
 		} else if (!name.equals(other.name))
 			return false;
+		if (type == null) {
+			if (other.type != null)
+				return false;
+		} else if (!type.equals(other.type))
+			return false;
 		if (up != other.up)
 			return false;
 		if (version == null) {
@@ -71,6 +83,7 @@ public class StatusReport {
 			return false;
 		return true;
 	}
+	
 	
 	
 }

@@ -4,7 +4,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
-import static java.util.Objects.requireNonNull;
 import static reka.api.Path.slashes;
 import static reka.config.configurer.Configurer.configure;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
@@ -126,7 +125,9 @@ public abstract class ModuleConfigurer {
 				ModuleSetup init = new ModuleSetup(module.info(), module.fullPath(), store, collector);
 				module.setup(init);
 				if (init.includeDefaultStatus() && module.info() != null) {
-					collector.statuses.add(() -> StatusProvider.create(module.fullPath().slashes(), module.info().version()));
+					collector.statuses.add(() -> StatusProvider.create(module.info().type().slashes(), 
+							                                           module.fullPath().slashes(), 
+							                                           module.info().version()));
 				}
 
 				init.buildFlowSegment().ifPresent(segment -> {

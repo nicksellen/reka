@@ -193,4 +193,15 @@ public class DataWrapper<T> implements Data {
 		return (Map<String,Object>) obj.obj();
 	}
 	
+	@Override
+	public int hashCode() {
+		return defaultHashCode();
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		return defaultEquals(obj);
+	}
+	
+	
 }

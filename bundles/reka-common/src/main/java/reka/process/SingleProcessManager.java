@@ -32,7 +32,8 @@ import reka.api.data.MutableData;
 public class SingleProcessManager implements ProcessManager {
 
 	private static final Logger log = LoggerFactory.getLogger(SingleProcessManager.class);
-	
+
+	private static final byte[] NEW_LINE = "\n".getBytes(StandardCharsets.UTF_8);
 	private static final Class<?> unixProcessClass;
 	
 	static {
@@ -52,6 +53,8 @@ public class SingleProcessManager implements ProcessManager {
 	
 	private final int pid;
 
+	private volatile boolean paused = false;
+	
 	@SuppressWarnings("unused")
 	private final boolean noreply;
 	
@@ -71,6 +74,12 @@ public class SingleProcessManager implements ProcessManager {
 	public SingleProcessManager(ProcessBuilder builder, boolean noreply) {
 		this(builder, noreply, new LinkedBlockingDeque<>());
 	}
+
+	//private volatile long sentmsg;
+	
+	//private volatile boolean waiting = false;
+	
+	private final Object lock = new Object();
 	
 	protected SingleProcessManager(
 			ProcessBuilder builder, 
@@ -117,13 +126,16 @@ public class SingleProcessManager implements ProcessManager {
 						Entry<String, Consumer<String>> entry = q.take();
 						String input = entry.getKey();
 						byte[] bytes = input.getBytes(StandardCharsets.UTF_8);
-						stdin.write(bytes);
-						stdin.write(NEW_LINE);
-						stdin.flush();
-						if (!noreply) consumerq.offer(entry.getValue());
+						
+						synchronized (lock) {
+							stdin.write(bytes);
+							stdin.write(NEW_LINE);
+							stdin.flush();
+							if (!noreply) consumerq.offer(entry.getValue());
+						}
 					}
 				} catch (InterruptedException | IOException e) {
-					terminate(process);
+					terminate();
 				}
 			}
 			
@@ -138,6 +150,7 @@ public class SingleProcessManager implements ProcessManager {
 					while (process.isAlive() && !Thread.interrupted()) {
 						String output = stdoutReader.readLine();
 						if (output != null) {
+							synchronized (lock) { }
 							if (!noreply) consumer = consumerq.poll();
 							if (consumer != null) {
 								consumer.accept(output);
@@ -150,7 +163,7 @@ public class SingleProcessManager implements ProcessManager {
 				} catch (IOException e) {
 					// we can't talk to the process any more
 				} finally {
-					terminate(process);
+					terminate();
 					writerThread.interrupt();
 				}
 			}
@@ -169,9 +182,74 @@ public class SingleProcessManager implements ProcessManager {
 		readerThread.start();
 	}
 	
-	private static void terminate(Process process) {
+	@Override
+	public void send(String input, Consumer<String> consumer) {
+		if (!process.isAlive()) throw runtime("process is dead!");
+		q.offer(createEntry(input, consumer));
+	}
+
+	@Override
+	public void shutdown() {
+		terminate();
+	}
+
+	@Override
+	public void send(String input) {
+		send(input, null);
+	}
+
+	@Override
+	public void addListener(Consumer<String> consumer) {
+		lineTriggers.add(consumer);
+	}
+
+	@Override
+	public boolean up() {
+		return process.isAlive();
+	}
+	
+	@Override
+	public void statusData(MutableData data) {
+		if (pid != -1) {
+			data.putInt("pid", pid);
+		}
+		data.putInt(Q_PATH, q.size());
+		data.putInt("consumer-q", consumerq.size());
+	}
+	
+	private void terminate() {
 		if (process == null) return;
 		if (process.isAlive()) {
+			
+			long waitUntil;
+
+			if (!q.isEmpty()) {
+				waitUntil = System.currentTimeMillis() + 5000;
+				System.out.printf("waiting for q to empty %s\n", q.size());
+				while (!q.isEmpty() || (System.currentTimeMillis() > waitUntil)) {
+					// wait
+				}
+				if (q.isEmpty()) {
+					System.out.printf("q empty :)\n");
+				} else {
+					System.out.printf("discarding %s things from q\n", q.size());
+				}
+				
+			}
+			
+			if (!consumerq.isEmpty()) {
+				waitUntil = System.currentTimeMillis() + 5000;
+				System.out.printf("waiting for consumerq to empty %s\n", consumerq.size());
+				while (!consumerq.isEmpty() || (System.currentTimeMillis() > waitUntil)) {
+					// wait
+				}
+				if (consumerq.isEmpty()) {
+					System.out.printf("consumerq empty :)\n");
+				} else {
+					System.out.printf("discarding %s things from consumerq\n", consumerq.size());
+				}
+			}
+			
 			process.destroy();
 			try {
 				if (!process.waitFor(5, TimeUnit.SECONDS)) {
@@ -199,41 +277,6 @@ public class SingleProcessManager implements ProcessManager {
 			}
 		} catch (IOException e) {
 			// ignore
-		}
-	}
-	
-	private static final byte[] NEW_LINE = "\n".getBytes(StandardCharsets.UTF_8);
-	
-	@Override
-	public void send(String input, Consumer<String> consumer) {
-		if (!process.isAlive()) throw runtime("process is dead!");
-		q.offer(createEntry(input, consumer));
-	}
-
-	@Override
-	public void kill() {
-		terminate(process);
-	}
-
-	@Override
-	public void send(String input) {
-		send(input, null);
-	}
-
-	@Override
-	public void addListener(Consumer<String> consumer) {
-		lineTriggers.add(consumer);
-	}
-
-	@Override
-	public boolean up() {
-		return process.isAlive();
-	}
-	
-	@Override
-	public void statusData(MutableData data) {
-		if (pid != -1) {
-			data.putInt("pid", pid);
 		}
 	}
 	

@@ -61,6 +61,11 @@ public class Application {
 	private class ApplicationStatusProvider implements StatusProvider {
 
 		@Override
+		public String type() {
+			return "app";
+		}
+		
+		@Override
 		public String name() {
 			return "app";
 		}
@@ -82,6 +87,7 @@ public class Application {
 					list.addMap(m -> {
 						m.putString("name", flow.name().slashes());
 						m.putLong("requests", flow.stats().requests.sum());
+						m.putLong("completed", flow.stats().completed.sum());
 						m.putLong("errors", flow.stats().errors.sum());
 						m.putLong("halts", flow.stats().halts.sum());
 					});

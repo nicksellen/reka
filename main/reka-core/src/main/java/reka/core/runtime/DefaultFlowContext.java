@@ -87,6 +87,7 @@ public class DefaultFlowContext implements FlowContext {
 	public void end(MutableData data) {
 		done = true;
 		subscriber.ok(data);
+		if (statsEnabled) stats.completed.increment();	
 	}
 
 	@Override

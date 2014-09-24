@@ -90,10 +90,15 @@ public class ProcessModule extends ModuleConfigurer {
 		
 		if (onLine != null) {
 			module.trigger("on line", onLine, registration -> {
+				
 				Flow flow = registration.flow();
-				registration.store().get(PROCESS_MANAGER).addListener(line -> {
+				
+				ProcessManager manager = registration.store().get(PROCESS_MANAGER);
+				
+				manager.addListener(line -> {
 					flow.prepare().data(MutableMemoryData.create().putString("out", line)).run();
 				});
+				
 			});
 		}
 		
@@ -120,7 +125,7 @@ public class ProcessModule extends ModuleConfigurer {
 		module.status(store -> store.get(PROCESS_MANAGER));
 		
 		module.shutdown("kill process", store -> {
-			store.lookup(PROCESS_MANAGER).ifPresent(manager -> manager.kill());
+			store.lookup(PROCESS_MANAGER).ifPresent(ProcessManager::shutdown);
 		});
 		
 		module.operation(root(), provider -> new ProcessCallConfigurer(noreply));

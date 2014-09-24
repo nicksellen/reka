@@ -33,6 +33,7 @@ import reka.api.content.Content;
 import reka.core.data.ObjProvider;
 
 import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 
 public interface Data extends Iterable<Entry<PathElement,Data>>, JsonProvider, ObjProvider, Hashable {
 	
@@ -218,6 +219,16 @@ public interface Data extends Iterable<Entry<PathElement,Data>>, JsonProvider, O
 			content.hash(hasher);
 		});
 		return hasher;
+	}
+	
+	default int defaultHashCode() {
+		return hash(Hashing.crc32().newHasher()).hash().asInt();
+	}
+	
+	default boolean defaultEquals(Object obj) {
+		if (!(obj instanceof Data)) return false;
+		Data other = (Data) obj;
+		return dataEquals(other);
 	}
 	
 	

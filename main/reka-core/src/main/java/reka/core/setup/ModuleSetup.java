@@ -77,7 +77,7 @@ public class ModuleSetup {
 	
 	public void status(Function<IdentityStore, StatusDataProvider> c) {
 		includeDefaultStatus = false;
-		collector.statuses.add(() -> StatusProvider.create(path.slashes(), info.version(), c.apply(store)));
+		collector.statuses.add(() -> StatusProvider.create(info.type().slashes(), path.slashes(), info.version(), c.apply(store)));
 	}
 	
 	public ModuleSetup initflow(String name, ConfigBody body, Consumer<InitFlowSetup> init) {

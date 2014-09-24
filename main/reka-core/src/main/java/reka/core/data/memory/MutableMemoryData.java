@@ -124,6 +124,15 @@ public class MutableMemoryData implements MutableDataProvider<Object> {
 	
 	public void run() {
 		
+		MutableData a = MutableMemoryData.create();
+		MutableData b = MutableMemoryData.create();
+		
+		a.putString("name", "nick").putInt("age", 25);
+		b.putString("name", "nick").putInt("age", 25);
+		
+		System.out.println(a.equals(b));
+		System.out.println(a.dataEquals(b));
+		
 		Object o = null;
 		
 		o = put(o, dots("things"), utf8("a nice string!"));
