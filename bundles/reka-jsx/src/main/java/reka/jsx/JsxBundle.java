@@ -17,8 +17,8 @@ import com.google.common.io.Resources;
 
 public class JsxBundle implements BundleConfigurer {
 	
-	private static NashornRunner runner;
-	private static CompiledScript jsxCompiler;
+	private static volatile NashornRunner runner;
+	private static volatile CompiledScript jsxCompiler;
 	
 	private static boolean initialized = false;
 	

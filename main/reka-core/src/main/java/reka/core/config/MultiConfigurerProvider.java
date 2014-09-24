@@ -12,7 +12,7 @@ import java.util.function.Supplier;
 import reka.api.Path;
 import reka.api.flow.FlowSegment;
 import reka.config.Config;
-import reka.core.setup.ModuleSetup.FlowSegmentBiFunction;
+import reka.core.setup.FlowSegmentBiFunction;
 
 public class MultiConfigurerProvider implements ConfigurerProvider {
 

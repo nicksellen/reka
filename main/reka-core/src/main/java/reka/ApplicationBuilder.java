@@ -1,9 +1,7 @@
 package reka;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.IntConsumer;
 
 import reka.api.Path;
@@ -21,7 +19,6 @@ public class ApplicationBuilder {
 	private final List<IntConsumer> pauseConsumers = new ArrayList<>();
 	private final List<IntConsumer> resumeConsumers = new ArrayList<>();
 	private final List<StatusProvider> statusProviders = new ArrayList<>();
-	private final Map<Path, String> moduleVersions = new HashMap<>();
 
 	private Path name;
 	private Data meta;
@@ -77,10 +74,6 @@ public class ApplicationBuilder {
 		return statusProviders;
 	}
 
-	public Map<Path,String> moduleVersions() {
-		return moduleVersions;
-	}
-
 	public Application build() {
 		return new Application(name, 
 							   meta, 
@@ -91,8 +84,7 @@ public class ApplicationBuilder {
 							   undeployConsumers, 
 							   pauseConsumers, 
 							   resumeConsumers, 
-							   statusProviders, 
-							   moduleVersions);
+							   statusProviders);
 	}
 
 }

@@ -10,7 +10,6 @@ import reka.api.flow.Flow;
 import reka.api.flow.FlowRun;
 import reka.api.run.Subscriber;
 import reka.core.data.memory.MutableMemoryData;
-import reka.util.Util;
 
 public class DefaultFlow implements Flow {
 

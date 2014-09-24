@@ -50,9 +50,9 @@ import reka.core.config.SequenceConfigurer;
 import reka.core.data.memory.MutableMemoryData;
 import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleConfigurer.ModuleInitializer;
-import reka.core.setup.ModuleSetup.MultiFlowRegistration;
-import reka.core.setup.ModuleSetup.Trigger;
-import reka.core.setup.ModuleSetup.TriggerCollection;
+import reka.core.setup.MultiFlowRegistration;
+import reka.core.setup.Trigger;
+import reka.core.setup.TriggerCollection;
 
 public class ApplicationConfigurer implements ErrorReporter {
 	
@@ -367,7 +367,6 @@ public class ApplicationConfigurer implements ErrorReporter {
 				});
 				
 				applicationBuilder.statusProviders().addAll(initializer.collector().statuses.stream().map(Supplier::get).collect(toList()));
-				applicationBuilder.moduleVersions().putAll(initializer.collector().versions);
 				
 		    	future.complete(applicationBuilder.build());
 	    	

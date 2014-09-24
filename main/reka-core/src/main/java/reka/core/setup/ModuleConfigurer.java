@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
+import static java.util.Objects.requireNonNull;
 import static reka.api.Path.slashes;
 import static reka.config.configurer.Configurer.configure;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
@@ -33,9 +34,6 @@ import reka.core.builder.SingleFlow;
 import reka.core.bundle.BundleConfigurer.ModuleInfo;
 import reka.core.runtime.NoFlow;
 import reka.core.runtime.NoFlowVisualizer;
-import reka.core.setup.ModuleSetup.FlowSegmentBiFunction;
-import reka.core.setup.ModuleSetup.InitFlow;
-import reka.core.setup.ModuleSetup.TriggerCollection;
 
 public abstract class ModuleConfigurer {
 
@@ -71,7 +69,6 @@ public abstract class ModuleConfigurer {
 
 	public static class ModuleCollector {
 
-		public final Map<Path, String> versions;
 		public final Map<Path, FlowSegmentBiFunction> providers;
 		public final List<InitFlow> initflows;
 		public final List<TriggerCollection> triggers;
@@ -79,7 +76,6 @@ public abstract class ModuleConfigurer {
 		public final List<Supplier<StatusProvider>> statuses;
 
 		public ModuleCollector() {
-			versions = new HashMap<>();
 			providers = new HashMap<>();
 			initflows = new ArrayList<>();
 			triggers = new ArrayList<>();
@@ -88,7 +84,6 @@ public abstract class ModuleConfigurer {
 		}
 
 		private ModuleCollector(ModuleCollector parent) {
-			this.versions = immutable(parent.versions);
 			this.providers = immutable(parent.providers);
 			this.initflows = immutable(parent.initflows);
 			this.triggers = immutable(parent.triggers);
@@ -124,7 +119,8 @@ public abstract class ModuleConfigurer {
 			Map<ModuleConfigurer, FlowSegment> segments = new HashMap<>();
 
 			for (ModuleConfigurer module : all) {
-
+				if (module.isRoot()) continue;
+				
 				IdentityStore store = IdentityStore.createConcurrentIdentityStore();
 
 				ModuleSetup init = new ModuleSetup(module.info(), module.fullPath(), store, collector);

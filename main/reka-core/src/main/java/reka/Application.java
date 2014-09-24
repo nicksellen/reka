@@ -4,10 +4,7 @@ import static java.util.Comparator.naturalOrder;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.IntConsumer;
 
 import reka.api.Path;
@@ -28,14 +25,12 @@ public class Application {
 	private final Flows flows;
 	private final FlowVisualizer initializerVisualizer;
 
-
 	private final List<NetworkInfo> network = new ArrayList<>();
 	
 	private final List<IntConsumer> undeployConsumers = new ArrayList<>();
 	private final List<IntConsumer> pauseConsumers = new ArrayList<>();
 	private final List<IntConsumer> resumeConsumers = new ArrayList<>();
 	private final List<StatusProvider> statusProviders = new ArrayList<>();
-	private final Map<Path,String> moduleVersions = new LinkedHashMap<>();
 	
 	public Application(
 			Path name, 
@@ -47,8 +42,7 @@ public class Application {
 			List<IntConsumer> undeployConsumers,
 			List<IntConsumer> pauseConsumers,
 			List<IntConsumer> resumeConsumers,
-			List<StatusProvider> statusProviders,
-			Map<Path,String> moduleVersions) {
+			List<StatusProvider> statusProviders) {
 		this.name = name;
 		this.fullName = name.slashes();
 		this.meta = meta;
@@ -62,11 +56,6 @@ public class Application {
 		this.statusProviders.addAll(statusProviders);
 		this.statusProviders.add(new ApplicationStatusProvider());
 		this.network.sort(naturalOrder());
-		//this.moduleVersions.putAll(moduleVersions);
-		
-		List<Path> moduleKeys = new ArrayList<>(moduleVersions.keySet());
-		Collections.sort(moduleKeys);
-		moduleKeys.forEach(key -> this.moduleVersions.put(key, moduleVersions.get(key)));
 	}
 	
 	private class ApplicationStatusProvider implements StatusProvider {
@@ -98,15 +87,6 @@ public class Application {
 					});
 				});
 			});
-			/*
-			data.putMap("modules", map -> {
-				moduleVersions.forEach((key, version) -> {
-					map.putString(key.slashes(), version);
-				});
-			});
-			*/
-			
-			
 		}
 
 	}
@@ -137,10 +117,6 @@ public class Application {
 	
 	public List<StatusProvider> statusProviders() {
 		return statusProviders;
-	}
-	
-	public Map<Path,String> moduleVersions() {
-		return moduleVersions;
 	}
 	
 	public FlowVisualizer initializerVisualizer() {

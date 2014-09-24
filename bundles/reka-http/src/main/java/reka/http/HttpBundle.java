@@ -14,8 +14,6 @@ public class HttpBundle implements BundleConfigurer {
 		bundle.module(path("http"), "0.1.0", () -> new HttpModule(server));
 		bundle.module(slashes("http/sessions"), "0.1.0", () -> new HttpSessionsModule());
 		bundle.module(path("websockets"), "0.1.0", () -> new WebsocketModule(server));
-		//setup.use(slashes("admin/http"), () -> new HttpAdminModule(server));
-		
 		bundle.shutdown(() -> server.shutdown());
 	}
 
