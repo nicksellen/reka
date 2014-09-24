@@ -46,8 +46,6 @@ import reka.api.data.Data;
 @Sharable
 public class DataToHttpEncoder extends MessageToMessageEncoder<Data> {
 	
-	private final Logger log = LoggerFactory.getLogger(getClass());
-	
 	public static final DataToHttpEncoder NORMAL = new DataToHttpEncoder(false);
 	public static final DataToHttpEncoder SSL = new DataToHttpEncoder(true);
 	

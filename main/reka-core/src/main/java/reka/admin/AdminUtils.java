@@ -1,7 +1,5 @@
 package reka.admin;
 
-import static java.util.Comparator.comparing;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -9,7 +7,7 @@ import reka.Application;
 import reka.ApplicationManager;
 import reka.api.data.MutableData;
 import reka.core.runtime.NoFlowVisualizer;
-import reka.core.setup.StatusProvider.StatusReport;
+import reka.core.setup.StatusReport;
 
 public class AdminUtils {
 
@@ -49,7 +47,7 @@ public class AdminUtils {
 		data.putList("flows", list -> {
 			app.flows().all().forEach(flow -> {
 				list.addMap(m -> {
-					m.putString("name", flow.name().subpath(app.name().length()).slashes());
+					m.putString("name", flow.name().slashes());
 				});
 			});
 			if (!(app.initializerVisualizer() instanceof NoFlowVisualizer)) {
@@ -60,12 +58,12 @@ public class AdminUtils {
 		});
 		statusMaybe.ifPresent(status -> {
 			data.putList("status", list -> {
-				status.sort(comparing(StatusReport::name));
 				status.forEach(statusItem -> {
 					list.addMap(report -> {
 						statusItem.data().forEachContent((path, content) -> report.put(path, content));
 						report.putBool("up", statusItem.up());
-						report.putString("name", statusItem.name());
+						report.putString("version", statusItem.version());
+						report.putString("module", statusItem.name());
 					});
 				});
 			});

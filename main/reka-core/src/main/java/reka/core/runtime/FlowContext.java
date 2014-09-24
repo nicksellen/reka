@@ -19,4 +19,6 @@ public interface FlowContext {
     void error(Data data, Throwable t);
     void halted();
 	void end(MutableData data);
+	
+	boolean statsEnabled();
 }

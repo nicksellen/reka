@@ -2,6 +2,7 @@ package reka;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.String.format;
+import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static reka.api.Path.slashes;
@@ -36,7 +37,7 @@ import reka.core.builder.FlowVisualizer;
 import reka.core.bundle.BundleManager;
 import reka.core.data.memory.MutableMemoryData;
 import reka.core.setup.StatusProvider;
-import reka.core.setup.StatusProvider.StatusReport;
+import reka.core.setup.StatusReport;
 
 public class ApplicationManager implements Iterable<Entry<String,Application>> {
 	
@@ -53,13 +54,16 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 	
 	private final List<Flow> deployListeners = Collections.synchronizedList(new ArrayList<>());
 	private final List<Flow> undeployListeners = Collections.synchronizedList(new ArrayList<>());
+	private final List<Flow> statusListeners = Collections.synchronizedList(new ArrayList<>());
 	
 	private final BlockingDeque<ApplicationTask> q = new LinkedBlockingDeque<>();
+	
+	private final ApplicationTask UPDATE_STATUS = new UpdateStatus();
 
 	public ApplicationManager(File datadir, BundleManager bundles) {
 		this.bundles = bundles;
 		executor.submit(new WaitForNextTask());
-		executor.scheduleAtFixedRate(new UpdateStatus(), 0, 5, TimeUnit.SECONDS);
+		Reka.SCHEDULED_SERVICE.scheduleAtFixedRate(() -> q.push(UPDATE_STATUS), 1, 1, TimeUnit.SECONDS);
 	}
 	
 	private static interface ApplicationTask extends Runnable { }
@@ -69,12 +73,7 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 		@Override
 		public void run() {
 			try {
-				ApplicationTask task = q.poll(3, TimeUnit.SECONDS);
-				if (task != null) {
-					executor.submit(task);
-				} else {
-					executor.submit(new WaitForNextTask());
-				}
+				executor.submit(q.take());
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -86,11 +85,16 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 
 		@Override
 		public void run() {
-			System.out.printf("collecting status\n");
 			try {
 				applications.forEach((identity, app) -> {
-					status.put(identity, app.statusProviders().stream().map(StatusProvider::report).collect(toList()));
+					List<StatusReport> appStatus = app.statusProviders().stream().map(StatusProvider::report).collect(toList());
+					appStatus.sort(comparing(StatusReport::name));
+					List<StatusReport> previousAppStatus = status.put(identity, appStatus);
+					if (previousAppStatus != null && !appStatus.equals(previousAppStatus)) {
+						notifyStatusListeners(identity, app);
+					}
 				});
+				executor.submit(new WaitForNextTask());
 			} catch (Throwable t) {
 				t.printStackTrace();
 			}
@@ -162,7 +166,9 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 					if (app != null) {
 						applications.put(identity, app);
 						previous.ifPresent(Application::undeploy);
-						status.put(identity, app.statusProviders().stream().map(StatusProvider::report).collect(toList()));
+						List<StatusReport> appStatus = app.statusProviders().stream().map(StatusProvider::report).collect(toList());
+						appStatus.sort(comparing(StatusReport::name));
+						status.put(identity, appStatus);
 						log.info("deployed [{}] listening on {}", app.fullName(), app.network().stream().map(Object::toString).collect(joining(", ")));
 						notifyDeployListeners(identity, app);
 						subscriber.ok(identity, version, app);
@@ -199,6 +205,14 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 		undeployListeners.remove(flow);
 	}
 	
+	public void addStatusListener(Flow flow) {
+		statusListeners.add(flow);
+	}
+
+	public void removeStatusListener(Flow flow) {
+		statusListeners.remove(flow);
+	}
+	
 	public void undeploy(String identity) {
 		q.push(new UndeployApplication(identity));
 	}
@@ -214,6 +228,12 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 			if (!app.flows().all().contains(flow)) { // don't notify the app itself, it's been undeployed...
 				flow.prepare().data(MutableMemoryData.create().putString("id", identity)).run();
 			}
+		});
+	}
+	
+	private void notifyStatusListeners(String identity, Application app) {
+		statusListeners.forEach(flow -> {
+			flow.prepare().data(MutableMemoryData.create().putString("id", identity)).stats(false).run();
 		});
 	}
 

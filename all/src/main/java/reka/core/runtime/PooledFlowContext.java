@@ -113,4 +113,10 @@ public class PooledFlowContext implements FlowContext {
 	public void halted() {
 		subscriber.halted();
 	}
+
+	@Override
+	public boolean statsEnabled() {
+		return false;
+	}
+	
 }

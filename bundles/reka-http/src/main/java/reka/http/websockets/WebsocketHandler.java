@@ -161,7 +161,7 @@ public class WebsocketHandler extends SimpleChannelInboundHandler<TextWebSocketF
 					resultData.getContent("reply").ifPresent(content -> {
 						ctx.channel().writeAndFlush(new TextWebSocketFrame(content.asUTF8()));
 					});
-				});
+				}, true);
 				
 			}
 			
@@ -182,7 +182,7 @@ public class WebsocketHandler extends SimpleChannelInboundHandler<TextWebSocketF
 						 MutableMemoryData.create()
 						 	.putString("host", host)
 						 	.putString("id", id),
-						 Subscriber.DO_NOTHING);
+						 Subscriber.DO_NOTHING, true);
 			}
 
 		}
@@ -206,7 +206,7 @@ public class WebsocketHandler extends SimpleChannelInboundHandler<TextWebSocketF
 				resultData.getContent("response").ifPresent(content -> {
 					ctx.channel().writeAndFlush(new TextWebSocketFrame(content.asUTF8()));
 				});
-			});
+			}, true);
 		
 		}
 		

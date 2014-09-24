@@ -1,75 +1,60 @@
 package reka.core.setup;
 
-import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.core.data.memory.MutableMemoryData;
 
 
 public interface StatusProvider extends StatusDataProvider {
 	
-	public static class StatusReport {
-		
-		private final String name;
-		private final boolean up;
-		private final Data data;
-		
-		public StatusReport(String name, boolean up, Data data) {
-			this.name = name;
-			this.up = up;
-			this.data = data;
-		}
-		
-		public String name() {
-			return name;
-		}
-		
-		public boolean up() {
-			return up;
-		}
-		
-		public Data data() {
-			return data;
-		}
-		
+	static StatusProvider create(String name, String version) {
+		return create(name, version, null);
 	}
 	
-	static StatusProvider create(String name, StatusDataProvider data) {
-		return new DefaultStatusProvider(name, data);
+	static StatusProvider create(String name, String version, StatusDataProvider provider) {
+		return new DefaultStatusProvider(name, version, provider);
 	}
 	
 	static class DefaultStatusProvider implements StatusProvider {
 		
 		private final String name;
+		private final String version;
 		private final StatusDataProvider provider;
 		
-		private DefaultStatusProvider(String name, StatusDataProvider data) {
+		private DefaultStatusProvider(String name, String version, StatusDataProvider provider) {
 			this.name = name;
-			this.provider = data;	
+			this.version = version;
+			this.provider = provider;
 		}
 
 		@Override
 		public String name() {
 			return name;
 		}
+		
+		@Override
+		public String version() {
+			return version;
+		}
 
 		@Override
 		public boolean up() {
-			return provider.up();
+			return provider != null ? provider.up() : true;
 		}
 
 		@Override
 		public void statusData(MutableData data) {
-			provider.statusData(data);
+			if (provider != null) provider.statusData(data);
 		}
 		
 	}
 	
 	String name();
+	String version();
 	
 	default StatusReport report() {
 		MutableData data = MutableMemoryData.create();
 		statusData(data);
-		return new StatusReport(name(), up(), data);
+		return new StatusReport(name(), version(), up(), data);
 	}
 	
 }

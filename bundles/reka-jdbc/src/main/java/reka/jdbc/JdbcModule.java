@@ -232,6 +232,8 @@ public class JdbcModule extends ModuleConfigurer {
 		
 		});
 		
+		module.status(store -> new JdbcStatusProvider(store.get(POOL)));
+		
 		module.shutdown("close connection pool", store -> {
 			store.lookup(POOL).ifPresent(jdbc -> { 
 				try {

@@ -10,9 +10,11 @@ import reka.api.flow.Flow;
 import reka.api.flow.FlowRun;
 import reka.api.run.Subscriber;
 import reka.core.data.memory.MutableMemoryData;
+import reka.util.Util;
 
 public class DefaultFlow implements Flow {
-	
+
+	private final FlowStats stats = new FlowStats();
 	private final static AtomicLong ids = new AtomicLong();
 	
 	private static final ExecutorService DEFAULT_EXECUTOR = Executors.newCachedThreadPool();
@@ -34,6 +36,7 @@ public class DefaultFlow implements Flow {
 		private Subscriber subscriber;
 		private MutableData data;
 		private ExecutorService executor;
+		private boolean stats = true;
 		
 		@Override
         public FlowRun complete(Subscriber subscriber) {
@@ -52,13 +55,19 @@ public class DefaultFlow implements Flow {
 			data = value;
 			return this;
 		}
+
+		@Override
+		public FlowRun stats(boolean enabled) {
+			stats = enabled;
+			return this;
+		}
 		
 		@Override
         public void run() {
 			if (data == null) data = MutableMemoryData.create();
 			if (executor == null) executor = DEFAULT_EXECUTOR;
 			if (subscriber == null) subscriber = Subscriber.DO_NOTHING;
-			DefaultFlow.this.run(executor, data, subscriber);
+			DefaultFlow.this.run(executor, data, subscriber, stats);
 		}
 	}
 	
@@ -74,12 +83,12 @@ public class DefaultFlow implements Flow {
 	
 	@Override
 	public void run(Subscriber subscriber) {
-		run(DEFAULT_EXECUTOR, MutableMemoryData.create(), subscriber);
+		run(DEFAULT_EXECUTOR, MutableMemoryData.create(), subscriber, true);
 	}
 	
 	@Override
-	public void run(ExecutorService executor, MutableData data, Subscriber subscriber) {
-		DefaultFlowContext.create(id, executor, subscriber).call(head, (d, c, t) -> {
+	public void run(ExecutorService executor, MutableData data, Subscriber subscriber, boolean statsEnabled) {
+		DefaultFlowContext.create(id, executor, subscriber, statsEnabled ? stats : null).call(head, (d, c, t) -> {
 			subscriber.error(d, t);
 		}, data);
 	}
@@ -97,6 +106,16 @@ public class DefaultFlow implements Flow {
 	@Override
 	public String fullName() {
 		return fullName;
+	}
+
+	@Override
+	public int compareTo(Flow o) {
+		return 0;
+	}
+
+	@Override
+	public FlowStats stats() {
+		return stats;
 	}
 	
 }

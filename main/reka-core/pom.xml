@@ -38,6 +38,14 @@
 			<artifactId>slf4j-api</artifactId>
 			<version>1.7.5</version>
 		</dependency>
+		
+    <dependency>
+        <groupId>io.dropwizard.metrics</groupId>
+        <artifactId>metrics-core</artifactId>
+        <version>3.1.0</version>
+    </dependency>
+
+		<!--  test only -->
 
 		<dependency>
 			<groupId>junit</groupId>

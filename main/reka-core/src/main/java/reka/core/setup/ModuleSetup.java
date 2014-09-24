@@ -29,21 +29,33 @@ import reka.api.run.AsyncOperation;
 import reka.api.run.Operation;
 import reka.config.Config;
 import reka.config.ConfigBody;
+import reka.core.bundle.BundleConfigurer.ModuleInfo;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.core.setup.ModuleConfigurer.ModuleCollector;
 
 public class ModuleSetup {
 	
+	private final ModuleInfo info;
 	private final ModuleCollector collector;
 	private final Path path;
 	private final IdentityStore store;
 	private final List<Supplier<FlowSegment>> segments = new ArrayList<>();	
 	
-	public ModuleSetup(Path path, IdentityStore store, ModuleCollector collector) {
+	private boolean includeDefaultStatus = true;
+	
+	public ModuleSetup(ModuleInfo info, Path path, IdentityStore store, ModuleCollector collector) {
+		this.info = info;
 		this.path = path;
 		this.store = store;
 		this.collector = collector;
+		if (info != null) {
+			collector.versions.put(info.type(), info.version());
+		}
+	}
+	
+	protected boolean includeDefaultStatus() {
+		return includeDefaultStatus;
 	}
 	
 	public Path path() {
@@ -329,7 +341,8 @@ public class ModuleSetup {
 	}
 
 	public void status(Function<IdentityStore, StatusDataProvider> c) {
-		collector.statuses.add(() -> StatusProvider.create(path.slashes(), c.apply(store)));
+		includeDefaultStatus = false;
+		collector.statuses.add(() -> StatusProvider.create(path.slashes(), info.version(), c.apply(store)));
 	}
 	
 	public ModuleSetup initflow(String name, ConfigBody body, Consumer<InitFlowSetup> init) {

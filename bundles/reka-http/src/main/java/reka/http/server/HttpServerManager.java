@@ -100,6 +100,7 @@ public class HttpServerManager {
 			} else {
 				initializer = new HttpInitializer(httpOrWebsocketHandler);
 			}
+			
 		}
 		
 		public PortHandler httpAdd(String host, Flow flow) {

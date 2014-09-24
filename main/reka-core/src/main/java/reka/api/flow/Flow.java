@@ -1,6 +1,7 @@
 package reka.api.flow;
 
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.LongAdder;
 
 import reka.api.Path;
 import reka.api.data.MutableData;
@@ -14,12 +15,12 @@ public interface Flow extends Comparable<Flow> {
     
     void run();
     void run(Subscriber run);
+    
+    FlowStats stats();
 
     FlowRun prepare();
     
-    default void run(ExecutorService executor, MutableData data, Subscriber subscriber) {
-    	run(executor, data, subscriber);
-    }
+    void run(ExecutorService executor, MutableData data, Subscriber subscriber, boolean statsEnabled);
     
     @Override
     default int compareTo(Flow o) {
@@ -31,4 +32,11 @@ public interface Flow extends Comparable<Flow> {
     		return 0;
     	}
     }
+
+	public static class FlowStats {
+		public final LongAdder requests = new LongAdder();
+		public final LongAdder errors = new LongAdder();
+		public final LongAdder halts = new LongAdder();
+	}
+    
 }

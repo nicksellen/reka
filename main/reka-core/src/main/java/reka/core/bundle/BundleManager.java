@@ -59,7 +59,7 @@ public class BundleManager {
 	public Collection<Path> modulesKeys() {
 		Set<Path> keys = new HashSet<>();
 		for (ModuleInfo e : modules) {
-			keys.add(e.name());
+			keys.add(e.type());
 		}
 		return keys; 
 	}

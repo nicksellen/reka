@@ -13,6 +13,8 @@ import reka.core.data.memory.MutableMemoryData;
 
 public class NoFlow implements Flow {
 
+	private final FlowStats stats = new FlowStats();
+	
 	@Override
 	public long id() {
 		return 0;
@@ -66,6 +68,11 @@ public class NoFlow implements Flow {
 		}
 
 		@Override
+		public FlowRun stats(boolean enabled) {
+			return this;
+		}
+
+		@Override
 		public void run() {
 			subscriber.ok(data);
 		}
@@ -73,8 +80,18 @@ public class NoFlow implements Flow {
 	}
 
 	@Override
-	public void run(ExecutorService executor, MutableData data, Subscriber subscriber) {
-		new NoFlowRun().executor(executor).data(data).complete(subscriber).run();
+	public void run(ExecutorService executor, MutableData data, Subscriber subscriber, boolean statsEnabled) {
+		new NoFlowRun().executor(executor).data(data).complete(subscriber).stats(statsEnabled).run();
+	}
+
+	@Override
+	public int compareTo(Flow o) {
+		return 0;
+	}
+
+	@Override
+	public FlowStats stats() {
+		return stats;
 	}
 	
 }

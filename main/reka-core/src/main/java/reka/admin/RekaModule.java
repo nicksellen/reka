@@ -38,6 +38,7 @@ public class RekaModule extends ModuleConfigurer {
 	
 	private final List<ConfigBody> deployHandlers = new ArrayList<>();
 	private final List<ConfigBody> undeployHandlers = new ArrayList<>();
+	private final List<ConfigBody> statusHandlers = new ArrayList<>();
 	
 	public RekaModule(ApplicationManager manager) {
 		this.manager = manager;
@@ -52,6 +53,9 @@ public class RekaModule extends ModuleConfigurer {
 			break;
 		case "undeploy":
 			undeployHandlers.add(config.body());
+			break;
+		case "status":
+			statusHandlers.add(config.body());
 			break;
 		default:
 			throw runtime("unknown trigger %s", config.valueAsString());
@@ -83,6 +87,16 @@ public class RekaModule extends ModuleConfigurer {
 				manager.addUndeployListener(flow);
 				registration.undeploy(version -> { 
 					manager.removeUndeployListener(flow);
+				});
+			});
+		}	
+
+		for (ConfigBody body : statusHandlers) {			
+			module.trigger("on status", body, registration -> {
+				Flow flow = registration.flow();
+				manager.addStatusListener(flow);
+				registration.undeploy(version -> { 
+					manager.removeStatusListener(flow);
 				});
 			});
 		}

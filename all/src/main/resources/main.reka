@@ -18,7 +18,7 @@ app {
   
   markdown
   
-  http markdown thing {
+  http markdown server {
   	listen localhost:5001
   	on request {
       markdown {

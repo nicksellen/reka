@@ -14,6 +14,7 @@ import java.util.regex.Pattern;
 
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
+import reka.core.bundle.BundleConfigurer.ModuleInfo;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.core.data.memory.MutableMemoryData;
@@ -102,7 +103,7 @@ public class HttpModule extends ModuleConfigurer {
 	
 	@Conf.At("sessions")
 	public void sessions(Config config) {
-		configureModule(new HttpSessionsModule(), config);
+		configureModule(new ModuleInfo(fullPath().add("session"), info().version(), () -> new HttpSessionsModule()), config);
 	}
 
 	@Override

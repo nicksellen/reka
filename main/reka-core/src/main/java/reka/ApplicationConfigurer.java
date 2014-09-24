@@ -154,8 +154,8 @@ public class ApplicationConfigurer implements ErrorReporter {
     	
     }
     
-    private static Path triggerPath(Path appname, Trigger trigger) {
-    	return appname.add(trigger.base()).add(trigger.key().name());
+    private static Path triggerPath(Trigger trigger) {
+    	return trigger.base().add(trigger.key().name());
     }
     
     public CompletableFuture<Application> build(String identity, int applicationVersion) {
@@ -176,8 +176,6 @@ public class ApplicationConfigurer implements ErrorReporter {
 	    	applicationBuilder.version(applicationVersion);
 	    	applicationBuilder.initializerVisualizer(initializer.visualizer());
 	    	
-	    	List<Runnable> shutdownHandlers = initializer.collector().shutdownHandlers;
-	    	
 	    	Map<Path,FlowTest> tests = new HashMap<>();
 	    	
 	    	MultiConfigurerProvider configurerProvider = new MultiConfigurerProvider(initializer.collector().providers);
@@ -189,18 +187,18 @@ public class ApplicationConfigurer implements ErrorReporter {
 	    	
 	    	initializer.collector().triggers.forEach(triggers -> {
 	    		triggers.get().forEach(trigger -> {
-	    			flowBuilders.add(triggerPath(applicationBuilder.name(), trigger), 
+	    			flowBuilders.add(triggerPath(trigger), 
 	    					trigger.supplier().apply(configurerProvider).bind(trigger.base(), triggers.store()).get());
 	    		});
 	    	});
 	    	
 	    	defs.forEach(config -> 
-				flowBuilders.add(applicationName.add(config.valueAsString()), 
+				flowBuilders.add(path(config.valueAsString()), 
 						configure(new SequenceConfigurer(configurerProvider), config).bind().get()));
 	    	
 	    	AtomicInteger num = new AtomicInteger();
 	    	testConfigs.forEach(config -> {
-	    		Path testName = applicationName.add("test").add(config.hasValue() ? config.valueAsString() : String.valueOf(num.incrementAndGet()));
+	    		Path testName = path("test").add(config.hasValue() ? config.valueAsString() : String.valueOf(num.incrementAndGet()));
 	    		FlowTest test = configure(new TestConfigurer(configurerProvider), config).build();
 	    		flowBuilders.add(testName, test.run().get());
 	    		tests.put(testName, test);
@@ -321,7 +319,7 @@ public class ApplicationConfigurer implements ErrorReporter {
 								latch.countDown();
 							}
 							
-						});
+						}, true);
 					});
 					
 					if (!latch.await(10, TimeUnit.SECONDS)) {
@@ -345,7 +343,7 @@ public class ApplicationConfigurer implements ErrorReporter {
 					Map<IdentityKey<Flow>,Flow> m = new HashMap<>();
 					
 					triggers.get().forEach(trigger -> {
-						m.put(trigger.key(), flows.flow(triggerPath(applicationBuilder.name(), trigger)));
+						m.put(trigger.key(), flows.flow(triggerPath(trigger)));
 					});
 					
 					MultiFlowRegistration mr = new MultiFlowRegistration(applicationBuilder.version(), identity, triggers.store(), m);
@@ -369,6 +367,7 @@ public class ApplicationConfigurer implements ErrorReporter {
 				});
 				
 				applicationBuilder.statusProviders().addAll(initializer.collector().statuses.stream().map(Supplier::get).collect(toList()));
+				applicationBuilder.moduleVersions().putAll(initializer.collector().versions);
 				
 		    	future.complete(applicationBuilder.build());
 	    	

@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
@@ -20,6 +22,8 @@ import reka.core.bundle.BundleConfigurer;
 import reka.core.bundle.BundleManager;
 
 public class Reka {
+	
+	public static final ScheduledExecutorService SCHEDULED_SERVICE = Executors.newSingleThreadScheduledExecutor();
 	
 	public static final String REKA_ENV = "REKA_ENV";
 	

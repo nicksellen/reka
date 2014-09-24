@@ -10,5 +10,6 @@ public interface FlowRun {
     FlowRun complete(Subscriber subscriber);
     FlowRun executor(ExecutorService executor);
     FlowRun data(MutableData value);
+    FlowRun stats(boolean enabled);
     void run();
 }

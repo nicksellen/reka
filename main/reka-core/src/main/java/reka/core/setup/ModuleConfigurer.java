@@ -38,118 +38,124 @@ import reka.core.setup.ModuleSetup.InitFlow;
 import reka.core.setup.ModuleSetup.TriggerCollection;
 
 public abstract class ModuleConfigurer {
-	
+
 	public static class ModuleInitializer {
-		
+
 		private final Flow flow;
 		private final FlowVisualizer visualizer;
 		private final ModuleCollector collector;
-		
+
 		ModuleInitializer(Flow initialize, FlowVisualizer visualizer, ModuleCollector collector) {
 			this.flow = initialize;
 			this.visualizer = visualizer;
 			this.collector = collector;
 		}
-		
+
 		public Flow flow() {
 			return flow;
 		}
-		
+
 		public FlowVisualizer visualizer() {
 			return visualizer;
 		}
-		
+
 		public ModuleCollector collector() {
 			return collector;
 		}
-		
+
 	}
-	
+
 	public static ModuleInitializer buildInitializer(ModuleConfigurer root) {
 		return Utils.process(root);
 	}
-	
+
 	public static class ModuleCollector {
-		
-		public final Map<Path,FlowSegmentBiFunction> providers;
+
+		public final Map<Path, String> versions;
+		public final Map<Path, FlowSegmentBiFunction> providers;
 		public final List<InitFlow> initflows;
 		public final List<TriggerCollection> triggers;
 		public final List<Runnable> shutdownHandlers;
 		public final List<Supplier<StatusProvider>> statuses;
-		
+
 		public ModuleCollector() {
+			versions = new HashMap<>();
 			providers = new HashMap<>();
 			initflows = new ArrayList<>();
 			triggers = new ArrayList<>();
 			shutdownHandlers = new ArrayList<>();
-			statuses = new ArrayList<>();	
+			statuses = new ArrayList<>();
 		}
-		
+
 		private ModuleCollector(ModuleCollector parent) {
+			this.versions = immutable(parent.versions);
 			this.providers = immutable(parent.providers);
 			this.initflows = immutable(parent.initflows);
 			this.triggers = immutable(parent.triggers);
 			this.shutdownHandlers = immutable(parent.shutdownHandlers);
-			this.statuses = immutable(parent.statuses);	
+			this.statuses = immutable(parent.statuses);
 		}
-		
+
 		public ModuleCollector immutable() {
 			return new ModuleCollector(this);
 		}
-		
-		private static <K,V> Map<K,V> immutable(Map<K,V> in) {
+
+		private static <K, V> Map<K, V> immutable(Map<K, V> in) {
 			return unmodifiableMap(new HashMap<>(in));
 		}
-		
+
 		private static <T> List<T> immutable(List<T> in) {
 			return unmodifiableList(new ArrayList<>(in));
 		}
-		
+
 	}
-	
+
 	private static class Utils {
-		
+
 		public static ModuleInitializer process(ModuleConfigurer root) {
-			
+
 			ModuleCollector collector = new ModuleCollector();
-			
+
 			Set<ModuleConfigurer> all = collect(root, new HashSet<>());
 			Set<ModuleConfigurer> toplevel = findTopLevel(all);
-			Map<String,ModuleConfigurer> rootsMap = map(root.uses);
-			
+			Map<String, ModuleConfigurer> rootsMap = map(root.uses);
+
 			resolveNamedDependencies(all, rootsMap);
-			Map<ModuleConfigurer,FlowSegment> segments = new HashMap<>();
-			
+			Map<ModuleConfigurer, FlowSegment> segments = new HashMap<>();
+
 			for (ModuleConfigurer module : all) {
-				
+
 				IdentityStore store = IdentityStore.createConcurrentIdentityStore();
-				
-				ModuleSetup init = new ModuleSetup(module.fullPath(), store, collector);
+
+				ModuleSetup init = new ModuleSetup(module.info(), module.fullPath(), store, collector);
 				module.setup(init);
-				
+				if (init.includeDefaultStatus() && module.info() != null) {
+					collector.statuses.add(() -> StatusProvider.create(module.fullPath().slashes(), module.info().version()));
+				}
+
 				init.buildFlowSegment().ifPresent(segment -> {
 					segments.put(module, segment);
 				});
-				
+
 			}
-			
+
 			Optional<FlowSegment> segment = buildSegment(toplevel, segments);
-			
+
 			Flow flow;
 			FlowVisualizer visualizer;
-			
+
 			if (segment.isPresent()) {
 				Entry<Flow, FlowVisualizer> entry = SingleFlow.create(Path.path("initialize"), segment.get());
 				flow = entry.getKey();
-				visualizer = entry.getValue();	
+				visualizer = entry.getValue();
 			} else {
 				flow = new NoFlow();
 				visualizer = new NoFlowVisualizer();
 			}
-			
+
 			return new ModuleInitializer(flow, visualizer, collector.immutable());
 		}
-		
+
 		private static Optional<FlowSegment> buildSegment(Set<ModuleConfigurer> modules, Map<ModuleConfigurer, FlowSegment> built) {
 			List<FlowSegment> segments = new ArrayList<>();
 			for (ModuleConfigurer module : modules) {
@@ -157,24 +163,25 @@ public abstract class ModuleConfigurer {
 			}
 			return segments.isEmpty() ? Optional.empty() : Optional.of(createParallelSegment(segments));
 		}
-		
+
 		private static Optional<FlowSegment> buildSegment(ModuleConfigurer module, Map<ModuleConfigurer, FlowSegment> built) {
-			if (module.isRoot()) return Optional.empty();
-			
+			if (module.isRoot())
+				return Optional.empty();
+
 			List<FlowSegment> sequence = new ArrayList<>();
-			
+
 			if (built.containsKey(module)) {
 				sequence.add(built.get(module));
 			}
-			
+
 			Optional<FlowSegment> c = buildSegment(module.usedBy, built);
 			if (c.isPresent()) {
 				sequence.add(c.get());
 			}
-			
+
 			return sequence.isEmpty() ? Optional.empty() : Optional.of(seq(sequence));
 		}
-		
+
 		private static void resolveNamedDependencies(Set<ModuleConfigurer> all, Map<String, ModuleConfigurer> allMap) {
 			for (ModuleConfigurer use : all) {
 				for (String depname : use.modulesNames) {
@@ -195,7 +202,7 @@ public abstract class ModuleConfigurer {
 			}
 			return roots;
 		}
-		
+
 		private static Set<ModuleConfigurer> collect(ModuleConfigurer use, Set<ModuleConfigurer> collector) {
 			collector.add(use);
 			for (ModuleConfigurer child : use.uses) {
@@ -203,39 +210,40 @@ public abstract class ModuleConfigurer {
 			}
 			return collector;
 		}
-		
-		public static Map<String,ModuleConfigurer> map(Collection<ModuleConfigurer> uses) {
-			Map<String,ModuleConfigurer> map = new HashMap<>();
+
+		public static Map<String, ModuleConfigurer> map(Collection<ModuleConfigurer> uses) {
+			Map<String, ModuleConfigurer> map = new HashMap<>();
 			for (ModuleConfigurer use : uses) {
 				map.put(use.name(), use);
 			}
 			return map;
 		}
-		
+
 	}
-	
+
 	private List<ModuleInfo> modules = new ArrayList<>();
-	
+
+	private ModuleInfo info;
 	private String type;
-	private String name;
-	
+	private String alias;
+
 	private boolean isRoot;
-	
+
 	private Path parentPath = Path.root();
 	private Path modulePath = Path.root();
-	
+
 	private final List<String> modulesNames = new ArrayList<>();
-	
+
 	private final Set<ModuleConfigurer> usedBy = new HashSet<>();
 	private final Set<ModuleConfigurer> uses = new HashSet<>();
 
 	public ModuleConfigurer modules(List<ModuleInfo> modules) {
 		this.modules = modules;
-		
+
 		if (isRoot()) {
 			findRootConfigurers();
 		}
-		
+
 		return this;
 	}
 
@@ -243,52 +251,58 @@ public abstract class ModuleConfigurer {
 		for (ModuleInfo e : modules) {
 			// all the ones with a root path need to be added automatically
 			// we don't need to explicitly load these...
-			if (e.name().isEmpty()) {
+			if (e.type().isEmpty()) {
 				uses.add(e.get());
 			}
 		}
 	}
-	
+
 	public abstract void setup(ModuleSetup module);
-	
+
 	public boolean isRoot() {
 		return isRoot;
 	}
-	
+
 	public ModuleConfigurer isRoot(boolean val) {
 		isRoot = val;
 		return this;
 	}
-	
+
 	public ModuleConfigurer modulePath(Path path) {
 		this.modulePath = path;
 		return this;
 	}
-
+	
 	@Conf.Key
-	public ModuleConfigurer type(String val) {
+	public void type(String val) {
 		type = val;
-		return this;
 	}
 	
 	@Conf.Val
-	public ModuleConfigurer name(String val) {
-		name = val;
-		return this;
+	public void alias(String val) {
+		alias = val;
 	}
-	
+
+	protected void info(ModuleInfo val) {
+		info = val;
+	}
+
 	public String name() {
-		return name != null ? name : type;
+		return alias != null ? alias : type;
 	}
-	
+
+	public ModuleInfo info() {
+		return info;
+	}
+
 	public String getName() {
 		return name();
 	}
-	
-	private Path fullPath() {
+
+	protected Path fullPath() {
 		return parentPath.add(slashes(name()));
 	}
-	
+
 	public String typeAndName() {
 		if (type.equals(name())) {
 			return type;
@@ -296,22 +310,23 @@ public abstract class ModuleConfigurer {
 			return format("%s/%s", type, name());
 		}
 	}
-	
+
 	public void useThisConfig(Config config) {
-		checkConfig(modules != null, "'%s' is not a valid module (try one of %s)", config.key(), mappingNames());
-		Supplier<ModuleConfigurer> supplier = mappingFor(slashes(config.key()));
-		checkConfig(supplier != null, "'%s' is not a valid module (try one of %s)", config.key(), mappingNames());
-		configureModule(supplier.get(), config);
+		ModuleInfo info = moduleFor(slashes(config.key()));
+		checkConfig(info != null, "'%s' is not a valid module (try one of %s)", config.key(), mappingNames());
+		configureModule(info, config);
 	}
-	
-	protected void configureModule(ModuleConfigurer module, Config config) {
+
+	protected void configureModule(ModuleInfo info, Config config) {
+		ModuleConfigurer module = info.get();
+		module.info(info);
 		module.modules(modules);
 		module.parentPath(modulePath);
 		configure(module, config);
 		uses.add(module);
 		module.usedBy.add(this);
 	}
-	
+
 	@Conf.Each("use")
 	public void use(Config config) {
 		if (config.hasBody()) {
@@ -324,30 +339,30 @@ public abstract class ModuleConfigurer {
 			invalidConfig("must have body or value (referencing another dependency)");
 		}
 	}
-	
+
 	private void parentPath(Path val) {
 		parentPath = val;
 	}
 
-	private Supplier<ModuleConfigurer> mappingFor(Path path) {
+	private ModuleInfo moduleFor(Path path) {
 		for (ModuleInfo m : modules) {
-			if (m.name().equals(path)) {
+			if (m.type().equals(path)) {
 				return m;
 			}
 		}
 		return null;
 	}
-	
+
 	private Collection<String> mappingNames() {
 		List<String> result = new ArrayList<>();
 		for (ModuleInfo e : modules) {
-			if (!e.name().isEmpty()) {
-				result.add(e.name().slashes());
+			if (!e.type().isEmpty()) {
+				result.add(e.type().slashes());
 			}
 		}
 		return result;
 	}
-	
+
 	@Override
 	public String toString() {
 		return format("%s(\n    name %s\n    params %s)", type, name(), modulesNames);

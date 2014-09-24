@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import org.slf4j.Logger;
@@ -30,7 +31,7 @@ import reka.api.data.MutableData;
 
 public class SingleProcessManager implements ProcessManager {
 
-	private final Logger log = LoggerFactory.getLogger(getClass());
+	private static final Logger log = LoggerFactory.getLogger(SingleProcessManager.class);
 	
 	private static final Class<?> unixProcessClass;
 	
@@ -78,11 +79,13 @@ public class SingleProcessManager implements ProcessManager {
 		this.q = q;
 		this.builder = builder;
 		this.noreply = noreply;
+		
 		try {
-			this.process = builder.start();
+			process = builder.start();
 		} catch (IOException e1) {
 			throw unchecked(e1);
 		}
+		
 		int tryPid = -1;
 		if (unixProcessClass != null && unixProcessClass.isInstance(process)) {
 			try {
@@ -110,7 +113,7 @@ public class SingleProcessManager implements ProcessManager {
 			@Override
 			public void run() {
 				try {
-					while (process.isAlive()) {
+					while (process.isAlive() && !Thread.interrupted()) {
 						Entry<String, Consumer<String>> entry = q.take();
 						String input = entry.getKey();
 						byte[] bytes = input.getBytes(StandardCharsets.UTF_8);
@@ -120,7 +123,7 @@ public class SingleProcessManager implements ProcessManager {
 						if (!noreply) consumerq.offer(entry.getValue());
 					}
 				} catch (InterruptedException | IOException e) {
-					log.error("writer thread stopped");
+					terminate(process);
 				}
 			}
 			
@@ -132,7 +135,7 @@ public class SingleProcessManager implements ProcessManager {
 			public void run() {
 				try {
 					Consumer<String> consumer = null;
-					while (process.isAlive()) {
+					while (process.isAlive() && !Thread.interrupted()) {
 						String output = stdoutReader.readLine();
 						if (output != null) {
 							if (!noreply) consumer = consumerq.poll();
@@ -145,8 +148,9 @@ public class SingleProcessManager implements ProcessManager {
 						drain(stderr);
 					}	
 				} catch (IOException e) {
-					log.error("reader thread stopped :(", e);
+					// we can't talk to the process any more
 				} finally {
+					terminate(process);
 					writerThread.interrupt();
 				}
 			}
@@ -165,6 +169,23 @@ public class SingleProcessManager implements ProcessManager {
 		readerThread.start();
 	}
 	
+	private static void terminate(Process process) {
+		if (process == null) return;
+		if (process.isAlive()) {
+			process.destroy();
+			try {
+				if (!process.waitFor(5, TimeUnit.SECONDS)) {
+					process.destroyForcibly();
+					if (!process.waitFor(5, TimeUnit.SECONDS)) {
+						log.error("failed to terminate process");
+					}
+				}
+			} catch (InterruptedException e) {
+				// whatever
+			}
+		}
+	}
+	
 	private void drain(InputStream stream) {
 		byte[] buf = new byte[8192];
 		int readLength;
@@ -177,7 +198,6 @@ public class SingleProcessManager implements ProcessManager {
 				System.err.printf("stderr: %s\n", new String(baos.toByteArray(), StandardCharsets.UTF_8));
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
 			// ignore
 		}
 	}
@@ -192,9 +212,7 @@ public class SingleProcessManager implements ProcessManager {
 
 	@Override
 	public void kill() {
-		if (process.isAlive()) {
-			process.destroyForcibly();
-		}
+		terminate(process);
 	}
 
 	@Override

@@ -30,6 +30,7 @@ import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
 import reka.core.setup.OperationConfigurer;
 import reka.core.setup.OperationSetup;
+import reka.core.setup.StatusDataProvider;
 import reka.core.util.StringWithVars;
 import reka.http.server.HttpServerManager;
 import reka.http.server.HttpSettings;
@@ -139,6 +140,8 @@ public class WebsocketModule extends ModuleConfigurer {
 		
 		module.operation(path("send"), provider -> new WebsocketSendConfigurer());
 		module.operation(path("broadcast"), provider -> new WebsocketBroadcastConfigurer());
+		
+		module.status(store -> new WebsocketStatusProvider(store.get(HTTP_SETTINGS)));
 		
 		topics.forEach(topic -> {
 			Path base = path(topic.key().name());
@@ -403,6 +406,28 @@ public class WebsocketModule extends ModuleConfigurer {
 						});
 					}
 				});
+			});
+		}
+		
+	}
+	
+	public class WebsocketStatusProvider implements StatusDataProvider {
+
+		private final HttpSettings settings;
+		
+		public WebsocketStatusProvider(HttpSettings settings) {
+			this.settings = settings;
+		}
+		
+		@Override
+		public boolean up() {
+			return true;
+		}
+
+		@Override
+		public void statusData(MutableData data) {
+			server.websocket(settings, ws -> {
+				data.putInt("connections", ws.channels.size());
 			});
 		}
 		

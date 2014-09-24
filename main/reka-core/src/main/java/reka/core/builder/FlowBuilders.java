@@ -81,6 +81,7 @@ public class FlowBuilders {
 		}
 		
 		public FlowInfo visualizer(DefaultFlowVisualizer visualizer) {
+			checkState(!built(), "already built!");
 			this.visualizer = visualizer;
 			return this;
 		}
@@ -90,6 +91,7 @@ public class FlowBuilders {
 		}
 		
 		public FlowInfo flow(Flow flow) {
+			checkState(!built(), "already built!");
 			this.flow = flow;
 			return this;
 		}
@@ -114,6 +116,11 @@ public class FlowBuilders {
 		public FlowSegment segment() {
 			return segment;
 		}
+		
+		public boolean built() {
+			return flow != null && visualizer != null;
+		}
+		
 	}
 	
 	public FlowBuilders add(Path name, FlowSegment segment) {
@@ -175,6 +182,7 @@ public class FlowBuilders {
 	private final Map<Path,FlowConnector> connectors = new HashMap<>();
 	
 	private void createFlow(FlowInfo info, boolean buildFlow) {
+		if (info.built()) return;
 		
 		FlowConnector connections = connectSegments(info.segment());
 		

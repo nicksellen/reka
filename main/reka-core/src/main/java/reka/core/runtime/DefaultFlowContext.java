@@ -6,6 +6,7 @@ import java.util.concurrent.ExecutorService;
 
 import reka.api.data.Data;
 import reka.api.data.MutableData;
+import reka.api.flow.Flow.FlowStats;
 import reka.api.run.Subscriber;
 import reka.core.runtime.handlers.ActionHandler;
 import reka.core.runtime.handlers.ErrorHandler;
@@ -14,10 +15,11 @@ import reka.core.runtime.handlers.stateful.NodeState;
 
 public class DefaultFlowContext implements FlowContext {
 	
-	public static FlowContext create(long flowId, ExecutorService executor, Subscriber subscriber) {
-		return new DefaultFlowContext(flowId, executor, subscriber);
+	public static FlowContext create(long flowId, ExecutorService executor, Subscriber subscriber, FlowStats stats) {
+		return new DefaultFlowContext(flowId, executor, subscriber, stats);
 	}
 
+	private final FlowStats stats;
 	private final ExecutorService executor;
 	private final Map<Integer,NodeState> states = new HashMap<>();
 	private final Subscriber subscriber;
@@ -26,11 +28,16 @@ public class DefaultFlowContext implements FlowContext {
 	
 	private volatile boolean done = false;
 	
-	private DefaultFlowContext(long flowId, ExecutorService executor, Subscriber subscriber) {
+	private final boolean statsEnabled;
+	
+	private DefaultFlowContext(long flowId, ExecutorService executor, Subscriber subscriber, FlowStats stats) {
 		this.executor = executor;
 		this.subscriber = subscriber;
 		this.flowId = flowId;
+		this.stats = stats;
+		this.statsEnabled = stats != null;
 		started = System.nanoTime();
+		if (statsEnabled) stats.requests.increment();	
 	}
 
 	@Override
@@ -86,12 +93,19 @@ public class DefaultFlowContext implements FlowContext {
 	public void error(Data data, Throwable t) {
 		done = true;
 		subscriber.error(data, t);
+		if (statsEnabled) stats.errors.increment();
 	}
 
 	@Override
 	public void halted() {
 		done = true;
 		subscriber.halted();
+		if (statsEnabled) stats.halts.increment();
+	}
+
+	@Override
+	public boolean statsEnabled() {
+		return statsEnabled;
 	}
 	
 }
