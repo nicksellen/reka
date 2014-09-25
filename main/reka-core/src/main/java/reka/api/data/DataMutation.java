@@ -2,11 +2,10 @@ package reka.api.data;
 
 import static reka.api.Path.path;
 import static reka.api.Path.PathElements.name;
-import static reka.api.content.Contents.falseValue;
+import static reka.api.content.Contents.booleanValue;
 import static reka.api.content.Contents.integer;
 import static reka.api.content.Contents.longValue;
 import static reka.api.content.Contents.nullValue;
-import static reka.api.content.Contents.trueValue;
 import static reka.api.content.Contents.utf8;
 
 import java.util.function.Consumer;
@@ -76,7 +75,7 @@ public interface DataMutation<T> {
 	}
 	
 	default T putBool(Path path, boolean val) {
-		return put(path, val ? trueValue() : falseValue());
+		return put(path, booleanValue(val));
 	}
 	
 	default T putBool(PathElement element, boolean val) {

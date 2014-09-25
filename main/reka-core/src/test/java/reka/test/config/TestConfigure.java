@@ -2,7 +2,6 @@ package reka.test.config;
 
 import static reka.config.configurer.Configurer.configure;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,12 +20,12 @@ public class TestConfigure {
     private Router router;
     
 	@Conf.At("people.nick.age")
-	public void node(BigDecimal age) {
+	public void node(int age) {
 		log.debug("nick is {}\n", age);
 	}
 
 	@Conf.At("people.james.age")
-	public void james(BigDecimal age) {
+	public void james(int age) {
 		log.debug("james is {}\n", age);
 	}
 	

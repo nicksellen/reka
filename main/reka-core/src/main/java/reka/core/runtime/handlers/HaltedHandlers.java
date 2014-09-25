@@ -29,7 +29,7 @@ public class HaltedHandlers implements HaltedHandler {
 			if (handler instanceof HaltedHandlers) {
 				HaltedHandlers inner = (HaltedHandlers) handler;
 				addAll(inner.handlers, dst);
-			} else if (!DoNothing.INSTANCE.equals(handler)){
+			} else if (handler != null && !DoNothing.INSTANCE.equals(handler)){
 				dst.add(handler);
 			}
 		}

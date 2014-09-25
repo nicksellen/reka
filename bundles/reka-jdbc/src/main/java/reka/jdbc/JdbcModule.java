@@ -43,7 +43,7 @@ import reka.core.util.StringWithVars.Variable;
 
 public class JdbcModule extends ModuleConfigurer {
 	
-	protected static final IdentityKey<JdbcConnectionProvider> POOL = IdentityKey.named("connection pool");
+	protected static final IdentityKey<DBCP2ConnectionProvider> POOL = IdentityKey.named("connection pool");
 
 	@SuppressWarnings("unused")
 	private final Logger log = LoggerFactory.getLogger(getClass());

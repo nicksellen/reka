@@ -22,6 +22,7 @@ import reka.core.bundle.BundleManager;
 import reka.filesystem.FilesystemBundle;
 import reka.http.HttpBundle;
 import reka.jade.JadeBundle;
+import reka.jdbc.JdbcBundle;
 import reka.jsx.JsxBundle;
 import reka.less.LessBundle;
 import reka.main.Main;
@@ -53,6 +54,7 @@ public class All {
 			new NashornBundle(),
 			new ProcessBundle(),
 			new MustacheBundle(),
+			new JdbcBundle(),
 			new JsxBundle(),
 			new CommonBundle(),
 			new LessBundle(),

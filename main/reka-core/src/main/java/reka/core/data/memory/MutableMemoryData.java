@@ -6,11 +6,10 @@ import static java.util.stream.IntStream.range;
 import static reka.api.Path.dots;
 import static reka.api.Path.root;
 import static reka.api.Path.PathElements.nextIndex;
+import static reka.api.content.Contents.booleanValue;
 import static reka.api.content.Contents.doubleValue;
-import static reka.api.content.Contents.falseValue;
 import static reka.api.content.Contents.integer;
 import static reka.api.content.Contents.longValue;
-import static reka.api.content.Contents.trueValue;
 import static reka.api.content.Contents.utf8;
 import static reka.util.Util.createEntry;
 import static reka.util.Util.runtime;
@@ -40,7 +39,7 @@ import reka.api.Path;
 import reka.api.Path.PathElement;
 import reka.api.Path.PathElements;
 import reka.api.content.Content;
-import reka.api.content.Content.NullContent;
+import reka.api.content.types.NullContent;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.core.data.ObjBuilder;
@@ -94,19 +93,19 @@ public class MutableMemoryData implements MutableDataProvider<Object> {
 		return list;
 	}
 	
-	private static Content convertToContent(Object obj) {
-		if (obj instanceof String) {
-			return utf8((String) obj);
-		} else if (obj instanceof Long) {
-			return longValue((Long) obj);
-		} else if (obj instanceof Double) {
-			return doubleValue((Double) obj);
-		} else if (obj instanceof Integer) {
-			return integer((Integer) obj);
-		} else if (obj instanceof Boolean) {
-			return ((Boolean) obj) ? trueValue() : falseValue(); 
-		} else if (obj == null) {
+	private static Content convertToContent(Object obj) { 
+		if (obj == null) {
 			return NullContent.INSTANCE;
+		} else if (obj instanceof String) {
+			return utf8((String) obj);
+		} else if (long.class.isInstance(obj)) {
+			return longValue((long) obj);
+		} else if (int.class.isInstance(obj)) {
+			return integer((int) obj);
+		} else if (double.class.isInstance(obj)) {
+			return doubleValue((double) obj);
+		} else if (boolean.class.isInstance(obj)) {
+			return booleanValue((boolean) obj);
 		} else {
 			throw runtime("don't know how to make %s (%s) a Content", obj, obj.getClass());
 		}

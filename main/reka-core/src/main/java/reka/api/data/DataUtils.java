@@ -105,7 +105,14 @@ final class DataUtils {
 		if (a == b) return true;
 		
 		if (a.isContent() && b.isContent()) {
-			return a.content().equals(b.content());
+			Content aContent = a.content();
+			Content bContent = b.content();
+			if (aContent.equals(bContent)) {
+				return true;
+			} else {
+				return false;
+			}
+			//return a.content().equals(b.content());
 		} else if (a.isContent() || b.isContent()) {
 			return false;
 		}

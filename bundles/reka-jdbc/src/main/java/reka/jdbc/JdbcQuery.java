@@ -2,11 +2,10 @@ package reka.jdbc;
 
 import static reka.api.Path.path;
 import static reka.api.Path.PathElements.index;
-import static reka.api.content.Contents.falseValue;
+import static reka.api.content.Contents.booleanValue;
 import static reka.api.content.Contents.integer;
 import static reka.api.content.Contents.longValue;
 import static reka.api.content.Contents.nullValue;
-import static reka.api.content.Contents.trueValue;
 import static reka.api.content.Contents.utf8;
 import static reka.util.Util.runtime;
 import static reka.util.Util.unchecked;
@@ -64,7 +63,7 @@ public class JdbcQuery implements Operation {
 	}
 
 	private MutableData run(MutableData data) {
-				
+		
 		try (Connection connection = provider.getConnection()) {
 
 			try {
@@ -157,14 +156,11 @@ public class JdbcQuery implements Operation {
 				return nullValue();
 			}
 		case Types.BOOLEAN:
-			if (result.getBoolean(column)) {
-				return trueValue();
-			} else {
-				return falseValue();
-			}
+			return booleanValue(result.getBoolean(column));
 		default:
 			throw runtime("don't know how to handle column type [%d] / [%s]", meta.getColumnType(column), meta.getColumnTypeName(column));
 		}
+		
 	}
 	
 	private void handleResultSet(ResultSet result, MutableData data) throws SQLException {
@@ -217,13 +213,8 @@ public class JdbcQuery implements Operation {
 				return;
 			}
 		case Types.BOOLEAN:
-			if (result.getBoolean(column)) {
-				item.put(path, trueValue());
-				return;
-			} else {
-				item.put(path, falseValue());
-				return;
-			}
+			item.put(path, booleanValue(result.getBoolean(column)));
+			return;
 		default:
 			switch (meta.getColumnTypeName(column)) {
 			case "json":
@@ -236,13 +227,7 @@ public class JdbcQuery implements Operation {
 				}
 				return;
 			case "bool":
-				if (result.getBoolean(column)) {
-					item.put(path, trueValue());
-					return;
-				} else {
-					item.put(path, falseValue());
-					return;
-				}
+				item.put(path, booleanValue(result.getBoolean(column)));
 			default:
 				throw runtime("don't know how to handle column type [%d] / [%s]", meta.getColumnType(column), meta.getColumnTypeName(column));
 			}

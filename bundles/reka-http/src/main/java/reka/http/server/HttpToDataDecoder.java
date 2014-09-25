@@ -1,7 +1,6 @@
 package reka.http.server;
 
 import static reka.api.Path.dots;
-import static reka.api.content.Contents.trueValue;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
@@ -15,6 +14,7 @@ import java.util.Map.Entry;
 import reka.api.Path.PathElements;
 import reka.api.Path.Request;
 import reka.api.Path.Response;
+import reka.api.content.types.BooleanContent;
 import reka.api.data.MutableData;
 import reka.core.data.memory.MutableMemoryData;
 
@@ -68,7 +68,7 @@ public class HttpToDataDecoder extends MessageToMessageDecoder<HttpRequest> {
 		
 		if ("HEAD".equals(httpMethod)) {
 			httpMethod = "GET";
-			data.put(Response.HEAD, trueValue());
+			data.put(Response.HEAD, BooleanContent.TRUE);
 		}
 		
 		data.putString(Request.METHOD, httpMethod);

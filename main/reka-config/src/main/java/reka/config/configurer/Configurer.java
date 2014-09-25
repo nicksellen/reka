@@ -11,6 +11,7 @@ import static java.util.stream.StreamSupport.stream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -861,6 +862,39 @@ public class Configurer {
 		
 	}
 	
+	protected class BigDecimalAtOption extends AtOption {
+
+		BigDecimalAtOption(Method method, String path) {
+			super(method, path);
+		}
+
+		@Override
+		public void apply(ConfigOrNavigableConfig config, Object instance, Status status) {
+		    if (config.hasBody()) {
+    		    Optional<Config> at = config.body().at(path);
+    			if (at.isPresent()) {
+    				Config conf = at.get();
+    				if (conf.hasValue()) {
+    					status.addFirstAsMatched(path);
+	    				try {
+	    					checkDeprecation(method, conf);
+	    					method.invoke(instance, conf.valueAsBigDecimal());
+		                } catch (Throwable t) {
+		                	t.printStackTrace();
+							throw asInvalidConfigurationException(conf, t);
+		                }
+    				}
+    			}
+		    }
+		}
+
+		@Override
+		public int order() {
+			return 10;
+		}
+		
+	}
+	
 	protected static final Splitter dotSplitter = Splitter.on(".");
 	
 
@@ -1060,6 +1094,8 @@ public class Configurer {
 				options.add(new DoubleAtOption(method, annotation.value()));
 			} else if (assignable(valueClass, float.class, Float.class)) {
 				options.add(new FloatAtOption(method, annotation.value()));
+			} else if (assignable(valueClass, BigDecimal.class)) {
+				options.add(new BigDecimalAtOption(method, annotation.value()));
 			} else if (assignable(valueClass, boolean.class, Boolean.class)) {
 				options.add(new BooleanAtOption(method, annotation.value()));
 			} else if (assignable(valueClass, String.class)) {

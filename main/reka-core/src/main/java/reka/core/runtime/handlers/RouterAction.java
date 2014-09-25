@@ -17,34 +17,34 @@ public class RouterAction implements ActionHandler {
 
 	private final RouterOperation operation;
 	private final ErrorHandler error;
-	
+
 	private final Collection<NodeChild> children;
 	private final Set<RouteKey> keys;
-	
+
 	public RouterAction(RouterOperation operation, Collection<NodeChild> children, ErrorHandler error) {
 		this.operation = operation;
 		this.children = children;
 		this.error = error;
-		
+
 		ImmutableSet.Builder<RouteKey> keys = ImmutableSet.builder();
 		for (NodeChild child : children) {
-		    if (child.key() != null) {
-		        keys.add(child.key());
-		    }
+			if (child.key() != null) {
+				keys.add(child.key());
+			}
 		}
-		
+
 		this.keys = keys.build();
 	}
-	
+
 	@Override
 	public void call(MutableData data, FlowContext context) {
-		
+
 		RouteCollector collector = DefaultRouteCollector.create(keys);
-		
+
 		operation.call(data, collector);
-		
+
 		boolean copy = collector.routed().size() > 1;
-		
+
 		for (NodeChild child : children) {
 			if (collector.routed().contains(child.key())) {
 				context.call(child.node(), error, copy ? data.mutableCopy() : data);
@@ -52,8 +52,7 @@ public class RouterAction implements ActionHandler {
 				child.node().halted(context);
 			}
 		}
-		
+
 	}
 
 }
-

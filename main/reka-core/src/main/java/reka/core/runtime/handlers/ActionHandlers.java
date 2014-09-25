@@ -30,7 +30,7 @@ public class ActionHandlers implements ActionHandler {
 			if (handler instanceof ActionHandlers) {
 				ActionHandlers inner = (ActionHandlers) handler;
 				addAll(inner.handlers, dst);
-			} else if (!DoNothing.INSTANCE.equals(handler)){
+			} else if (handler != null && !DoNothing.INSTANCE.equals(handler)){
 				dst.add(handler);
 			}
 		}

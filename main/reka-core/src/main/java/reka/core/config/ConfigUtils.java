@@ -2,8 +2,7 @@ package reka.core.config;
 
 import static reka.api.Path.dots;
 import static reka.api.Path.root;
-import static reka.api.content.Contents.falseValue;
-import static reka.api.content.Contents.trueValue;
+import static reka.api.content.Contents.booleanValue;
 import static reka.api.content.Contents.utf8;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import reka.api.Path;
@@ -50,9 +49,9 @@ public class ConfigUtils {
 		} else if (config.hasKey()) {
 			String key = config.key();
 			if (key.startsWith("!")) {
-				data.putOrAppend(dots(key.substring(1)), falseValue());
+				data.putOrAppend(dots(key.substring(1)), booleanValue(false));
 			} else {
-				data.putOrAppend(path, trueValue());
+				data.putOrAppend(path, booleanValue(true));
 			}
 		}
 		return data;

@@ -15,6 +15,8 @@ import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import reka.api.data.MutableData;
+
 public class DBCP2ConnectionProvider implements JdbcConnectionProvider {
 	
 	private final Logger log = LoggerFactory.getLogger(getClass());
@@ -46,6 +48,14 @@ public class DBCP2ConnectionProvider implements JdbcConnectionProvider {
 	@Override
 	public DataSource dataSource() {
 		return dataSource;
+	}
+	
+	public void writeStats(MutableData data) {
+		int active = connectionPool.getNumActive();
+		if (active >= 0) data.putInt("active", active);
+		
+		int idle = connectionPool.getNumIdle();
+		if (idle >= 0) data.putInt("idle", idle);
 	}
 
 }

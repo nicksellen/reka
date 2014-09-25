@@ -1,55 +1,20 @@
 package reka.http.operations;
 
-import static reka.api.content.Contents.binary;
-import static reka.util.Util.unchecked;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.file.Files;
-
 import reka.api.Path.Response;
 import reka.api.content.Content;
 import reka.api.data.MutableData;
 import reka.api.run.Operation;
 
-public class HttpContent implements Operation {
-
-	private static final long PUT_IN_FILE_THRESHOLD = 1024L * 512L; // 512k
-	
-	private final Content content;
-	private final Content contentType;
+public class HttpContent extends BaseHttpContent implements Operation {
 	
 	public HttpContent(Content content, Content contentType) {
-		
-		if (!content.hasFile() && !content.hasByteBuffer()) {
-			
-			byte[] contentBytes = content.asBytes();
-			
-			if (contentBytes.length > PUT_IN_FILE_THRESHOLD) {
-				try {
-					File f = Files.createTempFile("reka.", "httpcontent").toFile();
-					f.deleteOnExit();
-					Files.write(f.toPath(), contentBytes);
-					content = binary(contentType.asUTF8(), f);
-				} catch (IOException e) {
-					throw unchecked(e);
-				}
-			} else {
-				ByteBuffer buf = ByteBuffer.allocateDirect(contentBytes.length).put(contentBytes);
-				buf.flip();
-				content = binary(contentType.asUTF8(), buf.asReadOnlyBuffer());
-			}
-		}
-		
-		this.content = content;
-		this.contentType = contentType;
+		super(content, contentType);
 	}
-	
+
 	@Override
 	public void call(MutableData data) {
 		data.put(Response.CONTENT, content)
-				   .put(Response.Headers.CONTENT_TYPE, contentType);
+		    .put(Response.Headers.CONTENT_TYPE, contentType);
 	}
 
 }

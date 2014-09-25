@@ -3,7 +3,7 @@ package reka.http.server;
 import static reka.api.Path.dots;
 import static reka.api.Path.path;
 import static reka.api.content.Contents.binary;
-import static reka.api.content.Contents.trueValue;
+import static reka.api.content.Contents.booleanValue;
 import static reka.api.content.Contents.utf8;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.channel.ChannelHandler.Sharable;
@@ -35,6 +35,7 @@ import reka.api.Path;
 import reka.api.Path.PathElements;
 import reka.api.Path.Request;
 import reka.api.Path.Response;
+import reka.api.content.types.BooleanContent;
 import reka.api.data.MutableData;
 import reka.core.data.memory.MutableMemoryData;
 
@@ -223,7 +224,7 @@ public class FullHttpToDatasetDecoder extends MessageToMessageDecoder<FullHttpRe
 		
 		if ("HEAD".equals(httpMethod)) {
 			httpMethod = "GET";
-			data.put(Response.HEAD, trueValue());
+			data.put(Response.HEAD, BooleanContent.TRUE);
 		}
 		
 		data.putString(Request.METHOD, httpMethod);

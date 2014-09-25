@@ -139,8 +139,8 @@ class NodeBuilder {
 		final ActionHandler action;
 		
 		ErrorHandler error = CONTEXT_ERROR;
-		HaltedHandler halted = DoNothing.INSTANCE;
-		
+		HaltedHandler halted = null;
+				
 		if (node.isEnd()) {
 			halted = CONTEXT_HALTED;
 		}
@@ -149,6 +149,18 @@ class NodeBuilder {
 			sb.append("listeners(").append(listeners).append(") ");
 			error = errorHandlers(asList(errorHandlers(listeners), error));
 			halted = haltedHandlers(asList(haltedHandlers(listeners), halted));
+		}
+		
+		if (halted == null) {
+			halted = new HaltedHandler(){
+
+				@Override
+				public void halted(FlowContext context) {
+					log.error("halted at {}: {}", id, name);
+				}
+				
+			};
+
 		}
 		
 		FlowOperation operation = null;
@@ -211,6 +223,12 @@ class NodeBuilder {
 			ControlHandler stateHandler = new StatefulControl(id, initialCounter, main, halted, error);
 			main = stateHandler;
 			halted = stateHandler;
+		}
+
+		boolean inspectAll = false;
+		
+		if (inspectAll) {
+			main = new InspectDataAction(format("before %s [%s]", id, name), main, error);
 		}
 
 		//main = new TimeLoggerAction(id, main, error);

@@ -1,9 +1,8 @@
 package reka.jdbc;
 
 import static reka.api.Path.path;
-import static reka.api.content.Contents.falseValue;
+import static reka.api.content.Contents.booleanValue;
 import static reka.api.content.Contents.integer;
-import static reka.api.content.Contents.trueValue;
 import static reka.api.content.Contents.utf8;
 import static reka.util.Util.unchecked;
 
@@ -12,6 +11,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import reka.api.content.types.BooleanContent;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.core.data.memory.MutableMemoryData;
@@ -93,7 +93,7 @@ public class JdbcUtil {
 						String column = columnRef.toLowerCase();
 						schemas.put(path(db, table, "columns", column, "type"), utf8(columnResult.getString("TYPE_NAME").toLowerCase()));
 						schemas.put(path(db, table, "columns", column, "size"), integer(columnResult.getInt("COLUMN_SIZE")));
-						schemas.put(path(db, table, "columns", column, "nullable"), columnResult.getInt("NULLABLE") == 0 ? falseValue() : trueValue());
+						schemas.put(path(db, table, "columns", column, "nullable"), booleanValue(columnResult.getInt("NULLABLE") != 0));
 						
 						String remark = columnResult.getString("REMARKS");
 						if (remark != null && !remark.isEmpty()) {
@@ -132,8 +132,7 @@ public class JdbcUtil {
 						String index = indexResult.getString("INDEX_NAME").toLowerCase();
 						String column = indexResult.getString("COLUMN_NAME").toLowerCase();
 						if (column != null) {
-							//schemas.put(path(db, table, "columns", column, "indexes", index, "type"), integer(indexResult.getShort("TYPE")));
-							schemas.put(path(db, table, "columns", column, "indexes", index, "unique"), indexResult.getBoolean("NON_UNIQUE") ? falseValue() : trueValue());
+							schemas.put(path(db, table, "columns", column, "indexes", index, "unique"), booleanValue(!indexResult.getBoolean("NON_UNIQUE")));
 						} else {
 							schemas.put(path(db, table, "indexes", index, "type"), integer(indexResult.getShort("TYPE")));
 						}
@@ -153,7 +152,7 @@ public class JdbcUtil {
 						*/
 						
 						String column = pkResult.getString("COLUMN_NAME").toLowerCase();
-						schemas.put(path(db, table, "columns", column, "primary"), trueValue());
+						schemas.put(path(db, table, "columns", column, "primary"), BooleanContent.TRUE);
 						
 					}
 					

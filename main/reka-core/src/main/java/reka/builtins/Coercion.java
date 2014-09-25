@@ -1,9 +1,8 @@
 package reka.builtins;
 
 import static reka.api.Path.dots;
-import static reka.api.content.Contents.falseValue;
+import static reka.api.content.Contents.booleanValue;
 import static reka.api.content.Contents.longValue;
-import static reka.api.content.Contents.trueValue;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import static reka.util.Util.createEntry;
 
@@ -100,7 +99,7 @@ public class Coercion {
 						data.put(path, longValue(Long.valueOf(content.asUTF8())));
 						break;
 					case BOOLEAN:
-						data.put(path, Boolean.valueOf(content.asUTF8()) ? trueValue() : falseValue());
+						data.put(path, booleanValue(Boolean.valueOf(content.asUTF8())));
 						break;
 					}
 				}
@@ -140,7 +139,7 @@ public class Coercion {
 		public void call(MutableData data) {
 			Data val = data.at(path);
 			if (val.isContent()) {
-				data.put(path, Boolean.valueOf(val.content().asUTF8()) ? trueValue() : falseValue());
+				data.put(path, booleanValue(Boolean.valueOf(val.content().asUTF8())));
 			}
 		}
 		

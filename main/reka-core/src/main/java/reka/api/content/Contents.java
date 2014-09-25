@@ -10,19 +10,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 
-import reka.api.content.Content.BinaryContent;
-import reka.api.content.Content.BinaryContent.Encoding;
-import reka.api.content.Content.ByteArrayBinaryContent;
-import reka.api.content.Content.ByteBufferBinaryContent;
-import reka.api.content.Content.DoubleContent;
-import reka.api.content.Content.FalseContent;
-import reka.api.content.Content.FileBinaryContent;
-import reka.api.content.Content.IntegerContent;
-import reka.api.content.Content.LongContent;
-import reka.api.content.Content.NonSerializeableObject;
-import reka.api.content.Content.NullContent;
-import reka.api.content.Content.TrueContent;
-import reka.api.content.Content.UTF8Content;
+import reka.api.content.types.BinaryContent;
+import reka.api.content.types.BinaryContent.Encoding;
+import reka.api.content.types.BooleanContent;
+import reka.api.content.types.ByteArrayBinaryContent;
+import reka.api.content.types.ByteBufferBinaryContent;
+import reka.api.content.types.DoubleContent;
+import reka.api.content.types.FileBinaryContent;
+import reka.api.content.types.IntegerContent;
+import reka.api.content.types.LongContent;
+import reka.api.content.types.NullContent;
+import reka.api.content.types.UTF8Content;
 
 public class Contents {
 	
@@ -30,12 +28,8 @@ public class Contents {
 		return new DoubleContent(value);
 	}
 	
-	public static Content falseValue() {
-		return FalseContent.INSTANCE;
-	}
-	
-	public static Content trueValue() {
-		return TrueContent.INSTANCE;
+	public static Content booleanValue(boolean value) {
+		return BooleanContent.of(value);
 	}
 	
 	public static Content nullValue() {
@@ -66,21 +60,6 @@ public class Contents {
 			throw unchecked(e);
 		}
 	}
-
-	/*
-	public static Content binary(ByteBuffer buffer) {
-		return new ByteBufferBinaryContent(null, BinaryContent.Encoding.NONE, buffer);
-	}
-
-
-	public static Content binary(File file) {
-		return new FileBinaryContent(null, BinaryContent.Encoding.NONE, file);
-	}
-
-	public static Content binary(byte[] bytes) {
-		return new ByteArrayBinaryContent(null, BinaryContent.Encoding.NONE, bytes);
-	}
-	*/
 	
 	public static Content binary(String contentType, ByteBuffer buffer) {
 		return new ByteBufferBinaryContent(contentType, BinaryContent.Encoding.NONE, buffer);
@@ -97,10 +76,6 @@ public class Contents {
 	public static Content binary(String contentType, byte[] bytes, String encoding) {
 		return new ByteArrayBinaryContent(contentType, BinaryContent.Encoding.valueOf(encoding.toUpperCase()), bytes);
 	}
-	
-    public static Content nonSerializableContent(Object object) {
-        return new NonSerializeableObject(object);
-    }
 	
 	public static byte[] writeValueToByteArray(Content content) {
 		try {
