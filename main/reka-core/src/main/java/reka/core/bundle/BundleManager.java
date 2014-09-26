@@ -38,7 +38,7 @@ public class BundleManager {
 	}
 	
 	private void setupBundle(BundleConfigurer bundle) {
-		BundleConfigurer.BundleSetup setup = new BundleConfigurer.BundleSetup();
+		BundleConfigurer.BundleSetup setup = new BundleConfigurer.BundleSetup(bundle.base());
 		bundle.setup(setup);
 		modules.addAll(setup.modules());
 		converters.addAll(setup.converters());

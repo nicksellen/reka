@@ -1,5 +1,7 @@
 package reka.core.bundle;
 
+import static reka.api.Path.root;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
@@ -10,6 +12,7 @@ import reka.core.setup.ModuleConfigurer;
 
 public interface BundleConfigurer {
 	
+	Path base();
 	void setup(BundleSetup bundle);
 	
 	public static class ModuleInfo implements Supplier<ModuleConfigurer> {
@@ -41,13 +44,23 @@ public interface BundleConfigurer {
 	
 	public static class BundleSetup {
 		
+		private final Path base;
+		
 		private final List<ModuleInfo> modules = new ArrayList<>();
 		private final List<ConfigConverter> converters = new ArrayList<>();
 		private final List<BundleConfigurer> moreBundles = new ArrayList<>();
 		private final List<Runnable> shutdownHandlers = new ArrayList<>();
 		
-		public BundleSetup module(Path name, String version, Supplier<ModuleConfigurer> supplier) {
-			modules.add(new ModuleInfo(name, version, supplier));
+		public BundleSetup(Path base) {
+			this.base = base;
+		}
+		
+		public BundleSetup module(String version, Supplier<ModuleConfigurer> supplier) {
+			return submodule(root(), version, supplier);
+		}
+		
+		public BundleSetup submodule(Path name, String version, Supplier<ModuleConfigurer> supplier) {
+			modules.add(new ModuleInfo(base.add(name), version, supplier));
 			return this;
 		}
 		
@@ -56,6 +69,7 @@ public interface BundleConfigurer {
 			return this;
 		}
 		
+		/*
 		public BundleSetup bundle(BundleConfigurer bundle) {
 			moreBundles.add(bundle);
 			return this;
@@ -67,6 +81,7 @@ public interface BundleConfigurer {
 			}
 			return this;
 		}
+		*/
 
 		public void shutdown(Runnable handler) {
 			shutdownHandlers.add(handler);

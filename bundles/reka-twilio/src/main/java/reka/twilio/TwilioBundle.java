@@ -30,11 +30,16 @@ import com.twilio.sdk.resource.factory.SmsFactory;
 import com.twilio.sdk.resource.instance.Sms;
 
 public class TwilioBundle implements BundleConfigurer {
+
+	@Override
+	public Path base() {
+		return path("twilio");
+	}
 	
 	private static final Logger log = LoggerFactory.getLogger(TwilioBundle.class);
 
 	public void setup(BundleSetup bundle) {
-		bundle.module(path("twilio"), "0.1.0", () -> new TwilioModule());
+		bundle.module("0.1.0", () -> new TwilioModule());
 	}
 	
 	public static class TwilioModule extends ModuleConfigurer {

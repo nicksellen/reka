@@ -23,8 +23,13 @@ import reka.core.util.StringWithVars;
 public class FilesystemBundle implements BundleConfigurer {
 
 	@Override
+	public reka.api.Path base() {
+		return path("fs");
+	}
+
+	@Override
 	public void setup(BundleSetup bundle) {
-		bundle.module(path("fs"), "0.1.0", () -> new FilesystemModule());
+		bundle.module("0.1.0", () -> new FilesystemModule());
 	}
 	
 	public static class FilesystemReadConfigurer implements OperationConfigurer {

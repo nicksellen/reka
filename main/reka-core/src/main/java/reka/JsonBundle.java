@@ -26,12 +26,17 @@ import reka.core.setup.OperationSetup;
 import reka.core.util.StringWithVars;
 
 public class JsonBundle implements BundleConfigurer {
+
+	@Override
+	public Path base() {
+		return path("json");
+	}
 	
 	private static final ObjectMapper jsonMapper = new ObjectMapper();
 
 	@Override
 	public void setup(BundleSetup bundle) {
-		bundle.module(path("json"), "0.1.0", () -> new UseJson());
+		bundle.module("0.1.0", () -> new UseJson());
 	}
 	
 	public static class UseJson extends ModuleConfigurer {

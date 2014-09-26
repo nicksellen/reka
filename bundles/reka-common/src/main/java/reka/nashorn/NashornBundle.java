@@ -1,6 +1,7 @@
 package reka.nashorn;
 
 import static reka.api.Path.path;
+import reka.api.Path;
 import reka.core.bundle.BundleConfigurer;
 
 // http://docs.oracle.com/javase/8/docs/technotes/guides/scripting/nashorn/intro.html#sthref14
@@ -12,8 +13,13 @@ import reka.core.bundle.BundleConfigurer;
 public class NashornBundle implements BundleConfigurer {
 
 	@Override
+	public Path base() {
+		return path("nashorn");
+	}
+
+	@Override
 	public void setup(BundleSetup bundle) {
-		bundle.module(path("nashorn"), "0.1.0", () -> new NashornModule());
+		bundle.module("0.1.0", () -> new NashornModule());
 	}
 
 }

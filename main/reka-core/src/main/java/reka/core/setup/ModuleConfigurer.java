@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
+import static java.util.stream.Collectors.joining;
 import static reka.api.Path.slashes;
 import static reka.config.configurer.Configurer.configure;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
@@ -315,7 +316,7 @@ public abstract class ModuleConfigurer {
 
 	public void useThisConfig(Config config) {
 		ModuleInfo info = moduleFor(slashes(config.key()));
-		checkConfig(info != null, "'%s' is not a valid module (try one of %s)", config.key(), mappingNames());
+		checkConfig(info != null, "'%s' is not a valid module (try one of %s)", config.key(), mappingNames().stream().collect(joining(", ")));
 		configureModule(info, config);
 	}
 

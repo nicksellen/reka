@@ -20,14 +20,15 @@ import reka.config.parser.ConfigParser;
 import reka.core.bundle.BundleConfigurer;
 import reka.core.bundle.BundleManager;
 import reka.filesystem.FilesystemBundle;
+import reka.h2.H2Bundle;
 import reka.http.HttpBundle;
 import reka.jade.JadeBundle;
-import reka.jdbc.JdbcBundle;
 import reka.jsx.JsxBundle;
 import reka.less.LessBundle;
 import reka.main.Main;
 import reka.mustache.MustacheBundle;
 import reka.nashorn.NashornBundle;
+import reka.pg.PostgresBundle;
 import reka.process.ProcessBundle;
 
 public class All {
@@ -54,7 +55,8 @@ public class All {
 			new NashornBundle(),
 			new ProcessBundle(),
 			new MustacheBundle(),
-			new JdbcBundle(),
+			new H2Bundle(),
+			new PostgresBundle(),
 			new JsxBundle(),
 			new CommonBundle(),
 			new LessBundle(),

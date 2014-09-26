@@ -52,17 +52,17 @@ public class HttpServerManager {
 	private final boolean epoll;
 	
 	private final Class<? extends ServerChannel> nettyServerChannelType;
-	private final Class<? extends Channel> nettyChannelType;
+	private final Class<? extends Channel> nettyClientChannelType;
 	
 	public HttpServerManager() {
 		epoll = Epoll.isAvailable();
 		if (epoll) {
 			nettyServerChannelType = EpollServerSocketChannel.class;
-			nettyChannelType = EpollSocketChannel.class;
+			nettyClientChannelType = EpollSocketChannel.class;
 			nettyEventGroup = new EpollEventLoopGroup();
 		} else {
 			nettyServerChannelType = NioServerSocketChannel.class;
-			nettyChannelType = NioSocketChannel.class;
+			nettyClientChannelType = NioSocketChannel.class;
 			nettyEventGroup = new NioEventLoopGroup();
 		}
 	}
@@ -76,7 +76,7 @@ public class HttpServerManager {
 	}
 	
 	public Class<? extends Channel> nettyChannelType() {
-		return nettyChannelType;
+		return nettyClientChannelType;
 	}
 	
 	private class PortHandler {

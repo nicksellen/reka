@@ -2,22 +2,23 @@ package reka.h2;
 
 import static reka.util.Util.unchecked;
 
-import org.h2.Driver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import reka.core.setup.ModuleConfigurer;
-import reka.core.setup.ModuleSetup;
+import reka.jdbc.JdbcModule;
+import reka.pg.PostgresModule;
 
-public class H2Module extends ModuleConfigurer {
+public class H2Module extends JdbcModule {
+	
+	private static final Logger log = LoggerFactory.getLogger(PostgresModule.class);
 
-	@Override
-	public void setup(ModuleSetup module) {
-		
+	static {
 		try {
-			Class.forName(Driver.class.getName());
+			Class.forName(org.h2.Driver.class.getName());
+			log.info("loading postgres driver {}", org.h2.Driver.class.getName());
 		} catch (ClassNotFoundException e) {
 			throw unchecked(e);
 		}
-		
 	}
 
 }

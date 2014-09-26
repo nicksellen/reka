@@ -12,6 +12,7 @@ import javax.script.CompiledScript;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import reka.api.Path;
 import reka.core.bundle.BundleConfigurer;
 import reka.nashorn.NashornRunner;
 import reka.nashorn.SingleThreadedNashornRunner;
@@ -19,6 +20,11 @@ import reka.nashorn.SingleThreadedNashornRunner;
 import com.google.common.io.Resources;
 
 public class JsxBundle implements BundleConfigurer {
+
+	@Override
+	public Path base() {
+		return path("jsx");
+	}
 	
 	private static final Logger log = LoggerFactory.getLogger(JsxBundle.class);
 	
@@ -51,7 +57,7 @@ public class JsxBundle implements BundleConfigurer {
 	}
 
 	public void setup(BundleSetup bundle) {
-		bundle.module(path("jsx"), "0.1.0", () -> new JsxModule());
+		bundle.module("0.1.0", () -> new JsxModule());
 	}
 
 }

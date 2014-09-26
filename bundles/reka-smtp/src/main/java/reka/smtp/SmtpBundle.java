@@ -28,6 +28,7 @@ import org.subethamail.smtp.helper.SimpleMessageListener;
 import org.subethamail.smtp.helper.SimpleMessageListenerAdapter;
 import org.subethamail.smtp.server.SMTPServer;
 
+import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.flow.Flow;
@@ -45,12 +46,17 @@ import reka.core.setup.OperationSetup;
 import reka.core.util.StringWithVars;
 
 public class SmtpBundle implements BundleConfigurer {
+
+	@Override
+	public Path base() {
+		return path("smtp");
+	}
 	
 	private static final Logger log = LoggerFactory.getLogger(SmtpBundle.class);
 
 	public void setup(BundleSetup bundle) {
-		bundle.module(path("smtp"), "0.1.0", () -> new UseSMTPConfigurer());
-		bundle.module(path("smtp/server"), "0.1.0", () -> new UseSMTPServerConfigurer());
+		bundle.module("0.1.0", () -> new UseSMTPConfigurer());
+		bundle.submodule(path("server"), "0.1.0", () -> new UseSMTPServerConfigurer());
 	}
 	
 	public static class UseSMTPServerConfigurer extends ModuleConfigurer {

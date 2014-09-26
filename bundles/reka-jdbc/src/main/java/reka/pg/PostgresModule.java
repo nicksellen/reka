@@ -2,22 +2,19 @@ package reka.pg;
 
 import static reka.util.Util.unchecked;
 
-import org.postgresql.Driver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.core.setup.ModuleConfigurer;
-import reka.core.setup.ModuleSetup;
+import reka.jdbc.JdbcModule;
 
-public class PostgresModule extends ModuleConfigurer {
+public class PostgresModule extends JdbcModule {
 
-	private final Logger log = LoggerFactory.getLogger(getClass());
+	private static final Logger log = LoggerFactory.getLogger(PostgresModule.class);
 	
-	@Override
-	public void setup(ModuleSetup init) {
+	static {
 		try {
-			Class.forName(Driver.class.getName());
-			log.info("loading postgres driver {}", Driver.class.getName());
+			Class.forName(org.postgresql.Driver.class.getName());
+			log.info("loading postgres driver {}", org.postgresql.Driver.class.getName());
 		} catch (ClassNotFoundException e) {
 			throw unchecked(e);
 		}

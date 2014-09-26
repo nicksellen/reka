@@ -338,38 +338,33 @@ public class Configurer {
 
 	protected Configured<Object> apply(ConfigOrNavigableConfig config, Object instance) {
 		Status status = new Status();
-		List<ConfigurationError> errors = new ArrayList<>();
+		
 		for (ConfOption option : options) {
 			try {
 			    option.apply(config, instance, status);
 			} catch (Throwable t) {
-				InvalidConfigurationException e = findInvalidConfigurationException(t);
-				if (e != null) {
-					errors.addAll(e.errors);
-				} else {
-					errors.add(new ConfigurationError(config, rootExceptionMessage(t), t));
-				}
+				status.error(config.config(), t);
 			}
 		}
 		
 		if (instance instanceof ErrorReporter) {
-			ErrorCollector collector = new ErrorCollector(config, errors);
+			ErrorCollector collector = new ErrorCollector(config, status.errors);
 			((ErrorReporter) instance).errors(collector);
 		}
 		
 		if (config.hasBody()) {
 			for (Config c : config.body()) {
 				if (c.hasKey() && !status.matchedKeys.contains(c.key())) {
-					errors.add(new ConfigurationError(new WrappedConfig(c), format("invalid option %s", c.key())));		
+					status.errors.add(new ConfigurationError(new WrappedConfig(c), format("invalid option %s", c.key())));		
 				}
 			}
 		}
 		
-		if (!errors.isEmpty()) {
-			log.debug("there are {} errors! {}\n", errors.size(), errors);
+		if (!status.errors.isEmpty()) {
+			log.debug("there are {} errors! {}\n", status.errors.size(), status.errors);
 		}
 		
-		return new Configured<Object>(config, instance, errors);
+		return new Configured<Object>(config, instance, status.errors);
 	}
 	
 	protected static InvalidConfigurationException findInvalidConfigurationException(Throwable t) {
@@ -435,7 +430,11 @@ public class Configurer {
 	}
 
 	protected static class Status {
+		
+		private final List<ConfigurationError> errors = new ArrayList<>();
+		
 		final Set<String> matchedKeys = new HashSet<>();
+		
 		protected void addFirstAsMatched(String val) {
 			matchedKeys.add(val);
 			Iterator<String> it = dotSplitter.split(val).iterator();
@@ -443,6 +442,11 @@ public class Configurer {
 				matchedKeys.add(it.next());
 			}
 		}
+		
+		protected void error(Config conf, Throwable t) {
+			errors.add(asConfigurationError(conf, t));
+		}
+		
 	}
 	
 	protected static abstract class ConfOption {
@@ -475,7 +479,7 @@ public class Configurer {
     					checkDeprecation(method, child);
     					method.invoke(instance, child);
 	                } catch (Throwable t) {
-						throw asInvalidConfigurationException(child, t);
+	                	status.error(child, t);
 	                }
     			}
 		    }
@@ -507,7 +511,7 @@ public class Configurer {
         					checkDeprecation(method, child);
                         	method.invoke(instance, child.valueAsString());
                         } catch (Throwable t) {
-	    					throw asInvalidConfigurationException(child, t);
+                        	status.error(child, t);
                         }
                     }
                 } else {
@@ -518,7 +522,7 @@ public class Configurer {
         					checkDeprecation(method, child);
                         	method.invoke(instance, child.valueAsString());
                         } catch (Throwable t) {
-	    					throw asInvalidConfigurationException(child, t);
+                        	status.error(child, t);
                         }
                     }
                 }
@@ -551,7 +555,7 @@ public class Configurer {
         					checkDeprecation(method, child);
     						method.invoke(instance, child);
 		                } catch (Throwable t) {
-							throw asInvalidConfigurationException(child, t);
+                        	status.error(child, t);
 		                }
     				}
     			} else {
@@ -561,7 +565,7 @@ public class Configurer {
         					checkDeprecation(method, child);
         					method.invoke(instance, child);
     	                } catch (Throwable t) {
-    						throw asInvalidConfigurationException(child, t);
+                        	status.error(child, t);
     	                }
     				}
     			}
@@ -591,7 +595,7 @@ public class Configurer {
         					newlymatched.add(child.key());
     						method.invoke(instance, child);
 		                } catch (Throwable t) {
-							throw asInvalidConfigurationException(child, t);
+                        	status.error(child, t);
 		                }
     				}
     		    }
@@ -635,7 +639,7 @@ public class Configurer {
 					status.matchedKeys.addAll(allKeys(config));
 		    		method.invoke(instance, config.config());
                 } catch (Throwable t) {
-					throw asInvalidConfigurationException(config.config(), t);
+                	status.error(config.config(), t);
                 }
 		    }
 		}
@@ -661,7 +665,7 @@ public class Configurer {
 					status.matchedKeys.add(config.config().key());
 					method.invoke(instance, config.config().key());
                 } catch (Throwable t) {
-					throw asInvalidConfigurationException(config.config(), t);
+                	status.error(config.config(), t);
                 }
 			}
 		}
@@ -687,7 +691,7 @@ public class Configurer {
 					status.matchedKeys.add(config.config().key());
 					method.invoke(instance, config.config().subkey());
                 } catch (Throwable t) {
-					throw asInvalidConfigurationException(config.config(), t);
+                	status.error(config.config(), t);
                 }
 			}
 		}
@@ -713,7 +717,7 @@ public class Configurer {
     					checkDeprecation(method, config.config());
             			method.invoke(instance, config.config().valueAsString());
 	                } catch (Throwable t) {
-						throw asInvalidConfigurationException(config.config(), t);
+                    	status.error(config.config(), t);
 	                }
             	}
             }
@@ -762,7 +766,7 @@ public class Configurer {
     				try {
     					method.invoke(instance, val);
 	                } catch (Throwable t) {
-						throw asInvalidConfigurationException(conf, t);
+                    	status.error(conf, t);
 	                }
     				
     			}
@@ -796,8 +800,7 @@ public class Configurer {
 	    					checkDeprecation(method, conf);
 	    					handleNumber(method, instance, conf.valueAsNumber());
 		                } catch (Throwable t) {
-		                	t.printStackTrace();
-							throw asInvalidConfigurationException(conf, t);
+                        	status.error(conf, t);
 		                }
     				}
     			}
@@ -880,8 +883,7 @@ public class Configurer {
 	    					checkDeprecation(method, conf);
 	    					method.invoke(instance, conf.valueAsBigDecimal());
 		                } catch (Throwable t) {
-		                	t.printStackTrace();
-							throw asInvalidConfigurationException(conf, t);
+                        	status.error(conf, t);
 		                }
     				}
     			}
@@ -916,7 +918,7 @@ public class Configurer {
 	    					checkDeprecation(method, conf);
 	    					method.invoke(instance, conf.valueAsString());
 	    				} catch (Throwable t) {
-	    					throw asInvalidConfigurationException(conf, t);
+                        	status.error(conf, t);
 	    				}
     				}
     			}
@@ -946,7 +948,7 @@ public class Configurer {
     					checkDeprecation(method, conf);
 	    				method.invoke(instance, conf);
     				} catch (Throwable t) {
-    					throw asInvalidConfigurationException(conf, t);
+                    	status.error(conf, t);
     				}
     			}
 		    }
@@ -958,11 +960,10 @@ public class Configurer {
 		}
 	}
 	
-	protected static InvalidConfigurationException asInvalidConfigurationException(Config conf, Throwable t) {
-		t.printStackTrace();
+	protected static ConfigurationError asConfigurationError(Config conf, Throwable t) {
 		InvalidConfigurationException e = findInvalidConfigurationException(t);
-		if (e != null) return e;
-		return new InvalidConfigurationException(asList(new ConfigurationError(new WrappedConfig(conf), rootExceptionMessage(t),t)));
+		if (e != null) t = e;
+		return new ConfigurationError(new WrappedConfig(conf), rootExceptionMessage(t), t);
 	}
 	
 	protected void configureEachChildOf(Method method, Conf.EachChildOf[] annotations) {

@@ -21,7 +21,7 @@ public class MarkdownOperation implements Operation {
 	@Override
 	public void call(MutableData data) {
 		data.at(inFn.apply(data)).forEachContent((path, content) -> {
-			content = utf8(MarkdownBundle.md.get().markdownToHtml(content.asUTF8()));
+			content = utf8(MarkdownModule.md.get().markdownToHtml(content.asUTF8()));
 			data.put(outFn.apply(data).add(path), content);
 		});
 	}

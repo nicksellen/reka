@@ -41,7 +41,7 @@ import reka.core.setup.ModuleSetup;
 import reka.core.util.StringWithVars;
 import reka.core.util.StringWithVars.Variable;
 
-public class JdbcModule extends ModuleConfigurer {
+public abstract class JdbcModule extends ModuleConfigurer {
 	
 	protected static final IdentityKey<DBCP2ConnectionProvider> POOL = IdentityKey.named("connection pool");
 

@@ -15,7 +15,7 @@ public class MarkdownConverter implements ConfigConverter {
 			
 			out.add(config.toBuilder()
 				.document("text/html", 
-						MarkdownBundle.md.get().markdownToHtml(config.documentContentAsString()).getBytes(StandardCharsets.UTF_8))
+						MarkdownModule.md.get().markdownToHtml(config.documentContentAsString()).getBytes(StandardCharsets.UTF_8))
 				.build());
 			
 		} else {
