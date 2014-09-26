@@ -283,7 +283,7 @@ public class FlowBuilders {
 			}
 			
 			if (hasMultipleParents || current.optional() || current.builder().node().isEnd()) {
-				trigger.addListener(current.builder().id());
+				//trigger.addListener(current.builder().id());
 				current.builder().isTrigger(true);
 			}
 			
@@ -293,11 +293,17 @@ public class FlowBuilders {
 			current.builder().isTrigger(true);
 		}
 		
+		if (trigger != null && current.builder().isTrigger()) {
+			// pass on the trigger
+			trigger.addListener(current.builder().id());
+		}
+		
 		boolean processChildren = true;
 		
 		if (hasMultipleParents && current.builder().parentCount() != current.builder().initialCounter()) {
 			processChildren = false;
 		}
+		System.out.printf("configuring %s isTrigger:%s\n", current.builder().name(), current.builder().isTrigger());
 		
 		if (processChildren) {
 			
@@ -321,6 +327,9 @@ public class FlowBuilders {
 			}
 		
 		}
+
+
+		
 	}
 	
 }

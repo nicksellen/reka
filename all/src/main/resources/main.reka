@@ -1,3 +1,7 @@
+
+app api @include(api.reka)
+app ui @include(ui/main.reka)
+
 app {
   name hello
   
@@ -92,7 +96,6 @@ app {
 }
 
 
-app api @include(api.reka)
 
 app two {
   name two levels of router

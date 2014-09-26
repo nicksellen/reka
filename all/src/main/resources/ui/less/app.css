@@ -1,0 +1,334 @@
+.hidden {
+  display: none;
+}
+
+#panel {
+}
+
+#sidebar {
+  width: 300px;
+  position: fixed;
+  z-index: 500;
+  height: 100%;
+  border-right: 1px solid #ddd;
+  overflow: scroll;
+}
+
+
+#content {
+  position: absolute;
+  padding-left: 340px;
+  z-index: 400;
+  width: 1200px;
+  background-color: white;
+}
+
+#content-offside {
+  border-left: 1px solid #EEE;
+  position: fixed;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  left: 1200px;
+  background-color: #fff;
+  font-family: monospace;
+  z-index: 300;
+  overflow: hidden;
+  color: #bbb;
+}
+
+#content-offside:hover {
+  color: #555;
+}
+
+#content-offside .inner {
+  width: 100%;
+  height: 100%;
+  padding: 20px;
+  overflow-y: scroll;
+}
+
+
+#sidebar > h1 {
+  font-size: 20px;
+  font-weight: normal;
+  padding: 20px;
+  margin: 0;
+}
+
+#sidebar > h1 a {
+  border: none;
+  color: red;
+}
+
+#sidebar > h1 .icon {
+  padding-right: 15px;
+  color: #ddd;
+  position: relative;
+  top: 3px;
+}
+
+.app-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.app-list .title {
+  font-size: 20px;
+  display: block;
+}
+
+.app-list a {
+  border: none;
+  padding: 15px 20px 15px 55px;
+  color: #444;
+}
+
+.app-list .active {
+  border-left: 10px solid red;
+}
+
+.app-list a.active {
+  color: #000;
+}
+
+.app-list .app-name {
+  display: block;
+}
+
+input.app-filter {
+  border: none;
+  width: 100%;
+  background-color: none;
+  padding: 10px 20px 10px 55px;
+  font-size: 18px;
+  color: #888;
+}
+
+input.app-filter:focus {
+  background-color: #f5f5f5;
+}
+
+input.app-filter::-webkit-input-placeholder {
+   color: #ccc;  
+}
+
+input.app-filter:-moz-placeholder { /* Firefox 18- */
+   color: #ccc;  
+}
+
+input.app-filter::-moz-placeholder {  /* Firefox 19+ */
+   color: #ccc;  
+}
+
+input.app-filter:-ms-input-placeholder {  
+   color: #ccc;  
+}
+
+.app-id {
+  font-family: monospace;
+  font-size: 14px;
+  line-height: 22px;
+  display: block;
+  color: #444;
+}
+
+.app-details .app-name {
+  font-size: 40px;
+  font-weight: normal;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.app-details ul.app-network {
+  padding: 0;
+  list-style: none;
+}
+
+
+.app-details ul.app-network a {
+  display: inline-block;
+  margin-bottom: 15px;
+  font-size: 18px;
+}
+
+.flow-container {
+  width: 100%;
+  height: 400px;
+  padding-right: 40px;
+  overflow: hidden;
+}
+
+.flow-container-inner {
+  border: 1px solid #ddd;
+  width: 100%;
+  height: 100%;
+  padding: 40px;
+  overflow: scroll;
+}
+
+.tinyflow {
+  text-align: center;
+}
+
+.tinyflow img {
+  height: 100px;
+}
+
+ul.flowlist {
+  padding: 0;
+  list-style: none;
+}
+
+ul.flowlist li {
+  float: left;
+  margin-right: 20px;
+  margin-bottom: 20px;
+  padding:20px;
+  padding-top: 15px;
+  border: 1px solid #ddd;
+  cursor: pointer;
+}
+
+ul.flowlist li:hover {
+  border-color: #777;
+}
+
+ul.flowlist li .flow-name {
+  display: block;
+  margin-bottom: 20px;
+}
+
+ul.app-actions {
+  padding: 0;
+  list-style: none;
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: 20px;
+  margin-right: 0;
+}
+
+
+button {
+  cursor: pointer;
+}
+
+button.destroy {
+  border: none;
+  padding: 10px;
+  background-color: red;
+  color: white;
+}
+
+button.destroy .icon {
+  padding-right: 8px;
+}
+
+.bigflow {
+  position: fixed;
+  z-index: 1000;
+  background-color: white;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.bigflow > .content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  top: 80px;
+  overflow: scroll;
+  text-align: center;
+  padding: 40px;
+}
+
+.bigflow > .header {
+  position: fixed;
+  z-index: 1000;
+  background-color: white;
+  height: 80px;
+  overflow: hidden;
+  top: 0;
+  left: 0;
+  right: 0;
+  border-bottom: 1px solid #ddd;
+}
+
+.bigflow > .header > h1 {
+  text-align: center;
+  font-size: 40px;
+font-weight: normal;
+margin-top: 10px;
+}
+
+.bigflow > .header > h1 .app-name:after {
+  content: ' / ';
+  color: #ccc;
+}
+
+.bigflow > .header a {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  padding: 24px;
+font-size: 20px;
+  border: none;
+}
+
+.bigflow > .header a:before {
+ content: '\2190';
+  padding-right: 10px;
+  font-size: 20px;
+  color: red;
+   
+}
+
+.disconnected {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255,255,255,0.8);
+  z-index: 10000;
+}
+
+.disconnected h1 {
+  position: absolute;
+  font-size: 44px;
+  left: 50%;
+  text-align: center;
+  color: white;
+  background-color: red;
+  padding-top: 40px;
+  margin-top: 80px;
+  width: 500px;
+  margin-left: -250px;
+  height: 150px;
+  top: 50%;
+  margin-top: -75px;
+}
+
+.flow-name .part:after {
+  content: '/';
+  color: #ccc;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+h1 .flow-name .part:after {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.flow-name .part:last-child:after {
+  content: '';
+}

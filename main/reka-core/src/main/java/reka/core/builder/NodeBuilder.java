@@ -35,7 +35,6 @@ import reka.core.runtime.Node;
 import reka.core.runtime.NodeChild;
 import reka.core.runtime.handlers.ActionHandler;
 import reka.core.runtime.handlers.ControlHandler;
-import reka.core.runtime.handlers.DoNothing;
 import reka.core.runtime.handlers.ErrorHandler;
 import reka.core.runtime.handlers.HaltedHandler;
 import reka.core.runtime.handlers.RuntimeNode;
@@ -126,12 +125,24 @@ class NodeBuilder {
 	private static final HaltedHandler CONTEXT_HALTED = new ContextHalted();
 	private static final ErrorHandler CONTEXT_ERROR = new ContextError();
 	
+	private static String gvid(NodeFactory f, long id) {
+		return format("%s:%s", System.identityHashCode(f), id);
+	}
+	
 	Node build(NodeFactory factory) {
 	    
+		String prefix = "";
+		
 		StringBuilder sb = new StringBuilder();
 		
 		List<NodeChild> children = buildChildren(factory);
-		List<FailureHandler> listeners = buildListeners(factory);
+		
+		List<Node> listenerNodes = this.listeners.stream().map(factory::get).collect(toList());
+		List<FailureHandler> listeners = new ArrayList<>();
+		for (Node l : listenerNodes) {
+			listeners.add(l);
+		}
+		//List<FailureHandler> listeners = buildListeners(factory);
 		
 		boolean stateful = initialCounter > 1;
 		boolean hasListeners = !listeners.isEmpty();
@@ -149,6 +160,11 @@ class NodeBuilder {
 			sb.append("listeners(").append(listeners).append(") ");
 			error = errorHandlers(asList(errorHandlers(listeners), error));
 			halted = haltedHandlers(asList(haltedHandlers(listeners), halted));
+			
+			for (Node listenerNode: listenerNodes) {
+				System.out.printf("%s\"%s\" -> \"%s\" [style=\"dashed\"]\n", prefix, gvid(factory, id), gvid(factory, listenerNode.id()));
+			}
+			
 		}
 		
 		if (halted == null) {
@@ -170,11 +186,16 @@ class NodeBuilder {
 		} else if (!node.isNoOp() && !node.isEnd() && !node.hasEmbeddedFlow()) {
 			throw new IllegalStateException(format("node [%s] must have supplier, be subscribable, or embedded flow reference", name()));
 		}
+
+		for (NodeChild child : children) {
+			System.out.printf("%s\"%s\" -> \"%s\" \n", prefix, gvid(factory, id), gvid(factory, child.node().id()));
+		}
 		
 		if (operation instanceof RouterOperation) {
 			sb.append("router ");
 			action = routing((RouterOperation) operation, children, error);
 		} else {
+			
 			List<ActionHandler> childActions = children.stream().map(NodeChild::node).collect(toList());
 			ActionHandler next = actionHandlers(childActions, error);
 			
@@ -225,16 +246,13 @@ class NodeBuilder {
 			halted = stateHandler;
 		}
 
-		boolean inspectAll = false;
-		
-		if (inspectAll) {
-			main = new InspectDataAction(format("before %s [%s]", id, name), main, error);
-		}
-
 		//main = new TimeLoggerAction(id, main, error);
 
 		RuntimeNode rtNode = new RuntimeNode(id, name, main, halted, error);
 		log.debug("\n  built node {} -> \n    {}\n    {}", id, sb.toString().trim(), rtNode);
+		
+		
+		System.out.printf("%s\"%s\" [label=\"%s\"]\n", prefix, gvid(factory, id), name);
 		
 		return rtNode;
 	}
