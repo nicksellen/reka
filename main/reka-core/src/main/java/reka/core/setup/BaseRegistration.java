@@ -1,10 +1,12 @@
 package reka.core.setup;
 
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 
 import reka.api.IdentityStore;
-import reka.api.data.Data;
+import reka.api.data.MutableData;
+import reka.core.data.memory.MutableMemoryData;
 
 abstract class BaseRegistration {
 
@@ -71,8 +73,14 @@ abstract class BaseRegistration {
 		return resumeConsumers;
 	}
 	
-	public void network(int port, String protocol, Data details) {
-		network.add(new NetworkInfo(port, protocol, details));
+	public void network(int port, String protocol) {
+		network(port, protocol, data -> {});
+	}
+	
+	public void network(int port, String protocol, Consumer<MutableData> details) {
+		MutableData data = MutableMemoryData.create();
+		details.accept(data);
+		network.add(new NetworkInfo(port, protocol, data.immutable()));
 	}
 	
 	public List<NetworkInfo> network() {

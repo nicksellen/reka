@@ -42,21 +42,6 @@ public class WebsocketModule extends ModuleConfigurer {
 	private final Pattern listenPortOnly = Pattern.compile("^[0-9]+$");
 	private final Pattern listenHostAndPort = Pattern.compile("^(.+):([0-9]+)$");
 	
-	public class HostAndPort {
-		private final String host;
-		private final int port;
-		public HostAndPort(String host, int port) {
-			this.host = host;
-			this.port = port;
-		}
-		public String host() {
-			return host;
-		}
-		public int port() {
-			return port;
-		}
-	}
-	
 	private final List<HostAndPort> listens = new ArrayList<>();
 	
 	private SslSettings ssl;
@@ -170,11 +155,11 @@ public class WebsocketModule extends ModuleConfigurer {
 		module.setupInitializer(init -> {
 			init.run("set http settings", store -> {
 				// FIXME: hackety hack, don't look back, these aren't the real HTTP settings!
-				int port = listens.get(0).port;
+				int port = listens.get(0).port();
 				if (port == -1) {
 					port = ssl != null ? 443 : 80;
 				}
-				store.put(HTTP_SETTINGS, HttpSettings.http(port, listens.get(0).host, Type.WEBSOCKET, -1));
+				store.put(HTTP_SETTINGS, HttpSettings.http(port, listens.get(0).host(), Type.WEBSOCKET, null, -1));
 			});
 		});
 		
@@ -182,7 +167,7 @@ public class WebsocketModule extends ModuleConfigurer {
 			
 			for (HostAndPort listen : listens) {
 			
-				String host = listen.host() == null ? "*" : listen.host();
+				String host = listen.host();
 				int port = listen.port();
 				
 				if (port == -1) {
@@ -193,9 +178,9 @@ public class WebsocketModule extends ModuleConfigurer {
 			
 				HttpSettings settings;
 				if (ssl != null) {
-					settings = HttpSettings.https(port, host, Type.WEBSOCKET, registration.applicationVersion(), ssl);
+					settings = HttpSettings.https(port, host, Type.WEBSOCKET, registration.applicationIdentity(), registration.applicationVersion(), ssl);
 				} else {
-					settings = HttpSettings.http(port, host, Type.WEBSOCKET, registration.applicationVersion());
+					settings = HttpSettings.http(port, host, Type.WEBSOCKET, registration.applicationIdentity(), registration.applicationVersion());
 				}
 				
 				server.deployWebsocket(identity, settings, ws -> {

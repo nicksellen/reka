@@ -100,8 +100,8 @@ class NodeBuilder {
 		return children.stream().map(child -> child.build(factory)).collect(toList());   
 	}
 	
-	private List<FailureHandler> buildListeners(NodeFactory factory) {
-        return listeners.stream().map(factory::get).collect(toList());
+	private List<Node> buildListeners(NodeFactory factory) {
+        return this.listeners.stream().map(factory::get).collect(toList());
 	}
 	
 	private static class ContextHalted implements HaltedHandler {
@@ -125,8 +125,10 @@ class NodeBuilder {
 	private static final HaltedHandler CONTEXT_HALTED = new ContextHalted();
 	private static final ErrorHandler CONTEXT_ERROR = new ContextError();
 	
-	private static String gvid(NodeFactory f, long id) {
-		return format("%s:%s", System.identityHashCode(f), id);
+	private final <A extends B,B> List<B> listToList(List<A> a) {
+		List<B> b = new ArrayList<>();
+		for (A item : a) b.add(item);
+		return b;
 	}
 	
 	Node build(NodeFactory factory) {
@@ -137,12 +139,8 @@ class NodeBuilder {
 		
 		List<NodeChild> children = buildChildren(factory);
 		
-		List<Node> listenerNodes = this.listeners.stream().map(factory::get).collect(toList());
-		List<FailureHandler> listeners = new ArrayList<>();
-		for (Node l : listenerNodes) {
-			listeners.add(l);
-		}
-		//List<FailureHandler> listeners = buildListeners(factory);
+		List<Node> listenerNodes = buildListeners(factory);
+		List<FailureHandler> listeners = listToList(listenerNodes);
 		
 		boolean stateful = initialCounter > 1;
 		boolean hasListeners = !listeners.isEmpty();
@@ -162,21 +160,9 @@ class NodeBuilder {
 			halted = haltedHandlers(asList(haltedHandlers(listeners), halted));
 			
 			for (Node listenerNode: listenerNodes) {
-				System.out.printf("%s\"%s\" -> \"%s\" [style=\"dashed\"]\n", prefix, gvid(factory, id), gvid(factory, listenerNode.id()));
+				factory.dot().append(format("%s\"%s\" -> \"%s\" [style=\"dashed\"]\n", prefix, id, listenerNode.id()));
 			}
 			
-		}
-		
-		if (halted == null) {
-			halted = new HaltedHandler(){
-
-				@Override
-				public void halted(FlowContext context) {
-					log.error("halted at {}: {}", id, name);
-				}
-				
-			};
-
 		}
 		
 		FlowOperation operation = null;
@@ -188,7 +174,7 @@ class NodeBuilder {
 		}
 
 		for (NodeChild child : children) {
-			System.out.printf("%s\"%s\" -> \"%s\" \n", prefix, gvid(factory, id), gvid(factory, child.node().id()));
+			factory.dot().append(format("%s\"%s\" -> \"%s\" \n", prefix, id, child.node().id()));
 		}
 		
 		if (operation instanceof RouterOperation) {
@@ -251,8 +237,7 @@ class NodeBuilder {
 		RuntimeNode rtNode = new RuntimeNode(id, name, main, halted, error);
 		log.debug("\n  built node {} -> \n    {}\n    {}", id, sb.toString().trim(), rtNode);
 		
-		
-		System.out.printf("%s\"%s\" [label=\"%s\"]\n", prefix, gvid(factory, id), name);
+		factory.dot().append(format("%s\"%s\" [label=\"%s\"]\n", prefix, id, name));
 		
 		return rtNode;
 	}

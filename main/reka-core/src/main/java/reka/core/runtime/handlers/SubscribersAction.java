@@ -25,7 +25,7 @@ public class SubscribersAction implements ActionHandler {
 			try {
 				subscriber.ok(data);
 			} catch (Throwable t) {
-				t.printStackTrace();
+				//t.printStackTrace();
 				// continue...
 			}
 		}

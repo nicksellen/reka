@@ -1,5 +1,7 @@
 package reka.http.server;
 
+import static java.lang.String.format;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -78,21 +80,23 @@ public class HttpSettings {
 	private final String host;
 	private final Type type;
 	private final SslSettings sslSettings;
-	private final int applicationVersion; // application version
+	private final String applicationIdentity;
+	private final int applicationVersion;
 	
-	public static HttpSettings http(int port, String host, Type type, int applicationVersion) {
-		return new HttpSettings(port, host, type, null, applicationVersion);
+	public static HttpSettings http(int port, String host, Type type, String applicationIdentity, int applicationVersion) {
+		return new HttpSettings(port, host, type, null, applicationIdentity, applicationVersion);
 	}
 	
-	public static HttpSettings https(int port, String host, Type type, int applicationVersion, SslSettings sslSettings) {
-		return new HttpSettings(port, host, type, sslSettings, applicationVersion);
+	public static HttpSettings https(int port, String host, Type type, String applicationIdentity, int applicationVersion, SslSettings sslSettings) {
+		return new HttpSettings(port, host, type, sslSettings, applicationIdentity, applicationVersion);
 	}
 	
-	private HttpSettings(int port, String host, Type type, SslSettings sslSettings, int applicationVersion) {
+	private HttpSettings(int port, String host, Type type, SslSettings sslSettings, String applicationIdentity, int applicationVersion) {
 		this.port = port;
 		this.host = host;
 		this.type = type;
 		this.sslSettings = sslSettings;
+		this.applicationIdentity = applicationIdentity;
 		this.applicationVersion = applicationVersion;
 	}
 
@@ -118,6 +122,15 @@ public class HttpSettings {
 
 	public int applicationVersion() {
 		return applicationVersion;
+	}
+	
+	public String applicationIdentity() {
+		return applicationIdentity;
+	}
+	
+	@Override
+	public String toString() {
+		return format("%s://%s:%s v%s", isSsl() ? "https" : "http", host, port, applicationVersion);
 	}
 
 	@Override

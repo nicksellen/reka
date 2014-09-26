@@ -1,6 +1,7 @@
 package reka.core.builder;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.lang.String.format;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -16,6 +17,7 @@ public class NodeFactory {
     private final Map<Integer,NodeBuilder> builders;
     private final Map<Path,Flow> embeddableFlows;
     private final Map<Integer,Node> nodes = new HashMap<>();
+    private final StringBuffer dotContent = new StringBuffer();
     
     NodeFactory(Map<Integer,NodeBuilder> builders, Map<Path,Flow> embeddedableFlows) {
         this.builders = builders;
@@ -46,6 +48,14 @@ public class NodeFactory {
     
     public Collection<Node> nodes() {
         return nodes.values();
+    }
+    
+    public StringBuffer dot() {
+    	return dotContent;
+    }
+    
+    public String toDot() {
+    	return format("diagraph G {\n%s}\n", dotContent.toString());
     }
     
 }

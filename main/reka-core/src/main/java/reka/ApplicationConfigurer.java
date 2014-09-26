@@ -1,6 +1,7 @@
 package reka;
 
 import static java.lang.String.format;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static reka.api.Path.path;
 import static reka.api.Path.slashes;
@@ -50,6 +51,7 @@ import reka.core.config.SequenceConfigurer;
 import reka.core.data.memory.MutableMemoryData;
 import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleConfigurer.ModuleInitializer;
+import reka.core.setup.ModuleSetup.ApplicationCheck;
 import reka.core.setup.MultiFlowRegistration;
 import reka.core.setup.Trigger;
 import reka.core.setup.TriggerCollection;
@@ -126,7 +128,7 @@ public class ApplicationConfigurer implements ErrorReporter {
     	return flowsBuilder.buildVisualizers();
     }
     
-    public void checkValid() {
+    public void checkValid(String identity) {
     	ModuleInitializer initializer = ModuleConfigurer.buildInitializer(rootModule);
     	MultiConfigurerProvider configurerProvider = new MultiConfigurerProvider(initializer.collector().providers);
     	initializer.collector().triggers.forEach(triggers -> triggers.get().forEach(trigger -> {
@@ -138,6 +140,21 @@ public class ApplicationConfigurer implements ErrorReporter {
     	testConfigs.forEach(config -> {
     		configure(new TestConfigurer(configurerProvider), config).build();
     	});
+    	runChecks(identity, initializer);
+    }
+    
+    private void runChecks(String identity, ModuleInitializer initializer) {
+    	List<String> checkErrors = new ArrayList<>();
+    	initializer.collector().checks.forEach(check -> {
+    		ApplicationCheck appCheck = new ApplicationCheck(identity);
+    		check.accept(appCheck);
+    		appCheck.errors().forEach(error -> {
+    			checkErrors.add(error);
+    		});
+    	});
+    	if (!checkErrors.isEmpty()) {
+    		throw new RuntimeException(checkErrors.stream().collect(joining(", ")));
+    	}
     }
     
     public static class TriggerSetup {
@@ -159,15 +176,14 @@ public class ApplicationConfigurer implements ErrorReporter {
     }
     
     public CompletableFuture<Application> build(String identity, int applicationVersion) {
-
-    	CompletableFuture<Application> future = new CompletableFuture<>();
-    	
-    	return safelyCompletable(future, () -> {
-
+    	return safelyCompletable(future -> {
+    		
     		FlowBuilders initflowBuilders = new FlowBuilders();
     		FlowBuilders flowBuilders = new FlowBuilders();
     		
 	    	ModuleInitializer initializer = ModuleConfigurer.buildInitializer(rootModule);
+	    	
+	    	runChecks(identity, initializer);
 	    	
 	    	ApplicationBuilder applicationBuilder = new ApplicationBuilder();
 	    	
@@ -247,7 +263,7 @@ public class ApplicationConfigurer implements ErrorReporter {
 		@Override
 		public void error(Data data, Throwable t) {
 			log.debug("error whilst initializing app :( {} {}", t.getMessage(), data.toPrettyJson());
-			t.printStackTrace();
+			//t.printStackTrace();
 			future.completeExceptionally(t);
 		}
 		

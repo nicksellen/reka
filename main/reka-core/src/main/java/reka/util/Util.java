@@ -6,8 +6,10 @@ import java.io.IOException;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 
 import org.codehaus.jackson.JsonGenerator;
 
@@ -107,9 +109,10 @@ public class Util {
 		return new AbstractMap.SimpleEntry<K,V>(key, value);
 	}
 	
-	public static <T> CompletableFuture<T> safelyCompletable(CompletableFuture<T> future, ThrowingRunnable runnable) {
+	public static <T> CompletableFuture<T> safelyCompletable(ThrowingConsumer<CompletableFuture<T>> consumer) {
+    	CompletableFuture<T> future = new CompletableFuture<>();
 		try {
-			runnable.run();
+			consumer.accept(future);
 		} catch (Throwable t) {
 			if (!future.isDone()) {
 				future.completeExceptionally(t);
@@ -120,6 +123,10 @@ public class Util {
 		
 	public static interface ThrowingRunnable {
 		void run() throws Throwable;
+	}
+	
+	public static interface ThrowingConsumer<T> {
+		void accept(T val) throws Throwable;
 	}
 
 	public static void ignoreExceptions(ThrowingRunnable r) {

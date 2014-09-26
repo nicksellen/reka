@@ -56,10 +56,8 @@ public class RekaDeployFromFileOperation implements AsyncOperation {
 
 			@Override
 			public void error(String identity, Throwable t) {
-				log.info("deploying {} error", identity);
 				t = unwrap(t);
-				log.error("failed to deploy application",  t);
-				t.printStackTrace();
+				log.error("failed to deploy [{}] - {}", identity, t.getMessage());
 				ctx.error(t);
 			}
 			

@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import reka.api.IdentityKey;
 import reka.api.flow.Flow;
+import reka.http.HostAndPort;
 import reka.http.server.HttpSettings.SslSettings;
 import reka.http.websockets.WebsocketHandler;
 import reka.http.websockets.WebsocketHandler.WebsocketHost;
@@ -46,7 +47,6 @@ public class HttpServerManager {
 	
 	private final Map<Integer,PortHandler> handlers = new HashMap<>();
 		
-	private final Object lock = new Object();
 	private final Map<String,HttpSettings> deployed = new HashMap<>();
 	
 	private final boolean epoll;
@@ -94,13 +94,11 @@ public class HttpServerManager {
 			this.port = port;
 			this.sslSettings = sslSettings;
 			httpOrWebsocketHandler = new HttpOrWebsocket(httpHandler, websocketHandler, sslSettings != null);
-
 			if (sslSettings != null) {
 				initializer = new HttpsInitializer(httpOrWebsocketHandler, sslSettings.certChainFile(), sslSettings.keyFile());
 			} else {
 				initializer = new HttpInitializer(httpOrWebsocketHandler);
 			}
-			
 		}
 		
 		public PortHandler httpAdd(String host, Flow flow) {
@@ -198,9 +196,7 @@ public class HttpServerManager {
 	}
 	
 	public Map<String,HttpSettings> deployed() {
-		synchronized (lock) {
-			return ImmutableMap.copyOf(deployed);	
-		}
+		return ImmutableMap.copyOf(deployed);
 	}
 	
 	public static class WebsocketTriggers {
@@ -256,15 +252,18 @@ public class HttpServerManager {
 	}
 	
 	public void deployWebsocket(String identity, HttpSettings settings, Consumer<WebsocketTriggers> deploy) {
-		
-		synchronized (lock) {
-			WebsocketTriggers websocketTriggers = new WebsocketTriggers();
-			deploy.accept(websocketTriggers);
-			deploy(identity, settings, handler -> {
-				handler.websocketAdd(settings.host(), websocketTriggers);
-			});
-		}
-		
+		WebsocketTriggers websocketTriggers = new WebsocketTriggers();
+		deploy.accept(websocketTriggers);
+		deploy(identity, settings, handler -> {
+			handler.websocketAdd(settings.host(), websocketTriggers);
+		});
+	}
+	
+	public boolean isAvailable(String applicationIdentity, HostAndPort listen) {
+		return deployed.values().stream().allMatch(settings -> {
+			return settings.applicationIdentity().equals(applicationIdentity) ||
+				   (!listen.host().equals(settings.host()) || listen.port() != settings.port());
+		});
 	}
 	
 	public void deployHttp(String identity, Flow flow, HttpSettings settings) {
@@ -275,138 +274,121 @@ public class HttpServerManager {
 	}
 
 	private void deploy(String identity, HttpSettings settings, Consumer<PortHandler> consumer) {
+			
+		HttpSettings previous = deployed.put(identity, settings);
 		
-		synchronized (lock) {
-			
-			HttpSettings previous = deployed.put(identity, settings);
-			
-			boolean removePrevious = false;
+		boolean removePrevious = false;
 
-			if (previous != null) {
-				boolean hostChanged = !previous.host().equals(settings.host());
-				boolean portChanged = previous.port() != settings.port();
-				removePrevious = hostChanged || portChanged;
+		if (previous != null) {
+			boolean hostChanged = !previous.host().equals(settings.host());
+			boolean portChanged = previous.port() != settings.port();
+			removePrevious = hostChanged || portChanged;
+		}
+		
+		PortHandler portHandler = handlers.get(settings.port());
+		
+		if (portHandler != null) {
+			if ((portHandler.isSsl() != settings.isSsl()) || 
+			    (portHandler.isSsl() && settings.isSsl() && 
+			     !portHandler.sslSettings().equals(settings.sslSettings()))) {
+				throw runtime("must have same ssl settings (2)");
 			}
-			
-			PortHandler portHandler = handlers.get(settings.port());
-			
-			if (portHandler != null) {
-				if ((portHandler.isSsl() != settings.isSsl()) || 
-				    (portHandler.isSsl() && settings.isSsl() && 
-				     !portHandler.sslSettings().equals(settings.sslSettings()))) {
-					throw runtime("must have same ssl settings (2)");
+		} else {
+			portHandler = new PortHandler(settings.port(), settings.sslSettings());
+			handlers.put(settings.port(), portHandler);
+		}
+		
+		consumer.accept(portHandler);
+		
+		if (removePrevious) {
+			PortHandler h = handlers.get(previous.port());
+			if (h != null) {
+				switch (settings.type()) {
+				case HTTP:
+					h.httpRemove(previous.host());	
+					break;
+				case WEBSOCKET:
+					h.websocketRemove(previous.host());
+					break;
 				}
-			} else {
-				portHandler = new PortHandler(settings.port(), settings.sslSettings());
-				handlers.put(settings.port(), portHandler);
+				if (h.isEmpty()) handlers.remove(previous.port());
 			}
-			
-			consumer.accept(portHandler);
-			
-			if (removePrevious) {
-				PortHandler h = handlers.get(previous.port());
-				if (h != null) {
-					switch (settings.type()) {
-					case HTTP:
-						h.httpRemove(previous.host());	
-						break;
-					case WEBSOCKET:
-						h.websocketRemove(previous.host());
-						break;
-					}
-					if (h.isEmpty()) handlers.remove(previous.port());
-				}
-			}
-			
 		}
 	}
 	
 	public void undeploy(String identity, int undeployVersion) {
 		
-		synchronized (lock) {
-			
-			HttpSettings settings = deployed.get(identity);
-			
-			if (settings == null) {
-				log.debug("   it didn't seem to actually be deployed ({} were though)", deployed.keySet());
-				return;
-			}
-			
-			if (settings.applicationVersion() > undeployVersion) {
-				log.info("ignoring request to undeploy version {} as we're on version {}", undeployVersion, settings.applicationVersion());
-				return;
-			}
-			
-			deployed.remove(identity);
-			
-			PortHandler handler = handlers.get(settings.port());
-			if (handler != null) {
-				switch (settings.type()) {
-				case HTTP:
-					handler.httpRemove(settings.host());	
-					break;
-				case WEBSOCKET:
-					handler.websocketRemove(settings.host());
-					break;
-				}
-				if (handler.isEmpty()) handlers.remove(settings.port());
-			}
-			
+		HttpSettings settings = deployed.get(identity);
+		
+		if (settings == null) {
+			log.debug("   it didn't seem to actually be deployed ({} were though)", deployed.keySet());
+			return;
 		}
+		
+		if (settings.applicationVersion() > undeployVersion) {
+			log.info("ignoring request to undeploy version {} as we're on version {}", undeployVersion, settings.applicationVersion());
+			return;
+		}
+		
+		deployed.remove(identity);
+		
+		PortHandler handler = handlers.get(settings.port());
+		if (handler != null) {
+			switch (settings.type()) {
+			case HTTP:
+				handler.httpRemove(settings.host());	
+				break;
+			case WEBSOCKET:
+				handler.websocketRemove(settings.host());
+				break;
+			}
+			if (handler.isEmpty()) handlers.remove(settings.port());
+		}
+			
 	}
 	
 	public void pause(String identity, int version) {
+		HttpSettings settings = deployed.get(identity);
+	
+		if (settings == null) {
+			return;
+		}
 		
-		synchronized (lock) {
-			
-			HttpSettings settings = deployed.get(identity);
+		if (settings.applicationVersion() > version) {
+			log.info("tried to pause version {} but we're running a new version {}", version, settings.applicationVersion());
+			return;
+		}
 		
-			if (settings == null) {
-				return;
-			}
-			
-			if (settings.applicationVersion() > version) {
-				log.info("tried to pause version {} but we're running a new version {}", version, settings.applicationVersion());
-				return;
-			}
-			
-			PortHandler handler = handlers.get(settings.port());
-			if (handler != null) {
-				log.debug("pausing [{}]", identity);
-				handler.httpPause(settings.host());
-			}
-			
+		PortHandler handler = handlers.get(settings.port());
+		if (handler != null) {
+			log.debug("pausing [{}]", identity);
+			handler.httpPause(settings.host());
 		}
 	}
 
 	public void resume(String identity, int version) {
-		
-		synchronized (lock) {
 			
-			HttpSettings settings = deployed.get(identity);
-		
-			if (settings == null) {
-				return;
-			}
-			
-			if (settings.applicationVersion() > version) {
-				log.info("tried to resume version {} but we're running a new version {}", version, settings.applicationVersion());
-				return;
-			}
-			
-			PortHandler handler = handlers.get(settings.port());
-			if (handler != null) {
-				log.debug("resuming [{}]", identity);
-				handler.httpResume(settings.host());
-			}
-			
+		HttpSettings settings = deployed.get(identity);
+	
+		if (settings == null) {
+			return;
 		}
+		
+		if (settings.applicationVersion() > version) {
+			log.info("tried to resume version {} but we're running a new version {}", version, settings.applicationVersion());
+			return;
+		}
+		
+		PortHandler handler = handlers.get(settings.port());
+		if (handler != null) {
+			log.debug("resuming [{}]", identity);
+			handler.httpResume(settings.host());
+		}
+		
 	}
 
 	public void shutdown() {
-		synchronized(lock) {
-			handlers.values().forEach(port -> port.stop());
-		}
+		handlers.values().forEach(port -> port.stop());
 	}
 
 }

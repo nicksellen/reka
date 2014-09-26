@@ -47,7 +47,7 @@ public class HaltedHandlers implements HaltedHandler {
 			try {
 				handler.halted(context);
 			} catch (Throwable t) {
-				t.printStackTrace();
+				//t.printStackTrace();
 			}
 		}		
 	}

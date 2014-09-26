@@ -42,21 +42,6 @@ public class HttpModule extends ModuleConfigurer {
 	
 	private SslSettings ssl;
 	
-	public class HostAndPort {
-		private final String host;
-		private final int port;
-		public HostAndPort(String host, int port) {
-			this.host = host;
-			this.port = port;
-		}
-		public String host() {
-			return host;
-		}
-		public int port() {
-			return port;
-		}
-	}
-
 	private final HttpServerManager server;
 	
 	private final List<HostAndPort> listens = new ArrayList<>();
@@ -118,25 +103,20 @@ public class HttpModule extends ModuleConfigurer {
 		
 		for (Function<ConfigurerProvider, OperationConfigurer> h : requestHandlers) {
 			
+			module.check(check -> {
+				for (HostAndPort listen : listens) {
+					if (!server.isAvailable(check.applicationIdentity(), listen)) {
+						check.error("%s:%s is not available", listen.host(), listen.port());
+					}
+				}
+			});
+			
 			module.trigger("on request", h, registration -> {
 				
 				for (HostAndPort listen : listens) {
-					
-					String host = listen.host() == null ? "*" : listen.host();
-					int port = listen.port();
-					
-					if (port == -1) {
-						port = ssl != null ? 443 : 80;
-					}
-					
-					String identity = format("%s/%s/%s/http", registration.applicationIdentity(), host, port);
-				
-					HttpSettings settings;
-					if (ssl != null) {
-						settings = HttpSettings.https(port, host, Type.HTTP, registration.applicationVersion(), ssl);
-					} else {
-						settings = HttpSettings.http(port, host, Type.HTTP, registration.applicationVersion());
-					}
+
+					String identity = format("%s/%s/%s/http", registration.applicationIdentity(), listen.host(), listen.port());
+					HttpSettings settings = getHttpSettings(listen, registration.applicationIdentity(), registration.applicationVersion());
 					
 					server.deployHttp(identity, registration.flow(), settings);
 					
@@ -144,14 +124,29 @@ public class HttpModule extends ModuleConfigurer {
 					registration.pause(version -> server.pause(identity, version));
 					registration.resume(version -> server.resume(identity, version));
 					
-					registration.network(port, settings.isSsl() ? "https" : "http", MutableMemoryData.create(details -> {
-						details.putString("host", host);
-					}).immutable());
+					registration.network(listen.port(), settings.isSsl() ? "https" : "http", details -> {
+						details.putString("host", listen.host());
+					});
 				
 				}
 			});
 		}
 		
+	}
+	
+	private HttpSettings getHttpSettings(HostAndPort listen, String applicationIdentity, int applicationVersion) {
+		String host = listen.host();
+		int port = listen.port();
+		
+		if (port == -1) {
+			port = ssl != null ? 443 : 80;
+		}
+	
+		if (ssl != null) {
+			return  HttpSettings.https(port, host, Type.HTTP, applicationIdentity, applicationVersion, ssl);
+		} else {
+			return HttpSettings.http(port, host, Type.HTTP, applicationIdentity, applicationVersion);
+		}
 	}
 
 }

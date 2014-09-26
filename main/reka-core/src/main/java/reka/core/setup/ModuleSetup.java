@@ -1,11 +1,13 @@
 package reka.core.setup;
 
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static reka.config.configurer.Configurer.configure;
 import static reka.core.builder.FlowSegments.createLabelSegment;
 import static reka.core.builder.FlowSegments.seq;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -85,6 +87,34 @@ public class ModuleSetup {
 		collector.initflows.add(new InitFlow(path.add(name), supplier, store, flow -> {
 			init.accept(new InitFlowSetup(flow, store));
 		}));
+		return this;
+	}
+	
+	public static class ApplicationCheck {
+		
+		private final String applicationIdentity;
+		private final List<String> errors = new ArrayList<>();
+		
+		public ApplicationCheck(String applicationIdentity) {
+			this.applicationIdentity = applicationIdentity;
+		}
+		
+		public String applicationIdentity() {
+			return applicationIdentity;
+		}
+		
+		public void error(String msg, Object... objs) {
+			errors.add(format(msg, objs));
+		}
+		
+		public List<String> errors() {
+			return Collections.unmodifiableList(errors);
+		}
+		
+	}
+
+	public ModuleSetup check(Consumer<ApplicationCheck> check) {
+		collector.checks.add(check);
 		return this;
 	}
 	

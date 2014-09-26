@@ -124,16 +124,24 @@ public class HttpHostHandler extends SimpleChannelInboundHandler<MutableData> {
 
 		@Override
 		public void error(Data data, Throwable error) {
-			context.writeAndFlush(textErrorMessage(data, error)).addListener(ChannelFutureListener.CLOSE);
-			/*
-			context.writeAndFlush(acceptsHtml(data) ? 
-						htmlErrorMessage(data, error) : jsonErrorMessage(data, error))
-				   .addListener(ChannelFutureListener.CLOSE);
-				   */
+			Data msg;
+			String acceptHeader = data.getString(Request.Headers.ACCEPT).orElse("");
+			if (acceptsHtml(acceptHeader)) {
+				msg = htmlErrorMessage(data, error);
+			} else if (acceptsJson(acceptHeader)) {
+				msg = jsonErrorMessage(data, error);
+			} else {
+				msg = textErrorMessage(data, error);
+			}
+			context.writeAndFlush(msg).addListener(ChannelFutureListener.CLOSE);
 		}
 		
-		private static boolean acceptsHtml(Data data) {
-			return data.getString(Request.Headers.ACCEPT).orElse("").contains("text/html");
+		private static boolean acceptsHtml(String acceptHeader) {
+			return acceptHeader.contains("/html");
+		}
+		
+		private static boolean acceptsJson(String acceptHeader) {
+			return acceptHeader.contains("/json");
 		}
 		
 		private static String stacktrace(Throwable t) {

@@ -255,6 +255,7 @@ public class FlowBuilders {
 	        NodeFactory factory = new NodeFactory(idToNodeBuilder, dependencies);        
 	        Node headNode = factory.get(nodeToId.get(info.start()));
 	        info.flow(new DefaultFlow(info.name(), headNode));
+	        //System.out.printf("flow action dot for [%s]:\n\n%s\n", info.name.slashes(), factory.toDot());
 		}
 		
         info.visualizer(new DefaultFlowVisualizer(info.name(), nodeToId, idToName, idToType, segments, connections));
@@ -270,40 +271,25 @@ public class FlowBuilders {
 		
 		boolean hasMultipleParents = current.builder().parentCount() > 1;
 		
-		if (trigger == null) {
-			
-			if (hasMultipleParents || current.optional()) {
-				current.builder().incrementInitialCounter();
-			}
-			
-		} else {
-			
-			if (hasMultipleParents) {
-				current.builder().incrementInitialCounter();	
-			}
-			
-			if (hasMultipleParents || current.optional() || current.builder().node().isEnd()) {
-				//trigger.addListener(current.builder().id());
-				current.builder().isTrigger(true);
-			}
-			
+		if (hasMultipleParents || 
+			(trigger == null && current.optional())) {
+			// a node that needs to wait for previous nodes to complete we store how many it will wait for
+			current.builder().incrementInitialCounter();
 		}
 		
-		if (current.optional() || current.builder().node().hasEmbeddedFlow()) {
+		if (current.optional() || 
+			current.builder().node().hasEmbeddedFlow() || 
+			current.builder().node().isEnd() ||
+			(trigger != null && hasMultipleParents)) {
+			// a node that needs to notify downstream nodes when it is halted
 			current.builder().isTrigger(true);
 		}
 		
 		if (trigger != null && current.builder().isTrigger()) {
-			// pass on the trigger
 			trigger.addListener(current.builder().id());
 		}
 		
-		boolean processChildren = true;
-		
-		if (hasMultipleParents && current.builder().parentCount() != current.builder().initialCounter()) {
-			processChildren = false;
-		}
-		System.out.printf("configuring %s isTrigger:%s\n", current.builder().name(), current.builder().isTrigger());
+		boolean processChildren = !hasMultipleParents || current.builder().parentCount() == current.builder().initialCounter();
 		
 		if (processChildren) {
 			
@@ -319,7 +305,7 @@ public class FlowBuilders {
 					}
 				}
 				
-				if (current.builder().node().isRouterNode()) {
+				if (current.builder().node().isRouter()) {
 					child.optional(true);
 				}
 				
@@ -327,8 +313,6 @@ public class FlowBuilders {
 			}
 		
 		}
-
-
 		
 	}
 	

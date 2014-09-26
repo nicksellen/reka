@@ -154,7 +154,7 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 				
 				ApplicationConfigurer configurer = configure(new ApplicationConfigurer(bundles), config);
 				
-				configurer.checkValid();
+				configurer.checkValid(identity);
 				
 				versions.putIfAbsent(identity, new AtomicInteger());
 				
@@ -237,9 +237,9 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 		});
 	}
 
-	public void validate(Source source) {
+	public void validate(String identity, Source source) {
 		NavigableConfig config = bundles.processor().process(ConfigParser.fromSource(source));
-		configure(new ApplicationConfigurer(bundles), config).checkValid();
+		configure(new ApplicationConfigurer(bundles), config).checkValid(identity);
 	}
 	
 	public static interface DeploySubscriber {

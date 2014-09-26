@@ -85,7 +85,7 @@ public class SmtpBundle implements BundleConfigurer {
 								new EmailListener(registration.flow())));
 					smtpServer.setPort(port);
 					log.debug("starting smtp server on port {}", port);
-					registration.network(port, "smtp", Data.NONE);
+					registration.network(port, "smtp");
 					smtpServer.start();
 					registration.undeploy(version -> smtpServer.stop());
 					

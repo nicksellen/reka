@@ -1,6 +1,6 @@
 
 app api @include(api.reka)
-app ui @include(ui/main.reka)
+//app ui @include(ui/main.reka)
 
 app {
   name hello

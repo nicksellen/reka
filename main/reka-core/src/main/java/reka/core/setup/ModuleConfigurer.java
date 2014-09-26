@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import reka.api.IdentityStore;
@@ -33,6 +34,7 @@ import reka.core.builder.SingleFlow;
 import reka.core.bundle.BundleConfigurer.ModuleInfo;
 import reka.core.runtime.NoFlow;
 import reka.core.runtime.NoFlowVisualizer;
+import reka.core.setup.ModuleSetup.ApplicationCheck;
 
 public abstract class ModuleConfigurer {
 
@@ -74,12 +76,14 @@ public abstract class ModuleConfigurer {
 		public final List<Runnable> shutdownHandlers;
 		public final List<Supplier<StatusProvider>> statuses;
 
+		public final List<Consumer<ApplicationCheck>> checks;
 		public ModuleCollector() {
 			providers = new HashMap<>();
 			initflows = new ArrayList<>();
 			triggers = new ArrayList<>();
 			shutdownHandlers = new ArrayList<>();
 			statuses = new ArrayList<>();
+			checks = new ArrayList<>();
 		}
 
 		private ModuleCollector(ModuleCollector parent) {
@@ -88,6 +92,7 @@ public abstract class ModuleConfigurer {
 			this.triggers = immutable(parent.triggers);
 			this.shutdownHandlers = immutable(parent.shutdownHandlers);
 			this.statuses = immutable(parent.statuses);
+			this.checks = immutable(parent.checks);
 		}
 
 		public ModuleCollector immutable() {

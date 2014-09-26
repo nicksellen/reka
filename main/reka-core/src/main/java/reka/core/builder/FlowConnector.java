@@ -100,7 +100,7 @@ public class FlowConnector {
 	}
 	
 	private void add(FlowNode from, FlowNode to, RouteKey key) {
-		boolean optional = from.node().isRouterNode();
+		boolean optional = from.node().isRouter();
 		if (from.isNoOp() || to.isNoOp()) {
 			noOpConnections.add(FlowNodeConnection.create(from, to, key, optional));			
 		} else {
