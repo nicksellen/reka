@@ -169,7 +169,6 @@ public class Configurer {
     
     protected static class Configured<T> {
 
-    	@SuppressWarnings("unused")
 		protected final ConfigOrNavigableConfig config;
     	protected final T value;
     	protected final List<ConfigurationError> errors;
@@ -199,6 +198,7 @@ public class Configurer {
 		
 		InvalidConfigurationException(Collection<ConfigurationError> errors) {
     		super();
+    		checkArgument(!errors.isEmpty(), "must have at least one error!");
     		this.errors = errors;
 		}
 		
@@ -435,7 +435,7 @@ public class Configurer {
 		
 		final Set<String> matchedKeys = new HashSet<>();
 		
-		protected void addFirstAsMatched(String val) {
+		protected void matched(String val) {
 			matchedKeys.add(val);
 			Iterator<String> it = dotSplitter.split(val).iterator();
 			if (it.hasNext()) {
@@ -445,6 +445,10 @@ public class Configurer {
 		
 		protected void error(Config conf, Throwable t) {
 			errors.add(asConfigurationError(conf, t));
+		}
+		
+		protected void error(Config conf, String msg, Object... objs) {
+			errors.add(new ConfigurationError(new WrappedConfig(conf), format(msg, objs)));
 		}
 		
 	}
@@ -473,7 +477,7 @@ public class Configurer {
 		@Override
 		public void apply(ConfigOrNavigableConfig config, Object instance, Status status) {
 		    if (config.hasBody()) {
-		    	status.addFirstAsMatched(path);
+		    	status.matched(path);
     			for (Config child : config.body().eachChildOf(path)) {
     				try {
     					checkDeprecation(method, child);
@@ -506,7 +510,7 @@ public class Configurer {
                 if (match.equals("")) {
                     // all immediate children
                     for (Config child : config.body()) {
-                        status.addFirstAsMatched(child.key());
+                        status.matched(child.key());
                         try {
         					checkDeprecation(method, child);
                         	method.invoke(instance, child.valueAsString());
@@ -516,7 +520,7 @@ public class Configurer {
                     }
                 } else {
                     // all children at path
-                    status.addFirstAsMatched(match);
+                    status.matched(match);
                     for (Config child : config.body().each(match)) {
                         try {
         					checkDeprecation(method, child);
@@ -550,7 +554,7 @@ public class Configurer {
 		    if (config.hasBody()) {
     			if (match.equals("")) {
     				for (Config child : config.body().each()) {
-    					status.addFirstAsMatched(child.key());
+    					status.matched(child.key());
     					try {
         					checkDeprecation(method, child);
     						method.invoke(instance, child);
@@ -559,7 +563,7 @@ public class Configurer {
 		                }
     				}
     			} else {
-					status.addFirstAsMatched(match);
+					status.matched(match);
     				for (Config child : config.body().each(match)) {
     					try {
         					checkDeprecation(method, child);
@@ -744,11 +748,12 @@ public class Configurer {
 			if (config.hasBody()) {
     		    Optional<Config> at = config.body().at(path);
     			if (at.isPresent()) {
+					status.matched(path);
     				Config conf = at.get();
     				
     				boolean val = true;
+    				
     				if (conf.hasValue()) {
-    					status.addFirstAsMatched(path);
     					checkDeprecation(method, conf);
     					String str = conf.valueAsString();
     					
@@ -757,6 +762,7 @@ public class Configurer {
     					} else if (falseValues.contains(str)) {
     						val = false;
     					} else {
+    						
     						throw preconditionError(
     								"must be empty (true) or one of %s (true) or %s (false)", 
     								trueValues, falseValues);
@@ -795,7 +801,7 @@ public class Configurer {
     			if (at.isPresent()) {
     				Config conf = at.get();
     				if (conf.hasValue()) {
-    					status.addFirstAsMatched(path);
+    					status.matched(path);
 	    				try {
 	    					checkDeprecation(method, conf);
 	    					handleNumber(method, instance, conf.valueAsNumber());
@@ -878,7 +884,7 @@ public class Configurer {
     			if (at.isPresent()) {
     				Config conf = at.get();
     				if (conf.hasValue()) {
-    					status.addFirstAsMatched(path);
+    					status.matched(path);
 	    				try {
 	    					checkDeprecation(method, conf);
 	    					method.invoke(instance, conf.valueAsBigDecimal());
@@ -913,7 +919,7 @@ public class Configurer {
     			if (at.isPresent()) {
     				Config conf = at.get();
     				if (conf.hasValue()) {
-    					status.addFirstAsMatched(path);
+    					status.matched(path);
 	    				try {
 	    					checkDeprecation(method, conf);
 	    					method.invoke(instance, conf.valueAsString());
@@ -944,7 +950,7 @@ public class Configurer {
     			if (at.isPresent()) {
     				Config conf = at.get();
     				try {
-	    				status.addFirstAsMatched(path);
+	    				status.matched(path);
     					checkDeprecation(method, conf);
 	    				method.invoke(instance, conf);
     				} catch (Throwable t) {

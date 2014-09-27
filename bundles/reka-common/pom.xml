@@ -7,7 +7,6 @@
 	<version>0.1.0</version>
 
 	<properties>
-		<core.version>0.1.0</core.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 
@@ -15,7 +14,7 @@
 		<dependency>
 			<groupId>io.reka</groupId>
 			<artifactId>reka-core</artifactId>
-			<version>${core.version}</version>
+			<version>0.1.0</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
@@ -43,41 +42,29 @@
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-shade-plugin</artifactId>
-				<version>2.3</version>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>2.5</version>
 				<configuration>
-					<createDependencyReducedPom>true</createDependencyReducedPom>
-					<filters>
-						<filter>
-							<artifact>*:*</artifact>
-							<excludes>
-								<exclude>META-INF/*.SF</exclude>
-								<exclude>META-INF/*.DSA</exclude>
-								<exclude>META-INF/*.RSA</exclude>
-							</excludes>
-						</filter>
-					</filters>
+					<archive>
+						<manifest>
+							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+						</manifest>
+						<manifestEntries>
+							<Reka-Module>reka.common.CommonBundle</Reka-Module>
+						</manifestEntries>
+					</archive>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-shade-plugin</artifactId>
+				<version>2.2</version>
 				<executions>
 					<execution>
 						<phase>package</phase>
 						<goals>
 							<goal>shade</goal>
 						</goals>
-						<configuration>	
-							<transformers>
-								<transformer
-									implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
-								<transformer
-									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<manifestEntries>
-										<Reka-Version>${core.version}</Reka-Version>
-										<Reka-Bundle>reka.common.CommonBundle</Reka-Bundle>
-										<Reka-Bundle-Version>${project.version}</Reka-Bundle-Version>
-									</manifestEntries>
-								</transformer>
-							</transformers>
-						</configuration>
 					</execution>
 				</executions>
 			</plugin>

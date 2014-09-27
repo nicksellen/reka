@@ -1,7 +1,7 @@
 JAVA_HOME := $(shell cat .java-home)
 export JAVA_HOME
 
-dist_bundles = command http jade jdbc mustache smtp less jsx common
+dist_bundles = command http jade mustache smtp less jsx common postgres h2
 
 dist_dir = dist/reka
 

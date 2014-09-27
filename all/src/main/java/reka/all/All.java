@@ -28,7 +28,7 @@ import reka.less.LessBundle;
 import reka.main.Main;
 import reka.mustache.MustacheBundle;
 import reka.nashorn.NashornBundle;
-import reka.pg.PostgresBundle;
+import reka.postgres.PostgresBundle;
 import reka.process.ProcessBundle;
 
 public class All {

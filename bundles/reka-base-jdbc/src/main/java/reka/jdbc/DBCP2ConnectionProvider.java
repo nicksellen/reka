@@ -5,7 +5,6 @@ import java.sql.SQLException;
 
 import javax.sql.DataSource;
 
-import org.apache.commons.dbcp2.ConnectionFactory;
 import org.apache.commons.dbcp2.DriverManagerConnectionFactory;
 import org.apache.commons.dbcp2.PoolableConnection;
 import org.apache.commons.dbcp2.PoolableConnectionFactory;
@@ -21,41 +20,46 @@ public class DBCP2ConnectionProvider implements JdbcConnectionProvider {
 	
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	
-	private final ConnectionFactory factory;
-	private final PoolableConnectionFactory poolableConnectionFactory;
-	private final ObjectPool<PoolableConnection> connectionPool;
-	private final PoolingDataSource<PoolableConnection> dataSource;
+	private final PoolableConnectionFactory factory;
+	private final ObjectPool<PoolableConnection> pool;
+	private final PoolingDataSource<PoolableConnection> ds;
 
-	public DBCP2ConnectionProvider(String url, String username, String password) {
-		factory = new DriverManagerConnectionFactory(url, username, password);
-		poolableConnectionFactory = new PoolableConnectionFactory(factory, null);
-		connectionPool = new GenericObjectPool<>(poolableConnectionFactory);
-		poolableConnectionFactory.setPool(connectionPool);
-		dataSource = new PoolingDataSource<>(connectionPool);
+	public DBCP2ConnectionProvider(String url, String username, String password, boolean poolStatements) {
+		factory = new PoolableConnectionFactory(new DriverManagerConnectionFactory(url, username, password), null);
+		factory.setPoolStatements(poolStatements);
+		pool = new GenericObjectPool<>(factory);
+		factory.setPool(pool);
+		ds = new PoolingDataSource<>(pool);
 	}
 
 	@Override
 	public void close() throws Exception {
 		log.info("closing connection pool");
-		connectionPool.close();
+		pool.close();
 	}
 
 	@Override
 	public Connection getConnection() throws SQLException {
-		return dataSource.getConnection();
+		return ds.getConnection();
 	}
 	
 	@Override
 	public DataSource dataSource() {
-		return dataSource;
+		return ds;
 	}
-	
+
+	@Override
 	public void writeStats(MutableData data) {
-		int active = connectionPool.getNumActive();
+		int active = pool.getNumActive();
 		if (active >= 0) data.putInt("active", active);
 		
-		int idle = connectionPool.getNumIdle();
+		int idle = pool.getNumIdle();
 		if (idle >= 0) data.putInt("idle", idle);
+	}
+
+	@Override
+	public void finished(Connection connection) throws SQLException {
+		connection.close();
 	}
 
 }

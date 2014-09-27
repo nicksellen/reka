@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,9 +40,9 @@ import reka.core.setup.ModuleSetup;
 import reka.core.util.StringWithVars;
 import reka.core.util.StringWithVars.Variable;
 
-public abstract class JdbcModule extends ModuleConfigurer {
+public abstract class JdbcBaseModule extends ModuleConfigurer {
 	
-	protected static final IdentityKey<DBCP2ConnectionProvider> POOL = IdentityKey.named("connection pool");
+	protected static final IdentityKey<JdbcConnectionProvider> POOL = IdentityKey.named("connection pool");
 
 	@SuppressWarnings("unused")
 	private final Logger log = LoggerFactory.getLogger(getClass());
@@ -51,7 +50,7 @@ public abstract class JdbcModule extends ModuleConfigurer {
 	private final Map<String,List<Data>> seeds = new HashMap<>();
 	
 	private List<String> sqls = new ArrayList<>();
-	private String url, username, password;
+	private String username, password;
 	
 	private boolean returnGeneratedKeys = false;
 	
@@ -78,10 +77,8 @@ public abstract class JdbcModule extends ModuleConfigurer {
 		returnGeneratedKeys = val;
 	}
 
-	@Conf.At("url")
-	public void jdbcURL(String val) {
-		url = val;
-	}
+	public abstract String jdbcUrl();
+	public abstract JdbcConnectionProvider connectionProvider(String username, String password); 
 	
 	@Conf.At("username")
 	public void username(String val) {
@@ -112,11 +109,10 @@ public abstract class JdbcModule extends ModuleConfigurer {
 		
 		JdbcConfiguration config = new JdbcConfiguration(returnGeneratedKeys);
 		
-		if (url == null) {
-			url = format("jdbc:h2:mem:%s", UUID.randomUUID().toString());
-			if (username == null) username = "sa";
-			if (password == null) password = "sa";
-		}
+		String url = jdbcUrl();
+
+		if (username == null) username = "sa";
+		if (password == null) password = "sa";
 		
 		module.operation(root(), provider -> new JdbcQueryConfigurer(config));
 		module.operation(path("insert"), provider -> new JdbcInsertConfigurer());
@@ -124,7 +120,7 @@ public abstract class JdbcModule extends ModuleConfigurer {
 		module.setupInitializer(init -> {
 			
 			init.run("create connection pool", store -> {
-				store.put(POOL, new DBCP2ConnectionProvider(url, username, password));
+				store.put(POOL, connectionProvider(username, password));
 			});
 
 			if (!migrations.isEmpty()) {
@@ -232,7 +228,7 @@ public abstract class JdbcModule extends ModuleConfigurer {
 		
 		});
 		
-		module.status(store -> new JdbcStatusProvider(store.get(POOL)));
+		module.status(store -> new JdbcStatusProvider(url, store.get(POOL)));
 		
 		module.shutdown("close connection pool", store -> {
 			store.lookup(POOL).ifPresent(jdbc -> { 

@@ -2,8 +2,8 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
+	<artifactId>reka-postgres</artifactId>
 	<groupId>io.reka</groupId>
-	<artifactId>reka-twilio</artifactId>
 	<version>0.1.0</version>
 
 	<properties>
@@ -18,29 +18,22 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
+			<groupId>io.reka</groupId>
+			<artifactId>reka-base-jdbc</artifactId>
+			<version>0.1.0</version>
+		</dependency>
+		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>3.8.1</version>
+			<version>4.11</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.twilio.sdk</groupId>
-			<artifactId>twilio-java-sdk</artifactId>
-			<version>3.4.1</version>
-			<exclusions>
-				<exclusion>
-					<artifactId>jackson-mapper-asl</artifactId>
-					<groupId>org.codehaus.jackson</groupId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<artifactId>jackson-mapper-asl</artifactId>
-			<groupId>org.codehaus.jackson</groupId>
-			<version>1.9.12</version>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<version>9.3-1102-jdbc41</version>
 		</dependency>
 	</dependencies>
-
 	<build>
 		<plugins>
 			<plugin>
@@ -62,7 +55,7 @@
 							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
 						</manifest>
 						<manifestEntries>
-							<Reka-Module>reka.twilio.TwilioBundle</Reka-Module>
+							<Reka-Module>reka.postgres.PostgresBundle</Reka-Module>
 						</manifestEntries>
 					</archive>
 				</configuration>
@@ -82,5 +75,4 @@
 			</plugin>
 		</plugins>
 	</build>
-
 </project>

@@ -1,7 +1,7 @@
 package reka.jdbc;
 
 import static reka.core.config.ConfigUtils.configToData;
-import static reka.jdbc.JdbcModule.POOL;
+import static reka.jdbc.JdbcBaseModule.POOL;
 
 import java.util.ArrayList;
 import java.util.List;

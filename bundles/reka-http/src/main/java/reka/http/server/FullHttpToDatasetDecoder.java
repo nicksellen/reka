@@ -3,7 +3,6 @@ package reka.http.server;
 import static reka.api.Path.dots;
 import static reka.api.Path.path;
 import static reka.api.content.Contents.binary;
-import static reka.api.content.Contents.booleanValue;
 import static reka.api.content.Contents.utf8;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.channel.ChannelHandler.Sharable;

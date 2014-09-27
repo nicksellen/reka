@@ -5,9 +5,11 @@ import reka.core.setup.StatusDataProvider;
 
 public class JdbcStatusProvider implements StatusDataProvider {
 
-	private final DBCP2ConnectionProvider pool;
+	private final String url;
+	private final JdbcConnectionProvider pool;
 	
-	public JdbcStatusProvider(DBCP2ConnectionProvider pool) {
+	public JdbcStatusProvider(String url, JdbcConnectionProvider pool) {
+		this.url = url;
 		this.pool = pool;
 	}
 	
@@ -19,6 +21,7 @@ public class JdbcStatusProvider implements StatusDataProvider {
 	@Override
 	public void statusData(MutableData data) {
 		pool.writeStats(data);
+		data.putString("url", url);
 	}
 
 }

@@ -1,4 +1,4 @@
-package reka.pg;
+package reka.postgres;
 
 import static reka.api.Path.path;
 import reka.api.Path;

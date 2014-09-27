@@ -2,6 +2,7 @@ package reka;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
+import static java.lang.String.format;
 import static reka.util.Util.unchecked;
 
 import java.io.File;
@@ -12,7 +13,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.jar.Manifest;
@@ -37,7 +37,7 @@ public class RekaConfigurer {
 
 	private final List<BundleConfigurer> defaultBundles = new ArrayList<>();
 	
-	private final Map<URL, String> addedBundles = new HashMap<>();
+	private final List<BundleMeta> addedBundles = new ArrayList<>();
 	
 	private final Path bundleBasedir;
 	
@@ -86,14 +86,22 @@ public class RekaConfigurer {
 				checkArgument(entry != null, "must include META-INF/MANIFEST.MF in your jar");
 				Manifest manifest = new Manifest(zip.getInputStream(entry));
 
-				String coreVersion = manifest.getMainAttributes().getValue("Reka-Version");
-				checkArgument(coreVersion != null, "you must include a Reka-Version value in the manifest, specifiying the core version");
+				String name = manifest.getMainAttributes().getValue("Implementation-Title");
+				String version = manifest.getMainAttributes().getValue("Implementation-Version");
+				String classname = manifest.getMainAttributes().getValue("Reka-Module");
 				
-				// TODO: actually make it check the version against the self version
+				checkArgument(name != null && version != null, 
+						"missing Implementation-Title and/or Implementation-Version " +
+						"check you have addDefaultImplementationEntries enabled in your maven-jar-plugin configuration");
+
+				name = name.replaceFirst("^reka\\-", "");
 				
-				String bundleName = manifest.getMainAttributes().getValue("Reka-Bundle");
-				checkArgument(bundleName != null, "you must include a Reka-Bundle value in the manifest");
-				addedBundles.put(file.toURI().toURL(), bundleName);
+				if (classname == null) {
+					// convention: reka.<name>.NameBundle
+					classname = format("reka.%s.%Bundle", name, capitalize(name));
+				}
+				
+				addedBundles.add(new BundleMeta(file.toURI().toURL(), classname, name, version));
 			}
 		} catch (Throwable t) {
 			throw unchecked(t);
@@ -106,22 +114,15 @@ public class RekaConfigurer {
 		
 		bundles.addAll(defaultBundles);
 		
-		URL[] urls = addedBundles.keySet().toArray(new URL[addedBundles.size()]);
-		
 		boolean classLoadingError = false;
-		for (Entry<URL, String> e : addedBundles.entrySet()) {
-			
-			// classloader per bundle keeps things isolated (each bundle can have it's own versions of libraries)
-			@SuppressWarnings("resource")
-			ClassLoader cl = new URLClassLoader(urls, Reka.class.getClassLoader());
-			
-			String classname = e.getValue();
+		for (BundleMeta meta : addedBundles) {
+			ClassLoader cl = new URLClassLoader(new URL[] { meta.url() }, Reka.class.getClassLoader());
 			try {
-				Object obj = cl.loadClass(classname).newInstance();
+				Object obj = cl.loadClass(meta.classname()).newInstance();
 				bundles.add((BundleConfigurer) obj);
 			} catch (ClassCastException | ClassNotFoundException | InstantiationException | IllegalAccessException error) {
 				error.printStackTrace();
-				log.error("couldn't load {} from {}", classname, e.getKey());
+				log.error("couldn't load {} from {}", meta.classname(), meta.url());
 				classLoadingError = true;
 			}
 		}
@@ -129,6 +130,10 @@ public class RekaConfigurer {
 		checkState(!classLoadingError, "failed to load all bundles");
 		
 		return new Reka(new File(datadir), bundles, apps);
+	}
+	
+	private String capitalize(String v) {
+		return Character.toUpperCase(v.charAt(0)) + v.substring(1);
 	}
 
 }

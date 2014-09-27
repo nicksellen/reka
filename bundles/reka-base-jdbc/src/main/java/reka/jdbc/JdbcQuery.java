@@ -24,6 +24,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
@@ -49,6 +51,8 @@ public class JdbcQuery implements Operation {
 	private final JdbcConnectionProvider provider;
 	private final Path resultField;
 	
+	private volatile Meta meta;
+	
 	public JdbcQuery(JdbcConfiguration config, JdbcConnectionProvider provider, StringWithVars query, Path resultPath) {
 		this.config = config;
 		this.query = query;
@@ -56,16 +60,14 @@ public class JdbcQuery implements Operation {
 		this.provider = provider;
 		this.resultField = resultPath;
 	}
-
+	
 	@Override
 	public void call(MutableData data) {
-		run(data);
-	}
-
-	private MutableData run(MutableData data) {
 		
-		try (Connection connection = provider.getConnection()) {
-
+		try {
+			
+			Connection connection = provider.getConnection();
+			
 			try {
 			
 				connection.setAutoCommit(false);
@@ -74,7 +76,7 @@ public class JdbcQuery implements Operation {
 				int updateCount = 0;
 				
 				List<Content> keys = new ArrayList<>();
-					
+				
 				PreparedStatement statement = connection.prepareStatement(
 						queryWithPlaceholders,
 						config.returnGeneratedKeys ? Statement.RETURN_GENERATED_KEYS : Statement.NO_GENERATED_KEYS);
@@ -114,29 +116,36 @@ public class JdbcQuery implements Operation {
 			} catch (Throwable t) {
 				connection.rollback();
 				throw t;
+			} finally {
+				provider.finished(connection);
 			}
-			
-		} catch (Throwable t) {
-			
+		
+		} catch (Throwable t) {	
 			t.printStackTrace();
 			throw unchecked(t);
 		}
-		
-		return data;
 	}
 	
 	private void handleKeys(ResultSet result, Collection<Content> keys) throws SQLException {
-		ResultSetMetaData meta = result.getMetaData();
+		Meta meta = meta(result);
 		while (result.next()) {
 			keys.add(keyToContent(meta, result, 1));
 		}
 	}
 	
-	private Content keyToContent(ResultSetMetaData meta, ResultSet result, int column) throws SQLException {
+
+	private Meta meta(ResultSet result) throws SQLException {
+		if (meta == null) {
+			meta = new Meta(result.getMetaData());
+		}
+		return meta;
+	}
+	
+	private Content keyToContent(Meta meta, ResultSet result, int column) throws SQLException {
 		
 		// see http://docs.oracle.com/javase/6/docs/api/constant-values.html#java.sql.Types.STRUCT
 		
-		switch (meta.getColumnType(column)) {
+		switch (meta.types[column]) {
 		case Types.LONGNVARCHAR:
 		case Types.LONGVARCHAR:
 		case Types.CLOB:
@@ -158,37 +167,59 @@ public class JdbcQuery implements Operation {
 		case Types.BOOLEAN:
 			return booleanValue(result.getBoolean(column));
 		default:
-			throw runtime("don't know how to handle column type [%d] / [%s]", meta.getColumnType(column), meta.getColumnTypeName(column));
+			throw runtime("don't know how to handle column type [%d] / [%s]", meta.types[column], meta.typeNames[column]);
 		}
 		
 	}
 	
 	private void handleResultSet(ResultSet result, MutableData data) throws SQLException {
 
-		ResultSetMetaData meta = result.getMetaData();
-		String tableName = meta.getTableName(1).toLowerCase();
+		Meta meta = meta(result);
+		String tableName = meta.tablename;
 		
 		Path p = resultField.isEmpty() ? path(tableName) : resultField;
 		
 		MutableData list = data.createListAt(p);
-		int columnCount = meta.getColumnCount();
+		int columnCount = meta.count;
 		MutableData item;
 		
 		while (result.next()) {
 			item = list.createMapAt(path(index(result.getRow() - 1)));
 			for (int column = 1; column < columnCount + 1; column++) {
-				String key = meta.getColumnLabel(column).toLowerCase();
-				putResult(item, path(key), meta, result, column);
+				putResult(item, meta.keys[column], meta, result, column);
 			}
 		}
 		
 	}
 	
-	private void putResult(MutableData item, Path path, ResultSetMetaData meta, ResultSet result, int column) throws IllegalArgumentException, SQLException {
+	private static class Meta {
+		private final int count;
+		private String tablename;
+		private final String[] labels;
+		private final Path[] keys;
+		private final int[] types;
+		private final String[] typeNames;
+		Meta(ResultSetMetaData meta) throws SQLException {
+			tablename = meta.getTableName(1).toLowerCase();
+			count = meta.getColumnCount();
+			labels = new String[count + 1];
+			keys = new Path[count + 1];
+			types = new int[count + 1];
+			typeNames = new String[count + 1];
+			for (int i = 1; i < count + 1; i++) {
+				labels[i] = meta.getColumnLabel(i).toLowerCase();
+				keys[i] = path(labels[i]);
+				types[i] = meta.getColumnType(i);
+				typeNames[i] = meta.getColumnTypeName(i).toLowerCase();
+			}
+		}
+	}
+	
+	private void putResult(MutableData item, Path path, Meta meta, ResultSet result, int column) throws IllegalArgumentException, SQLException {
 
 		// see http://docs.oracle.com/javase/6/docs/api/constant-values.html#java.sql.Types.STRUCT
 		
-		switch (meta.getColumnType(column)) {
+		switch (meta.types[column]) {
 		case Types.LONGNVARCHAR:
 		case Types.LONGVARCHAR:
 		case Types.CLOB:
@@ -212,11 +243,12 @@ public class JdbcQuery implements Operation {
 				item.put(path, nullValue());
 				return;
 			}
+		case Types.BIT:
 		case Types.BOOLEAN:
 			item.put(path, booleanValue(result.getBoolean(column)));
 			return;
 		default:
-			switch (meta.getColumnTypeName(column)) {
+			switch (meta.typeNames[column]) {
 			case "json":
 				try {
 					@SuppressWarnings("unchecked")
@@ -229,7 +261,7 @@ public class JdbcQuery implements Operation {
 			case "bool":
 				item.put(path, booleanValue(result.getBoolean(column)));
 			default:
-				throw runtime("don't know how to handle column type [%d] / [%s]", meta.getColumnType(column), meta.getColumnTypeName(column));
+				throw runtime("don't know how to handle column type [%d] / [%s]", meta.types[column], meta.typeNames[column]);
 			}
 		}
 	}

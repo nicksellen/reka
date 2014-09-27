@@ -10,10 +10,10 @@
   <packaging>pom</packaging>
 
   <modules>
+    <module>reka-base-jdbc</module>
     <module>reka-command</module>
     <module>reka-http</module>
     <module>reka-jade</module>
-    <module>reka-jdbc</module>
     <module>reka-jruby</module>
     <module>reka-mustache</module>
     <module>reka-rhino</module>
@@ -22,5 +22,7 @@
     <module>reka-less</module>
     <module>reka-jsx</module>
     <module>reka-common</module>
+    <module>reka-postgres</module>
+    <module>reka-h2</module>
   </modules>
 </project>

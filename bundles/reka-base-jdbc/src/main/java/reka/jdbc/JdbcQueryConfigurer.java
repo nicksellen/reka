@@ -3,7 +3,7 @@ package reka.jdbc;
 import static java.util.Objects.requireNonNull;
 import static reka.api.Path.dots;
 import static reka.api.Path.root;
-import static reka.jdbc.JdbcModule.POOL;
+import static reka.jdbc.JdbcBaseModule.POOL;
 import reka.api.Path;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
