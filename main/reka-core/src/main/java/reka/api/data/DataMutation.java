@@ -7,13 +7,11 @@ import static reka.api.content.Contents.integer;
 import static reka.api.content.Contents.longValue;
 import static reka.api.content.Contents.nullValue;
 import static reka.api.content.Contents.utf8;
-
-import java.util.function.Consumer;
-
 import reka.api.Path;
 import reka.api.Path.PathElement;
 import reka.api.Path.PathElements;
 import reka.api.content.Content;
+import reka.util.ThrowingConsumer;
 
 public interface DataMutation<T> {
 
@@ -27,8 +25,8 @@ public interface DataMutation<T> {
 	MutableData createMapAt(Path path);
 	MutableData createListAt(Path path);
 	
-	T putMap(Path path, Consumer<MapMutation> map);
-	T putList(Path path, Consumer<ListMutation> list);
+	T putMap(Path path, ThrowingConsumer<MapMutation> map);
+	T putList(Path path, ThrowingConsumer<ListMutation> list);
 
 	default T put(String key, Data data) {
 		return put(path(key), data);
@@ -122,27 +120,27 @@ public interface DataMutation<T> {
 		return remove(PathElements.index(index));
 	}
 	
-	default T putMap(PathElement element, Consumer<MapMutation> map) {
+	default T putMap(PathElement element, ThrowingConsumer<MapMutation> map) {
 		return putMap(path(element), map);
 	}
 	
-	default T putMap(String key, Consumer<MapMutation> map) {
+	default T putMap(String key, ThrowingConsumer<MapMutation> map) {
 		return putMap(PathElements.name(key), map);
 	}
 	
-	default T putMap(int index, Consumer<MapMutation> map) {
+	default T putMap(int index, ThrowingConsumer<MapMutation> map) {
 		return putMap(PathElements.index(index), map);
 	}
 	
-	default T putList(PathElement element, Consumer<ListMutation> list) {
+	default T putList(PathElement element, ThrowingConsumer<ListMutation> list) {
 		return putList(path(element), list);
 	}
 	
-	default T putList(String key, Consumer<ListMutation> list) {
+	default T putList(String key, ThrowingConsumer<ListMutation> list) {
 		return putList(PathElements.name(key), list);
 	}
 	
-	default T putList(int index, Consumer<ListMutation> list) {
+	default T putList(int index, ThrowingConsumer<ListMutation> list) {
 		return putList(PathElements.index(index), list);
 	}
 

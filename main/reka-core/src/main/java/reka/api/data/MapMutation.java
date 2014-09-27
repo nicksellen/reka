@@ -10,14 +10,15 @@ import java.util.function.Consumer;
 
 import reka.api.Path;
 import reka.api.content.Content;
+import reka.util.ThrowingConsumer;
 
 public interface MapMutation {
 	
 	MapMutation remove(Path key);
 	MapMutation put(Path key, Data data);
 	MapMutation put(Path key, Content content);
-	MapMutation putList(Path key, Consumer<ListMutation> list);
-	MapMutation putMap(Path key, Consumer<MapMutation> map);
+	MapMutation putList(Path key, ThrowingConsumer<ListMutation> list);
+	MapMutation putMap(Path key, ThrowingConsumer<MapMutation> map);
 	
 	default MapMutation putInt(Path key, int val) {
 		return put(key, integer(val));
@@ -57,11 +58,11 @@ public interface MapMutation {
 		return put(key, utf8(val));
 	}
 
-	default MapMutation putList(String key, Consumer<ListMutation> list) {
+	default MapMutation putList(String key, ThrowingConsumer<ListMutation> list) {
 		return putList(path(key), list);
 	}
 	
-	default MapMutation putMap(String key, Consumer<MapMutation> map) {
+	default MapMutation putMap(String key, ThrowingConsumer<MapMutation> map) {
 		return putMap(path(key), map);
 	}
 	

@@ -12,3 +12,5 @@ docker/**/*.jar
 dist
 .java-home
 build
+**.h2.db
+**.trace.db

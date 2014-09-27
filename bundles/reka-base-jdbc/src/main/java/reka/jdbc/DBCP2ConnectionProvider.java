@@ -2,6 +2,7 @@ package reka.jdbc;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.concurrent.LinkedBlockingDeque;
 
 import javax.sql.DataSource;
 

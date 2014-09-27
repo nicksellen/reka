@@ -119,14 +119,6 @@ public class Util {
 		return future;
 	}
 		
-	public static interface ThrowingRunnable {
-		void run() throws Throwable;
-	}
-	
-	public static interface ThrowingConsumer<T> {
-		void accept(T val) throws Throwable;
-	}
-
 	public static void ignoreExceptions(ThrowingRunnable r) {
 		try {
 			r.run();

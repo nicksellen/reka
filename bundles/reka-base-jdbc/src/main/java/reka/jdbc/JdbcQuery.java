@@ -24,8 +24,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
@@ -33,6 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import reka.api.Path;
 import reka.api.content.Content;
+import reka.api.data.MapMutation;
 import reka.api.data.MutableData;
 import reka.api.run.Operation;
 import reka.core.data.memory.MutableMemoryData;
@@ -179,28 +178,35 @@ public class JdbcQuery implements Operation {
 		
 		Path p = resultField.isEmpty() ? path(tableName) : resultField;
 		
-		MutableData list = data.createListAt(p);
 		int columnCount = meta.count;
-		MutableData item;
 		
-		while (result.next()) {
-			item = list.createMapAt(path(index(result.getRow() - 1)));
-			for (int column = 1; column < columnCount + 1; column++) {
-				putResult(item, meta.keys[column], meta, result, column);
+		data.putList(p, list -> {
+			while (result.next()) {
+				list.addMap(map -> {
+					for (int column = 1; column < columnCount + 1; column++) {
+						putResult(map, meta.keys[column], meta, result, column);
+					}
+				});
 			}
-		}
+		});
 		
 	}
 	
 	private static class Meta {
+		
 		private final int count;
 		private String tablename;
 		private final String[] labels;
 		private final Path[] keys;
 		private final int[] types;
 		private final String[] typeNames;
+		
 		Meta(ResultSetMetaData meta) throws SQLException {
-			tablename = meta.getTableName(1).toLowerCase();
+			try {
+				tablename = meta.getTableName(1).toLowerCase();
+			} catch (SQLException e) {
+				tablename = "";
+			}
 			count = meta.getColumnCount();
 			labels = new String[count + 1];
 			keys = new Path[count + 1];
@@ -213,9 +219,62 @@ public class JdbcQuery implements Operation {
 				typeNames[i] = meta.getColumnTypeName(i).toLowerCase();
 			}
 		}
+		
 	}
 	
+
 	private void putResult(MutableData item, Path path, Meta meta, ResultSet result, int column) throws IllegalArgumentException, SQLException {
+
+		// see http://docs.oracle.com/javase/6/docs/api/constant-values.html#java.sql.Types.STRUCT
+		
+		switch (meta.types[column]) {
+		case Types.LONGNVARCHAR:
+		case Types.LONGVARCHAR:
+		case Types.CLOB:
+		case Types.CHAR:
+		case Types.VARCHAR:
+			item.put(path, utf8(result.getString(column)));
+			return;
+		case Types.SMALLINT:
+		case Types.INTEGER:
+			item.put(path, integer(result.getInt(column)));
+			return;
+		case Types.BIGINT:
+			item.put(path, longValue(result.getLong(column)));
+			return;
+		case Types.TIMESTAMP: 
+			Timestamp ts = result.getTimestamp(column);
+			if (ts != null) {
+				item.put(path, longValue(ts.getTime()));
+				return; // TODO: how to represent dates?	
+			} else {
+				item.put(path, nullValue());
+				return;
+			}
+		case Types.BIT:
+		case Types.BOOLEAN:
+			item.put(path, booleanValue(result.getBoolean(column)));
+			return;
+		default:
+			switch (meta.typeNames[column]) {
+			case "json":
+				try {
+					@SuppressWarnings("unchecked")
+					Map<String,Object> m = json.readValue(result.getString(column), Map.class);
+					item.put(path, MutableMemoryData.createFromMap(m));
+				} catch (IOException e) {
+					throw unchecked(e);
+				}
+				return;
+			case "bool":
+				item.put(path, booleanValue(result.getBoolean(column)));
+			default:
+				throw runtime("don't know how to handle column type [%d] / [%s]", meta.types[column], meta.typeNames[column]);
+			}
+		}
+	}
+	
+	private void putResult(MapMutation item, Path path, Meta meta, ResultSet result, int column) throws IllegalArgumentException, SQLException {
 
 		// see http://docs.oracle.com/javase/6/docs/api/constant-values.html#java.sql.Types.STRUCT
 		

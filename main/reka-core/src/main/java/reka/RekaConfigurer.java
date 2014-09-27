@@ -2,7 +2,6 @@ package reka;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
-import static java.lang.String.format;
 import static reka.util.Util.unchecked;
 
 import java.io.File;
@@ -94,12 +93,9 @@ public class RekaConfigurer {
 						"missing Implementation-Title and/or Implementation-Version " +
 						"check you have addDefaultImplementationEntries enabled in your maven-jar-plugin configuration");
 
-				name = name.replaceFirst("^reka\\-", "");
+				checkArgument(classname != null, "must provide Reka-Module in the manifest");
 				
-				if (classname == null) {
-					// convention: reka.<name>.NameBundle
-					classname = format("reka.%s.%Bundle", name, capitalize(name));
-				}
+				name = name.replaceFirst("^reka\\-", "");
 				
 				addedBundles.add(new BundleMeta(file.toURI().toURL(), classname, name, version));
 			}
@@ -130,10 +126,6 @@ public class RekaConfigurer {
 		checkState(!classLoadingError, "failed to load all bundles");
 		
 		return new Reka(new File(datadir), bundles, apps);
-	}
-	
-	private String capitalize(String v) {
-		return Character.toUpperCase(v.charAt(0)) + v.substring(1);
 	}
 
 }

@@ -4,11 +4,11 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static reka.api.Path.path;
 import static reka.api.Path.PathElements.nextIndex;
 import static reka.util.Util.runtime;
+import static reka.util.Util.unchecked;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Consumer;
 
 import reka.api.Path;
 import reka.api.Path.PathElement;
@@ -18,6 +18,7 @@ import reka.api.data.Data;
 import reka.api.data.ListMutation;
 import reka.api.data.MapMutation;
 import reka.api.data.MutableData;
+import reka.util.ThrowingConsumer;
 
 public class MutableDataWrapper<T> extends DataWrapper<T> implements Data, MutableData {
 
@@ -115,24 +116,32 @@ public class MutableDataWrapper<T> extends DataWrapper<T> implements Data, Mutab
 	}
 	
 	@Override
-	public MutableData putMap(Path path, Consumer<MapMutation> consumer) {
+	public MutableData putMap(Path path, ThrowingConsumer<MapMutation> consumer) {
 		BatchMutateMap mutation = new BatchMutateMap(provider.createMap());
-		consumer.accept(mutation);
-		for (Path p : mutation.removed) {
-			 provider.remove(root, path.add(p));
+		try {
+			consumer.accept(mutation);
+			for (Path p : mutation.removed) {
+				 provider.remove(root, path.add(p));
+			}
+			root = provider.put(root, path, mutation.map);
+		} catch (Exception t) {
+			throw unchecked(t);
 		}
-		root = provider.put(root, path, mutation.map);
 		return this;
 	}
 
 	@Override
-	public MutableData putList(Path path, Consumer<ListMutation> consumer) {
+	public MutableData putList(Path path, ThrowingConsumer<ListMutation> consumer) {
 		BatchMutateList mutation = new BatchMutateList(provider.createList());
-		consumer.accept(mutation);
-		for (PathElement e : mutation.removed) {
-			 provider.remove(root, path(e));
+		try {
+			consumer.accept(mutation);
+			for (PathElement e : mutation.removed) {
+				 provider.remove(root, path(e));
+			}
+			root = provider.put(root, path, mutation.list);
+		} catch (Exception t) {
+			throw unchecked(t);
 		}
-		root = provider.put(root, path, mutation.list);
 		return this;
 	}
 
@@ -179,18 +188,26 @@ public class MutableDataWrapper<T> extends DataWrapper<T> implements Data, Mutab
 
 
 		@Override
-		public ListMutation addList(Consumer<ListMutation> consumer) {
+		public ListMutation addList(ThrowingConsumer<ListMutation> consumer) {
 			BatchMutateList mutation = new BatchMutateList(provider.createList());
-			consumer.accept(mutation);
-			provider.put(list, path(nextIndex()), mutation.list);
+			try {
+				consumer.accept(mutation);
+				provider.put(list, path(nextIndex()), mutation.list);
+			} catch (Exception t) {
+				throw unchecked(t);
+			}
 			return this;
 		}
 
 		@Override
-		public ListMutation addMap(Consumer<MapMutation> consumer) {
+		public ListMutation addMap(ThrowingConsumer<MapMutation> consumer) {
 			BatchMutateMap mutation = new BatchMutateMap(provider.createMap());
-			consumer.accept(mutation);
-			provider.put(list, path(nextIndex()), mutation.map);
+			try {
+				consumer.accept(mutation);
+				provider.put(list, path(nextIndex()), mutation.map);
+			} catch (Exception t) {
+				throw unchecked(t);
+			}
 			return this;
 		}
 		
@@ -227,18 +244,26 @@ public class MutableDataWrapper<T> extends DataWrapper<T> implements Data, Mutab
 		}
 
 		@Override
-		public MapMutation putList(Path path,Consumer<ListMutation> consumer) {
+		public MapMutation putList(Path path,ThrowingConsumer<ListMutation> consumer) {
 			BatchMutateList mutation = new BatchMutateList(provider.createList());
-			consumer.accept(mutation);
-			provider.put(map, path, mutation.list);
+			try {
+				consumer.accept(mutation);
+				provider.put(map, path, mutation.list);
+			} catch (Exception t) {
+				throw unchecked(t);
+			}
 			return this;
 		}
 
 		@Override
-		public MapMutation putMap(Path path, Consumer<MapMutation> consumer) {
+		public MapMutation putMap(Path path, ThrowingConsumer<MapMutation> consumer) {
 			BatchMutateMap mutation = new BatchMutateMap(provider.createMap());
-			consumer.accept(mutation);
-			provider.put(map, path, mutation.map);
+			try {
+				consumer.accept(mutation);
+				provider.put(map, path, mutation.map);
+			} catch (Exception t) {
+				throw unchecked(t);
+			}
 			return this;
 		}
 	}
