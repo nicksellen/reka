@@ -52,8 +52,6 @@ public class SingleProcessManager implements ProcessManager {
 	private final Process process;
 	
 	private final int pid;
-
-	private volatile boolean paused = false;
 	
 	@SuppressWarnings("unused")
 	private final boolean noreply;
@@ -74,10 +72,6 @@ public class SingleProcessManager implements ProcessManager {
 	public SingleProcessManager(ProcessBuilder builder, boolean noreply) {
 		this(builder, noreply, new LinkedBlockingDeque<>());
 	}
-
-	//private volatile long sentmsg;
-	
-	//private volatile boolean waiting = false;
 	
 	private final Object lock = new Object();
 	
@@ -124,10 +118,9 @@ public class SingleProcessManager implements ProcessManager {
 				try {
 					while (process.isAlive() && !Thread.interrupted()) {
 						Entry<String, Consumer<String>> entry = q.take();
-						String input = entry.getKey();
-						byte[] bytes = input.getBytes(StandardCharsets.UTF_8);
-						
 						synchronized (lock) {
+							String input = entry.getKey();
+							byte[] bytes = input.getBytes(StandardCharsets.UTF_8);
 							stdin.write(bytes);
 							stdin.write(NEW_LINE);
 							stdin.flush();
@@ -220,6 +213,8 @@ public class SingleProcessManager implements ProcessManager {
 	private void terminate() {
 		if (process == null) return;
 		if (process.isAlive()) {
+			
+			// TODO: this needs some tidying up...
 			
 			long waitUntil;
 
