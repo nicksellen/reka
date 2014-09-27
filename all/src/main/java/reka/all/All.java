@@ -1,6 +1,7 @@
 package reka.all;
 
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static reka.config.configurer.Configurer.configure;
 
 import java.io.File;
@@ -11,25 +12,26 @@ import org.kohsuke.args4j.CmdLineException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.JsonBundle;
+import reka.JsonModule;
+import reka.ModuleMeta;
 import reka.RekaConfigurer;
-import reka.builtins.BuiltinsBundle;
-import reka.common.CommonBundle;
+import reka.builtins.BuiltinsModule;
+import reka.common.CommonModule;
 import reka.config.NavigableConfig;
 import reka.config.parser.ConfigParser;
-import reka.core.bundle.BundleConfigurer;
-import reka.core.bundle.BundleManager;
-import reka.filesystem.FilesystemBundle;
-import reka.h2.H2Bundle;
-import reka.http.HttpBundle;
-import reka.jade.JadeBundle;
-import reka.jsx.JsxBundle;
-import reka.less.LessBundle;
+import reka.core.module.ModuleManager;
+import reka.filesystem.FilesystemModule;
+import reka.h2.H2Module;
+import reka.http.HttpModule;
+import reka.jade.JadeModule;
+import reka.jsx.JsxModule;
+import reka.less.LessModule;
 import reka.main.Main;
-import reka.mustache.MustacheBundle;
-import reka.nashorn.NashornBundle;
-import reka.postgres.PostgresBundle;
-import reka.process.ProcessBundle;
+import reka.mustache.MustacheModule;
+import reka.nashorn.NashornModule;
+import reka.postgres.PostgresModule;
+import reka.process.ProcessModule;
+import reka.smtp.SmtpModule;
 
 public class All {
 
@@ -49,25 +51,25 @@ public class All {
 			return;
 		};
 		
-		List<BundleConfigurer> defaultBundles = new ArrayList<>(asList(
-			new BuiltinsBundle(), 
-			new FilesystemBundle(),
-			new NashornBundle(),
-			new ProcessBundle(),
-			new MustacheBundle(),
-			new H2Bundle(),
-			new PostgresBundle(),
-			new JsxBundle(),
-			new CommonBundle(),
-			new LessBundle(),
-			new JadeBundle(),
-			new JsonBundle()));
+		List<ModuleMeta> defaultModules = new ArrayList<>(asList(
+			new BuiltinsModule(), 
+			new FilesystemModule(),
+			new NashornModule(),
+			new ProcessModule(),
+			new MustacheModule(),
+			new H2Module(),
+			new PostgresModule(),
+			new JsxModule(),
+			new CommonModule(),
+			new LessModule(),
+			new JadeModule(),
+			new SmtpModule(),
+			new JsonModule(),
+			new HttpModule()))
+		.stream().map(m -> new ModuleMeta("snapshot", m)).collect(toList());
 		
-		defaultBundles.addAll(asList(
-			new HttpBundle()));
-		
-		NavigableConfig conf = new BundleManager(defaultBundles).processor().process(ConfigParser.fromFile(file));
-		configure(new RekaConfigurer(file.getParentFile().toPath(), defaultBundles), conf).build().run();
+		NavigableConfig conf = new ModuleManager(defaultModules).processor().process(ConfigParser.fromFile(file));
+		configure(new RekaConfigurer(file.getParentFile().toPath(), defaultModules), conf).build().run();
 		
 	}
 

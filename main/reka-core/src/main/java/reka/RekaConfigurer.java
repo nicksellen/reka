@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
-import reka.core.bundle.BundleConfigurer;
+import reka.core.module.Module;
 
 public class RekaConfigurer {
 	
@@ -34,15 +34,30 @@ public class RekaConfigurer {
 	
 	private String datadir = "data";
 
-	private final List<BundleConfigurer> defaultBundles = new ArrayList<>();
+	private final List<ModuleMeta> defaultModules = new ArrayList<>();
 	
-	private final List<BundleMeta> addedBundles = new ArrayList<>();
+	private final List<JarModule> addedModules = new ArrayList<>();
 	
-	private final Path bundleBasedir;
+	private final Path moduleBasedir;
 	
-	public RekaConfigurer(Path bundleBasedir, List<BundleConfigurer> defaultBundles) {
-		this.bundleBasedir = bundleBasedir;
-		this.defaultBundles.addAll(defaultBundles);
+	private static class JarModule {
+		
+		private final URL url;
+		private final String classname;
+		private final String name;
+		private final String version;
+		
+		public JarModule(URL url, String classname, String name, String version) {
+			this.url = url;
+			this.classname = classname;
+			this.name = name;
+			this.version = version;
+		}
+	}
+	
+	public RekaConfigurer(Path moduleBasedir, List<ModuleMeta> modules) {
+		this.moduleBasedir = moduleBasedir;
+		this.defaultModules.addAll(modules);
 	}
 	
 	@Conf.At("data")
@@ -50,9 +65,9 @@ public class RekaConfigurer {
 		datadir = val;
 	}
 	
-	@Conf.Each("bundle")
-	public void bundle(String val) {
-		unpackBundle(val);
+	@Conf.Each("module")
+	public void module(String val) {
+		unpackModule(val);
 	}
 	
 	@Conf.Each("app")
@@ -72,12 +87,12 @@ public class RekaConfigurer {
 		apps.put(identity, body);
 	}
 	
-	private void unpackBundle(String jarpath) {
-		log.info("loading bundles from {}", jarpath);
-		loadBundle(bundleBasedir.resolve(jarpath).toFile());
+	private void unpackModule(String jarpath) {
+		log.info("loading modules from {}", jarpath);
+		loadModule(moduleBasedir.resolve(jarpath).toFile());
 	}
 	
-	private void loadBundle(File file) {
+	private void loadModule(File file) {
 		try {
 			checkArgument(file.exists(), "[%s] does not exist", file.getAbsolutePath());
 			try (ZipFile zip = new ZipFile(file)) {
@@ -97,7 +112,7 @@ public class RekaConfigurer {
 				
 				name = name.replaceFirst("^reka\\-", "");
 				
-				addedBundles.add(new BundleMeta(file.toURI().toURL(), classname, name, version));
+				addedModules.add(new JarModule(file.toURI().toURL(), classname, name, version));
 			}
 		} catch (Throwable t) {
 			throw unchecked(t);
@@ -106,26 +121,28 @@ public class RekaConfigurer {
 	
 	public Reka build() {
 		
-		List<BundleConfigurer> bundles = new ArrayList<>();
+		List<ModuleMeta> modules = new ArrayList<>();
 		
-		bundles.addAll(defaultBundles);
+		modules.addAll(defaultModules);
 		
 		boolean classLoadingError = false;
-		for (BundleMeta meta : addedBundles) {
-			ClassLoader cl = new URLClassLoader(new URL[] { meta.url() }, Reka.class.getClassLoader());
+		for (JarModule jar : addedModules) {
+			ClassLoader cl = new URLClassLoader(new URL[] { jar.url }, Reka.class.getClassLoader());
 			try {
-				Object obj = cl.loadClass(meta.classname()).newInstance();
-				bundles.add((BundleConfigurer) obj);
+				Object obj = cl.loadClass(jar.classname).newInstance();
+				Module module = (Module) obj;
+				modules.add(new ModuleMeta(jar.version, module));
+				
 			} catch (ClassCastException | ClassNotFoundException | InstantiationException | IllegalAccessException error) {
 				error.printStackTrace();
-				log.error("couldn't load {} from {}", meta.classname(), meta.url());
+				log.error("couldn't load {} from {}", jar.classname, jar.url);
 				classLoadingError = true;
 			}
 		}
 		
-		checkState(!classLoadingError, "failed to load all bundles");
+		checkState(!classLoadingError, "failed to load all modules");
 		
-		return new Reka(new File(datadir), bundles, apps);
+		return new Reka(new File(datadir), modules, apps);
 	}
 
 }

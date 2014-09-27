@@ -16,10 +16,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import reka.ApplicationManager.DeploySubscriber;
-import reka.admin.RekaSystemBundle;
+import reka.admin.AdminModule;
 import reka.config.ConfigBody;
-import reka.core.bundle.BundleConfigurer;
-import reka.core.bundle.BundleManager;
+import reka.core.module.ModuleManager;
 
 public class Reka {
 	
@@ -30,12 +29,12 @@ public class Reka {
 	private static final Logger log = LoggerFactory.getLogger(Reka.class);
 	
 	private final File datadir;
-	private final List<BundleConfigurer> bundles = new ArrayList<>();
+	private final List<ModuleMeta> modules = new ArrayList<>();
 	private final Map<String,ConfigBody> configs = new HashMap<>();
 	
-	public Reka(File datadir, List<BundleConfigurer> bundles, Map<String,ConfigBody> configs) {
+	public Reka(File datadir, List<ModuleMeta> modules, Map<String,ConfigBody> configs) {
 		this.datadir = datadir;
-		this.bundles.addAll(bundles);
+		this.modules.addAll(modules);
 		this.configs.putAll(configs);
 	}
 	
@@ -43,24 +42,24 @@ public class Reka {
 		
 		if (!datadir.isDirectory() && !datadir.mkdirs()) throw runtime("couldn't create datadir %s", datadir); 
 		
-		BundleManager bundleManager = new BundleManager(bundles);
-		ApplicationManager applicationManager  = new ApplicationManager(datadir, bundleManager);
+		ModuleManager moduleManager = new ModuleManager(modules);
+		ApplicationManager applicationManager  = new ApplicationManager(datadir, moduleManager);
 		
 		Runtime.getRuntime().addShutdownHook(new Thread(){
 			
 			@Override
 			public void run() {
 				applicationManager.shutdown();
-				bundleManager.shutdown();
+				moduleManager.shutdown();
 			}
 			
 		});
 		
-		bundleManager.add(new RekaSystemBundle(applicationManager));
+		moduleManager.add(new ModuleMeta("core", new AdminModule(applicationManager)));
 		
-		Stream<String> bundlesNames = bundleManager.modulesKeys().stream().map(reka.api.Path::slashes);
+		Stream<String> moduleNames = moduleManager.modulesKeys().stream().map(reka.api.Path::slashes);
 		
-		bundlesNames.filter(s -> !s.isEmpty()).forEach(m -> {
+		moduleNames.filter(s -> !s.isEmpty()).forEach(m -> {
 			log.info("module available {}", m);
 		});
 		

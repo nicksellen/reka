@@ -32,7 +32,7 @@ import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.builder.FlowVisualizer;
 import reka.core.builder.SingleFlow;
-import reka.core.bundle.BundleConfigurer.ModuleInfo;
+import reka.core.module.ModuleInfo;
 import reka.core.runtime.NoFlow;
 import reka.core.runtime.NoFlowVisualizer;
 import reka.core.setup.ModuleSetup.ApplicationCheck;
@@ -128,11 +128,11 @@ public abstract class ModuleConfigurer {
 				
 				IdentityStore store = IdentityStore.createConcurrentIdentityStore();
 
-				ModuleSetup init = new ModuleSetup(module.info(), module.fullPath(), store, collector);
+				ModuleSetup init = new ModuleSetup(module.info(), module.fullAliasOrName(), store, collector);
 				module.setup(init);
 				if (init.includeDefaultStatus() && module.info() != null) {
-					collector.statuses.add(() -> StatusProvider.create(module.info().type().slashes(), 
-							                                           module.fullPath().slashes(), 
+					collector.statuses.add(() -> StatusProvider.create(module.info().name().slashes(), 
+							                                           module.fullAliasOrName().slashes(), 
 							                                           module.info().version()));
 				}
 
@@ -189,7 +189,7 @@ public abstract class ModuleConfigurer {
 			for (ModuleConfigurer use : all) {
 				for (String depname : use.modulesNames) {
 					ModuleConfigurer dep = allMap.get(depname);
-					checkNotNull(dep, "missing dependency: [%s] uses [%s]", use.name(), depname);
+					checkNotNull(dep, "missing dependency: [%s] uses [%s]", use.aliasOrName(), depname);
 					dep.usedBy.add(use);
 					use.uses.add(dep);
 				}
@@ -217,7 +217,7 @@ public abstract class ModuleConfigurer {
 		public static Map<String, ModuleConfigurer> map(Collection<ModuleConfigurer> uses) {
 			Map<String, ModuleConfigurer> map = new HashMap<>();
 			for (ModuleConfigurer use : uses) {
-				map.put(use.name(), use);
+				map.put(use.aliasOrName(), use);
 			}
 			return map;
 		}
@@ -227,7 +227,7 @@ public abstract class ModuleConfigurer {
 	private List<ModuleInfo> modules = new ArrayList<>();
 
 	private ModuleInfo info;
-	private String type;
+	private String name;
 	private String alias;
 
 	private boolean isRoot;
@@ -254,7 +254,7 @@ public abstract class ModuleConfigurer {
 		for (ModuleInfo e : modules) {
 			// all the ones with a root path need to be added automatically
 			// we don't need to explicitly load these...
-			if (e.type().isEmpty()) {
+			if (e.name().isEmpty()) {
 				uses.add(e.get());
 			}
 		}
@@ -277,8 +277,8 @@ public abstract class ModuleConfigurer {
 	}
 	
 	@Conf.Key
-	public void type(String val) {
-		type = val;
+	public void name(String val) {
+		name = val;
 	}
 	
 	@Conf.Val
@@ -290,27 +290,23 @@ public abstract class ModuleConfigurer {
 		info = val;
 	}
 
-	public String name() {
-		return alias != null ? alias : type;
+	public String aliasOrName() {
+		return alias != null ? alias : name;
 	}
 
 	public ModuleInfo info() {
 		return info;
 	}
-
-	public String getName() {
-		return name();
-	}
-
-	protected Path fullPath() {
-		return parentPath.add(slashes(name()));
+	
+	protected Path fullAliasOrName() {
+		return parentPath.add(slashes(aliasOrName()));
 	}
 
 	public String typeAndName() {
-		if (type.equals(name())) {
-			return type;
+		if (name.equals(aliasOrName())) {
+			return name;
 		} else {
-			return format("%s/%s", type, name());
+			return format("%s/%s", name, aliasOrName());
 		}
 	}
 
@@ -349,7 +345,7 @@ public abstract class ModuleConfigurer {
 
 	private ModuleInfo moduleFor(Path path) {
 		for (ModuleInfo m : modules) {
-			if (m.type().equals(path)) {
+			if (m.name().equals(path)) {
 				return m;
 			}
 		}
@@ -359,8 +355,8 @@ public abstract class ModuleConfigurer {
 	private Collection<String> mappingNames() {
 		List<String> result = new ArrayList<>();
 		for (ModuleInfo e : modules) {
-			if (!e.type().isEmpty()) {
-				result.add(e.type().slashes());
+			if (!e.name().isEmpty()) {
+				result.add(e.name().slashes());
 			}
 		}
 		return result;
@@ -368,7 +364,7 @@ public abstract class ModuleConfigurer {
 
 	@Override
 	public String toString() {
-		return format("%s(\n    name %s\n    params %s)", type, name(), modulesNames);
+		return format("%s(\n    name %s\n    params %s)", name, aliasOrName(), modulesNames);
 	}
 
 }

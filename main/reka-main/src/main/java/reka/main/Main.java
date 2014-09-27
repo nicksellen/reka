@@ -1,6 +1,7 @@
 package reka.main;
 
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static reka.config.configurer.Configurer.configure;
 
 import java.io.File;
@@ -10,17 +11,17 @@ import org.kohsuke.args4j.CmdLineException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.JsonBundle;
+import reka.JsonModule;
+import reka.ModuleMeta;
 import reka.RekaConfigurer;
-import reka.builtins.BuiltinsBundle;
-import reka.common.CommonBundle;
+import reka.builtins.BuiltinsModule;
+import reka.common.CommonModule;
 import reka.config.NavigableConfig;
 import reka.config.parser.ConfigParser;
-import reka.core.bundle.BundleConfigurer;
-import reka.core.bundle.BundleManager;
-import reka.filesystem.FilesystemBundle;
-import reka.nashorn.NashornBundle;
-import reka.process.ProcessBundle;
+import reka.core.module.ModuleManager;
+import reka.filesystem.FilesystemModule;
+import reka.nashorn.NashornModule;
+import reka.process.ProcessModule;
 
 public class Main {
 
@@ -40,16 +41,17 @@ public class Main {
 			return;
 		};
 		
-		List<BundleConfigurer> defaultBundles = asList(
-			new BuiltinsBundle(), 
-			new FilesystemBundle(),
-			new NashornBundle(),
-			new CommonBundle(),
-			new ProcessBundle(),
-			new JsonBundle());
+		List<ModuleMeta> defaultModules = asList(
+			new BuiltinsModule(), 
+			new FilesystemModule(),
+			new NashornModule(),
+			new CommonModule(),
+			new ProcessModule(),
+			new JsonModule())
+		.stream().map(m -> new ModuleMeta("snapshot", m)).collect(toList());
 		
-		NavigableConfig conf = new BundleManager(defaultBundles).processor().process(ConfigParser.fromFile(file));
-		configure(new RekaConfigurer(file.getParentFile().toPath(), defaultBundles), conf).build().run();
+		NavigableConfig conf = new ModuleManager(defaultModules).processor().process(ConfigParser.fromFile(file));
+		configure(new RekaConfigurer(file.getParentFile().toPath(), defaultModules), conf).build().run();
 		
 	}
 

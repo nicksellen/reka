@@ -23,7 +23,7 @@ import reka.api.flow.FlowOperation;
 import reka.api.flow.FlowSegment;
 import reka.api.run.Operation;
 import reka.api.run.RouterOperation;
-import reka.builtins.BuiltinsModule;
+import reka.builtins.BuiltinsConfigurer;
 import reka.config.Config;
 import reka.config.NavigableConfig;
 import reka.config.configurer.Configurer.InvalidConfigurationException;
@@ -85,7 +85,7 @@ public class PutTest {
 	
 	private Data configurePutWith(String path) {
 		MutableData data = MutableMemoryData.create();
-		configureThenCall(new BuiltinsModule.PutConfigurer(), root.at(path).get(), data);
+		configureThenCall(new BuiltinsConfigurer.PutConfigurer(), root.at(path).get(), data);
 		return data;
 	}
 	

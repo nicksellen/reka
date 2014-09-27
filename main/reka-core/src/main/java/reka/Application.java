@@ -61,23 +61,23 @@ public class Application {
 	private class ApplicationStatusProvider implements StatusProvider {
 
 		@Override
-		public String type() {
-			return "app";
-		}
-		
-		@Override
 		public String name() {
 			return "app";
 		}
 		
 		@Override
+		public String alias() {
+			return "app";
+		}
+		
+		@Override
 		public String version() {
-			return "unknown";
+			return "core";
 		}
 		
 		@Override
 		public boolean up() {
-			return true; // the application itself is always up
+			return true; // this should probably be looking at whether ALL the other things are up
 		}
 
 		@Override

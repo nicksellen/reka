@@ -61,7 +61,7 @@ public class RekaVisualizeOperation implements Operation {
 		try {
 			Entry<Content,Content> entry = cache.get(hash, () -> {
 				
-				Collection<FlowVisualizer> vs = manager.visualize(RekaModule.getConfigFromData(data, in));
+				Collection<FlowVisualizer> vs = manager.visualize(AdminConfigurer.getConfigFromData(data, in));
 				
 				Iterator<FlowVisualizer> it = vs.iterator();
 				FlowVisualizer first = null;

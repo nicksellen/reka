@@ -45,10 +45,10 @@ import reka.config.configurer.annotations.Conf;
 import reka.core.builder.FlowBuilders;
 import reka.core.builder.FlowVisualizer;
 import reka.core.builder.Flows;
-import reka.core.bundle.BundleManager;
 import reka.core.config.MultiConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.core.data.memory.MutableMemoryData;
+import reka.core.module.ModuleManager;
 import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleConfigurer.ModuleInitializer;
 import reka.core.setup.ModuleSetup.ApplicationCheck;
@@ -66,9 +66,9 @@ public class ApplicationConfigurer implements ErrorReporter {
     
     private final MutableData meta = MutableMemoryData.create();
     
-    public ApplicationConfigurer(BundleManager bundles) {
+    public ApplicationConfigurer(ModuleManager modules) {
         rootModule = new RootModule();
-		rootModule.modules(bundles.modules());
+		rootModule.modules(modules.modules());
     }
     
     private final List<Config> defs = new ArrayList<>();

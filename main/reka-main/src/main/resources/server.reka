@@ -1,4 +1,4 @@
-bundle ../../../../../bundles/reka-http/target/reka-http-0.1.0.jar
+module ../../../../../modules/reka-http/target/reka-http-0.1.0.jar
 
 app {
   name hello

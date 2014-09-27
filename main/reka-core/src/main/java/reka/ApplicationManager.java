@@ -29,15 +29,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import reka.api.Path;
+import reka.api.data.MutableData;
 import reka.api.flow.Flow;
 import reka.config.NavigableConfig;
 import reka.config.Source;
 import reka.config.parser.ConfigParser;
 import reka.core.builder.FlowVisualizer;
-import reka.core.bundle.BundleManager;
 import reka.core.data.memory.MutableMemoryData;
+import reka.core.module.ModuleManager;
+import reka.core.setup.ModuleStatusReport;
 import reka.core.setup.StatusProvider;
-import reka.core.setup.StatusReport;
 
 public class ApplicationManager implements Iterable<Entry<String,Application>> {
 	
@@ -45,12 +46,12 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 	
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	
-	private final BundleManager bundles;
+	private final ModuleManager moduleManager;
 	
 	private final ConcurrentMap<String,Application> applications = new ConcurrentHashMap<>();
 	private final ConcurrentMap<String,AtomicInteger> versions = new ConcurrentHashMap<>();
 	
-	private final ConcurrentMap<String,List<StatusReport>> status = new ConcurrentHashMap<>();
+	private final ConcurrentMap<String,List<ModuleStatusReport>> status = new ConcurrentHashMap<>();
 	
 	private final List<Flow> deployListeners = Collections.synchronizedList(new ArrayList<>());
 	private final List<Flow> undeployListeners = Collections.synchronizedList(new ArrayList<>());
@@ -60,8 +61,8 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 	
 	private final ApplicationTask UPDATE_STATUS = new UpdateStatus();
 
-	public ApplicationManager(File datadir, BundleManager bundles) {
-		this.bundles = bundles;
+	public ApplicationManager(File datadir, ModuleManager moduleManager) {
+		this.moduleManager = moduleManager;
 		executor.submit(new WaitForNextTask());
 		Reka.SCHEDULED_SERVICE.scheduleAtFixedRate(() -> q.push(UPDATE_STATUS), 1, 1, TimeUnit.SECONDS);
 	}
@@ -86,17 +87,21 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 		@Override
 		public void run() {
 			try {
+				List<String> identities = new ArrayList<>();
 				applications.forEach((identity, app) -> {
-					List<StatusReport> appStatus = app.statusProviders().stream().map(StatusProvider::report).collect(toList());
-					appStatus.sort(comparing(StatusReport::name));
-					List<StatusReport> previousAppStatus = status.put(identity, appStatus);
+					List<ModuleStatusReport> appStatus = reportsFor(app);
+					List<ModuleStatusReport> previousAppStatus = status.put(identity, appStatus);
 					if (previousAppStatus != null && !appStatus.equals(previousAppStatus)) {
-						notifyStatusListeners(identity, app);
+						identities.add(identity);
 					}
 				});
-				executor.submit(new WaitForNextTask());
+				if (!identities.isEmpty()) {
+					notifyStatusListeners(identities);
+				}
 			} catch (Throwable t) {
 				t.printStackTrace();
+			} finally {
+				executor.submit(new WaitForNextTask());
 			}
 		}
 		
@@ -112,14 +117,18 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 
 		@Override
 		public void run() {
-			Application app = applications.remove(identity);
-			versions.remove(identity);
-			if (app == null) return;
-			app.undeploy();
-			status.remove(identity);
-			log.info("undeployed [{}]", app.fullName());
-			notifyUndeployListeners(identity, app);
-			executor.submit(new WaitForNextTask());
+			log.info("running undeploy task {}", identity);
+			try {
+				Application app = applications.remove(identity);
+				versions.remove(identity);
+				if (app == null) return;
+				app.undeploy();
+				status.remove(identity);
+				log.info("undeployed [{}]", app.fullName());
+				notifyUndeployListeners(identity, app);
+			} finally {
+				executor.submit(new WaitForNextTask());
+			}
 		}
 		
 	}
@@ -136,11 +145,11 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 			this.originalConfig = originalConfig;
 			this.constrainTo = constrainTo != null ? constrainTo : new File("/");
 			this.subscriber = subscriber;
-			log.info("deploying task {}", identity);
 		}
 
 		@Override
 		public void run() {
+			log.info("running deploy task {}", identity);
 
 			Optional<Application> previous = Optional.ofNullable(applications.remove(identity));
 			
@@ -150,9 +159,9 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 				
 				log.info("deploying {}", identity);
 				
-				NavigableConfig config = bundles.processor().process(originalConfig);
+				NavigableConfig config = moduleManager.processor().process(originalConfig);
 				
-				ApplicationConfigurer configurer = configure(new ApplicationConfigurer(bundles), config);
+				ApplicationConfigurer configurer = configure(new ApplicationConfigurer(moduleManager), config);
 				
 				configurer.checkValid(identity);
 				
@@ -163,21 +172,22 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 				previous.ifPresent(Application::pause);
 				
 				configurer.build(identity, version).whenComplete((app, ex) -> {
-					if (app != null) {
-						applications.put(identity, app);
-						previous.ifPresent(Application::undeploy);
-						List<StatusReport> appStatus = app.statusProviders().stream().map(StatusProvider::report).collect(toList());
-						appStatus.sort(comparing(StatusReport::name));
-						status.put(identity, appStatus);
-						log.info("deployed [{}] listening on {}", app.fullName(), app.network().stream().map(Object::toString).collect(joining(", ")));
-						notifyDeployListeners(identity, app);
-						subscriber.ok(identity, version, app);
-					} else if (ex != null) {
-						log.info("exception whilst deploying!");
-						subscriber.error(identity, ex);
-						previous.ifPresent(Application::resume);
+					try {
+						if (app != null) {
+							applications.put(identity, app);
+							previous.ifPresent(Application::undeploy);
+							status.put(identity, reportsFor(app));
+							log.info("deployed [{}] listening on {}", app.fullName(), app.network().stream().map(Object::toString).collect(joining(", ")));
+							notifyDeployListeners(identity, app);
+							subscriber.ok(identity, version, app);
+						} else if (ex != null) {
+							log.info("exception whilst deploying!");
+							subscriber.error(identity, ex);
+							previous.ifPresent(Application::resume);
+						}
+					} finally {
+						executor.submit(new WaitForNextTask());
 					}
-					executor.submit(new WaitForNextTask());
 				});
 				
 			} catch (Throwable t) {
@@ -187,6 +197,12 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 			}
 		}
 		
+	}
+	
+	private static List<ModuleStatusReport> reportsFor(Application app) {
+		List<ModuleStatusReport> appStatus = app.statusProviders().stream().map(StatusProvider::report).collect(toList());
+		appStatus.sort(comparing(ModuleStatusReport::name));
+		return appStatus;
 	}
 	
 	public void addDeployListener(Flow flow) {
@@ -231,15 +247,18 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 		});
 	}
 	
-	private void notifyStatusListeners(String identity, Application app) {
+	private void notifyStatusListeners(List<String> identities) {
+		MutableData data = MutableMemoryData.create().putList("ids", list -> {
+			identities.forEach(identity -> list.addString(identity));
+		});
 		statusListeners.forEach(flow -> {
-			flow.prepare().data(MutableMemoryData.create().putString("id", identity)).stats(false).run();
+			flow.prepare().data(data.mutableCopy()).stats(false).run();
 		});
 	}
 
 	public void validate(String identity, Source source) {
-		NavigableConfig config = bundles.processor().process(ConfigParser.fromSource(source));
-		configure(new ApplicationConfigurer(bundles), config).checkValid(identity);
+		NavigableConfig config = moduleManager.processor().process(ConfigParser.fromSource(source));
+		configure(new ApplicationConfigurer(moduleManager), config).checkValid(identity);
 	}
 	
 	public static interface DeploySubscriber {
@@ -288,14 +307,14 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 	}
 	
 	public Collection<FlowVisualizer> visualize(NavigableConfig config) {
-		return configure(new ApplicationConfigurer(bundles), config).visualize();
+		return configure(new ApplicationConfigurer(moduleManager), config).visualize();
 	}
 	
 	public Optional<Application> get(String identity) {
 		return Optional.ofNullable(applications.get(identity));
 	}
 	
-	public Optional<List<StatusReport>> statusFor(String identity) {
+	public Optional<List<ModuleStatusReport>> statusFor(String identity) {
 		return Optional.ofNullable(status.get(identity));
 	}
 	

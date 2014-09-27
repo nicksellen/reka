@@ -7,11 +7,11 @@ import reka.Application;
 import reka.ApplicationManager;
 import reka.api.data.MutableData;
 import reka.core.runtime.NoFlowVisualizer;
-import reka.core.setup.StatusReport;
+import reka.core.setup.ModuleStatusReport;
 
 public class AdminUtils {
 
-	public static MutableData putAppDetails(MutableData data, Application app, Optional<List<StatusReport>> statusMaybe) {
+	public static MutableData putAppDetails(MutableData data, Application app, Optional<List<ModuleStatusReport>> statusMaybe) {
 		
 		data.putString("name", app.name().slashes());
 		data.putInt("version", app.version());
@@ -64,6 +64,9 @@ public class AdminUtils {
 						report.putBool("up", statusItem.up());
 						report.putString("version", statusItem.version());
 						report.putString("module", statusItem.name());
+						if (!statusItem.name().equals(statusItem.alias())) {
+							report.putString("alias", statusItem.alias());
+						}
 					});
 				});
 			});

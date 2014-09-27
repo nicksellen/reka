@@ -22,9 +22,9 @@ import reka.api.Path;
 import reka.api.flow.Flow;
 import reka.api.flow.FlowSegment;
 import reka.config.ConfigBody;
-import reka.core.bundle.BundleConfigurer.ModuleInfo;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
+import reka.core.module.ModuleInfo;
 import reka.core.setup.ModuleConfigurer.ModuleCollector;
 
 public class ModuleSetup {
@@ -66,7 +66,7 @@ public class ModuleSetup {
 		return this;
 	}
 	
-	public void shutdown(String name, Consumer<IdentityStore> handler) {
+	public void onShutdown(String name, Consumer<IdentityStore> handler) {
 		collector.shutdownHandlers.add(() -> handler.accept(store));
 	}
 	
@@ -79,7 +79,7 @@ public class ModuleSetup {
 	
 	public void status(Function<IdentityStore, StatusDataProvider> c) {
 		includeDefaultStatus = false;
-		collector.statuses.add(() -> StatusProvider.create(info.type().slashes(), path.slashes(), info.version(), c.apply(store)));
+		collector.statuses.add(() -> StatusProvider.create(info.name().slashes(), path.slashes(), info.version(), c.apply(store)));
 	}
 	
 	public ModuleSetup initflow(String name, ConfigBody body, Consumer<InitFlowSetup> init) {

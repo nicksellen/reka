@@ -6,7 +6,7 @@ import reka.core.setup.ModuleSetup;
 public class RootModule extends ModuleConfigurer {
 	
 	public RootModule() {
-		type("root");
+		name("root");
 		isRoot(true);
 	}
 

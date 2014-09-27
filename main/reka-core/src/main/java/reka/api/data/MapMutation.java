@@ -5,9 +5,6 @@ import static reka.api.content.Contents.booleanValue;
 import static reka.api.content.Contents.integer;
 import static reka.api.content.Contents.longValue;
 import static reka.api.content.Contents.utf8;
-
-import java.util.function.Consumer;
-
 import reka.api.Path;
 import reka.api.content.Content;
 import reka.util.ThrowingConsumer;

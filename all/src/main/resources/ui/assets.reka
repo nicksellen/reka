@@ -1,7 +1,0 @@
-put javascripts {
-  [] /assets/lib/jquery-1.11.1.min.js
-  [] /assets/lib/react-with-addons-0.11.1.js
-  [] /assets/lib/page.js
-  [] /assets/ws.js
-  [] /assets/templates.js
-}

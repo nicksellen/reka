@@ -6,36 +6,36 @@ import reka.core.data.memory.MutableMemoryData;
 
 public interface StatusProvider extends StatusDataProvider {
 	
-	static StatusProvider create(String type, String name, String version) {
-		return create(type, name, version, null);
+	static StatusProvider create(String name, String alias, String version) {
+		return create(name, alias, version, null);
 	}
 	
-	static StatusProvider create(String type, String name, String version, StatusDataProvider provider) {
-		return new DefaultStatusProvider(type, name, version, provider);
+	static StatusProvider create(String name, String alias, String version, StatusDataProvider provider) {
+		return new DefaultStatusProvider(name, alias, version, provider);
 	}
 	
 	static class DefaultStatusProvider implements StatusProvider {
 		
-		private final String type;
 		private final String name;
+		private final String alias;
 		private final String version;
 		private final StatusDataProvider provider;
 		
-		private DefaultStatusProvider(String type, String name, String version, StatusDataProvider provider) {
-			this.type = type;
+		private DefaultStatusProvider(String name, String alias, String version, StatusDataProvider provider) {
 			this.name = name;
+			this.alias = alias;
 			this.version = version;
 			this.provider = provider;
 		}
 
 		@Override
-		public String type() {
-			return type;
+		public String name() {
+			return name;
 		}
 		
 		@Override
-		public String name() {
-			return name;
+		public String alias() {
+			return alias;
 		}
 		
 		@Override
@@ -55,14 +55,14 @@ public interface StatusProvider extends StatusDataProvider {
 		
 	}
 	
-	String type();
 	String name();
+	String alias();
 	String version();
 	
-	default StatusReport report() {
+	default ModuleStatusReport report() {
 		MutableData data = MutableMemoryData.create();
 		statusData(data);
-		return new StatusReport(type(), name(), version(), up(), data);
+		return new ModuleStatusReport(name(), alias(), version(), up(), data);
 	}
 	
 }

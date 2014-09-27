@@ -1,18 +1,18 @@
 JAVA_HOME := $(shell cat .java-home)
 export JAVA_HOME
 
-dist_bundles = command http jade mustache smtp less jsx common postgres h2
+dist_modules = command http jade mustache smtp less jsx common postgres h2
 
 dist_dir = dist/reka
 
-.PHONY: clean clean-build clean-dist upload-s3 test install-main build-main build-bundles
+.PHONY: clean clean-build clean-dist upload-s3 test install-main build-main build-modules
 
 all: build
 
 build:
 	@mvn -DskipTests clean package
-	@mkdir -p build/bundles
-	@find bundles -name 'reka-*.jar' -exec cp {} build/bundles/ ';'
+	@mkdir -p build/modules
+	@find modules -name 'reka-*.jar' -exec cp {} build/modules/ ';'
 	@find main/reka-main -name 'reka-*.jar' -exec cp {} build/ ';'
 
 test:
@@ -21,7 +21,7 @@ test:
 build-main:
 	@cd main && mvn -DskipTests clean package
 
-build-bundles: install-main
+build-modules: install-main
 	@cd bundles && mvn -DskipTests clean package
 
 install-main:
@@ -39,14 +39,14 @@ dist: build
 	@mkdir -p $(dist_dir)
 	@cp -r dist-resources/* $(dist_dir)/
 	@mkdir -p $(dist_dir)/lib/
-	@mkdir -p $(dist_dir)/lib/bundles
+	@mkdir -p $(dist_dir)/lib/modules
 	@mkdir -p $(dist_dir)/etc/apps
 	@cp build/reka-main*.jar $(dist_dir)/lib/reka-server.jar
-	@for bundle in $(dist_bundles); do\
-		cp build/bundles/reka-$$bundle-* $(dist_dir)/lib/bundles/ ; \
+	@for module in $(dist_modules); do\
+		cp build/modules/reka-$$module-* $(dist_dir)/lib/modules/ ; \
 	done
-	@for bundle in `ls $(dist_dir)/lib/bundles`; do\
-		echo "bundle ../lib/bundles/$$bundle" >> $(dist_dir)/etc/config.reka; \
+	@for module in `ls $(dist_dir)/lib/modules`; do\
+		echo "module ../lib/modules/$$module" >> $(dist_dir)/etc/config.reka; \
 	done
 	@echo "app api @include(apps/api.reka)" >> $(dist_dir)/etc/config.reka
 	@cd dist && tar zcvf reka-server.tar.gz reka
