@@ -65,7 +65,11 @@ public class DotGraphVisualizer implements GraphVisualizer<String> {
 		sb.append("  fontname = \"arial\"\n");
 		sb.append("  edge [fontsize=11]\n");
 		
-		for (Entry<Integer, String> node : nodes.entrySet()) {
+		List<Entry<Integer,String>> sortedNodes = new ArrayList<>(nodes.entrySet());
+		
+		sortedNodes.sort((a, b) -> idToText(a.getKey()).compareTo(idToText(b.getKey())));
+		
+		for (Entry<Integer, String> node : sortedNodes) {
 			String shape;
 			NodeType type = nodeTypes.get(node.getKey());
 			
