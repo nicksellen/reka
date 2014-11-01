@@ -24,7 +24,7 @@ public class HttpInitializer extends ChannelInitializer<SocketChannel> {
 				//new HttpContentCompressor(),
 				new HttpResponseEncoder(),
 				new ChunkedWriteHandler(), 
-				handler);
+				handler);	
 	}
 	
 }

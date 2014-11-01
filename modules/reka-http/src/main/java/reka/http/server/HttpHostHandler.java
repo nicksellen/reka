@@ -109,7 +109,12 @@ public class HttpHostHandler extends SimpleChannelInboundHandler<MutableData> {
 			ChannelFuture writeFuture = context.writeAndFlush(data);
 			long took = (System.nanoTime() - started) / 1000;
 			String status = data.getString(Response.STATUS).orElse("-");
-			log.info("{} {} - {} {}us", data.getString(Request.METHOD).orElse(""), data.getString(Request.PATH).orElse(""), status, took);
+			log.info("{} - \"{} {}\" {}us", 
+					data.getString(Request.HOST).orElse(""), 
+					data.getString(Request.METHOD).orElse(""), 
+					data.getString(Request.PATH).orElse(""), 
+					status,
+					took);
 			if (data.existsAt(CLOSE_CHANNEL)) {
 				writeFuture.addListener(ChannelFutureListener.CLOSE);
 			}

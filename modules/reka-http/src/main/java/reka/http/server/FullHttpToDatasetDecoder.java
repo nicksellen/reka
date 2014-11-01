@@ -56,10 +56,6 @@ public class FullHttpToDatasetDecoder extends MessageToMessageDecoder<FullHttpRe
 	@Override
 	protected void decode(ChannelHandlerContext ctx, FullHttpRequest request, List<Object> out) throws Exception {
 		
-		if (request.getUri().equals("/favicon.ico")) {
-			return;
-		}
-		
 		final MutableData data = MutableMemoryData.create();
 
 		if (!HttpHeaders.isKeepAlive(request)) {

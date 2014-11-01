@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import reka.api.data.MutableData;
 
-public class SingleProcessManager implements ProcessManager {
+public final class SingleProcessManager implements ProcessManager {
 
 	private static final Logger log = LoggerFactory.getLogger(SingleProcessManager.class);
 
@@ -89,21 +89,7 @@ public class SingleProcessManager implements ProcessManager {
 			throw unchecked(e1);
 		}
 		
-		int tryPid = -1;
-		if (unixProcessClass != null && unixProcessClass.isInstance(process)) {
-			try {
-				Field field = unixProcessClass.getDeclaredField("pid");
-				boolean b = field.isAccessible();
-				field.setAccessible(true);
-				tryPid = (int) field.get(process);
-				field.setAccessible(b);
-			} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
-				// oh well
-				e.printStackTrace();
-			}
-		}
-		
-		pid = tryPid;
+		pid = tryAndGetPid();
 		
 		stdin = process.getOutputStream();
 		stdout = process.getInputStream();
@@ -170,11 +156,26 @@ public class SingleProcessManager implements ProcessManager {
 			writerThread.setName(format("process-writer"));
 			readerThread.setName(format("process-reader"));
 		}
-		
-		writerThread.start();
-		readerThread.start();
 	}
 	
+	private int tryAndGetPid() {
+		int tryPid = -1;
+		if (unixProcessClass != null && unixProcessClass.isInstance(process)) {
+			try {
+				Field field = unixProcessClass.getDeclaredField("pid");
+				boolean original = field.isAccessible();
+				field.setAccessible(true);
+				tryPid = (int) field.get(process);
+				field.setAccessible(original);
+			} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
+				// oh well
+				e.printStackTrace();
+				tryPid = -1;
+			}
+		}
+		return tryPid;
+	}
+
 	@Override
 	public void send(String input, Consumer<String> consumer) {
 		if (!process.isAlive()) throw runtime("process is dead!");
@@ -210,46 +211,43 @@ public class SingleProcessManager implements ProcessManager {
 		data.putInt("consumer-q", consumerq.size());
 	}
 	
+	private static final int WAIT_SECONDS = 5;
+	
+	private static final long Q_DRAIN_WAIT = WAIT_SECONDS * 1000000000L;// in nanos
+	
 	private void terminate() {
 		if (process == null) return;
 		if (process.isAlive()) {
 			
-			// TODO: this needs some tidying up...
-			
-			long waitUntil;
+			long waitUntil = System.nanoTime() + Q_DRAIN_WAIT;
 
 			if (!q.isEmpty()) {
-				waitUntil = System.currentTimeMillis() + 5000;
 				System.out.printf("waiting for q to empty %s\n", q.size());
-				while (!q.isEmpty() || (System.currentTimeMillis() > waitUntil)) {
+				while (!q.isEmpty() && (System.nanoTime() < waitUntil)) {
 					// wait
 				}
-				if (q.isEmpty()) {
-					System.out.printf("q empty :)\n");
-				} else {
-					System.out.printf("discarding %s things from q\n", q.size());
+				if (!q.isEmpty()) {
+					log.warn("discarding {} things from q\n", q.size());
 				}
 				
 			}
 			
 			if (!consumerq.isEmpty()) {
-				waitUntil = System.currentTimeMillis() + 5000;
 				System.out.printf("waiting for consumerq to empty %s\n", consumerq.size());
-				while (!consumerq.isEmpty() || (System.currentTimeMillis() > waitUntil)) {
+				while (!consumerq.isEmpty() && (System.nanoTime() < waitUntil)) {
 					// wait
 				}
-				if (consumerq.isEmpty()) {
-					System.out.printf("consumerq empty :)\n");
-				} else {
-					System.out.printf("discarding %s things from consumerq\n", consumerq.size());
+				if (!consumerq.isEmpty()) {
+					log.warn("discarding {} things from consumerq\n", consumerq.size());
 				}
 			}
 			
 			process.destroy();
+			
 			try {
-				if (!process.waitFor(5, TimeUnit.SECONDS)) {
+				if (!process.waitFor(WAIT_SECONDS, TimeUnit.SECONDS)) {
 					process.destroyForcibly();
-					if (!process.waitFor(5, TimeUnit.SECONDS)) {
+					if (!process.waitFor(WAIT_SECONDS, TimeUnit.SECONDS)) {
 						log.error("failed to terminate process");
 					}
 				}
@@ -273,6 +271,12 @@ public class SingleProcessManager implements ProcessManager {
 		} catch (IOException e) {
 			// ignore
 		}
+	}
+
+	@Override
+	public void start() {
+		writerThread.start();
+		readerThread.start();
 	}
 	
 }

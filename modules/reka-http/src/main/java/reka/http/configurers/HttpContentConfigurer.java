@@ -4,19 +4,18 @@ import static reka.api.content.Contents.binary;
 import static reka.api.content.Contents.utf8;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import reka.api.content.Content;
-import reka.api.content.Contents;
 import reka.api.content.types.BinaryContent;
 import reka.api.data.Data;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.setup.OperationConfigurer;
 import reka.core.setup.OperationSetup;
-import reka.http.operations.HttpContentWithETag;
+import reka.http.operations.HttpContentUtils;
 
 public class HttpContentConfigurer implements OperationConfigurer {
 	
 	private Content content;
-	private Content contentType;
+	private String contentType;
 	
 	@Conf.Config
 	public void config(Config config) {
@@ -24,11 +23,11 @@ public class HttpContentConfigurer implements OperationConfigurer {
 			checkConfig(config.documentType() != null, "no document type!");
 			content = binary(config.documentType(), config.documentContent());
 			if (config.documentType() != null) {
-				contentType = Contents.utf8(config.documentType());
+				contentType = config.documentType();
 			}
 		} else if (config.hasValue()) {
 			content = utf8(config.valueAsString());
-			contentType = utf8("text/plain");
+			contentType = "text/plain";
 		}
 	}
 	
@@ -40,13 +39,13 @@ public class HttpContentConfigurer implements OperationConfigurer {
 
 	public HttpContentConfigurer content(Data value) {
 		content = utf8(value.toJson());
-		contentType = utf8("application/json");
+		contentType = "application/json";
 		return this;
 	}
 
 	@Conf.At("content-type")
 	public HttpContentConfigurer contentType(String value) {
-		contentType = utf8(value);
+		contentType = value;
 		return this;
 	}
 	
@@ -55,10 +54,10 @@ public class HttpContentConfigurer implements OperationConfigurer {
 		if (content instanceof BinaryContent && contentType == null) {
 			String ct = ((BinaryContent) content).contentType();
 			if (ct != null) {
-				contentType = utf8(ct);
+				contentType = ct;
 			}
 		}
-		ops.add("content", store -> new HttpContentWithETag(content, contentType));
+		ops.add("content", store -> HttpContentUtils.httpContent(content, contentType, true));
 	}
 
 }

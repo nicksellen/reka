@@ -55,7 +55,7 @@ public class Contents {
 			while ((b = stream.read()) != -1) {
 				baos.write(b);
 			}
-		return new ByteArrayBinaryContent(contentType, Encoding.NONE, baos.toByteArray());
+			return new ByteArrayBinaryContent(contentType, Encoding.NONE, baos.toByteArray());
 		} catch (IOException e) {
 			throw unchecked(e);
 		}

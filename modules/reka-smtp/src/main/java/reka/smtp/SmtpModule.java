@@ -5,9 +5,6 @@ import static reka.api.Path.path;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import reka.api.Path;
 import reka.core.module.Module;
 import reka.core.module.ModuleDefinition;

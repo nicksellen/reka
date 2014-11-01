@@ -2,8 +2,8 @@ package reka.rhino;
 
 import static reka.api.Path.dots;
 import static reka.api.Path.root;
-import static reka.rhino.RhinoHelper.compileJavascript;
 import static reka.rhino.RhinoConfigurer.SCOPE;
+import static reka.rhino.RhinoHelper.compileJavascript;
 
 import org.mozilla.javascript.Script;
 

@@ -7,7 +7,7 @@ dist_dir = dist/reka
 
 .PHONY: clean clean-build clean-dist upload-s3 test install-main build-main build-modules
 
-all: build
+all: clean dist
 
 build:
 	@mvn -DskipTests clean package

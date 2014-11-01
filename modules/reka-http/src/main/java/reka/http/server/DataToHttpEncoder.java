@@ -45,61 +45,61 @@ import reka.api.data.Data;
 
 @Sharable
 public class DataToHttpEncoder extends MessageToMessageEncoder<Data> {
-	
+
 	public static final DataToHttpEncoder NORMAL = new DataToHttpEncoder(false);
 	public static final DataToHttpEncoder SSL = new DataToHttpEncoder(true);
-	
+
 	private static final String DEFAULT_SERVER_NAME = "reka-http";
-	
+
 	private static final byte[] NEW_LINE = "\n".getBytes(StandardCharsets.UTF_8);
-	
+
 	private static final String TEXT_PLAIN = "text/plain";
 	private static final String APPLICATION_JSON = "application/json";
 	private static final byte[] NOT_FOUND = "not found\n".getBytes(StandardCharsets.UTF_8);
 
 	private final Logger logger = LoggerFactory.getLogger("http-encoder");
 	private final boolean ssl;
-	
+
 	private static volatile CharSequence date;
 	private static final SimpleDateFormat sdf = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss z");
 	private static final Runnable setdate = () -> date = HttpHeaders.newEntity(sdf.format(new Date()));
 	private static final ScheduledExecutorService e = Executors.newSingleThreadScheduledExecutor();
-	
+
 	static {
 		setdate.run();
 		e.scheduleWithFixedDelay(setdate, 1, 1, TimeUnit.SECONDS);
 	}
-	
+
 	private DataToHttpEncoder(boolean ssl) {
 		this.ssl = ssl;
 	}
-	
+
 	@Override
 	protected void encode(ChannelHandlerContext context, Data data, List<Object> out) throws Exception {
-		
+
 		try {
 			HttpResponseStatus responseStatus = HttpResponseStatus.valueOf(Integer.valueOf(data.getString(Response.STATUS).orElse("200")));
-			
+
 			Data maybeContent = data.at(Response.CONTENT);
-			
+
 			ByteBuf buffer = null;
-			
+
 			boolean headRequest = data.existsAt(Response.HEAD);
-			
+
 			if (headRequest) {
 				logger.info("sending HEAD response");
 			}
 
 			File file = null;
 			String contentType = null;
-			
+
 			if (maybeContent.isContent()) {
-				
-				if (!headRequest) { 
-				
+
+				if (!headRequest) {
+
 					Content content = maybeContent.content();
-					
-					switch (content.type()) { 
+
+					switch (content.type()) {
 					case BINARY:
 						if (content.hasFile()) {
 							file = content.asFile();
@@ -115,15 +115,15 @@ public class DataToHttpEncoder extends MessageToMessageEncoder<Data> {
 						buffer = context.alloc().buffer().writeBytes(content.asUTF8().getBytes(StandardCharsets.UTF_8));
 						break;
 					}
-				
+
 				}
 			} else if (maybeContent.isPresent()) {
-				
+
 				Data contentData = maybeContent;
-				
+
 				// send content data json
 				buffer = context.alloc().buffer();
-				
+
 				if (data.existsAt(Request.Params.PRETTY)) {
 					writeToOutputStreamAsPrettyJson(contentData, new ByteBufOutputStream(buffer));
 					buffer.writeBytes(NEW_LINE);
@@ -131,7 +131,7 @@ public class DataToHttpEncoder extends MessageToMessageEncoder<Data> {
 					writeToOutputStreamAsJson(contentData, new ByteBufOutputStream(buffer));
 				}
 				contentType = APPLICATION_JSON;
-				
+
 			} else if (!responseStatus.equals(HttpResponseStatus.NO_CONTENT)) {
 				// 404
 				buffer = context.alloc().buffer();
@@ -144,7 +144,7 @@ public class DataToHttpEncoder extends MessageToMessageEncoder<Data> {
 			} else {
 				response = new DefaultHttpResponse(HTTP_1_1, responseStatus);
 			}
-			
+
 			response.headers().set(HttpHeaders.Names.SERVER, DEFAULT_SERVER_NAME);
 			response.headers().set(HttpHeaders.Names.DATE, date);
 			if (data.existsAt(HttpHostHandler.CLOSE_CHANNEL)) {
@@ -152,22 +152,22 @@ public class DataToHttpEncoder extends MessageToMessageEncoder<Data> {
 			} else {
 				response.headers().set(HttpHeaders.Names.CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
 			}
-			
+
 			data.at(Response.HEADERS).forEachContent((p, c) -> {
 				response.headers().set(p.last().toString(), c);
 			});
-			
+
 			if (!response.headers().contains(HttpHeaders.Names.CONTENT_TYPE)) {
 				response.headers().set(HttpHeaders.Names.CONTENT_TYPE, TEXT_PLAIN);
 			}
-			
+
 			Collection<Cookie> cookies = new ArrayList<>();
-			
+
 			data.at(Response.COOKIES).forEachData((p, d) -> {
 				String val = d.isContent() ? d.content().asUTF8() : d.getString("value").get();
 				cookies.add(new DefaultCookie(p.toString(), val));
 			});
-			
+
 			for (String c : ServerCookieEncoder.encode(cookies)) {
 				response.headers().add(HttpHeaders.Names.SET_COOKIE, c);
 			}
@@ -180,18 +180,18 @@ public class DataToHttpEncoder extends MessageToMessageEncoder<Data> {
 				if (file != null) {
 					response.headers().add(HttpHeaders.Names.CONTENT_LENGTH, file.length());
 				} else if (buffer != null) {
-					response.headers().add(HttpHeaders.Names.CONTENT_LENGTH, buffer.readableBytes());				
+					response.headers().add(HttpHeaders.Names.CONTENT_LENGTH, buffer.readableBytes());
 				} else {
 					response.headers().add(HttpHeaders.Names.CONTENT_LENGTH, 0);
 				}
 			}
-			
+
 			out.add(response);
-			
+
 			if (file != null) {
 				if (ssl) {
 					out.add(new ChunkedFile(file));
-						out.add(LastHttpContent.EMPTY_LAST_CONTENT);
+					out.add(LastHttpContent.EMPTY_LAST_CONTENT);
 				} else {
 					try {
 						// TODO: handle the 'Range:' header here... :)

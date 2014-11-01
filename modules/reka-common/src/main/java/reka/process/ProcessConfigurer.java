@@ -115,6 +115,7 @@ public class ProcessConfigurer extends ModuleConfigurer {
 					} else {
 						manager = new MultiProcessManager(builder, processes, noreply);
 					}
+					manager.start();
 					store.put(PROCESS_MANAGER, manager);
 				} catch (Exception e) {
 					throw unchecked(e);

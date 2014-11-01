@@ -3,7 +3,6 @@ package reka.smtp;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import static reka.util.Util.runtime;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;

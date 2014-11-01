@@ -18,7 +18,7 @@
 		</dependency>
 		<dependency>
 			<groupId>io.reka</groupId>
-			<artifactId>reka-base-jdbc</artifactId>
+			<artifactId>reka-jdbc-common</artifactId>
 			<version>0.1.0</version>
 		</dependency>
 		<dependency>

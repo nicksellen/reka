@@ -10,7 +10,7 @@
   <packaging>pom</packaging>
 
   <modules>
-    <module>reka-base-jdbc</module>
+    <module>reka-jdbc-common</module>
     <module>reka-command</module>
     <module>reka-http</module>
     <module>reka-jade</module>

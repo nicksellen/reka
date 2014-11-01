@@ -30,7 +30,7 @@ public class ConcurrentIdentityStore implements IdentityStore {
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T> Optional<T> remove(IdentityKey<T> key) {
-		return Optional.ofNullable((T) map.remove(key));
+		return Optional.ofNullable((T) map.remove(identityHashCode(key)));
 	}
 	
 }

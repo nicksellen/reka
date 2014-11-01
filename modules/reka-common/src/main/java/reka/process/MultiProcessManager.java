@@ -13,7 +13,7 @@ import reka.api.data.MutableData;
 import reka.core.data.memory.MutableMemoryData;
 import reka.core.setup.StatusDataProvider;
 
-public class MultiProcessManager implements ProcessManager {
+public final class MultiProcessManager implements ProcessManager {
 
 	private final BlockingDeque<Entry<String,Consumer<String>>> q = new LinkedBlockingDeque<>();
 	private final ProcessBuilder builder;
@@ -69,6 +69,11 @@ public class MultiProcessManager implements ProcessManager {
 				});
 			});
 		});
+	}
+
+	@Override
+	public void start() {
+		all.forEach(ProcessManager::start);
 	}
 	
 }

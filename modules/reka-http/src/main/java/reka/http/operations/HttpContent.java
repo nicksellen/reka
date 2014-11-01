@@ -4,11 +4,16 @@ import reka.api.Path.Response;
 import reka.api.content.Content;
 import reka.api.data.MutableData;
 import reka.api.run.Operation;
+import reka.http.operations.HttpContentUtils.ContentAndType;
 
-public class HttpContent extends BaseHttpContent implements Operation {
+public class HttpContent implements Operation {
 	
-	public HttpContent(Content content, Content contentType) {
-		super(content, contentType);
+	private final Content content, contentType;
+	
+	protected HttpContent(Content content, String contentType) {
+		ContentAndType vals = HttpContentUtils.convert(content, contentType);
+		this.content = vals.content();
+		this.contentType = vals.type();
 	}
 
 	@Override
