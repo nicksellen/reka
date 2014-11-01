@@ -182,12 +182,12 @@ public class DefaultConfig implements Config {
 
     @Override
     public String format(FormattingOptions opts) {
-        return format(new ConfigFormatter(), opts);
+        return format(new ConfigFormatter(opts), opts);
     }
     
     @Override
     public String format() {
-    	return format(new FormattingOptions());
+    	return format(new FormattingOptions().compact(true));
     }
     
     @Override
@@ -198,7 +198,9 @@ public class DefaultConfig implements Config {
     private void formatted(Formatter<?> out, FormattingOptions opts) {
     	
     	if (hasKey()) {
-    		out.startEntry(key(), hasBody());
+    		String key = key();
+    		if (hasSubkey()) key = key + ":" + subkey();
+    		out.startEntry(key, hasBody());
     	} else {
     		out.startEntry(hasBody());
     	}

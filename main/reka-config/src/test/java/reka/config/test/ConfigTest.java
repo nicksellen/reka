@@ -93,6 +93,13 @@ public class ConfigTest {
 		
 	}
 	
+	@Test
+	public void withTrailingWhitespace() {
+		NavigableConfig root = ConfigParser.fromFile(new File(getClass().getResource("/with-trailing-space.reka").getFile()));
+		assertThat(root.at("boo.should").get().valueAsString(), equalTo("work"));
+		System.out.printf("%s\n", root);
+	}
+	
 	private static String readFileContents(String base, String filename) {
 	    return readFileContents(new File(base).toPath().getParent().resolve(filename).toString());
 	}

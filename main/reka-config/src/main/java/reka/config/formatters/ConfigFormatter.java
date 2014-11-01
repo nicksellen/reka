@@ -36,7 +36,7 @@ public class ConfigFormatter implements Formatter<String> {
 	    this(new FormattingOptions());
 	}
 	
-	private ConfigFormatter(FormattingOptions opts) {
+	public ConfigFormatter(FormattingOptions opts) {
 	    this.opts = opts;
         this.sb = new StringBuilder();
         stack.push(new ObjectState());

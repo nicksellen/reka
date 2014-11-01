@@ -28,20 +28,26 @@ class ValueHandler implements ParseHandler {
 				break;
 			}
 		} 
+
+		String str = sb.toString().trim();
 		
-		if (sb.length() > 0 && sb.charAt(sb.length() - 1) == '{') {
-			sb.setLength(sb.length() - 1);
-			body = true;
-		}
-		
-		if (sb.length() > 0 && sb.charAt(sb.length() - 1) == '[') {
-			sb.setLength(sb.length() - 1);
-			arrayBody = true;
-		}
-		
-		if (sb.length() > 0) {
-			String str = sb.toString().trim();
-			ctx.emit("value", new ValueVal(str), 1, str.length());
+		if (str.length() > 0) {
+			
+			if (str.endsWith("{")) {
+				str = str.substring(0, str.length() - 1);
+				str = str.trim();
+				body = true;
+			}
+			
+			if (str.endsWith("[")) {
+				str = str.substring(0, str.length() - 1);
+				str = str.trim();
+				arrayBody = true;
+			}
+
+			if (str.length() > 0) {
+				ctx.emit("value", new ValueVal(str), 1, str.length());
+			}
 		}
 		
 		if (doc) {

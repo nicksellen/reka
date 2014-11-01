@@ -1,0 +1,16 @@
+boo {  
+  should work
+  and with things inside it [
+  	include arrays
+  	like this and
+  ]
+  other things {
+  	too {
+  		with lots of {
+  			nesting {
+  				yay
+  			}
+  		}
+  	}
+  }
+}

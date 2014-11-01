@@ -57,19 +57,6 @@ public class ItemHandler implements ParseHandler {
 			conf.document(doc.contentType(), doc.value());
 		}
 		
-		/*
-		String val = value != null ? value.value() : null;
-		if (body != null) {
-			ctx.emit("obj", obj(src, null, val, body.configs()));
-		} else if (doc != null) {
-			ctx.emit("doc", doc(src, null, val, doc.contentType(), doc.value()));
-		} else if (value != null) {
-			ctx.emit("kv", v(src, null, value.value()));
-		} else {
-			throw new RuntimeException("nothing!");
-		}
-		*/
-		
 		ctx.emit("config", conf.build());
 		
 		ctx.eat(ParseHandlers.WHITESPACE);
