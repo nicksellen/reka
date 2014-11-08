@@ -11,24 +11,15 @@ import java.nio.file.Files;
 
 import javax.activation.MimetypesFileTypeMap;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import reka.api.content.Content;
 import reka.api.run.Operation;
 
 public abstract class HttpContentUtils {
-
-	private static final Logger logger = LoggerFactory.getLogger(HttpContentUtils.class);
 	
 	private static final MimetypesFileTypeMap mimeTypesMap;
 	
 	static {
-		try {
-			mimeTypesMap = new MimetypesFileTypeMap("/etc/mime.types");
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
+		mimeTypesMap = new MimetypesFileTypeMap(HttpContentUtils.class.getResourceAsStream("/mime.types"));
 	}
 	
 	public static Operation httpContent(Content content, String contentType, boolean useEtag) {
@@ -58,7 +49,7 @@ public abstract class HttpContentUtils {
 	
 	public static ContentAndType convert(Content content, String contentType) {
 		
-		contentType = convertToMimeType(contentType);
+		contentType = mimeType(contentType);
 		
 		if (!content.hasFile() && !content.hasByteBuffer()) {
 			
@@ -84,7 +75,7 @@ public abstract class HttpContentUtils {
 		
 	}
 
-	private static String convertToMimeType(String val) {
+	private static String mimeType(String val) {
 		return val.contains("/") ? val : mimeTypesMap.getContentType("fn." + val);
 	}
 	
