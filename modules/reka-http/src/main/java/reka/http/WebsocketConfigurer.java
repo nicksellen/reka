@@ -414,7 +414,9 @@ public class WebsocketConfigurer extends ModuleConfigurer {
 		@Override
 		public void statusData(MutableData data) {
 			server.websocket(settings, ws -> {
-				data.putInt("connections", ws.channels.size());
+				int conns = ws.channels.size();
+				data.putInt("connections", conns);
+				data.putString("summary", format("conns:%d", conns));
 			});
 		}
 		

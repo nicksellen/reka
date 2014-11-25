@@ -22,6 +22,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 import org.slf4j.Logger;
@@ -47,25 +48,18 @@ public final class SingleProcessManager implements ProcessManager {
 		unixProcessClass = clazz;
 	}
 	
-	@SuppressWarnings("unused")
 	private final ProcessBuilder builder;
-	private final Process process;
 	
-	private final int pid;
+	private volatile Process process;	
+	private volatile int pid;
 	
-	@SuppressWarnings("unused")
 	private final boolean noreply;
 	
-	private final OutputStream stdin;
-	private final BufferedReader stdoutReader;
-	private final InputStream stdout;
-	private final InputStream stderr;
-	
-	private final Thread readerThread, writerThread;
+	private final AtomicBoolean isShutdown = new AtomicBoolean(false);
 	
 	private final BlockingDeque<Entry<String,Consumer<String>>> q;
 	
-	private final Deque<Consumer<String>> consumerq = new ArrayDeque<>();
+	private volatile Deque<Consumer<String>> activeconsumerq;
 	
 	private final List<Consumer<String>> lineTriggers = Collections.synchronizedList(new ArrayList<>());
 	
@@ -83,79 +77,6 @@ public final class SingleProcessManager implements ProcessManager {
 		this.builder = builder;
 		this.noreply = noreply;
 		
-		try {
-			process = builder.start();
-		} catch (IOException e1) {
-			throw unchecked(e1);
-		}
-		
-		pid = tryAndGetPid();
-		
-		stdin = process.getOutputStream();
-		stdout = process.getInputStream();
-		stderr = process.getErrorStream();
-		
-		stdoutReader = new BufferedReader(new InputStreamReader(stdout, StandardCharsets.UTF_8));
-		
-		writerThread = new Thread() {
-			
-			@Override
-			public void run() {
-				try {
-					while (process.isAlive() && !Thread.interrupted()) {
-						Entry<String, Consumer<String>> entry = q.take();
-						synchronized (lock) {
-							String input = entry.getKey();
-							byte[] bytes = input.getBytes(StandardCharsets.UTF_8);
-							stdin.write(bytes);
-							stdin.write(NEW_LINE);
-							stdin.flush();
-							if (!noreply) consumerq.offer(entry.getValue());
-						}
-					}
-				} catch (InterruptedException | IOException e) {
-					terminate();
-				}
-			}
-			
-		};
-		
-		readerThread = new Thread() {
-			
-			@Override
-			public void run() {
-				try {
-					Consumer<String> consumer = null;
-					while (process.isAlive() && !Thread.interrupted()) {
-						String output = stdoutReader.readLine();
-						if (output != null) {
-							synchronized (lock) { }
-							if (!noreply) consumer = consumerq.poll();
-							if (consumer != null) {
-								consumer.accept(output);
-							} else if (lineTriggers.isEmpty()) {
-								lineTriggers.forEach(c -> c.accept(output));
-							}
-						}
-						drain(stderr);
-					}	
-				} catch (IOException e) {
-					// we can't talk to the process any more
-				} finally {
-					terminate();
-					writerThread.interrupt();
-				}
-			}
-		};
-
-		
-		if (pid != -1) {
-			writerThread.setName(format("process-writer-%s", pid));
-			readerThread.setName(format("process-reader-%s", pid));
-		} else {
-			writerThread.setName(format("process-writer"));
-			readerThread.setName(format("process-reader"));
-		}
 	}
 	
 	private int tryAndGetPid() {
@@ -184,7 +105,9 @@ public final class SingleProcessManager implements ProcessManager {
 
 	@Override
 	public void shutdown() {
-		terminate();
+		if (isShutdown.compareAndSet(false, true)) {
+			terminate(process, activeconsumerq, true);
+		}
 	}
 
 	@Override
@@ -208,38 +131,42 @@ public final class SingleProcessManager implements ProcessManager {
 			data.putInt("pid", pid);
 		}
 		data.putInt(Q_PATH, q.size());
-		data.putInt("consumer-q", consumerq.size());
+		data.putInt("consumer-q", activeconsumerq.size());
 	}
 	
 	private static final int WAIT_SECONDS = 5;
 	
 	private static final long Q_DRAIN_WAIT = WAIT_SECONDS * 1000000000L;// in nanos
 	
-	private void terminate() {
+	private void terminate(Process process, Deque<Consumer<String>> consumerq, boolean waitForQueue) {
 		if (process == null) return;
 		if (process.isAlive()) {
 			
-			long waitUntil = System.nanoTime() + Q_DRAIN_WAIT;
-
-			if (!q.isEmpty()) {
-				System.out.printf("waiting for q to empty %s\n", q.size());
-				while (!q.isEmpty() && (System.nanoTime() < waitUntil)) {
-					// wait
-				}
+			if (waitForQueue) {
+			
+				long waitUntil = System.nanoTime() + Q_DRAIN_WAIT;
+	
 				if (!q.isEmpty()) {
-					log.warn("discarding {} things from q\n", q.size());
+					System.out.printf("waiting for q to empty %s\n", q.size());
+					while (!q.isEmpty() && (System.nanoTime() < waitUntil)) {
+						// wait
+					}
+					if (!q.isEmpty()) {
+						log.warn("discarding {} things from q\n", q.size());
+					}
+					
 				}
 				
-			}
-			
-			if (!consumerq.isEmpty()) {
-				System.out.printf("waiting for consumerq to empty %s\n", consumerq.size());
-				while (!consumerq.isEmpty() && (System.nanoTime() < waitUntil)) {
-					// wait
-				}
 				if (!consumerq.isEmpty()) {
-					log.warn("discarding {} things from consumerq\n", consumerq.size());
+					System.out.printf("waiting for consumerq to empty %s\n", consumerq.size());
+					while (!activeconsumerq.isEmpty() && (System.nanoTime() < waitUntil)) {
+						// wait
+					}
+					if (!consumerq.isEmpty()) {
+						log.warn("discarding {} things from consumerq\n", consumerq.size());
+					}
 				}
+			
 			}
 			
 			process.destroy();
@@ -275,6 +202,98 @@ public final class SingleProcessManager implements ProcessManager {
 
 	@Override
 	public void start() {
+
+		try {
+			process = builder.start();
+		} catch (IOException e1) {
+			throw unchecked(e1);
+		}
+		
+		pid = tryAndGetPid();
+		
+		Deque<Consumer<String>> consumerq = new ArrayDeque<>();
+		activeconsumerq = consumerq;
+		
+		OutputStream stdin = process.getOutputStream();
+		InputStream stdout = process.getInputStream();
+		InputStream stderr = process.getErrorStream();
+		
+		BufferedReader stdoutReader = new BufferedReader(new InputStreamReader(stdout, StandardCharsets.UTF_8));
+		
+		Thread writerThread = new Thread() {
+			
+			@Override
+			public void run() {
+				Entry<String, Consumer<String>> entry = null;
+				try {
+					while (process.isAlive() && !Thread.interrupted()) {
+						entry = q.take();
+						synchronized (lock) {
+							String input = entry.getKey();
+							byte[] bytes = input.getBytes(StandardCharsets.UTF_8);
+							stdin.write(bytes);
+							stdin.write(NEW_LINE);
+							stdin.flush();
+							if (!noreply) consumerq.offer(entry.getValue());
+							entry = null;
+						}
+					}
+				} catch (InterruptedException | IOException e) {
+					// ignore
+				}			
+				
+				if (!isShutdown.get()) {
+					if (entry != null) {
+						q.offer(entry); // re-offer it, we failed to write to process
+					}
+					Process outgoingProcess = process;
+					SingleProcessManager.this.start(); // respawn!
+					terminate(outgoingProcess, consumerq, false);
+				}
+								
+			}
+			
+		};
+		
+		Thread readerThread = new Thread() {
+			
+			@Override
+			public void run() {
+				try {
+					Consumer<String> consumer = null;
+					while (process.isAlive() && !Thread.interrupted()) {
+						String output = stdoutReader.readLine();
+						if (output != null) {
+							synchronized (lock) { }
+							if (!noreply) consumer = consumerq.poll();
+							if (consumer != null) {
+								consumer.accept(output);
+							} else if (lineTriggers.isEmpty()) {
+								lineTriggers.forEach(c -> c.accept(output));
+							}
+						}
+						drain(stderr);
+					}	
+				} catch (IOException e) {
+					// we can't talk to the process any more
+				} finally {
+					writerThread.interrupt();
+				}
+				if (!consumerq.isEmpty()) {
+					log.warn("discarding {} items from consumerq", consumerq.size());
+				}
+			}
+		};
+
+		
+		if (pid != -1) {
+			writerThread.setName(format("process-writer-%s", pid));
+			readerThread.setName(format("process-reader-%s", pid));
+		} else {
+			writerThread.setName(format("process-writer"));
+			readerThread.setName(format("process-reader"));
+		}
+		
 		writerThread.start();
 		readerThread.start();
 	}

@@ -1,10 +1,12 @@
 package reka;
 
+import static java.lang.String.format;
 import static java.util.Comparator.naturalOrder;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.IntConsumer;
 
 import reka.api.Path;
@@ -82,17 +84,24 @@ public class Application {
 
 		@Override
 		public void statusData(MutableData data) {
+			AtomicLong totalreqs = new AtomicLong();
+			AtomicLong totalerrs = new AtomicLong();
 			data.putList("flows", list -> {
 				flows.all().forEach(flow -> {
 					list.addMap(m -> {
 						m.putString("name", flow.name().slashes());
-						m.putLong("requests", flow.stats().requests.sum());
+						long reqs = flow.stats().requests.sum();
+						long errs = flow.stats().errors.sum();
+						totalreqs.addAndGet(reqs);
+						totalerrs.addAndGet(errs);
+						m.putLong("requests", reqs);
 						m.putLong("completed", flow.stats().completed.sum());
-						m.putLong("errors", flow.stats().errors.sum());
+						m.putLong("errors", errs);
 						m.putLong("halts", flow.stats().halts.sum());
 					});
 				});
 			});
+			data.putString("summary", format("calls:%d errs:%d", totalreqs.get(), totalerrs.get()));
 		}
 
 	}
