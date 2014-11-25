@@ -45,7 +45,8 @@ public class Reka {
 	
 	public void run() {
 		
-		dirs.mkdirs(); 
+		dirs.mkdirs();
+		dirs.tmp().toFile().deleteOnExit();
 		
 		ModuleManager moduleManager = new ModuleManager(modules);
 		ApplicationManager manager  = new ApplicationManager(dirs, moduleManager);

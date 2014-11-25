@@ -60,12 +60,22 @@ def main {
       	data request.content
       	identity :appid
       }
-      println now deploying :appid hopefully
       reka/deploy {
         identity :appid
       }
+      reka/get {
+        out app
+        id :appid
+      }
+      putv response {
+        status 200
+        content :app
+        headers {
+          Content-Type application/json
+        }
+      }
     }
-    POST /appsoff/:appid* {
+    //POST /appsoff/:appid* {
       fs/mktmpdir tmpdir
       unzip {
         data request.content

@@ -22,8 +22,9 @@ public class FilesystemMktempDir implements Operation {
 	@Override
 	public void call(MutableData data) {
 		try {
-			java.nio.file.Path tmp = Files.createTempDirectory(tmpdirbase, ".rekatmp");
-			data.putString(dirname, tmp.toAbsolutePath().toString());
+			Files.createDirectories(tmpdirbase);
+			java.nio.file.Path tmp = Files.createTempDirectory(tmpdirbase, "fs.tmp.");
+			data.putString(dirname, tmpdirbase.relativize(tmp).toString());
 			tmp.toFile().deleteOnExit();
 		} catch (IOException e) {
 			throw unchecked(e);

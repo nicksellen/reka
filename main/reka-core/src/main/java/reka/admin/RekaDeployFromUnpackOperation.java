@@ -66,6 +66,7 @@ public class RekaDeployFromUnpackOperation implements AsyncOperation {
 				t = unwrap(t);
 				log.error("failed to deploy [{}] - {}", identity, t.getMessage());
 				ctx.error(t);
+				dirs.delete();
 			}
 			
 		});

@@ -4,10 +4,10 @@ import static reka.api.content.Contents.binary;
 import static reka.api.content.Contents.utf8;
 import static reka.util.Util.unchecked;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
+import java.nio.file.Path;
 
 import javax.activation.MimetypesFileTypeMap;
 
@@ -22,8 +22,8 @@ public abstract class HttpContentUtils {
 		mimeTypesMap = new MimetypesFileTypeMap(HttpContentUtils.class.getResourceAsStream("/mime.types"));
 	}
 	
-	public static Operation httpContent(Content content, String contentType, boolean useEtag) {
-		return useEtag ? new HttpContentWithETag(content, contentType) : new HttpContent(content, contentType);
+	public static Operation httpContent(Path tmpdir, Content content, String contentType, boolean useEtag) {
+		return useEtag ? new HttpContentWithETag(tmpdir, content, contentType) : new HttpContent(tmpdir, content, contentType);
 	}
 
 	private static final long PUT_IN_FILE_THRESHOLD = 1024L * 32l; // 32k;
@@ -47,7 +47,7 @@ public abstract class HttpContentUtils {
 		
 	}
 	
-	public static ContentAndType convert(Content content, String contentType) {
+	public static ContentAndType convert(java.nio.file.Path basedir, Content content, String contentType) {
 		
 		contentType = mimeType(contentType);
 		
@@ -57,10 +57,10 @@ public abstract class HttpContentUtils {
 			
 			if (contentBytes.length > PUT_IN_FILE_THRESHOLD) {
 				try {
-					File f = Files.createTempFile("reka.", "httpcontent").toFile();
-					f.deleteOnExit();
-					Files.write(f.toPath(), contentBytes);
-					content = binary(contentType, f);
+					java.nio.file.Path p = Files.createTempFile(basedir, "http.", "");
+					p.toFile().deleteOnExit();
+					Files.write(p, contentBytes);
+					content = binary(contentType, p.toFile());
 				} catch (IOException e) {
 					throw unchecked(e);
 				}

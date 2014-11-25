@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Supplier;
 
+import reka.AppDirs;
 import reka.api.flow.FlowSegment;
 import reka.api.run.RouteKey;
 import reka.config.Config;
@@ -25,6 +26,7 @@ import reka.http.operations.HttpRouter.Route;
 
 public class HttpRouteGroupConfigurer {
 
+	private final AppDirs dirs;
 	private final ConfigurerProvider provider;
 
 	private final Map<RouteKey, List<OperationConfigurer>> segments = new HashMap<>();
@@ -34,7 +36,8 @@ public class HttpRouteGroupConfigurer {
 	private Supplier<FlowSegment> then;
 	private String groupName;
 
-	HttpRouteGroupConfigurer(ConfigurerProvider provider) {
+	HttpRouteGroupConfigurer(AppDirs dirs, ConfigurerProvider provider) {
+		this.dirs = dirs;
 		this.provider = provider;
 	}
 
@@ -46,7 +49,7 @@ public class HttpRouteGroupConfigurer {
 	@Conf.Each("group")
 	@Conf.Each("named")
 	public void group(Config config) {
-		groups.add(configure(new HttpRouteGroupConfigurer(provider), config));
+		groups.add(configure(new HttpRouteGroupConfigurer(dirs, provider), config));
 	}
 
 	@Conf.Each("GET")
@@ -139,7 +142,7 @@ public class HttpRouteGroupConfigurer {
 	
 	private OperationConfigurer configToSegment(Config config) {
 		if (config.hasDocument()) {
-			return configure(new HttpContentConfigurer(), config);
+			return configure(new HttpContentConfigurer(dirs), config);
 		} else if (config.hasBody()) {
 			return configure(new SequenceConfigurer(provider), config);
 		} else {

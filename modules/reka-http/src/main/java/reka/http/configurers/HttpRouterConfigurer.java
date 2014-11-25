@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import reka.AppDirs;
 import reka.api.run.RouteKey;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
@@ -30,8 +31,8 @@ public class HttpRouterConfigurer extends HttpRouteGroupConfigurer implements Op
 
 	private final ConfigurerProvider provider;
     
-    public HttpRouterConfigurer(ConfigurerProvider provider) {
-    	super(provider);
+    public HttpRouterConfigurer(AppDirs dirs, ConfigurerProvider provider) {
+    	super(dirs, provider);
         this.provider = provider;
     }
     

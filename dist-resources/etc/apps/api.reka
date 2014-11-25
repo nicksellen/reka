@@ -44,43 +44,24 @@ def main {
       }
     }
     POST /apps/:appid* {
-      fs/mktmpdir tmpdir
-      unzip {
+      reka/unpack {
         data request.content
-        out :tmpdir
+        identity :appid
       }
-      fs/type :tmpdir/main.reka {
-        when file {
-          reka/deploy {
-            identity :appid
-            filename :tmpdir/main.reka
-          }
-          reka/get {
-            out app
-            id :appid
-          }
-          putv response {
-            status 200
-            content :app
-            headers {
-              Content-Type application/json
-            }
-          }
-        }
-        when dir {
-          putv response {
-            status 400
-            content main.reka should be a file
-          }            
-        }
-        when missing {
-          putv response {
-            status 400
-            content missing main.reka
-          }            
+      reka/deploy {
+        identity :appid
+      }
+      reka/get {
+        out app
+        id :appid
+      }
+      putv response {
+        status 200
+        content :app
+        headers {
+          Content-Type application/json
         }
       }
-      fs/rm :tmpdir 
     }
     named undeploy app {
       DELETE /apps/:appid* {

@@ -3,6 +3,7 @@ package reka.http.configurers;
 import static reka.api.content.Contents.binary;
 import static reka.api.content.Contents.utf8;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
+import reka.AppDirs;
 import reka.api.content.Content;
 import reka.api.content.types.BinaryContent;
 import reka.api.data.Data;
@@ -14,8 +15,13 @@ import reka.http.operations.HttpContentUtils;
 
 public class HttpContentConfigurer implements OperationConfigurer {
 	
+	private final AppDirs dirs;
 	private Content content;
 	private String contentType;
+	
+	public HttpContentConfigurer(AppDirs dirs) {
+		this.dirs = dirs;
+	}
 	
 	@Conf.Config
 	public void config(Config config) {
@@ -57,7 +63,7 @@ public class HttpContentConfigurer implements OperationConfigurer {
 				contentType = ct;
 			}
 		}
-		ops.add("content", store -> HttpContentUtils.httpContent(content, contentType, true));
+		ops.add("content", store -> HttpContentUtils.httpContent(dirs.tmp(), content, contentType, true));
 	}
 
 }

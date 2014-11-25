@@ -33,7 +33,7 @@ public class BaseDirs extends AbstractDirs {
 	}
 
 	private static Path asPath(String path) {
-		return new File(path).toPath();
+		return new File(path).toPath().toAbsolutePath();
 	}
 	
 }

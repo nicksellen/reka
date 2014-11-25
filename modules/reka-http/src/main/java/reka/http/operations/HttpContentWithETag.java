@@ -4,6 +4,7 @@ import static reka.api.content.Contents.integer;
 import static reka.api.content.Contents.utf8;
 
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,8 +37,8 @@ public class HttpContentWithETag implements Operation {
 	private static final Content EMPTY = Contents.nullValue();	
 	private static final Content NOT_MODIFIED = integer(304);
 	
-	protected HttpContentWithETag(Content content, String contentType) {
-		ContentAndType vals = HttpContentUtils.convert(content, contentType);
+	protected HttpContentWithETag(Path tmpdir, Content content, String contentType) {
+		ContentAndType vals = HttpContentUtils.convert(tmpdir, content, contentType);
 		this.content = vals.content();
 		this.contentType = vals.type();
 		Hasher hasher = sha1.newHasher();

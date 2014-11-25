@@ -95,9 +95,9 @@ public class HttpConfigurer extends ModuleConfigurer {
 		
 		listens.replaceAll(listen -> listen.port() == -1 ? new HostAndPort(listen.host(), ssl != null ? 443 : 80) : listen);
 		
-		module.operation(path("router"), provider -> new HttpRouterConfigurer(provider));
+		module.operation(path("router"), provider -> new HttpRouterConfigurer(dirs(), provider));
 		module.operation(path("redirect"), provider -> new HttpRedirectConfigurer());
-		module.operation(path("content"), provider -> new HttpContentConfigurer());
+		module.operation(path("content"), provider -> new HttpContentConfigurer(dirs()));
 		module.operation(path("request"), provider -> new HttpRequestConfigurer(server.nettyEventGroup(), server.nettyChannelType()));
 		module.operation(path("req"), provider -> new HttpRequestConfigurer(server.nettyEventGroup(), server.nettyChannelType()));
 		module.operation(path("auth"), provider -> new BasicAuthConfigurer(provider));

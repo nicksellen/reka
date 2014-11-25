@@ -1,5 +1,7 @@
 package reka.http.operations;
 
+import java.nio.file.Path;
+
 import reka.api.Path.Response;
 import reka.api.content.Content;
 import reka.api.data.MutableData;
@@ -10,8 +12,8 @@ public class HttpContent implements Operation {
 	
 	private final Content content, contentType;
 	
-	protected HttpContent(Content content, String contentType) {
-		ContentAndType vals = HttpContentUtils.convert(content, contentType);
+	protected HttpContent(Path tmpdir, Content content, String contentType) {
+		ContentAndType vals = HttpContentUtils.convert(tmpdir, content, contentType);
 		this.content = vals.content();
 		this.contentType = vals.type();
 	}
