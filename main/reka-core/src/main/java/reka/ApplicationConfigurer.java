@@ -66,9 +66,8 @@ public class ApplicationConfigurer implements ErrorReporter {
     
     private final MutableData meta = MutableMemoryData.create();
     
-    public ApplicationConfigurer(ModuleManager modules) {
-        rootModule = new RootModule();
-		rootModule.modules(modules.modules());
+    public ApplicationConfigurer(AppDirs dirs, ModuleManager modules) {
+        rootModule = new RootModule(dirs, modules.modules());
     }
     
     private final List<Config> defs = new ArrayList<>();

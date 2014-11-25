@@ -32,7 +32,9 @@ public class RekaConfigurer {
 
 	private final Map<String,ConfigBody> apps = new HashMap<>();
 	
-	private String datadir = "data";
+	private String appdir = "rekadata/apps";
+	private String datadir = "rekadata/data";
+	private String tmpdir = "rekadata/tmp";
 
 	private final List<ModuleMeta> defaultModules = new ArrayList<>();
 	
@@ -60,9 +62,19 @@ public class RekaConfigurer {
 		this.defaultModules.addAll(modules);
 	}
 	
-	@Conf.At("data")
+	@Conf.At("appdir")
+	public void appdir(String val) {
+		appdir = val;
+	}
+	
+	@Conf.At("datadir")
 	public void datadir(String val) {
 		datadir = val;
+	}
+	
+	@Conf.At("tmpdir")
+	public void tmpdir(String val) {
+		tmpdir = val;
 	}
 	
 	@Conf.Each("module")
@@ -142,7 +154,7 @@ public class RekaConfigurer {
 		
 		checkState(!classLoadingError, "failed to load all modules");
 		
-		return new Reka(new File(datadir), modules, apps);
+		return new Reka(new BaseDirs(appdir, datadir, tmpdir), modules, apps);
 	}
 
 }

@@ -97,11 +97,14 @@ public final class ParseContext {
 		
 		if (!it.hasNext()) return;
 		
-		StackItem state = it.next();
-		
+		receive(it.next().handler, emission);
+	}
+	
+	private void receive(ParseHandler handler, Object emission) {
+
 		Method method = null;
 		Class<?> objClass = emission.getClass();
-		Class<?> handlerClass = state.handler.getClass();
+		Class<?> handlerClass = handler.getClass();
 		
 		try {
 			for (Method m : handlerClass.getMethods()) {
@@ -113,7 +116,7 @@ public final class ParseContext {
 				break;
 			}
 			if (method != null) {
-				method.invoke(state.handler, emission);
+				method.invoke(handler, emission);
 			} else {
 				log.error("{} should define a receive({} val) method then it would have gotton {}", 
 						handlerClass.getName(), emission.getClass().getName(), emission);

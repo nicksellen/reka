@@ -3,6 +3,7 @@ package reka.admin;
 import java.util.function.Function;
 
 import reka.ApplicationManager;
+import reka.AppDirs;
 import reka.api.data.Data;
 import reka.config.configurer.annotations.Conf;
 import reka.core.setup.OperationConfigurer;
@@ -12,10 +13,12 @@ import reka.core.util.StringWithVars;
 public class RekaUndeployConfigurer implements OperationConfigurer {
 
 	private final ApplicationManager manager;
+	private final AppDirs dirs;
 	private Function<Data,String> identityFn;
 	
-	RekaUndeployConfigurer(ApplicationManager manager) {
+	RekaUndeployConfigurer(ApplicationManager manager, AppDirs dirs) {
 		this.manager = manager;
+		this.dirs = dirs;
 	}
 	
 	@Conf.Val
@@ -26,7 +29,7 @@ public class RekaUndeployConfigurer implements OperationConfigurer {
 	
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("deploy", store -> new RekaUndeployOperation(manager, identityFn));
+		ops.add("deploy", store -> new RekaUndeployOperation(manager, dirs, identityFn));
 	}
 	
 }

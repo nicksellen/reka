@@ -56,6 +56,16 @@ def main {
       }
     }
     POST /apps/:appid* {
+      reka/unpack {
+      	data request.content
+      	identity :appid
+      }
+      println now deploying :appid hopefully
+      reka/deploy {
+        identity :appid
+      }
+    }
+    POST /appsoff/:appid* {
       fs/mktmpdir tmpdir
       unzip {
         data request.content

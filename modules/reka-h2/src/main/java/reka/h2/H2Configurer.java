@@ -41,7 +41,12 @@ public class H2Configurer extends JdbcBaseModule {
 
 	@Override
 	public String jdbcUrl() {
-		return format("jdbc:h2:%s:%s", persist ? "file" : "mem", dbName);
+		if (persist) {
+			String dbPath = dirs().data().resolve(dbName.startsWith("/") ? dbName.substring(1) : dbName).toAbsolutePath().toString();
+			return format("jdbc:h2:file:%s", dbPath);
+		} else {
+			return format("jdbc:h2:mem:%s", dbName);
+		}
 	}
 
 	@Override

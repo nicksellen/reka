@@ -3,8 +3,17 @@ package reka.util;
 import static java.lang.String.format;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Base64.Decoder;
+import java.util.Base64.Encoder;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
@@ -161,4 +170,51 @@ public class Util {
 			json.writeEndArray();
 		}
 	}
+
+	private static final Encoder BASE64_ENCODER = Base64.getEncoder();
+	private static final Decoder BASE64_DECODER = Base64.getDecoder();
+	
+	public static String encode64(String val) {
+		return BASE64_ENCODER.encodeToString(val.getBytes(StandardCharsets.UTF_8));
+	}
+	
+	public static String decode64(String val) {
+		return new String(BASE64_DECODER.decode(val), StandardCharsets.UTF_8);
+	}
+	
+	public static void deleteRecursively(java.nio.file.Path path) {
+		if (!Files.exists(path)) return;
+		try {
+			Files.walkFileTree(path, new FileVisitor<Path>() {
+
+				@Override
+				public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+					return FileVisitResult.CONTINUE;
+				}
+
+				@Override
+				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+					Files.delete(file);
+					return FileVisitResult.CONTINUE;
+				}
+
+				@Override
+				public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+					if (exc != null) throw exc;
+					return FileVisitResult.CONTINUE;
+				}
+
+				@Override
+				public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+					if (exc != null) throw exc;
+					Files.delete(dir);
+					return FileVisitResult.CONTINUE;
+				}
+				
+			});
+		} catch (IOException e) {
+			throw unchecked(e);
+		}
+	}
+	
 }

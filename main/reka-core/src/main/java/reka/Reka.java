@@ -1,8 +1,12 @@
 package reka;
 
+import static reka.util.Util.decode64;
 import static reka.util.Util.runtime;
+import static reka.util.Util.unchecked;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -18,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import reka.ApplicationManager.DeploySubscriber;
 import reka.admin.AdminModule;
 import reka.config.ConfigBody;
+import reka.config.FileSource;
 import reka.core.module.ModuleManager;
 
 public class Reka {
@@ -28,34 +33,34 @@ public class Reka {
 	
 	private static final Logger log = LoggerFactory.getLogger(Reka.class);
 	
-	private final File datadir;
+	private final BaseDirs dirs;
 	private final List<ModuleMeta> modules = new ArrayList<>();
 	private final Map<String,ConfigBody> configs = new HashMap<>();
 	
-	public Reka(File datadir, List<ModuleMeta> modules, Map<String,ConfigBody> configs) {
-		this.datadir = datadir;
+	public Reka(BaseDirs dirs, List<ModuleMeta> modules, Map<String,ConfigBody> configs) {
+		this.dirs = dirs;
 		this.modules.addAll(modules);
 		this.configs.putAll(configs);
 	}
 	
 	public void run() {
 		
-		if (!datadir.isDirectory() && !datadir.mkdirs()) throw runtime("couldn't create datadir %s", datadir); 
+		dirs.mkdirs(); 
 		
 		ModuleManager moduleManager = new ModuleManager(modules);
-		ApplicationManager applicationManager  = new ApplicationManager(datadir, moduleManager);
+		ApplicationManager manager  = new ApplicationManager(dirs, moduleManager);
 		
 		Runtime.getRuntime().addShutdownHook(new Thread(){
 			
 			@Override
 			public void run() {
-				applicationManager.shutdown();
+				manager.shutdown();
 				moduleManager.shutdown();
 			}
 			
 		});
 		
-		moduleManager.add(new ModuleMeta("core", new AdminModule(applicationManager)));
+		moduleManager.add(new ModuleMeta("core", new AdminModule(manager)));
 		
 		Stream<String> moduleNames = moduleManager.modulesKeys().stream().map(reka.api.Path::slashes);
 		
@@ -68,9 +73,20 @@ public class Reka {
 		}
 		
 		log.info("starting reka in {}", System.getenv(REKA_ENV));
-		
+
 		for (Entry<String, ConfigBody> e : configs.entrySet()) {
-			applicationManager.deployConfig(e.getKey(), e.getValue(), null, DeploySubscriber.LOG);
+			manager.deployConfig(e.getKey(), e.getValue(), null, DeploySubscriber.LOG);
+		}
+		
+		try {
+			Files.list(dirs.app()).forEach(path -> {
+				String identity = decode64(path.getFileName().toString());
+				File mainreka = path.resolve("main.reka").toFile();
+				if (!mainreka.exists()) return;
+				manager.deploySource(identity, FileSource.from(mainreka), DeploySubscriber.LOG);
+			});
+		} catch (IOException e1) {
+			throw unchecked(e1);
 		}
 		
 	}

@@ -42,7 +42,6 @@ public class FilesystemWrite implements Operation {
 		
 		String filename = filenameFn.apply(data);
 		
-		if (filename.startsWith("/")) filename = filename.substring(1);
 		java.nio.file.Path to = resolveAndCheck(basedir, filename);
 		
 		File toFile = to.toFile();

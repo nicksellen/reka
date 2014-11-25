@@ -1,11 +1,10 @@
 package reka.admin;
 
-import static reka.util.Util.runtime;
-
 import java.util.UUID;
 import java.util.function.Function;
 
 import reka.ApplicationManager;
+import reka.AppDirs;
 import reka.api.data.Data;
 import reka.config.configurer.annotations.Conf;
 import reka.core.setup.OperationConfigurer;
@@ -15,12 +14,14 @@ import reka.core.util.StringWithVars;
 public class RekaDeployConfigurer implements OperationConfigurer {
 
 	private final ApplicationManager manager;
+	private final AppDirs dirs;
 	
 	private Function<Data,String> filenameFn;
 	private Function<Data,String> identityFn = (unused) -> UUID.randomUUID().toString();
 	
-	RekaDeployConfigurer(ApplicationManager manager) {
+	RekaDeployConfigurer(ApplicationManager manager, AppDirs dirs) {
 		this.manager = manager;
+		this.dirs = dirs;
 	}
 	
 	@Conf.At("filename")
@@ -38,7 +39,7 @@ public class RekaDeployConfigurer implements OperationConfigurer {
 		if (filenameFn != null) {
 			ops.add("deploy", store -> new RekaDeployFromFileOperation(manager, filenameFn, identityFn));
 		} else {
-			throw runtime("must specify either 'in' or 'filename'");
+			ops.add("deploy", store -> new RekaDeployFromUnpackOperation(manager, dirs.basedirs(), identityFn));
 		}
 	}
 	

@@ -105,7 +105,7 @@ public class FileSource extends AbstractSource {
     @Override
     public List<Path> nestedFiles(String location) {
     	
-    	Path base = file.toPath().getParent();
+    	Path base = file.toPath().getParent().toAbsolutePath();
     	
     	String glob = "glob:" + base.resolve(location).toAbsolutePath();
     	

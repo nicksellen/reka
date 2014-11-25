@@ -121,6 +121,12 @@ public class FilesystemModule implements Module {
 	
 	public static class FilesystemMktmpDirConfigurer implements OperationConfigurer {
 		
+		private final Path tmpdir;
+		
+		public FilesystemMktmpDirConfigurer(Path tmpdir) {
+			this.tmpdir = tmpdir;
+		}
+		
 		private reka.api.Path dirname = path("tmpdir");
 		
 		@Conf.Val
@@ -130,7 +136,7 @@ public class FilesystemModule implements Module {
 		
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add("mktmpdir", store -> new FilesystemMktempDir(dirname));
+			ops.add("mktmpdir", store -> new FilesystemMktempDir(tmpdir, dirname));
 		}
 		
 	}

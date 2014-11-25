@@ -3,7 +3,6 @@ package reka.filesystem;
 import static reka.filesystem.FilesystemUtils.resolveAndCheck;
 
 import java.io.File;
-import java.nio.file.Paths;
 import java.util.function.Function;
 
 import org.slf4j.Logger;
@@ -41,11 +40,8 @@ public class FilesystemList implements Operation {
 		
 		String dir = dirFn.apply(data);
 		
-		if (dir.startsWith("/")) dir = dir.substring(1);
-		
-		java.nio.file.Path dirPath = Paths.get(dir);
-		
-		File entry = resolveAndCheck(basedir, dirPath).toFile();
+		java.nio.file.Path entryPath = resolveAndCheck(basedir, dir);
+		File entry = entryPath.toFile();
 		
 		if (entry.isDirectory()) {
 			
@@ -55,7 +51,7 @@ public class FilesystemList implements Operation {
 			
 				for (int i = 0; i < files.length; i++) {
 					File file = files[i];
-					String path = dir.isEmpty() ? file.getName() : dirPath.resolve(file.getName()).toString();
+					String path = dir.isEmpty() ? file.getName() : entryPath.resolve(file.getName()).toString();
 					populate(data, dataOut.add(i), file, path);
 				}
 			

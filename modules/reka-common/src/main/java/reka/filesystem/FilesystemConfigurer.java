@@ -2,7 +2,6 @@ package reka.filesystem;
 
 import static reka.api.Path.path;
 
-import java.io.File;
 import java.nio.file.Path;
 
 import reka.config.configurer.annotations.Conf;
@@ -16,27 +15,30 @@ import reka.filesystem.FilesystemModule.FilesystemTypeConfigurer;
 
 public class FilesystemConfigurer extends ModuleConfigurer {
 	
-	private Path basedir = new File("/").toPath();
+	private String dir = "";
 	
 	@Conf.At("dir")
 	public void basedir(String val) {
-		basedir = new File(val).toPath();
+		if (val.startsWith("/")) val = val.substring(1);
+		dir = val;
 	}
 
 	@Override
 	public void setup(ModuleSetup module) {
-		module.operation(path("write"), provider -> new FilesystemWriteConfigurer(basedir));
-		module.operation(path("read"), provider -> new FilesystemReadConfigurer(basedir));
-		module.operation(path("list"), provider -> new FilesystemListConfigurer(basedir));
-		module.operation(path("ls"), provider -> new FilesystemListConfigurer(basedir));
-		module.operation(path("mktmpdir"), provider -> new FilesystemMktmpDirConfigurer());
-		module.operation(path("delete"), provider -> new FilesystemDeleteConfigurer(basedir));
-		module.operation(path("rm"), provider -> new FilesystemDeleteConfigurer(basedir));
-		module.operation(path("resolve"), provider -> new FilesystemResolveConfigurer(basedir));
-		module.operation(path("full-path"), provider -> new FilesystemResolveConfigurer(basedir));
-		module.operation(path("expand"), provider -> new FilesystemResolveConfigurer(basedir));
-		module.operation(path("type"), provider -> new FilesystemTypeConfigurer(provider, basedir));
-		module.operation(path("switch"), provider -> new FilesystemTypeConfigurer(provider, basedir));
+		Path datadir = dirs().data().resolve(dir);
+		Path tmpdir = dirs().tmp().resolve(dir);
+		module.operation(path("write"), provider -> new FilesystemWriteConfigurer(datadir));
+		module.operation(path("list"), provider -> new FilesystemListConfigurer(datadir));
+		module.operation(path("read"), provider -> new FilesystemReadConfigurer(datadir));
+		module.operation(path("ls"), provider -> new FilesystemListConfigurer(datadir));
+		module.operation(path("mktmpdir"), provider -> new FilesystemMktmpDirConfigurer(tmpdir));
+		module.operation(path("delete"), provider -> new FilesystemDeleteConfigurer(datadir));
+		module.operation(path("rm"), provider -> new FilesystemDeleteConfigurer(datadir));
+		module.operation(path("resolve"), provider -> new FilesystemResolveConfigurer(datadir));
+		module.operation(path("full-path"), provider -> new FilesystemResolveConfigurer(datadir));
+		module.operation(path("expand"), provider -> new FilesystemResolveConfigurer(datadir));
+		module.operation(path("type"), provider -> new FilesystemTypeConfigurer(provider, datadir));
+		module.operation(path("switch"), provider -> new FilesystemTypeConfigurer(provider, datadir));
 	}
 	
 }

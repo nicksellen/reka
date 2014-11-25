@@ -67,8 +67,9 @@ public class AdminConfigurer extends ModuleConfigurer {
 		module.operation(path("list"), provider -> new RekaListConfigurer(manager));
 		module.operation(path("get"), provider -> new RekaDetailsConfigurer(manager));
 		module.operation(path("validate"), provider -> new RekaValidateConfigurer(provider, manager));
-		module.operation(path("deploy"), provider -> new RekaDeployConfigurer(manager));
-		module.operation(path("undeploy"), provider -> new RekaUndeployConfigurer(manager));
+		module.operation(path("unpack"), provider -> new RekaUnpackConfigurer(dirs()));
+		module.operation(path("deploy"), provider -> new RekaDeployConfigurer(manager, dirs()));
+		module.operation(path("undeploy"), provider -> new RekaUndeployConfigurer(manager, dirs()));
 		module.operation(path("visualize"), provider -> new RekaVisualizeConfigurer(manager));
 		
 		for (ConfigBody body : deployHandlers) {			

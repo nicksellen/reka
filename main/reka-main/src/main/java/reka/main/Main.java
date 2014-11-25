@@ -48,7 +48,7 @@ public class Main {
 			new CommonModule(),
 			new ProcessModule(),
 			new JsonModule())
-		.stream().map(m -> new ModuleMeta("snapshot", m)).collect(toList());
+		.stream().map(m -> new ModuleMeta("core", m)).collect(toList());
 		
 		NavigableConfig conf = new ModuleManager(defaultModules).processor().process(ConfigParser.fromFile(file));
 		configure(new RekaConfigurer(file.getParentFile().toPath(), defaultModules), conf).build().run();

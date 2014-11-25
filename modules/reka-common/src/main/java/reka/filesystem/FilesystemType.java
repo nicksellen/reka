@@ -31,8 +31,6 @@ public class FilesystemType implements RouterOperation {
 		
 		String path = pathFn.apply(data);
 		
-		if (path.startsWith("/")) path = path.substring(1);
-		
 		File entry = resolveAndCheck(basedir, path).toFile();
 		
 		if (entry.isDirectory()) {

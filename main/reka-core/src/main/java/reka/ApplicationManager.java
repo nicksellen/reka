@@ -46,6 +46,7 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 	
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	
+	private final BaseDirs dirs;
 	private final ModuleManager moduleManager;
 	
 	private final ConcurrentMap<String,Application> applications = new ConcurrentHashMap<>();
@@ -61,7 +62,8 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 	
 	private final ApplicationTask UPDATE_STATUS = new UpdateStatus();
 
-	public ApplicationManager(File datadir, ModuleManager moduleManager) {
+	public ApplicationManager(BaseDirs dirs, ModuleManager moduleManager) {
+		this.dirs = dirs;
 		this.moduleManager = moduleManager;
 		executor.submit(new WaitForNextTask());
 		Reka.SCHEDULED_SERVICE.scheduleAtFixedRate(() -> q.push(UPDATE_STATUS), 1, 1, TimeUnit.SECONDS);
@@ -161,7 +163,7 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 				
 				NavigableConfig config = moduleManager.processor().process(originalConfig);
 				
-				ApplicationConfigurer configurer = configure(new ApplicationConfigurer(moduleManager), config);
+				ApplicationConfigurer configurer = configure(new ApplicationConfigurer(dirs.resolve(identity), moduleManager), config);
 				
 				configurer.checkValid(identity);
 				
@@ -258,7 +260,7 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 
 	public void validate(String identity, Source source) {
 		NavigableConfig config = moduleManager.processor().process(ConfigParser.fromSource(source));
-		configure(new ApplicationConfigurer(moduleManager), config).checkValid(identity);
+		configure(new ApplicationConfigurer(dirs.mktemp(), moduleManager), config).checkValid(identity);
 	}
 	
 	public static interface DeploySubscriber {
@@ -307,7 +309,7 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 	}
 	
 	public Collection<FlowVisualizer> visualize(NavigableConfig config) {
-		return configure(new ApplicationConfigurer(moduleManager), config).visualize();
+		return configure(new ApplicationConfigurer(dirs.mktemp(), moduleManager), config).visualize();
 	}
 	
 	public Optional<Application> get(String identity) {

@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import reka.AppDirs;
 import reka.api.IdentityStore;
 import reka.api.Path;
 import reka.api.flow.Flow;
@@ -225,6 +226,7 @@ public abstract class ModuleConfigurer {
 	}
 
 	private List<ModuleInfo> modules = new ArrayList<>();
+	private AppDirs dirs;
 
 	private ModuleInfo info;
 	private String name;
@@ -247,6 +249,11 @@ public abstract class ModuleConfigurer {
 			findRootConfigurers();
 		}
 
+		return this;
+	}
+	
+	public ModuleConfigurer dirs(AppDirs dirs) {
+		this.dirs = dirs;
 		return this;
 	}
 
@@ -298,6 +305,10 @@ public abstract class ModuleConfigurer {
 		return info;
 	}
 	
+	public AppDirs dirs() {
+		return dirs;
+	}
+	
 	protected Path fullAliasOrName() {
 		return parentPath.add(slashes(aliasOrName()));
 	}
@@ -319,6 +330,7 @@ public abstract class ModuleConfigurer {
 	protected void configureModule(ModuleInfo info, Config config) {
 		ModuleConfigurer module = info.get();
 		module.info(info);
+		module.dirs(dirs);
 		module.modules(modules);
 		module.parentPath(modulePath);
 		configure(module, config);
