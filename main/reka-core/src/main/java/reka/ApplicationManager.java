@@ -32,6 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import reka.admin.AdminUtils;
 import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
@@ -189,9 +190,10 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 						if (app != null) {
 							applications.put(identity, app);
 							previous.ifPresent(Application::undeploy);
-							status.put(identity, reportsFor(app));
+							List<ModuleStatusReport> reports = reportsFor(app);
+							status.put(identity, reports);
 							log.info("deployed [{}] listening on {}", app.fullName(), app.network().stream().map(Object::toString).collect(joining(", ")));
-							notifyDeployListeners(identity, app);
+							notifyDeployListeners(identity, app, reports);
 							subscriber.ok(identity, version, app);
 							versions.putIfAbsent(identity, new AtomicInteger());
 							versions.get(identity).set(version);
@@ -246,11 +248,9 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 		q.push(new UndeployApplication(identity));
 	}
 
-	private void notifyDeployListeners(String identity, Application app) {
-		emit(EventType.deploy, MutableMemoryData.create()
-				.putString("id", identity)
-				.putInt("version", app.version())
-				.putString("name", app.fullName()));
+	private void notifyDeployListeners(String identity, Application app, List<ModuleStatusReport> reports) {
+		emit(EventType.deploy, AdminUtils.putAppDetails(MutableMemoryData.create(), app, Optional.of(reports))
+				.putString("id", identity));
 	}
 	
 	private void notifyUndeployListeners(String identity, Application app) {
@@ -264,7 +264,7 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 		changed.forEach((identity, reports) -> {			
 			emit(EventType.status, MutableMemoryData.create()
 				.putString("id", identity)
-				.putList("reports", list -> {
+				.putList("status", list -> {
 					reports.forEach(report -> {
 						list.add(report.data());
 					});
