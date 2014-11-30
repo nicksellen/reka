@@ -1,5 +1,7 @@
 package reka.core.setup;
 
+import java.util.HashMap;
+
 import reka.api.data.MutableData;
 import reka.core.data.memory.MutableMemoryData;
 
@@ -60,7 +62,7 @@ public interface StatusProvider extends StatusDataProvider {
 	String version();
 	
 	default ModuleStatusReport report() {
-		MutableData data = MutableMemoryData.create();
+		MutableData data = MutableMemoryData.createFromMap(new HashMap<>());
 		statusData(data);
 		return new ModuleStatusReport(name(), alias(), version(), up(), data);
 	}

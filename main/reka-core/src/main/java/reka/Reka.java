@@ -1,12 +1,8 @@
 package reka;
 
-import static reka.util.Util.decode64;
 import static reka.util.Util.runtime;
-import static reka.util.Util.unchecked;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,6 +20,8 @@ import reka.admin.AdminModule;
 import reka.config.ConfigBody;
 import reka.config.FileSource;
 import reka.core.module.ModuleManager;
+import reka.dirs.AppDirs;
+import reka.dirs.BaseDirs;
 
 public class Reka {
 	
@@ -76,19 +74,14 @@ public class Reka {
 		log.info("starting reka in {}", System.getenv(REKA_ENV));
 
 		for (Entry<String, ConfigBody> e : configs.entrySet()) {
-			manager.deployConfig(e.getKey(), e.getValue(), null, DeploySubscriber.LOG);
+			manager.deployConfig(e.getKey(), -1, e.getValue(), null, DeploySubscriber.LOG);
 		}
 		
-		try {
-			Files.list(dirs.app()).forEach(path -> {
-				String identity = decode64(path.getFileName().toString());
-				File mainreka = path.resolve("main.reka").toFile();
-				if (!mainreka.exists()) return;
-				manager.deploySource(identity, FileSource.from(mainreka), DeploySubscriber.LOG);
-			});
-		} catch (IOException e1) {
-			throw unchecked(e1);
-		}
+		AppDirs.listApps(dirs).forEach((identityAndVersion, path) -> {
+			File mainreka = path.resolve("main.reka").toFile();
+			if (!mainreka.exists()) return;
+			manager.deploySource(identityAndVersion.identity(), identityAndVersion.version(), FileSource.from(mainreka), DeploySubscriber.LOG);
+		});
 		
 	}
 	

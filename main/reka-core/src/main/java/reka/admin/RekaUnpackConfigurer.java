@@ -5,13 +5,13 @@ import static reka.api.Path.dots;
 import java.util.UUID;
 import java.util.function.Function;
 
-import reka.AppDirs;
 import reka.api.Path;
 import reka.api.data.Data;
 import reka.config.configurer.annotations.Conf;
 import reka.core.setup.OperationConfigurer;
 import reka.core.setup.OperationSetup;
 import reka.core.util.StringWithVars;
+import reka.dirs.AppDirs;
 
 public class RekaUnpackConfigurer implements OperationConfigurer {
 
@@ -36,7 +36,7 @@ public class RekaUnpackConfigurer implements OperationConfigurer {
 
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("unpack", store -> new RekaUnpackOperation(dirs, dataPathFn, identityFn));
+		//ops.add("unpack", store -> new RekaUnpackOperation(dirs, dataPathFn, identityFn));
 	}
 
 }

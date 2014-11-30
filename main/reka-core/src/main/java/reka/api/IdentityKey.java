@@ -1,7 +1,6 @@
 package reka.api;
 
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicLong;
 
 public final class IdentityKey<T> {
 	

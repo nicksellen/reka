@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Supplier;
 
-import reka.AppDirs;
 import reka.api.flow.FlowSegment;
 import reka.api.run.RouteKey;
 import reka.config.Config;
@@ -20,6 +19,7 @@ import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.core.setup.OperationConfigurer;
 import reka.core.setup.OperationSetup;
+import reka.dirs.AppDirs;
 import reka.http.configurers.HttpRouterConfigurer.RouteBuilder;
 import reka.http.operations.HttpRouter;
 import reka.http.operations.HttpRouter.Route;

@@ -2,6 +2,8 @@ package reka.util;
 
 import static java.lang.String.format;
 
+import java.io.ByteArrayInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
@@ -9,6 +11,8 @@ import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -17,6 +21,8 @@ import java.util.Base64.Encoder;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import org.codehaus.jackson.JsonGenerator;
 
@@ -213,6 +219,50 @@ public class Util {
 				
 			});
 		} catch (IOException e) {
+			throw unchecked(e);
+		}
+	}
+
+	public static void unzip(byte[] bytes, java.nio.file.Path dest) {
+		try {
+
+			ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(bytes), StandardCharsets.UTF_8);
+			ZipEntry e;
+			while ((e = zip.getNextEntry()) != null) {
+				java.nio.file.Path filepath = dest.resolve(e.getName());
+				Files.createDirectories(filepath.getParent());
+				FileOutputStream out = new FileOutputStream(filepath.toFile());
+				try {
+					byte[] buf = new byte[8192];
+					int len;
+					while ((len = zip.read(buf, 0, buf.length)) > 0) {
+						out.write(buf, 0, len);
+					}
+				} finally {
+					ignoreExceptions(() -> out.close());
+					ignoreExceptions(() -> zip.closeEntry());
+				}
+			}
+		} catch (Throwable t) {
+			throw unchecked(t);
+		}
+	}
+
+	public static String hex(byte[] b) {
+	  StringBuilder result = new StringBuilder();
+	  for (int i = 0; i < b.length; i++) {
+	    result.append(Integer.toString((b[i] & 0xff) + 0x100, 16).substring(1));
+	  }
+	  return result.toString();
+	}
+	
+	public static String sha1hex(byte[] bs) {
+		try {
+			MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
+			sha1.reset();
+			sha1.update(bs);
+			return hex(sha1.digest());
+		} catch (NoSuchAlgorithmException e) {
 			throw unchecked(e);
 		}
 	}

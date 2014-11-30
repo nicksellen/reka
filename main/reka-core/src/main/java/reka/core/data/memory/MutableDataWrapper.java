@@ -181,7 +181,7 @@ public class MutableDataWrapper<T> extends DataWrapper<T> implements Data, Mutab
 		@Override
 		public ListMutation add(Data data) {
 			MutableDataWrapper<T> other = otherOrNull(data);
-			checkArgument(other != null, "we only support putting MemoryData in (for now)");
+			checkArgument(other != null, "we only support putting MemoryData in (for now), not %s", data.getClass());
 			list = provider.put(list, path(nextIndex()), other.root);
 			return this;
 		}

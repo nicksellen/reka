@@ -2,6 +2,7 @@ package reka.jsx;
 import static reka.api.Path.root;
 import static reka.api.content.Contents.utf8;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
+import static reka.util.Util.hex;
 import static reka.util.Util.unchecked;
 
 import java.io.File;
@@ -49,10 +50,11 @@ public class JsxConfigurer extends ModuleConfigurer {
 					MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
 					sha1.reset();
 					sha1.update(jsx.getBytes(StandardCharsets.UTF_8));
-					String hex = byteArrayToHexString(sha1.digest());
+					String hex = hex(sha1.digest());
 					
 					String compiled;
-					File cacheFile = new File("/tmp/reka.jsxcache." + hex);
+					
+					File cacheFile = dirs().tmp().resolve("jsx." + hex).toFile();
 					if (cacheFile.exists()) {
 						compiled = new String(Files.readAllBytes(cacheFile.toPath()), StandardCharsets.UTF_8);
 					} else {
@@ -72,14 +74,6 @@ public class JsxConfigurer extends ModuleConfigurer {
 		});
 		
 		module.operation(root(), provider -> new JsxTemplateConfigurer());
-	}
-	
-	private static String byteArrayToHexString(byte[] b) {
-	  StringBuilder result = new StringBuilder();
-	  for (int i = 0; i < b.length; i++) {
-	    result.append(Integer.toString((b[i] & 0xff) + 0x100, 16).substring(1));
-	  }
-	  return result.toString();
 	}
 	
 	public static class JsxTemplateConfigurer implements OperationConfigurer {

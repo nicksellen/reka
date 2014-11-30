@@ -62,7 +62,7 @@ public class ProcessConfigurer extends ModuleConfigurer {
 		checkConfig(command == null, "don't set command and script");
 		checkConfig(config.hasDocument(), "must have document");
 		try {
-			File file = Files.createTempFile("reka", "externalscript").toFile();
+			File file = Files.createTempFile(dirs().tmp(), "script.", "").toFile();
 			Files.write(file.toPath(), config.documentContent());
 			file.deleteOnExit();
 			file.setExecutable(true, true);

@@ -24,7 +24,6 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import reka.AppDirs;
 import reka.api.IdentityStore;
 import reka.api.Path;
 import reka.api.flow.Flow;
@@ -37,6 +36,7 @@ import reka.core.module.ModuleInfo;
 import reka.core.runtime.NoFlow;
 import reka.core.runtime.NoFlowVisualizer;
 import reka.core.setup.ModuleSetup.ApplicationCheck;
+import reka.dirs.AppDirs;
 
 public abstract class ModuleConfigurer {
 

@@ -107,9 +107,10 @@ public class FileSource extends AbstractSource {
     	
     	Path base = file.toPath().getParent().toAbsolutePath();
     	
-    	String glob = "glob:" + base.resolve(location).toAbsolutePath();
+    	String locationAbs = base.resolve(location).toAbsolutePath().toString();
+    	String glob = "glob:" + locationAbs;
     	
-    	log.info("finding files within {} that match {}", base, glob);
+    	log.info("finding files that match {}", locationAbs.substring(base.toString().length() + 1));
     	
     	PathMatcher matcher = FileSystems.getDefault().getPathMatcher(glob);
     	

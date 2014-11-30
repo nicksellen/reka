@@ -2,6 +2,7 @@ package reka.http.operations;
 
 import static reka.api.content.Contents.binary;
 import static reka.api.content.Contents.utf8;
+import static reka.util.Util.sha1hex;
 import static reka.util.Util.unchecked;
 
 import java.io.IOException;
@@ -57,10 +58,10 @@ public abstract class HttpContentUtils {
 			
 			if (contentBytes.length > PUT_IN_FILE_THRESHOLD) {
 				try {
-					java.nio.file.Path p = Files.createTempFile(basedir, "http.", "");
-					p.toFile().deleteOnExit();
-					Files.write(p, contentBytes);
-					content = binary(contentType, p.toFile());
+					String hex = sha1hex(contentBytes);
+					Path httpfile = basedir.resolve("http." + hex);
+					if (!Files.exists(httpfile)) Files.write(httpfile, contentBytes);
+					content = binary(contentType, httpfile.toFile());
 				} catch (IOException e) {
 					throw unchecked(e);
 				}

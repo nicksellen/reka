@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import reka.ApplicationManager;
+import reka.ApplicationManager.EventType;
 import reka.api.Path;
 import reka.api.content.Content;
 import reka.api.data.Data;
@@ -75,9 +76,9 @@ public class AdminConfigurer extends ModuleConfigurer {
 		for (ConfigBody body : deployHandlers) {			
 			module.trigger("on deploy", body, registration -> {
 				Flow flow = registration.flow();
-				manager.addDeployListener(flow);
+				manager.addListener(flow, EventType.deploy);
 				registration.undeploy(version -> { 
-					manager.removeDeployListener(flow);
+					manager.removeListener(flow);
 				});
 			});
 		}		
@@ -85,9 +86,9 @@ public class AdminConfigurer extends ModuleConfigurer {
 		for (ConfigBody body : undeployHandlers) {			
 			module.trigger("on undeploy", body, registration -> {
 				Flow flow = registration.flow();
-				manager.addUndeployListener(flow);
+				manager.addListener(flow, EventType.undeploy);
 				registration.undeploy(version -> { 
-					manager.removeUndeployListener(flow);
+					manager.removeListener(flow);
 				});
 			});
 		}	
@@ -95,9 +96,9 @@ public class AdminConfigurer extends ModuleConfigurer {
 		for (ConfigBody body : statusHandlers) {			
 			module.trigger("on status", body, registration -> {
 				Flow flow = registration.flow();
-				manager.addStatusListener(flow);
+				manager.addListener(flow, EventType.status);
 				registration.undeploy(version -> { 
-					manager.removeStatusListener(flow);
+					manager.removeListener(flow);
 				});
 			});
 		}

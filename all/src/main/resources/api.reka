@@ -44,8 +44,8 @@ def main {
     }
     GET /apps/:appid* {
       reka/get {
-        out response.content
         id :appid
+        out response.content
       }
     }
     GET /apps/:appid*/flows/:flow*.:format {
@@ -56,16 +56,13 @@ def main {
       }
     }
     POST /apps/:appid* {
-      reka/unpack {
-      	data request.content
-      	identity :appid
-      }
       reka/deploy {
-        identity :appid
+        id :appid
+      	data request.content
       }
       reka/get {
-        out app
         id :appid
+        out app
       }
       putv response {
         status 200
@@ -74,45 +71,6 @@ def main {
           Content-Type application/json
         }
       }
-    }
-    //POST /appsoff/:appid* {
-      fs/mktmpdir tmpdir
-      unzip {
-        data request.content
-        out :tmpdir
-      }
-      fs/type :tmpdir/main.reka {
-        when file {
-          reka/deploy {
-            identity :appid
-            filename :tmpdir/main.reka
-          }
-          reka/get {
-            out app
-            id :appid
-          }
-          putv response {
-            status 200
-            content :app
-            headers {
-              Content-Type application/json
-            }
-          }
-        }
-        when dir {
-          putv response {
-            status 400
-            content main.reka should be a file
-          }            
-        }
-        when missing {
-          putv response {
-            status 400
-            content missing main.reka
-          }            
-        }
-      }
-      fs/rm :tmpdir 
     }
     named undeploy app {
       DELETE /apps/:appid* {

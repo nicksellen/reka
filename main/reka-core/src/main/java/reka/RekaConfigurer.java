@@ -25,6 +25,7 @@ import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
 import reka.core.module.Module;
+import reka.dirs.BaseDirs;
 
 public class RekaConfigurer {
 	

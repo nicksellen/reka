@@ -13,6 +13,7 @@ import static reka.util.Util.safelyCompletable;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,6 +56,7 @@ import reka.core.setup.ModuleSetup.ApplicationCheck;
 import reka.core.setup.MultiFlowRegistration;
 import reka.core.setup.Trigger;
 import reka.core.setup.TriggerCollection;
+import reka.dirs.AppDirs;
 
 public class ApplicationConfigurer implements ErrorReporter {
 	
@@ -87,7 +89,7 @@ public class ApplicationConfigurer implements ErrorReporter {
     }
     
     @Conf.EachUnmatched
-    public void useModule(Config config) {
+    public void use(Config config) {
     	log.info("setting up module {}{}", config.key(), config.hasValue() ? " " + config.valueAsString() : "");
     	rootModule.useThisConfig(config);
     }
@@ -296,6 +298,8 @@ public class ApplicationConfigurer implements ErrorReporter {
 					
 					AtomicBoolean failed = new AtomicBoolean(false);
 					
+					List<String> testErrors = Collections.synchronizedList(new ArrayList<>());
+					
 					tests.forEach((name, test) -> {
 						Flow flow = flows.flow(name);
 						MutableData initialData = MutableMemoryData.create();
@@ -309,7 +313,7 @@ public class ApplicationConfigurer implements ErrorReporter {
 										if (type == DiffContentType.ADDED) return; // don't mind extra data for now...
 										Optional<Content> initvalue = test.initial().getContent(path);
 										if (!initvalue.isPresent() || !initvalue.get().equals(actual)) {
-											log.error("content at {} {} - expected [{}] got [{}]", path.dots(), type, expected, actual);
+											testErrors.add(format("content at %s %s - expected [%s] got [%s]", path.dots(), type, expected, actual));
 											failed.set(true);
 										}
 									});
@@ -343,7 +347,8 @@ public class ApplicationConfigurer implements ErrorReporter {
 				    	future.completeExceptionally(runtime(msg));
 						return;
 					} else if (failed.get()) {
-						String msg = format("failed to deploy [%s] because tests failed", identity);
+						String msg = format("failed to deploy [%s] because tests failed:\n%s", identity, 
+												testErrors.stream().map(s -> format("- %s", s)) .collect(joining("\n")));
 						log.error(msg);
 				    	future.completeExceptionally(runtime(msg));
 						return;

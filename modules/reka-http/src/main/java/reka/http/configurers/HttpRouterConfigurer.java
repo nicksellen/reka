@@ -12,7 +12,6 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.AppDirs;
 import reka.api.run.RouteKey;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
@@ -20,6 +19,7 @@ import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.core.setup.OperationConfigurer;
 import reka.core.setup.OperationSetup;
+import reka.dirs.AppDirs;
 import reka.http.operations.HttpRouter;
 import reka.http.operations.HttpRouter.HttpRouteVar;
 

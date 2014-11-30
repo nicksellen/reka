@@ -32,8 +32,8 @@ def main {
     }
     GET /apps/:appid* {
       reka/get {
-        out response.content
         id :appid
+        out response.content
       }
     }
     GET /apps/:appid*/flows/:flow*.:format {
@@ -44,16 +44,13 @@ def main {
       }
     }
     POST /apps/:appid* {
-      reka/unpack {
-        data request.content
-        identity :appid
-      }
       reka/deploy {
-        identity :appid
+        id :appid
+        data request.content
       }
       reka/get {
-        out app
         id :appid
+        out app
       }
       putv response {
         status 200

@@ -10,6 +10,7 @@ import static reka.api.content.Contents.booleanValue;
 import static reka.api.content.Contents.doubleValue;
 import static reka.api.content.Contents.integer;
 import static reka.api.content.Contents.longValue;
+import static reka.api.content.Contents.nullValue;
 import static reka.api.content.Contents.utf8;
 import static reka.util.Util.createEntry;
 import static reka.util.Util.runtime;
@@ -21,6 +22,7 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -54,6 +56,10 @@ public class MutableMemoryData implements MutableDataProvider<Object> {
 	
 	public static MutableData create() {
 		return new MutableDataWrapper<>(INSTANCE);
+	}
+	
+	public static MutableData from(Data data) {
+		return create().merge(data);
 	}
 	
 	public static MutableData create(Consumer<MutableData> consumer) {
@@ -118,7 +124,30 @@ public class MutableMemoryData implements MutableDataProvider<Object> {
 	private final JsonFactory jsonFactory = new JsonFactory();
 	
 	public static void main(String[] args) {
-		new MutableMemoryData().run();
+		
+		List<Data> reports = new ArrayList<>();
+		
+		reports.add(MutableMemoryData.create().putString("name", "first"));
+		reports.add(MutableMemoryData.create());
+		reports.add(MutableMemoryData.create().putString("name", "third"));
+		reports.add(MutableMemoryData.create());
+		reports.add(MutableMemoryData.createFromMap(new HashMap<>()));
+		reports.add(MutableMemoryData.create().putString("name", "final"));
+		
+		MutableData b = MutableMemoryData.create();
+		b.putList("reports", list -> {
+			reports.forEach(report -> {
+				list.add(report);
+			});
+		});
+		
+		System.out.printf("b: %s\n", b);
+		
+		b.forEachContent((path, content) -> {
+			System.out.printf("%s\n", path);
+		});
+		
+		//new MutableMemoryData().run();
 	}
 	
 	public void run() {
@@ -279,6 +308,9 @@ public class MutableMemoryData implements MutableDataProvider<Object> {
 			listVisitContent((List<Object>) obj, path, visitor);
 		} else if (obj instanceof Content) {
 			visitor.accept(path, (Content) obj); 
+		} else {
+			// TODO: should I do this?
+			visitor.accept(path, nullValue());
 		}
 	}
 	
@@ -609,7 +641,10 @@ public class MutableMemoryData implements MutableDataProvider<Object> {
 		} else if (i < l.size()) {
 			l.set(i, o);
 		} else {
-			throw new IndexOutOfBoundsException();
+			for (int j = l.size(); j < i; j++) {
+				l.add(null);
+			}
+			l.add(o);
 		}
 	}
 	

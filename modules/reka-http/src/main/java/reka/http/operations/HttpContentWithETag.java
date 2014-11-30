@@ -2,12 +2,10 @@ package reka.http.operations;
 
 import static reka.api.content.Contents.integer;
 import static reka.api.content.Contents.utf8;
+import static reka.util.Util.hex;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import reka.api.Path.Request;
 import reka.api.Path.Response;
@@ -20,14 +18,10 @@ import reka.http.operations.HttpContentUtils.ContentAndType;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-import com.google.common.io.BaseEncoding;
 
 public class HttpContentWithETag implements Operation {
-
-	private final Logger logger = LoggerFactory.getLogger(getClass());
 	
 	private static final HashFunction sha1 =  Hashing.sha1();
-	private final static BaseEncoding hex = BaseEncoding.base16();
 	
 	private final Content content, contentType;
 	
@@ -44,7 +38,7 @@ public class HttpContentWithETag implements Operation {
 		Hasher hasher = sha1.newHasher();
 		content.hash(hasher);
 		hasher.putString(contentType, StandardCharsets.UTF_8);
-		etagValue = hex.encode(hasher.hash().asBytes());
+		etagValue = hex(hasher.hash().asBytes());
 		etag = utf8(etagValue);
 	}
 

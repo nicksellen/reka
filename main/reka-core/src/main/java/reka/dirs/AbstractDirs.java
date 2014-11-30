@@ -1,4 +1,4 @@
-package reka;
+package reka.dirs;
 
 import static reka.util.Util.deleteRecursively;
 import static reka.util.Util.runtime;
@@ -6,13 +6,13 @@ import static reka.util.Util.runtime;
 import java.io.File;
 import java.nio.file.Path;
 
-public abstract class AbstractDirs {
+public abstract class AbstractDirs implements Dirs {
 	
 	protected final Path app;
 	protected final Path data;
 	protected final Path tmp;
 	
-	public AbstractDirs(Path app, Path data, Path tmp) {
+	protected AbstractDirs(Path app, Path data, Path tmp) {
 		this.app = app;
 		this.data = data;
 		this.tmp = tmp;
