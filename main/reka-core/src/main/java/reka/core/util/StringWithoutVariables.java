@@ -33,5 +33,10 @@ class StringWithoutVariables implements Function<Data,String>, StringWithVars {
 	public String withPlaceholder(String placeholder) {
 		return val;
 	}
+
+	@Override
+	public String original() {
+		return val;
+	}
 	
 }

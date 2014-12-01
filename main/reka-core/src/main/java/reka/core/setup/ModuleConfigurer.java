@@ -24,6 +24,8 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import reka.PortChecker;
+import reka.PortRequirement;
 import reka.api.IdentityStore;
 import reka.api.Path;
 import reka.api.flow.Flow;
@@ -77,8 +79,10 @@ public abstract class ModuleConfigurer {
 		public final List<TriggerCollection> triggers;
 		public final List<Runnable> shutdownHandlers;
 		public final List<Supplier<StatusProvider>> statuses;
-
 		public final List<Consumer<ApplicationCheck>> checks;
+		public final List<PortChecker> portCheckers;
+		public final List<PortRequirement> portRequirements;
+		
 		public ModuleCollector() {
 			providers = new HashMap<>();
 			initflows = new ArrayList<>();
@@ -86,6 +90,8 @@ public abstract class ModuleConfigurer {
 			shutdownHandlers = new ArrayList<>();
 			statuses = new ArrayList<>();
 			checks = new ArrayList<>();
+			portCheckers = new ArrayList<>();
+			portRequirements = new ArrayList<>();
 		}
 
 		private ModuleCollector(ModuleCollector parent) {
@@ -95,6 +101,8 @@ public abstract class ModuleConfigurer {
 			this.shutdownHandlers = immutable(parent.shutdownHandlers);
 			this.statuses = immutable(parent.statuses);
 			this.checks = immutable(parent.checks);
+			this.portCheckers = immutable(parent.portCheckers);
+			this.portRequirements = immutable(parent.portRequirements);
 		}
 
 		public ModuleCollector immutable() {
@@ -112,7 +120,7 @@ public abstract class ModuleConfigurer {
 	}
 
 	private static class Utils {
-
+		
 		public static ModuleInitializer process(ModuleConfigurer root) {
 
 			ModuleCollector collector = new ModuleCollector();
@@ -131,6 +139,7 @@ public abstract class ModuleConfigurer {
 
 				ModuleSetup init = new ModuleSetup(module.info(), module.fullAliasOrName(), store, collector);
 				module.setup(init);
+				
 				if (init.includeDefaultStatus() && module.info() != null) {
 					collector.statuses.add(() -> StatusProvider.create(module.info().name().slashes(), 
 							                                           module.fullAliasOrName().slashes(), 

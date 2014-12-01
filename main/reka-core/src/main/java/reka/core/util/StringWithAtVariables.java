@@ -155,6 +155,11 @@ final class StringWithAtVariables implements Function<Data,String>, StringWithVa
 	public String toString() {
 	    return original;
 	}
+
+	@Override
+	public String original() {
+		return original;
+	}
 	
 	
 }

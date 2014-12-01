@@ -25,6 +25,7 @@ public interface StringWithVars extends Function<Data,String> {
 	}
 	
 	List<Variable> vars();
+	String original();
 	boolean hasVariables();
 	String withPlaceholder(String val);
 	

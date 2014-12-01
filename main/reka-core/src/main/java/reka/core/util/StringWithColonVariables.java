@@ -155,6 +155,11 @@ final class StringWithColonVariables implements Function<Data,String>, StringWit
 	public String toString() {
 	    return original;
 	}
+
+	@Override
+	public String original() {
+		return original;
+	}
 	
 	
 }

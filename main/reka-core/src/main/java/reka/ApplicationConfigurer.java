@@ -15,9 +15,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -59,6 +62,8 @@ import reka.core.setup.TriggerCollection;
 import reka.dirs.AppDirs;
 
 public class ApplicationConfigurer implements ErrorReporter {
+	
+	private static final WeakHashMap<Application,Collection<PortChecker>> PORT_CHECKERS = new WeakHashMap<>();
 	
 	private static final ExecutorService executor = Executors.newSingleThreadExecutor(); // just used for app configure/deployments
 	
@@ -155,6 +160,31 @@ public class ApplicationConfigurer implements ErrorReporter {
     	});
     	if (!checkErrors.isEmpty()) {
     		throw new RuntimeException(checkErrors.stream().collect(joining(", ")));
+    	}
+    	runPortCheckers(identity, initializer);
+    }
+    
+    private void runPortCheckers(String identity, ModuleInitializer initializer) {
+    	Set<PortChecker> ran = new HashSet<>();
+    	List<String> errors = new ArrayList<>();
+    	PORT_CHECKERS.values().forEach(checkers -> {
+    		checkers.forEach(checker -> {
+    			if (!ran.contains(checker)) {    			
+	    			ran.add(checker);
+	    			initializer.collector().portRequirements.forEach(req -> {
+	    				if (!checker.check(identity, req.port(), req.host())) {
+	    					if (req.host().isPresent()) {
+	    						errors.add(format("port %d is not available", req.port()));
+	    					} else {
+	    						errors.add(format("host:port %s:%d is not available", req.host().get(), req.port()));
+	    					}
+	    				}
+	    			});
+    			}
+    		});
+    	});
+    	if (!errors.isEmpty()) {
+    		throw new RuntimeException(errors.stream().collect(joining(", ")));
     	}
     }
     
@@ -388,7 +418,11 @@ public class ApplicationConfigurer implements ErrorReporter {
 				
 				applicationBuilder.statusProviders().addAll(initializer.collector().statuses.stream().map(Supplier::get).collect(toList()));
 				
-		    	future.complete(applicationBuilder.build());
+				Application app = applicationBuilder.build();
+				
+				ApplicationConfigurer.PORT_CHECKERS.put(app, initializer.collector().portCheckers);
+				
+		    	future.complete(app);
 	    	
 	    	} catch (Throwable t) {
 	    		future.completeExceptionally(t);

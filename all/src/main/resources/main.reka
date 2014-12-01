@@ -22,7 +22,7 @@ app {
   
   markdown
   
-  http markdown server {
+  net/http markdown server {
   	listen localhost:5001
   	on request {
       markdown {
@@ -32,7 +32,7 @@ app {
       put:response.headers.Content-Type text/html
   	}
   }
-  http {
+  net/http {
   
     listen localhost:5000
     on request {
@@ -99,7 +99,7 @@ app {
 
 app two {
   name two levels of router
-  http {
+  net/http {
     listen localhost:7000
     on request {
       http/router {

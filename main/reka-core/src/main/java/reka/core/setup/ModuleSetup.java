@@ -16,6 +16,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import reka.PortChecker;
+import reka.PortRequirement;
 import reka.api.IdentityKey;
 import reka.api.IdentityStore;
 import reka.api.Path;
@@ -71,9 +73,19 @@ public class ModuleSetup {
 	}
 	
 	public ModuleSetup operation(Path name, Function<ConfigurerProvider,OperationConfigurer> c) {
-		collector.providers.put(path.add(name), (provider, config) -> {
+		
+		FlowSegmentBiFunction f = (provider, config) -> {
 			return configure(c.apply(provider), config).bind(path, store);
-		});
+		};
+		
+		// register it under two names, the full path (e.g. net/http/router):
+		collector.providers.put(path.add(name), f);
+		
+		if (!path.isEmpty()) {
+			// and the short name (e.g. http/router):
+			collector.providers.put(Path.path(path.last()).add(name), f);
+		}
+		
 		return this;
 	}
 	
@@ -118,6 +130,11 @@ public class ModuleSetup {
 		return this;
 	}
 	
+	public ModuleSetup registerPortChecker(PortChecker checker) {
+		collector.portCheckers.add(checker);
+		return this;
+	}
+	
 	public ModuleSetup trigger(String name, ConfigBody body, Consumer<SingleFlowRegistration> c) {
 		return trigger(IdentityKey.named(name), body, c);
 	}
@@ -145,6 +162,14 @@ public class ModuleSetup {
 		if (segments.isEmpty()) return Optional.empty();
 		List<FlowSegment> built = segments.stream().map(Supplier<FlowSegment>::get).collect(toList());
 		return Optional.of(createLabelSegment(path.slashes(), seq(built)));
+	}
+
+	public void requirePort(int port, Optional<String> host) {
+		collector.portRequirements.add(new PortRequirement(port, host));
+	}
+	
+	public void requirePort(int port) {
+		requirePort(port, Optional.empty());
 	}
 	
 }

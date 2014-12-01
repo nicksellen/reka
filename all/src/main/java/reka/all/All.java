@@ -22,13 +22,13 @@ import reka.config.parser.ConfigParser;
 import reka.core.module.ModuleManager;
 import reka.filesystem.FilesystemModule;
 import reka.h2.H2Module;
-import reka.http.HttpModule;
 import reka.jade.JadeModule;
 import reka.jsx.JsxModule;
 import reka.less.LessModule;
 import reka.main.Main;
 import reka.mustache.MustacheModule;
 import reka.nashorn.NashornModule;
+import reka.net.NetModule;
 import reka.postgres.PostgresModule;
 import reka.process.ProcessModule;
 import reka.smtp.SmtpModule;
@@ -65,7 +65,7 @@ public class All {
 			new JadeModule(),
 			new SmtpModule(),
 			new JsonModule(),
-			new HttpModule()))
+			new NetModule()))
 		.stream().map(m -> new ModuleMeta("snapshot", m)).collect(toList());
 		
 		NavigableConfig conf = new ModuleManager(defaultModules).processor().process(ConfigParser.fromFile(file));
