@@ -81,8 +81,6 @@ public class SocketConfigurer extends ModuleConfigurer {
 		
 		module.operation(path("send"), provider -> new SocketSendConfigurer(server));
 		module.operation(path("broadcast"), provider -> new SocketBroadcastConfigurer(server));
-		//module.operation(path("topic"), provider -> new SocketTopicSendConfigurer(server));
-		//module.operation(path("broadcast"), provider -> new SocketBroadcastConfigurer());
 	
 		module.registerPortChecker(server.portChecker);
 		
@@ -108,6 +106,10 @@ public class SocketConfigurer extends ModuleConfigurer {
 				store.put(Sockets.SETTINGS, NetSettings.socket(ports.get(0), null, -1));
 			});
 		});
+		
+		for (int port : ports) {
+			module.requirePort(port);
+		}
 		
 		module.triggers(triggers, reg -> {
 			

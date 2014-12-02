@@ -496,7 +496,8 @@ public class NetServerManager {
 		checkArgument(settings.type() == Type.SOCKET, "settings type must be %s", Type.SOCKET.toString());
 		SocketTriggers socketTriggers = new SocketTriggers();
 		deploy.accept(socketTriggers);
-		checkArgument(isAvailable(settings.applicationIdentity(), settings.port()), "port unavailable");
+		System.out.printf("this is too late!\n");
+		checkArgument(isAvailable(settings.applicationIdentity(), settings.port()), "port unavailable (%s)", settings.port());
 		deploy(id, settings, handler -> {
 			handler.socketSet(socketTriggers);
 		});

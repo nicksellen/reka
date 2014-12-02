@@ -174,9 +174,9 @@ public class ApplicationConfigurer implements ErrorReporter {
 	    			initializer.collector().portRequirements.forEach(req -> {
 	    				if (!checker.check(identity, req.port(), req.host())) {
 	    					if (req.host().isPresent()) {
-	    						errors.add(format("port %d is not available", req.port()));
-	    					} else {
 	    						errors.add(format("host:port %s:%d is not available", req.host().get(), req.port()));
+	    					} else {
+	    						errors.add(format("port %d is not available", req.port()));
 	    					}
 	    				}
 	    			});
