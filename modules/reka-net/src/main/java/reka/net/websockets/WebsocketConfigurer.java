@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -127,6 +128,12 @@ public class WebsocketConfigurer extends ModuleConfigurer {
 		module.operation(path("send"), provider -> new SocketSendConfigurer(server));
 		module.operation(path("broadcast"), provider -> new SocketBroadcastConfigurer(server));
 		
+		module.registerPortChecker(server.portChecker);
+		
+		listens.forEach(listen -> {
+			module.requirePort(listen.port(), Optional.of(listen.host()));	
+		});
+		
 		module.status(store -> new SocketStatusProvider(server, store.get(Sockets.SETTINGS)));
 		
 		topics.forEach(topic -> {
@@ -137,9 +144,9 @@ public class WebsocketConfigurer extends ModuleConfigurer {
 		
 		Map<IdentityKey<Flow>,Function<ConfigurerProvider, OperationConfigurer>> triggers = new HashMap<>();
 		
-		IdentityKey<Flow> connect = IdentityKey.named("connect");
-		IdentityKey<Flow> disconnect = IdentityKey.named("disconnect");
-		IdentityKey<Flow> message = IdentityKey.named("message");
+		IdentityKey<Flow> connect = IdentityKey.named("on connect");
+		IdentityKey<Flow> disconnect = IdentityKey.named("on disconnect");
+		IdentityKey<Flow> message = IdentityKey.named("on message");
 		
 		if (!onConnect.isEmpty()) {
 			triggers.put(connect, combine(onConnect));
@@ -190,7 +197,11 @@ public class WebsocketConfigurer extends ModuleConfigurer {
 					reg.flowFor(message).ifPresent(flow -> ws.onMessage(flow));					
 				});
 				
-				reg.undeploy(version -> server.undeploy(identity, version));
+				reg.network(listen.port(), ssl != null ? "wss" : "ws", details -> {
+					details.putString("host", listen.host());
+				});
+				
+				reg.onUndeploy(version -> server.undeploy(identity, version));
 				
 			}
 		});

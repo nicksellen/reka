@@ -12,7 +12,7 @@
   <modules>
     <module>reka-jdbc-common</module>
     <module>reka-command</module>
-    <module>reka-http</module>
+    <module>reka-net</module>
     <module>reka-jade</module>
     <module>reka-jruby</module>
     <module>reka-mustache</module>

@@ -3,8 +3,6 @@ package reka.net.common.sockets;
 import io.netty.channel.group.ChannelMatcher;
 import io.netty.channel.group.ChannelMatchers;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Function;
 
 import reka.api.data.Data;

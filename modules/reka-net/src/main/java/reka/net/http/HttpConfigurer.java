@@ -101,29 +101,29 @@ public class HttpConfigurer extends ModuleConfigurer {
 		module.operation(path("request"), provider -> new HttpRequestConfigurer(server.nettyEventGroup(), server.nettyChannelType()));
 		module.operation(path("req"), provider -> new HttpRequestConfigurer(server.nettyEventGroup(), server.nettyChannelType()));
 		module.operation(path("auth"), provider -> new BasicAuthConfigurer(provider));
+
+		module.registerPortChecker(server.portChecker);
+		
+		listens.forEach(listen -> {
+			module.requirePort(listen.port(), Optional.of(listen.host()));	
+		});
 		
 		for (Function<ConfigurerProvider, OperationConfigurer> h : requestHandlers) {
 			
-			module.registerPortChecker(server.portChecker);
-			
-			listens.forEach(listen -> {
-				module.requirePort(listen.port(), Optional.of(listen.host()));	
-			});
-			
-			module.trigger("on request", h, registration -> {
+			module.trigger("on request", h, reg -> {
 				
 				for (HostAndPort listen : listens) {
 					
-					String id = format("%s/%s/%s/http", registration.applicationIdentity(), listen.host(), listen.port());
-					NetSettings settings = httpSettings(listen, registration.applicationIdentity(), registration.applicationVersion());
+					String id = format("%s/%s/%s/http", reg.applicationIdentity(), listen.host(), listen.port());
+					NetSettings settings = httpSettings(listen, reg.applicationIdentity(), reg.applicationVersion());
 					
-					server.deployHttp(id, registration.flow(), settings);
+					server.deployHttp(id, reg.flow(), settings);
 					
-					registration.undeploy(version -> server.undeploy(id, version));
-					registration.pause(version -> server.pause(id, version));
-					registration.resume(version -> server.resume(id, version));
+					reg.onUndeploy(version -> server.undeploy(id, version));
+					reg.onPause(version -> server.pause(id, version));
+					reg.onResume(version -> server.resume(id, version));
 					
-					registration.network(listen.port(), settings.isSsl() ? "https" : "http", details -> {
+					reg.network(listen.port(), settings.isSsl() ? "https" : "http", details -> {
 						details.putString("host", listen.host());
 					});
 				

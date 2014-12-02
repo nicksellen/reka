@@ -6,7 +6,7 @@ fs {
   dir /
 }
 
-http {
+net/http {
   @env(CONTAINER) {
     when docker {
       listen api.reka

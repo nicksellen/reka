@@ -26,6 +26,7 @@ import reka.net.NetServerManager;
 import reka.net.NetSettings;
 import reka.net.common.sockets.SocketBroadcastConfigurer;
 import reka.net.common.sockets.SocketSendConfigurer;
+import reka.net.common.sockets.SocketStatusProvider;
 import reka.net.common.sockets.Sockets;
 
 public class SocketConfigurer extends ModuleConfigurer {
@@ -41,17 +42,6 @@ public class SocketConfigurer extends ModuleConfigurer {
 	public SocketConfigurer(NetServerManager server) {
 		this.server = server;
 	}
-	
-	/*
-	 *  I DID IT ALL WRONG :)
-	 *  
-	 *  I *do* need a single socketservermanager for all deployments
-	 *  this enables the seamless redeploys
-	 *  
-	 *  port is probably fine as identity as you have to take over
-	 *  the whole port for these.
-	 * 
-	 */
 
 	@Conf.Each("listen")
 	public void listen(String port) {
@@ -84,11 +74,13 @@ public class SocketConfigurer extends ModuleConfigurer {
 	
 		module.registerPortChecker(server.portChecker);
 		
+		module.status(store -> new SocketStatusProvider(server, store.get(Sockets.SETTINGS)));
+		
 		Map<IdentityKey<Flow>,Function<ConfigurerProvider, OperationConfigurer>> triggers = new HashMap<>();
 		
-		IdentityKey<Flow> connect = IdentityKey.named("connect");
-		IdentityKey<Flow> disconnect = IdentityKey.named("disconnect");
-		IdentityKey<Flow> message = IdentityKey.named("message");
+		IdentityKey<Flow> connect = IdentityKey.named("on connect");
+		IdentityKey<Flow> disconnect = IdentityKey.named("on disconnect");
+		IdentityKey<Flow> message = IdentityKey.named("on message");
 		
 		if (!onConnect.isEmpty()) {
 			triggers.put(connect, combine(onConnect));
@@ -124,7 +116,7 @@ public class SocketConfigurer extends ModuleConfigurer {
 					reg.flowFor(message).ifPresent(flow -> s.onMessage(flow));
 				});
 				
-				reg.undeploy(version -> server.undeploy(id, version));
+				reg.onUndeploy(version -> server.undeploy(id, version));
 				
 				reg.network(port, settings.isSsl() ? "socket-ssl" : "socket");
 			}

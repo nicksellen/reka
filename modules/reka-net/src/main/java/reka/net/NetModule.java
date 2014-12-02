@@ -1,4 +1,5 @@
 package reka.net;
+
 import static reka.api.Path.path;
 import static reka.api.Path.slashes;
 import reka.api.Path;
@@ -8,7 +9,6 @@ import reka.net.http.HttpConfigurer;
 import reka.net.http.HttpSessionsConfigurer;
 import reka.net.socket.SocketConfigurer;
 import reka.net.websockets.WebsocketConfigurer;
-
 
 public class NetModule implements Module {
 

@@ -49,15 +49,15 @@ abstract class BaseRegistration {
 		return store;
 	}
 	
-	public void undeploy(IntConsumer c) {
+	public void onUndeploy(IntConsumer c) {
 		undeployConsumers.add(c);
 	}
 	
-	public void pause(IntConsumer c) {
+	public void onPause(IntConsumer c) {
 		pauseConsumers.add(c);
 	}
 	
-	public void resume(IntConsumer c) {
+	public void onResume(IntConsumer c) {
 		resumeConsumers.add	(c);
 	}
 	

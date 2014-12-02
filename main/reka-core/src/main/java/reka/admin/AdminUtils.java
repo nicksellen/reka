@@ -31,12 +31,14 @@ public class AdminUtils {
 						m.put(path, content);
 					});
 					
-					network.details().getString("host").ifPresent(host -> {
-						StringBuilder sb = new StringBuilder();
-						sb.append(network.protocol()).append("://").append(host);
-						if (!network.isDefaultPort()) sb.append(':').append(network.port());
-						m.putString("url", sb.toString());
-					});
+					if (network.protocol().startsWith("http")) {
+						network.details().getString("host").ifPresent(host -> {
+							StringBuilder sb = new StringBuilder();
+							sb.append(network.protocol()).append("://").append(host);
+							if (!network.isDefaultPort()) sb.append(':').append(network.port());
+							m.putString("url", sb.toString());
+						});
+					}
 				
 				});
 			

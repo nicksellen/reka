@@ -65,10 +65,10 @@ public class AdminConfigurer extends ModuleConfigurer {
 	
 	@Override
 	public void setup(ModuleSetup module) {
+		
 		module.operation(path("list"), provider -> new RekaListConfigurer(manager));
 		module.operation(path("get"), provider -> new RekaDetailsConfigurer(manager));
 		module.operation(path("validate"), provider -> new RekaValidateConfigurer(provider, manager));
-		module.operation(path("unpack"), provider -> new RekaUnpackConfigurer(dirs()));
 		module.operation(path("deploy"), provider -> new RekaDeployConfigurer(manager, dirs()));
 		module.operation(path("undeploy"), provider -> new RekaUndeployConfigurer(manager, dirs()));
 		module.operation(path("visualize"), provider -> new RekaVisualizeConfigurer(manager));
@@ -77,7 +77,7 @@ public class AdminConfigurer extends ModuleConfigurer {
 			module.trigger("on deploy", body, registration -> {
 				Flow flow = registration.flow();
 				manager.addListener(flow, EventType.deploy);
-				registration.undeploy(version -> { 
+				registration.onUndeploy(version -> { 
 					manager.removeListener(flow);
 				});
 			});
@@ -87,7 +87,7 @@ public class AdminConfigurer extends ModuleConfigurer {
 			module.trigger("on undeploy", body, registration -> {
 				Flow flow = registration.flow();
 				manager.addListener(flow, EventType.undeploy);
-				registration.undeploy(version -> { 
+				registration.onUndeploy(version -> { 
 					manager.removeListener(flow);
 				});
 			});
@@ -97,7 +97,7 @@ public class AdminConfigurer extends ModuleConfigurer {
 			module.trigger("on status", body, registration -> {
 				Flow flow = registration.flow();
 				manager.addListener(flow, EventType.status);
-				registration.undeploy(version -> { 
+				registration.onUndeploy(version -> { 
 					manager.removeListener(flow);
 				});
 			});
@@ -124,6 +124,7 @@ public class AdminConfigurer extends ModuleConfigurer {
 		}
 		
 	}
+
 
 	// TODO: remove this method
 	static NavigableConfig getConfigFromData(Data data, Path in) {
