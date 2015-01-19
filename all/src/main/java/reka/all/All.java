@@ -3,9 +3,9 @@ package reka.all;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static reka.config.configurer.Configurer.configure;
+import io.reka.usenetplay.UseNetPlayModule;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.kohsuke.args4j.CmdLineException;
@@ -20,6 +20,7 @@ import reka.common.CommonModule;
 import reka.config.NavigableConfig;
 import reka.config.parser.ConfigParser;
 import reka.core.module.ModuleManager;
+import reka.core.module.RekaGuiceModule;
 import reka.filesystem.FilesystemModule;
 import reka.h2.H2Module;
 import reka.jade.JadeModule;
@@ -32,6 +33,9 @@ import reka.net.NetModule;
 import reka.postgres.PostgresModule;
 import reka.process.ProcessModule;
 import reka.smtp.SmtpModule;
+
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 
 public class All {
 
@@ -51,22 +55,25 @@ public class All {
 			return;
 		};
 		
-		List<ModuleMeta> defaultModules = new ArrayList<>(asList(
-			new BuiltinsModule(), 
-			new FilesystemModule(),
-			new NashornModule(),
-			new ProcessModule(),
-			new MustacheModule(),
-			new H2Module(),
-			new PostgresModule(),
-			new JsxModule(),
-			new CommonModule(),
-			new LessModule(),
-			new JadeModule(),
-			new SmtpModule(),
-			new JsonModule(),
-			new NetModule()))
-		.stream().map(m -> new ModuleMeta("snapshot", m)).collect(toList());
+		final Injector injector = Guice.createInjector(new RekaGuiceModule());
+		
+		List<ModuleMeta> defaultModules = asList(
+				BuiltinsModule.class,
+				FilesystemModule.class,
+				NashornModule.class,
+				ProcessModule.class,
+				MustacheModule.class,
+				H2Module.class,
+				PostgresModule.class,
+				JsxModule.class,
+				CommonModule.class,
+				LessModule.class,
+				JadeModule.class,
+				UseNetPlayModule.class,
+				SmtpModule.class,
+				JsonModule.class,
+				NetModule.class
+			).stream().map(c -> new ModuleMeta("snapshot", injector.getInstance(c))).collect(toList());
 		
 		NavigableConfig conf = new ModuleManager(defaultModules).processor().process(ConfigParser.fromFile(file));
 		configure(new RekaConfigurer(file.getParentFile().toPath(), defaultModules), conf).build().run();

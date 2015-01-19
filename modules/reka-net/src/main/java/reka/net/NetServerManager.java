@@ -49,15 +49,6 @@ import com.google.common.collect.ImmutableMap;
 
 public class NetServerManager {
 	
-	public static void main(String[] args) {
-		
-		Optional<String> a = Optional.of("name");
-		Optional<String> b = Optional.of("name");
-		
-		System.out.printf("a==b? : %s\n", a.equals(b));
-		
-	}
-	
 	private static final Logger log = LoggerFactory.getLogger(NetServerManager.class);
 
 	private final EventLoopGroup nettyEventGroup;
