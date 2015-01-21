@@ -75,6 +75,8 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
     	module.operation(path("halt!"), provider -> new HaltConfigurer());
     	module.operation(slashes("uuid/generate"), provider -> new GenerateUUIDConfigurer());
     	module.operation(path("println"), provider -> new PrintlnConfigurer());
+    	module.operation(path("uppercase"), provider -> new UppercaseConfigurer());
+    	module.operation(path("lowercase"), provider -> new LowercaseConfigurer());
     	module.operation(path("defer"), provider -> new DeferConfigurer(provider));
     	
     	module.operation(path("throw"), provider -> new ThrowConfigurer());
@@ -314,6 +316,73 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 		@Override
 		public void call(MutableData data) {
 			System.out.println(msg.apply(data));
+		}
+		
+	}
+	
+	public static class UppercaseConfigurer implements OperationConfigurer {
+		
+		private Path path;
+		
+		@Conf.Val
+		public void path(String val) {
+			path = dots(val);
+		}
+
+		@Override
+		public void setup(OperationSetup ops) {
+			ops.add("uppercase", store -> new UppercaseOperation(path));
+		}
+		
+	}
+	
+	public static class UppercaseOperation implements Operation {
+		
+		private final Path path;
+		
+		public UppercaseOperation(Path path) {
+			this.path = path;
+		}
+
+		@Override
+		public void call(MutableData data) {
+			data.getContent(path).ifPresent(content -> {
+				data.putString(path, content.asUTF8().toUpperCase());
+			});
+		}
+		
+	}
+
+	
+	public static class LowercaseConfigurer implements OperationConfigurer {
+		
+		private Path path;
+		
+		@Conf.Val
+		public void path(String val) {
+			path = dots(val);
+		}
+
+		@Override
+		public void setup(OperationSetup ops) {
+			ops.add("uppercase", store -> new LowercaseOperation(path));
+		}
+		
+	}
+	
+	public static class LowercaseOperation implements Operation {
+		
+		private final Path path;
+		
+		public LowercaseOperation(Path path) {
+			this.path = path;
+		}
+
+		@Override
+		public void call(MutableData data) {
+			data.getContent(path).ifPresent(content -> {
+				data.putString(path, content.asUTF8().toLowerCase());
+			});
 		}
 		
 	}

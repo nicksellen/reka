@@ -1,0 +1,21 @@
+
+test lowercase works {
+  run {
+    put:name NICK
+    lowercase name
+  }
+  expect {
+    name nick
+  }
+}
+
+
+test uppercase works {
+  run {
+    put:name nick
+    uppercase name
+  }
+  expect {
+    name NICK
+  }
+}
