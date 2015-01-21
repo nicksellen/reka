@@ -46,9 +46,10 @@ public class JsxModule implements Module {
 	
 	private static void initialize() {
 		try {
-			log.info("initializing jsx engine");
+			String version = "0.12.2";
+			log.info("initializing jsx engine ({})", version);
 			String init = Resources.toString(JsxModule.class.getResource("/env.js"), StandardCharsets.UTF_8);
-			String jsxTransformer = Resources.toString(JsxModule.class.getResource("/JSXTransformer-0.11.2.js"), StandardCharsets.UTF_8);
+			String jsxTransformer = Resources.toString(JsxModule.class.getResource("/JSXTransformer-" + version + ".js"), StandardCharsets.UTF_8);
 			runner = new SingleThreadedNashornRunner(asList(init, jsxTransformer));
 			String compiler = Resources.toString(JsxModule.class.getResource("/compiler.js"), StandardCharsets.UTF_8);
 			jsxCompiler = runner.compile(compiler);
