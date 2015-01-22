@@ -1,7 +1,6 @@
 package reka.jdbc;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 
 import reka.api.data.MutableData;
 import reka.core.setup.StatusDataProvider;
@@ -23,7 +22,7 @@ public class JdbcStatusProvider implements StatusDataProvider {
 		try (Connection connection = pool.getConnection()) {
 			connection.prepareCall(CHECK_CONNECTION_SQL).execute();
 			return true;
-		} catch (SQLException e) {
+		} catch (Throwable t) {
 			return false;
 		}
 	}
