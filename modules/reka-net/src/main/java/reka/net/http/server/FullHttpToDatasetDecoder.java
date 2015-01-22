@@ -52,6 +52,7 @@ public class FullHttpToDatasetDecoder extends MessageToMessageDecoder<FullHttpRe
 	private final Logger logger = LoggerFactory.getLogger(getClass().getSimpleName());
 
 	private static final Splitter hostSplitter = Splitter.on(":").limit(2);
+	private static final Splitter semicolonSplitter = Splitter.on(";").limit(2);
 	
 	@Override
 	protected void decode(ChannelHandlerContext ctx, FullHttpRequest request, List<Object> out) throws Exception {
@@ -121,6 +122,9 @@ public class FullHttpToDatasetDecoder extends MessageToMessageDecoder<FullHttpRe
 			
 			String requestContentType = request.headers().get(HttpHeaders.Names.CONTENT_TYPE);
 			if (requestContentType == null) requestContentType = "application/octet-stream";
+			
+			// just take the first bit if there is a semicolon, ignore the rest
+			requestContentType = semicolonSplitter.split(requestContentType).iterator().next();
 			
 			logger.debug("requestContentType: [{}]", requestContentType);
 			
