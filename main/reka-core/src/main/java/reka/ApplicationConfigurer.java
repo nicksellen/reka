@@ -322,9 +322,13 @@ public class ApplicationConfigurer implements ErrorReporter {
 				
 				// run tests!
 				
-				if (!tests.isEmpty()) {
+				int testCaseCount = (int)tests.values().stream().flatMap(t -> t.cases().stream()).count();
 				
-					CountDownLatch latch = new CountDownLatch(tests.size());
+				log.info("running {} tests", testCaseCount);
+				
+				if (testCaseCount > 0) {
+				
+					CountDownLatch latch = new CountDownLatch(testCaseCount);
 					
 					AtomicBoolean failed = new AtomicBoolean(false);
 					
@@ -332,43 +336,48 @@ public class ApplicationConfigurer implements ErrorReporter {
 					
 					tests.forEach((name, test) -> {
 						Flow flow = flows.flow(name);
-						MutableData initialData = MutableMemoryData.create();
-						initialData.merge(test.initial());
-						flow.run(executor, initialData, new Subscriber(){
-							
-							@Override
-							public void ok(MutableData data) {
-								try {
-									data.diffContentFrom(test.expect(), (path, type, expected, actual) -> {
-										if (type == DiffContentType.ADDED) return; // don't mind extra data for now...
-										Optional<Content> initvalue = test.initial().getContent(path);
-										if (!initvalue.isPresent() || !initvalue.get().equals(actual)) {
-											testErrors.add(format("content at %s %s - expected [%s] got [%s]", path.dots(), type, expected, actual));
-											failed.set(true);
-										}
-									});
-								} catch (Throwable t) {
-									t.printStackTrace();
-								} finally {
+						
+						test.cases().forEach(testCase -> {
+						
+							MutableData initialData = MutableMemoryData.create();
+							initialData.merge(testCase.initial());
+							flow.run(executor, initialData, new Subscriber(){
+								
+								@Override
+								public void ok(MutableData data) {
+									try {
+										data.diffContentFrom(testCase.expect(), (path, type, expected, actual) -> {
+											if (type == DiffContentType.ADDED) return; // don't mind extra data for now...
+											Optional<Content> initvalue = testCase.initial().getContent(path);
+											if (!initvalue.isPresent() || !initvalue.get().equals(actual)) {
+												testErrors.add(format("%s : %s\ncontent at %s %s - expected [%s] got [%s]", name.join(" / "), testCase.name(), path.dots(), type, expected, actual));
+												failed.set(true);
+											}
+										});
+									} catch (Throwable t) {
+										t.printStackTrace();
+									} finally {
+										latch.countDown();
+									}
+								}
+								
+								@Override
+								public void halted() {
+									log.error("test halted");
+									failed.set(true);
 									latch.countDown();
 								}
-							}
-							
-							@Override
-							public void halted() {
-								log.error("test halted");
-								failed.set(true);
-								latch.countDown();
-							}
-							
-							@Override
-							public void error(Data data, Throwable t) {
-								log.error("test failed to run", t);
-								failed.set(true);
-								latch.countDown();
-							}
-							
-						}, true);
+								
+								@Override
+								public void error(Data data, Throwable t) {
+									log.error("test failed to run", t);
+									failed.set(true);
+									latch.countDown();
+								}
+								
+							}, true);
+						
+						});
 					});
 					
 					if (!latch.await(10, TimeUnit.SECONDS)) {

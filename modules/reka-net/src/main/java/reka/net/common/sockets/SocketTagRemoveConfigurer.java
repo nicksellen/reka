@@ -11,14 +11,14 @@ import reka.core.setup.OperationSetup;
 import reka.core.util.StringWithVars;
 import reka.net.NetServerManager;
 
-public class SocketTagConfigurer implements OperationConfigurer {
+public class SocketTagRemoveConfigurer implements OperationConfigurer {
 
 	private final NetServerManager server;
 	
 	private Function<Data,String> idFn = StringWithVars.compile(":id");
 	private List<Function<Data,String>> tagFns = new ArrayList<>();
 	
-	public SocketTagConfigurer(NetServerManager server) {
+	public SocketTagRemoveConfigurer(NetServerManager server) {
 		this.server = server;
 	}
 	
@@ -34,7 +34,7 @@ public class SocketTagConfigurer implements OperationConfigurer {
 	
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("tag", store -> new SocketTagOperation(server, store.get(Sockets.SETTINGS), idFn, tagFns));
+		ops.add("tag/remove", store -> new SocketTagRemoveOperation(server, store.get(Sockets.SETTINGS), idFn, tagFns));
 	}
 	
 }

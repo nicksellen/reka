@@ -32,7 +32,8 @@ import reka.net.NetSettings.SslSettings;
 import reka.net.common.sockets.SocketBroadcastConfigurer;
 import reka.net.common.sockets.SocketSendConfigurer;
 import reka.net.common.sockets.SocketStatusProvider;
-import reka.net.common.sockets.SocketTagConfigurer;
+import reka.net.common.sockets.SocketTagAddConfigurer;
+import reka.net.common.sockets.SocketTagRemoveConfigurer;
 import reka.net.common.sockets.SocketTagSendConfigurer;
 import reka.net.common.sockets.Sockets;
 import reka.net.http.HostAndPort;
@@ -119,7 +120,8 @@ public class WebsocketConfigurer extends ModuleConfigurer {
 		
 		module.operation(path("send"), provider -> new SocketSendConfigurer(server));
 		module.operation(path("broadcast"), provider -> new SocketBroadcastConfigurer(server));
-		module.operation(path("tag"), provider -> new SocketTagConfigurer(server));
+		module.operation(path("tag/add"), provider -> new SocketTagAddConfigurer(server));
+		module.operation(path("tag/rm"), provider -> new SocketTagRemoveConfigurer(server));
 		module.operation(slashes("tag/send"), provider -> new SocketTagSendConfigurer(server));
 		
 		module.registerPortChecker(server.portChecker);

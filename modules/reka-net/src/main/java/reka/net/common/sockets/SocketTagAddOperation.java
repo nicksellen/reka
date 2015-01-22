@@ -10,14 +10,14 @@ import reka.net.ChannelAttrs;
 import reka.net.NetServerManager;
 import reka.net.NetSettings;
 
-public class SocketTagOperation implements Operation {
+public class SocketTagAddOperation implements Operation {
 
 	private final NetServerManager server;
 	private final Function<Data,String> idFn;
 	private final List<Function<Data,String>> tagFns;
 	private final NetSettings settings;
 	
-	public SocketTagOperation(NetServerManager server, NetSettings settings, Function<Data,String> idFn, List<Function<Data,String>> tagFns) {
+	public SocketTagAddOperation(NetServerManager server, NetSettings settings, Function<Data,String> idFn, List<Function<Data,String>> tagFns) {
 		this.server = server;
 		this.idFn = idFn;
 		this.tagFns = tagFns;
