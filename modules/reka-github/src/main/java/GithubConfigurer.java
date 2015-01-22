@@ -1,4 +1,3 @@
-import static java.lang.String.format;
 import static reka.config.configurer.Configurer.configure;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import static reka.util.Util.runtime;
@@ -8,14 +7,13 @@ import java.util.List;
 import java.util.function.Function;
 
 import reka.config.Config;
+import reka.config.configurer.annotations.Conf;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
 import reka.core.setup.OperationConfigurer;
 import reka.net.NetServerManager;
-import reka.net.NetSettings;
-import reka.config.configurer.annotations.Conf;
 
 public class GithubConfigurer extends ModuleConfigurer {
 	

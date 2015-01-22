@@ -9,6 +9,7 @@ import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.util.concurrent.GlobalEventExecutor;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -56,7 +57,9 @@ public class SocketHandler extends SimpleChannelInboundHandler<String> {
     @Override
     public void channelActive(final ChannelHandlerContext ctx) {
     	String id = UUID.randomUUID().toString();
-		ctx.channel().attr(ChannelAttrs.id).set(id);
+    	Channel channel = ctx.channel();
+		channel.attr(ChannelAttrs.id).set(id);
+		channel.attr(ChannelAttrs.tags).set(new HashSet<String>());
 		channels.add(ctx.channel());
 		trigger(onConnect, MutableMemoryData.create().putString("id", id), ctx);
     }

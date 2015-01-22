@@ -11,19 +11,19 @@ public class ChannelAttrs {
 	
 	public static final AttributeKey<String> host = AttributeKey.valueOf("host");
 	public static final AttributeKey<String> id = AttributeKey.valueOf("id");
-	public static final AttributeKey<Set<String>> topics = AttributeKey.valueOf("topics");
+	public static final AttributeKey<Set<String>> tags = AttributeKey.valueOf("tags");
 	
-	public static class ChannelTopicMatcher implements ChannelMatcher, Predicate<Channel>  {
+	public static class ChannelTagMatcher implements ChannelMatcher, Predicate<Channel>  {
 
-		private final String topic;
+		private final String tag;
 		
-		public ChannelTopicMatcher(String topic) {
-			this.topic = topic;
+		public ChannelTagMatcher(String tag) {
+			this.tag = tag;
 		}
 
 		@Override
 		public boolean matches(Channel channel) {
-			return channel.attr(ChannelAttrs.topics).get().contains(topic);
+			return channel.attr(ChannelAttrs.tags).get().contains(tag);
 		}
 		
 		@Override

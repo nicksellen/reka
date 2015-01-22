@@ -125,7 +125,7 @@ public class WebsocketHandler extends SimpleChannelInboundHandler<TextWebSocketF
 			
 			String id = UUID.randomUUID().toString();
 			channel.attr(ChannelAttrs.id).set(id);
-			channel.attr(ChannelAttrs.topics).set(new HashSet<String>());
+			channel.attr(ChannelAttrs.tags).set(new HashSet<String>());
 
 			log.debug("{} connected to host {}!", id, host);
 			

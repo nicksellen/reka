@@ -16,7 +16,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import reka.api.IdentityKey;
-import reka.api.Path;
 import reka.api.flow.Flow;
 import reka.config.Config;
 import reka.config.ConfigBody;
@@ -32,12 +31,10 @@ import reka.net.NetSettings.SslSettings;
 import reka.net.common.sockets.SocketBroadcastConfigurer;
 import reka.net.common.sockets.SocketSendConfigurer;
 import reka.net.common.sockets.SocketStatusProvider;
-import reka.net.common.sockets.SocketTopicSendConfigurer;
-import reka.net.common.sockets.SocketTopicSubscribeConfigurer;
+import reka.net.common.sockets.SocketTagConfigurer;
 import reka.net.common.sockets.Sockets;
 import reka.net.http.HostAndPort;
 import reka.net.http.SslConfigurer;
-import reka.net.http.WebsocketTopicConfigurer;
 
 public class WebsocketConfigurer extends ModuleConfigurer {
 	
@@ -57,8 +54,6 @@ public class WebsocketConfigurer extends ModuleConfigurer {
 	private final List<ConfigBody> onConnect = new ArrayList<>();
 	private final List<ConfigBody> onDisconnect = new ArrayList<>();
 	private final List<ConfigBody> onMessage = new ArrayList<>();
-	
-	private final List<WebsocketTopicConfigurer> topics = new ArrayList<>();
 
 	@Conf.Each("listen")
 	public void listen(String val) {
@@ -82,11 +77,6 @@ public class WebsocketConfigurer extends ModuleConfigurer {
 	@Conf.At("ssl")
 	public void ssl(Config config) {
 		ssl = configure(new SslConfigurer(), config).build();
-	}
-	
-	@Conf.Each("topic")
-	public void topic(Config config) {
-		topics.add(configure(new WebsocketTopicConfigurer(config.valueAsString()), config.body()));
 	}
 	
 	@Conf.Each("on")
@@ -127,6 +117,7 @@ public class WebsocketConfigurer extends ModuleConfigurer {
 		
 		module.operation(path("send"), provider -> new SocketSendConfigurer(server));
 		module.operation(path("broadcast"), provider -> new SocketBroadcastConfigurer(server));
+		module.operation(path("tag"), provider -> new SocketTagConfigurer(server));
 		
 		module.registerPortChecker(server.portChecker);
 		
@@ -135,12 +126,6 @@ public class WebsocketConfigurer extends ModuleConfigurer {
 		});
 		
 		module.status(store -> new SocketStatusProvider(server, store.get(Sockets.SETTINGS)));
-		
-		topics.forEach(topic -> {
-			Path base = path(topic.key());
-			module.operation(base, provider -> new SocketTopicSendConfigurer(server, topic.key()));
-			module.operation(base.add("subscribe"), provider -> new SocketTopicSubscribeConfigurer(server, topic.key()));
-		});
 		
 		Map<IdentityKey<Flow>,Function<ConfigurerProvider, OperationConfigurer>> triggers = new HashMap<>();
 		
