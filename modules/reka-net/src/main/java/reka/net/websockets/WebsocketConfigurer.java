@@ -2,6 +2,7 @@ package reka.net.websockets;
 
 import static java.lang.String.format;
 import static reka.api.Path.path;
+import static reka.api.Path.slashes;
 import static reka.config.configurer.Configurer.configure;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import static reka.util.Util.runtime;
@@ -32,6 +33,7 @@ import reka.net.common.sockets.SocketBroadcastConfigurer;
 import reka.net.common.sockets.SocketSendConfigurer;
 import reka.net.common.sockets.SocketStatusProvider;
 import reka.net.common.sockets.SocketTagConfigurer;
+import reka.net.common.sockets.SocketTagSendConfigurer;
 import reka.net.common.sockets.Sockets;
 import reka.net.http.HostAndPort;
 import reka.net.http.SslConfigurer;
@@ -118,6 +120,7 @@ public class WebsocketConfigurer extends ModuleConfigurer {
 		module.operation(path("send"), provider -> new SocketSendConfigurer(server));
 		module.operation(path("broadcast"), provider -> new SocketBroadcastConfigurer(server));
 		module.operation(path("tag"), provider -> new SocketTagConfigurer(server));
+		module.operation(slashes("tag/send"), provider -> new SocketTagSendConfigurer(server));
 		
 		module.registerPortChecker(server.portChecker);
 		
