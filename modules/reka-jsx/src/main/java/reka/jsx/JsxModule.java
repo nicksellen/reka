@@ -46,7 +46,7 @@ public class JsxModule implements Module {
 	
 	private static void initialize() {
 		try {
-			String version = "0.12.2";
+			String version = "0.11.2";
 			log.info("initializing jsx engine ({})", version);
 			String init = Resources.toString(JsxModule.class.getResource("/env.js"), StandardCharsets.UTF_8);
 			String jsxTransformer = Resources.toString(JsxModule.class.getResource("/JSXTransformer-" + version + ".js"), StandardCharsets.UTF_8);
