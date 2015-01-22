@@ -88,6 +88,8 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
     	module.operation(path("unzip"), provider -> new UnzipConfigurer());
     	module.operation(path("split"), provider -> new SplitConfigurer());
     	
+    	module.operation(path("match"), provider -> new MatchConfigurer(provider));
+    	
 	}
 	
 	public static class SplitConfigurer implements OperationConfigurer, ErrorReporter {
