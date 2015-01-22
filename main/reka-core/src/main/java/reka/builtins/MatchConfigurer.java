@@ -1,5 +1,6 @@
 package reka.builtins;
 
+import static reka.api.Path.path;
 import static reka.config.configurer.Configurer.configure;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 
@@ -9,8 +10,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
+import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.run.RouteCollector;
@@ -26,8 +28,12 @@ import reka.core.setup.OperationSetup;
 import reka.core.util.StringWithVars;
 
 public class MatchConfigurer implements OperationConfigurer {
+	
+	public static interface MatchThing {
+		boolean matches(String input, MutableData data);
+	}
 
-	public static class ExactValueMatcher implements Predicate<String> {
+	public static class ExactValueMatcher implements MatchThing {
 		
 		private final String value;
 		
@@ -36,8 +42,30 @@ public class MatchConfigurer implements OperationConfigurer {
 		}
 		
 		@Override
-		public boolean test(String input) {
+		public boolean matches(String input, MutableData data) {
 			return input.equals(value);
+		}
+		
+	}
+
+	public static class RegexValueMatcher implements MatchThing {
+		
+		private final Pattern pattern;
+		private final Path dest = path("matches");
+		
+		public RegexValueMatcher(Pattern pattern) {
+			this.pattern = pattern;
+		}
+		
+		@Override
+		public boolean matches(String input, MutableData data) {
+			java.util.regex.Matcher match = pattern.matcher(input);
+			if (!match.find()) return false;
+			data.putString(dest.add(0), match.group());
+			for (int i = 1; i <= match.groupCount(); i++) {
+				data.putString(dest.add(i), match.group(i));
+			}
+			return true;
 		}
 		
 	}
@@ -45,9 +73,9 @@ public class MatchConfigurer implements OperationConfigurer {
 	public static class Matcher {
 		
 		private final RouteKey key;
-		private final Predicate<String> matcher;
+		private final MatchThing matcher;
 		
-		public Matcher(RouteKey key, Predicate<String> matcher) {
+		public Matcher(RouteKey key, MatchThing matcher) {
 			this.key = key;
 			this.matcher = matcher;
 		}
@@ -56,7 +84,7 @@ public class MatchConfigurer implements OperationConfigurer {
 			return key;
 		}
 		
-		public Predicate<String> matcher() {
+		public MatchThing matcher() {
 			return matcher;
 		}
 		
@@ -85,7 +113,14 @@ public class MatchConfigurer implements OperationConfigurer {
 		addMatcher(val, new ExactValueMatcher(val), config.body());
 	}
 	
-	private void addMatcher(String name, Predicate<String> matcher, ConfigBody body) {
+	@Conf.Each("when/re")
+	public void whenRe(Config config) {
+		checkConfig(config.hasValue(), "must provide a regex value to match against");
+		String val = config.valueAsString();
+		addMatcher(val, new RegexValueMatcher(Pattern.compile(val)), config.body());
+	}
+	
+	private void addMatcher(String name, MatchThing matcher, ConfigBody body) {
 		RouteKey key = RouteKey.named(name);
 		matchers.add(new Matcher(key, matcher));
 		bodies.put(key, body);
@@ -122,7 +157,7 @@ public class MatchConfigurer implements OperationConfigurer {
 		@Override
 		public void call(MutableData data, RouteCollector router) {
 			String val = matchFn.apply(data);
-			Optional<Matcher> matcher = matchers.stream().filter(m -> m.matcher().test(val)).findFirst();
+			Optional<Matcher> matcher = matchers.stream().filter(m -> m.matcher().matches(val, data)).findFirst();
 			if (matcher.isPresent()) {
 				router.routeTo(matcher.get().key());
 			} else if (otherwise != null) {
