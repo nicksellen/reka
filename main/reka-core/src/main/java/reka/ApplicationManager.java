@@ -283,7 +283,7 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 		long eid = eventLogger.nextEventId();
 		Data data = incomingData.putLong("eid", eid).immutable();
 
-		log.info("emitting event {}: {}", type, data);
+		//log.info("emitting event {}: {}", type, data);
 		eventLogger.write(eid, type, data);
 		
 		listeners.forEach(listener -> {
