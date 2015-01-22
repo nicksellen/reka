@@ -1,6 +1,7 @@
 package reka.jdbc;
 
 import static reka.api.Path.path;
+import static reka.api.Path.root;
 import static reka.api.content.Contents.booleanValue;
 import static reka.api.content.Contents.integer;
 import static reka.api.content.Contents.longValue;
@@ -45,15 +46,17 @@ public class JdbcQuery implements Operation {
 	private final JdbcConfiguration config;
 	
 	private final StringWithVars query;
+	private final boolean first;
 	private final String queryWithPlaceholders;
 	private final JdbcConnectionProvider provider;
 	private final Path resultField;
 	
 	private volatile Meta meta;
 	
-	public JdbcQuery(JdbcConfiguration config, JdbcConnectionProvider provider, StringWithVars query, Path resultPath) {
+	public JdbcQuery(JdbcConfiguration config, JdbcConnectionProvider provider, StringWithVars query, boolean first, Path resultPath) {
 		this.config = config;
 		this.query = query;
+		this.first = first;
 		this.queryWithPlaceholders = query.withPlaceholder("?");
 		this.provider = provider;
 		this.resultField = resultPath;
@@ -173,21 +176,36 @@ public class JdbcQuery implements Operation {
 	private void handleResultSet(ResultSet result, MutableData data) throws SQLException {
 
 		Meta meta = meta(result);
-		Path tableName = meta.tablename;
-		
-		Path p = resultField.isEmpty() ? tableName : resultField;
 		
 		int columnCount = meta.count;
 		
-		data.putList(p, list -> {
-			while (result.next()) {
-				list.addMap(map -> {
+		if (first) {
+			
+			if (result.next()) {
+				data.putMap(root(), map -> {
 					for (int column = 1; column < columnCount + 1; column++) {
 						putResult(map, meta.keys[column], meta, result, column);
 					}
 				});
 			}
-		});
+			
+		} else {
+			
+			Path tableName = meta.tablename;
+			
+			Path p = resultField.isEmpty() ? tableName : resultField;
+			
+			data.putList(p, list -> {
+				while (result.next()) {
+					list.addMap(map -> {
+						for (int column = 1; column < columnCount + 1; column++) {
+							putResult(map, meta.keys[column], meta, result, column);
+						}
+					});
+				}
+			});
+		
+		}
 		
 	}
 	

@@ -114,7 +114,8 @@ public abstract class JdbcBaseModule extends ModuleConfigurer {
 		if (username == null) username = "sa";
 		if (password == null) password = "sa";
 		
-		module.operation(root(), provider -> new JdbcQueryConfigurer(config));
+		module.operation(root(), provider -> new JdbcQueryConfigurer(config, false));
+		module.operation(path("first"), provider -> new JdbcQueryConfigurer(config, true));
 		module.operation(path("insert"), provider -> new JdbcInsertConfigurer());
 		
 		module.setupInitializer(init -> {
