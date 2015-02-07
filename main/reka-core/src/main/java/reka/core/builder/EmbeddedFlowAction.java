@@ -29,17 +29,17 @@ public class EmbeddedFlowAction implements ActionHandler {
 				
 			@Override
 			public void ok(MutableData data) {
-				context.call(next, error, data);
+				context.handleAction(next, error, data);
 			}
 			
 			@Override
 			public void halted() {
-				halted.halted(context);
+				context.handleHalted(halted);
 			}
 			
 			@Override
 			public void error(Data data, Throwable t) {
-				error.error(data, context, t);
+				context.handleError(error, data, t);
 			}
 			
 		}, context.statsEnabled());	

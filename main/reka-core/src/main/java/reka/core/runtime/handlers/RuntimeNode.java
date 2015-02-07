@@ -35,7 +35,7 @@ public class RuntimeNode implements Node {
 
 	@Override
 	public void call(MutableData data, FlowContext context) {
-		context.call(next, error, data);
+		context.handleAction(next, error, data);
 	}
 
 	@Override

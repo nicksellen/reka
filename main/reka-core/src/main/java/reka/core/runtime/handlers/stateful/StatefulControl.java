@@ -77,7 +77,7 @@ public class StatefulControl implements ControlHandler {
 			mergedData.merge(it.next());
 		}
 		
-		context.call(next, error, mergedData);
+		context.handleAction(next, error, mergedData);
 	}
 
 

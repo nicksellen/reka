@@ -24,14 +24,12 @@ public class AsyncOperationAction implements ActionHandler {
 	
 				@Override
 				public void done() {
-					context.call(next, error, data);
+					context.handleAction(next, error, data);
 				}
 	
 				@Override
 				public void error(Throwable t) {
-					context.coordinationExecutor().execute(() -> {
-						error.error(data, context, t);
-					});
+					context.handleError(error, data, t);
 				}
 				
 			});

@@ -29,17 +29,17 @@ public class BackgroundAsyncOperationAction implements ActionHandler {
 		
 					@Override
 					public void done() {
-						context.call(next, error, data);
+						context.handleAction(next, error, data);
 					}
 		
 					@Override
 					public void error(Throwable t) {
-						error.error(data, context, t);
+						context.handleError(error, data, t);
 					}
 					
 				});
 			} catch (Throwable t) {
-				error.error(data, context, t);
+				context.handleError(error, data, t);
 			}
 		});
 	}

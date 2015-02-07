@@ -96,7 +96,7 @@ public class DefaultFlow implements Flow {
 	
 	@Override
 	public void run(ExecutorService operationExecutor, ExecutorService coordinationExecutor, MutableData data, Subscriber subscriber, boolean statsEnabled) {
-		DefaultFlowContext.create(id, operationExecutor, coordinationExecutor, subscriber, statsEnabled ? stats : null).call(head, (d, c, t) -> {
+		DefaultFlowContext.create(id, operationExecutor, coordinationExecutor, subscriber, statsEnabled ? stats : null).handleAction(head, (d, c, t) -> {
 			subscriber.error(d, t);
 		}, data);
 	}

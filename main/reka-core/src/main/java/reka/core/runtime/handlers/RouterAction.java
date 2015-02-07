@@ -38,26 +38,22 @@ public class RouterAction implements ActionHandler {
 
 	@Override
 	public void call(MutableData data, FlowContext context) {
-
-		RouteCollector collector = DefaultRouteCollector.create(keys);
 		
 		context.operationExecutor().execute(() -> {
+
+			RouteCollector collector = DefaultRouteCollector.create(keys);
 			
 			operation.call(data, collector);
-			
-			context.coordinationExecutor().execute(() -> {
 
-				boolean copy = collector.routed().size() > 1;
-	
-				for (NodeChild child : children) {
-					if (collector.routed().contains(child.key())) {
-						context.call(child.node(), error, copy ? data.mutableCopy() : data);
-					} else {
-						child.node().halted(context);
-					}
+			boolean copy = collector.routed().size() > 1;
+
+			for (NodeChild child : children) {
+				if (collector.routed().contains(child.key())) {
+					context.handleAction(child.node(), error, copy ? data.mutableCopy() : data);
+				} else {
+					context.handleHalted(child.node());
 				}
-			
-			});
+			}
 			
 		});
 

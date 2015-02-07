@@ -2,10 +2,12 @@ package reka.core.runtime;
 
 import static reka.util.Util.unchecked;
 
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+
 
 import reka.api.data.Data;
 import reka.api.data.MutableData;
@@ -13,6 +15,7 @@ import reka.api.flow.Flow.FlowStats;
 import reka.api.run.Subscriber;
 import reka.core.runtime.handlers.ActionHandler;
 import reka.core.runtime.handlers.ErrorHandler;
+import reka.core.runtime.handlers.HaltedHandler;
 import reka.core.runtime.handlers.stateful.DefaultNodeState;
 import reka.core.runtime.handlers.stateful.NodeState;
 
@@ -73,7 +76,7 @@ public class DefaultFlowContext implements FlowContext {
 	}
 
 	@Override
-	public void call(ActionHandler next, ErrorHandler error, MutableData data) {
+	public void handleAction(ActionHandler next, ErrorHandler error, MutableData data) {
 		coordinationExecutor.execute(() -> {
 			assert !done : "stop calling me, we're done!";
 			try {
@@ -81,6 +84,21 @@ public class DefaultFlowContext implements FlowContext {
 			} catch (Throwable t) {
 				error.error(data, this, t);
 			}
+		});
+	}
+
+
+	@Override
+	public void handleHalted(HaltedHandler halted) {
+		coordinationExecutor.execute(() -> {
+			halted.halted(this);
+		});
+	}
+
+	@Override
+	public void handleError(ErrorHandler error, Data data, Throwable t) {
+		coordinationExecutor.execute(() -> {
+			error.error(data, this, t);
 		});
 	}
 	

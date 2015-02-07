@@ -21,9 +21,9 @@ public class OperationAction implements ActionHandler {
 		context.operationExecutor().execute(() -> {
 			try {
 				operation.call(data);
-				context.call(next, error, data);
+				context.handleAction(next, error, data);
 			} catch (Throwable t) {
-				context.error(data, t);
+				context.handleError(error, data, t);
 			}
 		});
 	}

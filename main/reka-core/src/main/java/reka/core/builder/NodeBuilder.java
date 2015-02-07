@@ -104,26 +104,8 @@ class NodeBuilder {
         return this.listeners.stream().map(factory::get).collect(toList());
 	}
 	
-	private static class ContextHalted implements HaltedHandler {
-
-		@Override
-		public void halted(FlowContext context) {
-			context.halted();
-		}
-		
-	}
-	
-	private static class ContextError implements ErrorHandler {
-
-		@Override
-		public void error(Data data, FlowContext context, Throwable t) {
-			context.error(data, unwrap(t));
-		}
-		
-	}
-	
-	private static final HaltedHandler CONTEXT_HALTED = new ContextHalted();
-	private static final ErrorHandler CONTEXT_ERROR = new ContextError();
+	private static final HaltedHandler CONTEXT_HALTED = FlowContext.DEFAULT_HALTED_HANDLER;
+	private static final ErrorHandler CONTEXT_ERROR = FlowContext.DEFAULT_ERROR_HANDLER;
 	
 	private final <A extends B,B> List<B> listToList(List<A> a) {
 		List<B> b = new ArrayList<>();
