@@ -1,7 +1,6 @@
 package reka;
 
 import static reka.config.configurer.Configurer.configure;
-import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import static reka.core.config.ConfigUtils.configToData;
 import static reka.util.Util.unchecked;
 

@@ -9,16 +9,21 @@ import reka.core.runtime.handlers.ErrorHandler;
 import reka.core.runtime.handlers.stateful.NodeState;
 
 public interface FlowContext {
+	
+    ExecutorService operationExecutor();
+    ExecutorService coordinationExecutor();
+    
 	long flowId();
 	long started();
-    NodeState stateFor(int id);
-    ExecutorService executor();
-    void execute(Runnable runnable);
+	boolean statsEnabled();
+    
+    // call from any thread
 	void call(ActionHandler next, ErrorHandler error, MutableData data);
 	
+	// only call these from the coordinator thread
+    NodeState stateFor(int id);
     void error(Data data, Throwable t);
     void halted();
 	void end(MutableData data);
 	
-	boolean statsEnabled();
 }

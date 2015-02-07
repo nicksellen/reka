@@ -8,7 +8,8 @@ import reka.api.run.Subscriber;
 
 public interface FlowRun {
     FlowRun complete(Subscriber subscriber);
-    FlowRun executor(ExecutorService executor);
+    FlowRun operationExecutor(ExecutorService executor);
+    FlowRun coordinationExecutor(ExecutorService executor);
     FlowRun data(MutableData value);
     FlowRun stats(boolean enabled);
     void run();

@@ -25,9 +25,10 @@ public class PooledFlowContext implements FlowContext {
 		
 	};
 	
-	public static PooledFlowContext get(long flowId, ExecutorService executor, Subscriber subscriber) {
+	public static PooledFlowContext get(long flowId, ExecutorService operationExecutor, ExecutorService coordinationExecutor, Subscriber subscriber) {
 		PooledFlowContext ctx = RECYCLER.get();
-		ctx.executor = executor;
+		ctx.operationExecutor = operationExecutor;
+		ctx.coordinationExecutor = coordinationExecutor;
 		ctx.subscriber = subscriber;
 		ctx.flowId = flowId;
 		ctx.started = System.nanoTime();
@@ -41,7 +42,8 @@ public class PooledFlowContext implements FlowContext {
     public boolean recycle() {
     	states.values().forEach(PooledNodeState::recycle);
     	states.clear();
-    	executor = null;
+    	operationExecutor = null;
+    	coordinationExecutor = null;
 		subscriber = null;
 		flowId = -1;
 		started = -1;
@@ -49,7 +51,8 @@ public class PooledFlowContext implements FlowContext {
     }
 	
 	private long flowId;
-	private ExecutorService executor;
+	private ExecutorService operationExecutor;
+	private ExecutorService coordinationExecutor;
 	private Subscriber subscriber;
 	private long started;
 	
@@ -78,18 +81,19 @@ public class PooledFlowContext implements FlowContext {
 	}
 	
 	@Override
-    public ExecutorService executor() {
-		return executor;
+    public ExecutorService operationExecutor() {
+		return operationExecutor;
 	}
 
+	
 	@Override
-	public void execute(Runnable runnable) {
-		executor.execute(runnable);
+    public ExecutorService coordinationExecutor() {
+		return coordinationExecutor;
 	}
 
 	@Override
 	public void call(ActionHandler next, ErrorHandler error, MutableData data) {
-		execute(() -> {
+		coordinationExecutor.submit(() -> {
 			try {
 				next.call(data, this);
 			} catch (Throwable t) {

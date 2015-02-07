@@ -1,7 +1,10 @@
 package reka.core.runtime;
 
+import static reka.util.Util.unchecked;
+
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 
 import reka.api.data.Data;
@@ -14,67 +17,65 @@ import reka.core.runtime.handlers.stateful.DefaultNodeState;
 import reka.core.runtime.handlers.stateful.NodeState;
 
 public class DefaultFlowContext implements FlowContext {
-	
-	public static FlowContext create(long flowId, ExecutorService executor, Subscriber subscriber, FlowStats stats) {
-		return new DefaultFlowContext(flowId, executor, subscriber, stats);
+
+	public static FlowContext create(long flowId, ExecutorService operationExecutor, ExecutorService coordinationExecutor, 
+			                         Subscriber subscriber, FlowStats stats) {
+		return new DefaultFlowContext(flowId, operationExecutor, coordinationExecutor, subscriber, stats);
 	}
 
 	private final FlowStats stats;
-	private final ExecutorService executor;
-	private final Map<Integer,NodeState> states = new HashMap<>();
+	private final ExecutorService operationExecutor;
+	private final ExecutorService coordinationExecutor;
+	private final Map<Integer, NodeState> states = new HashMap<>();
 	private final Subscriber subscriber;
 	private final long flowId;
 	private final long started;
-	
+
 	private volatile boolean done = false;
-	
+
 	private final boolean statsEnabled;
-	
-	private DefaultFlowContext(long flowId, ExecutorService executor, Subscriber subscriber, FlowStats stats) {
-		this.executor = executor;
+
+	private volatile long threadId = -1; // only used when asserts are on
+
+	private DefaultFlowContext(long flowId, ExecutorService operationExecutor,
+			ExecutorService coordinationExecutor, Subscriber subscriber,
+			FlowStats stats) {
+		this.operationExecutor = operationExecutor;
+		this.coordinationExecutor = coordinationExecutor;
 		this.subscriber = subscriber;
 		this.flowId = flowId;
 		this.stats = stats;
 		this.statsEnabled = stats != null;
 		started = System.nanoTime();
-		if (statsEnabled) stats.requests.increment();	
+		if (statsEnabled) stats.requests.increment();
+		assert calculateThreadId();
+
 	}
 
-	@Override
-    public NodeState stateFor(int id) {
-		NodeState state = states.get(id);
-		if (state == null) {
-			state = DefaultNodeState.get();
-			states.put(id, state);
-		}
-		return state;
-	}
-	
 	@Override
 	public long flowId() {
 		return flowId;
 	}
-	
+
 	@Override
 	public long started() {
 		return started;
 	}
-	
+
 	@Override
-    public ExecutorService executor() {
-		return executor;
+	public ExecutorService operationExecutor() {
+		return operationExecutor;
 	}
 
 	@Override
-	public void execute(Runnable runnable) {
-		if (done) return;
-		executor.execute(runnable);
+	public ExecutorService coordinationExecutor() {
+		return coordinationExecutor;
 	}
 
 	@Override
 	public void call(ActionHandler next, ErrorHandler error, MutableData data) {
-		if (done) return;
-		execute(() -> {
+		coordinationExecutor.execute(() -> {
+			assert !done : "stop calling me, we're done!";
 			try {
 				next.call(data, this);
 			} catch (Throwable t) {
@@ -82,16 +83,29 @@ public class DefaultFlowContext implements FlowContext {
 			}
 		});
 	}
+	
+	@Override
+	public NodeState stateFor(int id) {
+		assert hasCorrectThread() : "wrong thread " + Thread.currentThread().getId() + " vs " + threadId;
+		NodeState state = states.get(id);
+		if (state == null) {
+			state = DefaultNodeState.get();
+			states.put(id, state);
+		}
+		return state;
+	}
 
 	@Override
 	public void end(MutableData data) {
+		assert hasCorrectThread() : "wrong thread " + Thread.currentThread().getId() + " vs " + threadId;
 		done = true;
 		subscriber.ok(data);
-		if (statsEnabled) stats.completed.increment();	
+		if (statsEnabled) stats.completed.increment();
 	}
 
 	@Override
 	public void error(Data data, Throwable t) {
+		assert hasCorrectThread() : "wrong thread " + Thread.currentThread().getId() + " vs " + threadId;
 		done = true;
 		subscriber.error(data, t);
 		if (statsEnabled) stats.errors.increment();
@@ -99,6 +113,7 @@ public class DefaultFlowContext implements FlowContext {
 
 	@Override
 	public void halted() {
+		assert hasCorrectThread();
 		done = true;
 		subscriber.halted();
 		if (statsEnabled) stats.halts.increment();
@@ -108,5 +123,23 @@ public class DefaultFlowContext implements FlowContext {
 	public boolean statsEnabled() {
 		return statsEnabled;
 	}
-	
+
+	private boolean hasCorrectThread() {
+		return Thread.currentThread().getId() == threadId;
+	}
+
+	private boolean calculateThreadId() {
+		CountDownLatch latch = new CountDownLatch(1);
+		coordinationExecutor.execute(() -> {
+			threadId = Thread.currentThread().getId();
+			latch.countDown();
+		});
+		try {
+			if (Thread.currentThread().getId() != threadId)	latch.await();
+		} catch (InterruptedException e) {
+			throw unchecked(e);
+		}
+		return true;
+	}
+
 }

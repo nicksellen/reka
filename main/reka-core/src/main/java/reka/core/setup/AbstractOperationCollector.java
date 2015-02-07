@@ -4,8 +4,8 @@ import static java.util.stream.Collectors.toList;
 import static reka.core.builder.FlowSegments.createLabelSegment;
 import static reka.core.builder.FlowSegments.createMetaSegment;
 import static reka.core.builder.FlowSegments.createNamedInputSegment;
-import static reka.core.builder.OperationFlowNode.createNode;
-import static reka.core.builder.OperationFlowNode.createRouterNode;
+import static reka.core.builder.OperationFlowNode.node;
+import static reka.core.builder.OperationFlowNode.routerNode;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -61,7 +61,7 @@ abstract class AbstractOperationCollector implements OperationSetup {
 			                           Function<IdentityStore,? extends RouterOperation> router, 
 			                           Consumer<RouterSetup> routes) {
 		
-		suppliers.add(() -> createRouterNode(basename.add(name).slashes(), () -> router.apply(store)));
+		suppliers.add(() -> routerNode(basename.add(name).slashes(), () -> router.apply(store)));
 		
 		parallel(par -> {
 			routes.accept(new RouterSetup(){
@@ -181,7 +181,7 @@ abstract class AbstractOperationCollector implements OperationSetup {
 	}
 
 	private void addNode(String name, Function<IdentityStore,? extends SimpleFlowOperation> c) {
-		add(() -> createNode(basename.add(name).slashes(), () -> c.apply(store)));
+		add(() -> node(basename.add(name).slashes(), () -> c.apply(store)));
 	}
 	
 	abstract FlowSegment build(Collection<FlowSegment> segments);

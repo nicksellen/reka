@@ -27,7 +27,7 @@ import com.google.common.collect.Iterables;
 public class FlowSegments extends AbstractFlowNode {
 	
 	public static FlowNode noop() {
-		return OperationFlowNode.createNoOp(); //(name, () -> NoOp.INSTANCE);
+		return OperationFlowNode.noop(); //(name, () -> NoOp.INSTANCE);
 	}
 	
 	public static FlowSegment seq(Collection<? extends FlowSegment> segments) {
@@ -36,6 +36,13 @@ public class FlowSegments extends AbstractFlowNode {
 
 	public static FlowSegment seq(FlowSegment first, FlowSegment... rest) {
 		return Sequential.of(first, rest);
+	}
+	
+	public static FlowSegment parallel(FlowSegment first, FlowSegment... rest) {
+		List<FlowSegment> list = new ArrayList<>(); 
+		list.addAll(asList(first));
+		list.addAll(asList(rest));
+		return createParallelSegment(list);
 	}
 	
 	public static FlowSegment createHalt() {
@@ -52,8 +59,11 @@ public class FlowSegments extends AbstractFlowNode {
 	}
 
 	public static FlowNode createStartNode(String name) {
-		//return OperationFlowNode.createNoOp().isStart(true);
-		return OperationFlowNode.createNode(name, () -> NoOp.INSTANCE).isStart(true);
+		return OperationFlowNode.node(name, () -> NoOp.INSTANCE).isStart(true);
+	}
+	
+	public static FlowNode createEndNode(String name) {
+		return OperationFlowNode.node(name, () -> NoOp.INSTANCE).isEnd(true);
 	}
 	
 	public static FlowNode createSubscribeableEndNode(String name) {

@@ -14,8 +14,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
@@ -43,7 +41,6 @@ import com.google.common.collect.Iterables;
 public class NashornConfigurer extends ModuleConfigurer {
 	
 	private static final Logger log = LoggerFactory.getLogger(NashornConfigurer.class);
-	private static final ExecutorService executor = Executors.newCachedThreadPool(); // TODO: remove this!
 
 	protected static final IdentityKey<NashornRunner> RUNNER = IdentityKey.named("nashorn runner");
 	
@@ -170,7 +167,7 @@ public class NashornConfigurer extends ModuleConfigurer {
 			
 			module.initflow(name, body, init -> {
 				log.debug("running init flow for {}", name);
-				init.flow().prepare().executor(executor).complete(data -> {
+				init.flow().prepare().complete(data -> {
 					log.debug("finished running init flow for {}", name);
 					init.store().put(key, data);
 					log.debug("put boo data");

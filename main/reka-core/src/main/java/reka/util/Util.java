@@ -19,8 +19,12 @@ import java.util.Base64;
 import java.util.Base64.Decoder;
 import java.util.Base64.Encoder;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -263,6 +267,27 @@ public class Util {
 			sha1.update(bs);
 			return hex(sha1.digest());
 		} catch (NoSuchAlgorithmException e) {
+			throw unchecked(e);
+		}
+	}
+	
+	public static boolean isSingleThreaded(ExecutorService executor) {
+		return countThreads(executor, 1000) == 1;
+	}
+	
+	public static int countThreads(ExecutorService executor, int n) {
+		Map<Long,Boolean> threadIds = new ConcurrentHashMap<>();
+		CountDownLatch latch = new CountDownLatch(n);
+		for (int i = 0; i < n; i++) {
+			executor.execute(() -> {
+				threadIds.put(Thread.currentThread().getId(), true);
+				latch.countDown();
+			});
+		}
+		try {
+			latch.await();
+			return threadIds.size();
+		} catch (InterruptedException e) {
 			throw unchecked(e);
 		}
 	}

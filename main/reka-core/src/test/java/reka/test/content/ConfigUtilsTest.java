@@ -20,7 +20,7 @@ public class ConfigUtilsTest {
 		Config c = config.at("john").get();
 		Data data = ConfigUtils.configToData(c.body());
 		
-		log.debug("turned [{}] into [{}]", config, data.toPrettyJson());
+		log.info("turned [{}] into [{}]", config, data.toPrettyJson());
 	}
 
 }

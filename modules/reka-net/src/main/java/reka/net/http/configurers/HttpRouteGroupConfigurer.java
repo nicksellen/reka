@@ -146,7 +146,7 @@ public class HttpRouteGroupConfigurer {
 		} else if (config.hasBody()) {
 			return configure(new SequenceConfigurer(provider), config);
 		} else {
-			return ops -> ops.add(() -> OperationFlowNode.createNoOp());
+			return ops -> ops.add(() -> OperationFlowNode.noop());
 		}
 	}
 	

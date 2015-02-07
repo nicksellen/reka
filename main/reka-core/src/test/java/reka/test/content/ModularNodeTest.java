@@ -33,6 +33,7 @@ import reka.core.runtime.handlers.ActionHandler;
 import reka.core.runtime.handlers.AsyncOperationAction;
 import reka.core.runtime.handlers.DSL;
 import reka.core.runtime.handlers.DoNothing;
+import reka.core.runtime.handlers.ErrorHandler;
 import reka.core.runtime.handlers.OperationAction;
 import reka.core.runtime.handlers.RuntimeNode;
 
@@ -56,16 +57,16 @@ public class ModularNodeTest {
 						  log.debug("it was called! with : {}\n", data.toPrettyJson());
 						  result.set(data);
 						  latch.countDown();
-					  })), DoNothing.INSTANCE, DoNothing.INSTANCE);
+					  }), DoNothing.INSTANCE), DoNothing.INSTANCE, DoNothing.INSTANCE);
 		
 		RouteKey somechild = RouteKey.named("some child");
 		
 		Node parent = new RuntimeNode(1, "parent", syncOperation((data) ->
 					data.putString(dots("example.from.parent"), "hello from parent"),
-					actionHandlers(asList(new NodeChild(child, false, somechild).node()), DoNothing.INSTANCE)), DoNothing.INSTANCE, DoNothing.INSTANCE);
+					actionHandlers(asList(new NodeChild(child, false, somechild).node()), DoNothing.INSTANCE), DoNothing.INSTANCE), DoNothing.INSTANCE, DoNothing.INSTANCE);
 		
 		parent.call(MutableMemoryData.create(), 
-					DefaultFlowContext.create(1, Executors.newCachedThreadPool(), Subscriber.DO_NOTHING, stats));
+					DefaultFlowContext.create(1, Executors.newCachedThreadPool(), Executors.newSingleThreadExecutor(), Subscriber.DO_NOTHING, stats));
 
 		if (latch.await(1, TimeUnit.SECONDS)) {
 			assertThat(result.get().getString(dots("example.from.child")).orElse("not found"), equalTo("hello from child"));
@@ -82,6 +83,7 @@ public class ModularNodeTest {
 		
 		final FlowStats stats = new FlowStats();
 		
+		final ExecutorService coordinator = Executors.newSingleThreadExecutor();
 		final ExecutorService executor = Executors.newCachedThreadPool();
 		final ExecutorService executor2 =Executors.newCachedThreadPool();
 		final AtomicReference<Data> result = new AtomicReference<>();
@@ -101,9 +103,9 @@ public class ModularNodeTest {
 		
 		Node parent = new RuntimeNode(1, "parent", syncOperation((data) ->
 					data.put(dots("example.from.parent"), utf8("hello from parent")),
-					actionHandlers(asList(new NodeChild(child, false, somechild).node()), DoNothing.INSTANCE)), DoNothing.INSTANCE, DoNothing.INSTANCE);
+					actionHandlers(asList(new NodeChild(child, false, somechild).node()), DoNothing.INSTANCE), DoNothing.INSTANCE), DoNothing.INSTANCE, DoNothing.INSTANCE);
 		
-		parent.call(MutableMemoryData.create(), DefaultFlowContext.create(1, executor, Subscriber.DO_NOTHING, stats));
+		parent.call(MutableMemoryData.create(), DefaultFlowContext.create(1, executor, coordinator, Subscriber.DO_NOTHING, stats));
 
 		
 
@@ -115,8 +117,8 @@ public class ModularNodeTest {
 		}
 	}
 	
-	public static OperationAction syncOperation(Operation operation, ActionHandler next) {
-		return new OperationAction(operation, next);
+	public static OperationAction syncOperation(Operation operation, ActionHandler next, ErrorHandler error) {
+		return new OperationAction(operation, next, error);
 	}
 
 }

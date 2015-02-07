@@ -20,7 +20,11 @@ public interface Flow extends Comparable<Flow> {
 
     FlowRun prepare();
     
-    void run(ExecutorService executor, MutableData data, Subscriber subscriber, boolean statsEnabled);
+    void run(ExecutorService operationExecutor, ExecutorService coordinationExecutor, MutableData data, Subscriber subscriber, boolean statsEnabled);
+
+    default void runWithSingleThreadedExecutor(ExecutorService singleThreadedCoordinator, MutableData data, Subscriber subscriber, boolean statsEnabled) {
+    	run(singleThreadedCoordinator, singleThreadedCoordinator, data, subscriber, statsEnabled);
+    }
     
     @Override
     default int compareTo(Flow o) {

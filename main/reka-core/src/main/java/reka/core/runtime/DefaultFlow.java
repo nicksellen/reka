@@ -15,8 +15,9 @@ public class DefaultFlow implements Flow {
 
 	private final FlowStats stats = new FlowStats();
 	private final static AtomicLong ids = new AtomicLong();
-	
-	private static final ExecutorService DEFAULT_EXECUTOR = Executors.newCachedThreadPool();
+
+	private static final ExecutorService DEFAULT_OPERATION_EXECUTOR = Executors.newCachedThreadPool();
+	private static final ExecutorService DEFAULT_COORDINATOR_EXECUTOR = Executors.newSingleThreadExecutor();
 	
 	private final long id;
 	private final Path name;
@@ -34,7 +35,8 @@ public class DefaultFlow implements Flow {
 		
 		private Subscriber subscriber;
 		private MutableData data;
-		private ExecutorService executor;
+		private ExecutorService operationExecutor;
+		private ExecutorService coordinationExecutor;
 		private boolean stats = true;
 		
 		@Override
@@ -44,8 +46,14 @@ public class DefaultFlow implements Flow {
 		}
 		
 		@Override
-        public FlowRun executor(ExecutorService executor) {
-			this.executor = executor;
+        public FlowRun operationExecutor(ExecutorService executor) {
+			this.operationExecutor = executor;
+			return this;
+		}
+		
+		@Override
+        public FlowRun coordinationExecutor(ExecutorService executor) {
+			this.coordinationExecutor = executor;
 			return this;
 		}
 		
@@ -64,9 +72,10 @@ public class DefaultFlow implements Flow {
 		@Override
         public void run() {
 			if (data == null) data = MutableMemoryData.create();
-			if (executor == null) executor = DEFAULT_EXECUTOR;
+			if (operationExecutor == null) operationExecutor = DEFAULT_OPERATION_EXECUTOR;
+			if (coordinationExecutor == null) coordinationExecutor = DEFAULT_COORDINATOR_EXECUTOR;
 			if (subscriber == null) subscriber = Subscriber.DO_NOTHING;
-			DefaultFlow.this.run(executor, data, subscriber, stats);
+			DefaultFlow.this.run(operationExecutor, coordinationExecutor, data, subscriber, stats);
 		}
 	}
 	
@@ -82,12 +91,12 @@ public class DefaultFlow implements Flow {
 	
 	@Override
 	public void run(Subscriber subscriber) {
-		run(DEFAULT_EXECUTOR, MutableMemoryData.create(), subscriber, true);
+		run(DEFAULT_OPERATION_EXECUTOR, DEFAULT_COORDINATOR_EXECUTOR, MutableMemoryData.create(), subscriber, true);
 	}
 	
 	@Override
-	public void run(ExecutorService executor, MutableData data, Subscriber subscriber, boolean statsEnabled) {
-		DefaultFlowContext.create(id, executor, subscriber, statsEnabled ? stats : null).call(head, (d, c, t) -> {
+	public void run(ExecutorService operationExecutor, ExecutorService coordinationExecutor, MutableData data, Subscriber subscriber, boolean statsEnabled) {
+		DefaultFlowContext.create(id, operationExecutor, coordinationExecutor, subscriber, statsEnabled ? stats : null).call(head, (d, c, t) -> {
 			subscriber.error(d, t);
 		}, data);
 	}

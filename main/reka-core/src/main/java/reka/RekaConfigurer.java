@@ -47,6 +47,7 @@ public class RekaConfigurer {
 		
 		private final URL url;
 		private final String classname;
+		@SuppressWarnings("unused")
 		private final String name;
 		private final String version;
 		

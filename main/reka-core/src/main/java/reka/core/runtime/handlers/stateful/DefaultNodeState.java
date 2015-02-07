@@ -1,6 +1,5 @@
 package reka.core.runtime.handlers.stateful;
 
-import static com.google.common.base.Preconditions.checkState;
 import static java.lang.String.format;
 
 import java.util.ArrayList;
@@ -27,9 +26,8 @@ public class DefaultNodeState implements NodeState {
 	
 	@Override
 	public NodeState initialize(int value) {
-		if (initialized) {
-			checkState(initial == value, "re-initialize with a different value !?");
-		} else {
+		assert !initialized || initial == value : "re-initialized with a different value !?";
+		if (!initialized) {
 			this.initial = value;
 			this.remaining = value;
 			initialized = true;
@@ -39,9 +37,9 @@ public class DefaultNodeState implements NodeState {
 	
 	@Override
     public void decrement() {
-		checkState(initialized, "you must initialize the state");
+		assert initialized : "you must initialize the state";
 		remaining -= 1;
-		checkState(remaining >= 0, "remaining must not go below zero");
+		assert remaining >= 0 : "remaining must not go below zero";
 		if (remaining == 0) {
 			if (atLeastOneThingArrived) {
 				lifecycle = Lifecycle.ACTIVE;

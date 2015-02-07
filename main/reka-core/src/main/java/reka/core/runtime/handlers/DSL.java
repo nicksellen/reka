@@ -23,7 +23,7 @@ public class DSL {
 	
 	public static ActionHandler op(FlowOperation operation, ActionHandler next, ErrorHandler error) {
 		if (operation instanceof Operation) {
-			return new OperationAction((Operation) operation, next);
+			return new OperationAction((Operation) operation, next, error);
 		} else if (operation instanceof AsyncOperation) {
 			return new AsyncOperationAction((AsyncOperation) operation, next, error);
 		} else if (operation instanceof NoOp) {
@@ -59,7 +59,7 @@ public class DSL {
 			return new EndAction();
 		} else {
 			throw new IllegalStateException(
-				format("was excepting this to be a DoNothing action, not %s", next.getClass()));
+				format("was expecting this to be a DoNothing action, not %s", next.getClass()));
 		}
 	}
 	

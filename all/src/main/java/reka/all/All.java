@@ -3,7 +3,6 @@ package reka.all;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static reka.config.configurer.Configurer.configure;
-import io.reka.usenetplay.UseNetPlayModule;
 
 import java.io.File;
 import java.util.List;
@@ -69,7 +68,7 @@ public class All {
 				CommonModule.class,
 				LessModule.class,
 				JadeModule.class,
-				UseNetPlayModule.class,
+				//UseNetPlayModule.class,
 				SmtpModule.class,
 				JsonModule.class,
 				NetModule.class

@@ -25,7 +25,7 @@ public class EmbeddedFlowAction implements ActionHandler {
 	
 	@Override
 	public void call(MutableData data, FlowContext context) {
-		flow.run(context.executor(), data, new Subscriber() {
+		flow.run(context.operationExecutor(), context.coordinationExecutor() , data, new Subscriber() {
 				
 			@Override
 			public void ok(MutableData data) {

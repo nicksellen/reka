@@ -19,18 +19,22 @@ public class AsyncOperationAction implements ActionHandler {
 	
 	@Override
 	public void call(MutableData data, FlowContext context) {
-		op.call(data, new OperationResult(){
-
-			@Override
-			public void done() {
-				context.call(next, error, data);
-			}
-
-			@Override
-			public void error(Throwable t) {
-				error.error(data, context, t);
-			}
-			
+		context.operationExecutor().execute(() -> {
+			op.call(data, new OperationResult(){
+	
+				@Override
+				public void done() {
+					context.call(next, error, data);
+				}
+	
+				@Override
+				public void error(Throwable t) {
+					context.coordinationExecutor().execute(() -> {
+						error.error(data, context, t);
+					});
+				}
+				
+			});
 		});
 	}
 

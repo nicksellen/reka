@@ -15,7 +15,7 @@ public interface MutableData extends Data, DataMutation<MutableData> {
 		return this;
 	}
 	
-	// TODO: actually set an immutable flag somewhere....
+	// TODO: actually set an immutable flag somewhere or actually put it into an immutable class....
 	default Data immutable() {
 		return this;
 	}

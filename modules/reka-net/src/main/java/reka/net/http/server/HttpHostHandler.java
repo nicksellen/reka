@@ -230,7 +230,7 @@ public class HttpHostHandler extends SimpleChannelInboundHandler<MutableData> {
 	}
 	
 	private void executeFlow(ChannelHandlerContext context, Flow flow, MutableData data, String host) {
-		flow.run(context.executor(), data, new ChannelHandlerContextDataSubscriber(context), true);
+		flow.run(context.executor(), context.executor(), data, new ChannelHandlerContextDataSubscriber(context), true);
 	}
 
 	private static String rootExceptionMessage(Throwable t) {

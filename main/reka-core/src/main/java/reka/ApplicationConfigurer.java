@@ -254,7 +254,7 @@ public class ApplicationConfigurer implements ErrorReporter {
 	    	// ok, initialize this thing!
 	    	
 	    	ApplicationInitializer appi = new ApplicationInitializer(future, identity, flowBuilders, applicationBuilder, initializer, tests);
-	    	initializer.flow().prepare().executor(executor).data(MutableMemoryData.create()).complete(appi).run();
+	    	initializer.flow().prepare().coordinationExecutor(executor).operationExecutor(executor).data(MutableMemoryData.create()).complete(appi).run();
     	
     	});
     }
@@ -341,7 +341,7 @@ public class ApplicationConfigurer implements ErrorReporter {
 						
 							MutableData initialData = MutableMemoryData.create();
 							initialData.merge(testCase.initial());
-							flow.run(executor, initialData, new Subscriber(){
+							flow.runWithSingleThreadedExecutor(executor, initialData, new Subscriber(){
 								
 								@Override
 								public void ok(MutableData data) {
