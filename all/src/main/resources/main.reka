@@ -72,7 +72,10 @@ app {
           	println I am printing
           	println I am printing some more
           	sleep 1s
-          	sleep 1s
+          	context sleeping {
+          		println I am printing in the new context!
+          		sleep 1s
+          	}
           	sleep 1s
           }
           put:response.content hey

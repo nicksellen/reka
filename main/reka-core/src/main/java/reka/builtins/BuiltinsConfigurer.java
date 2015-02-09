@@ -71,6 +71,7 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 		module.operation(path("copy"), provider -> new CopyConfigurer());
     	module.operation(path("run"), provider -> new RunConfigurer(provider));
     	module.operation(path("runp"), provider -> new RunParallelConfigurer(provider));
+    	module.operation(path("context"), provider -> new NewContextConfigurer(provider));
     	module.operation(path("then"), provider -> new RunConfigurer(provider));
     	module.operation(path("log"), provider -> new LogConfigurer());
     	module.operation(path("sleep"), provider -> new SleepConfigurer());
@@ -521,6 +522,36 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 			ops.parallel(par -> {
 				items.forEach(item -> par.add(item));
 			});
+		}
+		
+	}
+	
+	public static class NewContextConfigurer implements OperationConfigurer {
+		
+		private final ConfigurerProvider provider;
+
+		private OperationConfigurer configurer;
+		private String label;
+		
+		public NewContextConfigurer(ConfigurerProvider provider) {
+			this.provider = provider;
+		}
+		
+		@Conf.Val
+		public void label(String val) {
+			label = val;
+		}
+		
+		@Conf.Config
+		public void config(Config config) {
+			configurer = configure(new SequenceConfigurer(provider), config.body());
+		}
+
+		@Override
+		public void setup(OperationSetup ops) {
+			if (label != null) ops.label(label);
+			ops.useNewContext();
+			configurer.setup(ops);
 		}
 		
 	}
