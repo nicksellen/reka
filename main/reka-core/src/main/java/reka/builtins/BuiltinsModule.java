@@ -20,6 +20,7 @@ public class BuiltinsModule implements Module {
 	public void setup(ModuleDefinition module) {
 		
 		module.main(() -> new BuiltinsConfigurer());
+		
 		module.submodule(path("timer"), () -> new TimerConfigurer());
 		
 		// the ordering of these is very important! be careful :)

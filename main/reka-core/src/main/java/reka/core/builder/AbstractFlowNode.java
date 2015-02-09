@@ -10,7 +10,7 @@ import java.util.Set;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.flow.FlowConnection;
-import reka.api.flow.FlowDependency;
+import reka.api.flow.FlowReference;
 import reka.api.flow.FlowNode;
 import reka.api.flow.FlowSegment;
 import reka.api.run.RouteKey;
@@ -24,13 +24,13 @@ public class AbstractFlowNode implements FlowNode {
 	
 	private String name;
 	private OperationSupplier<?> supplier;
-	private FlowDependency embeddedFlowNode;
+	private FlowReference flowReferenceNode;
 	private boolean isStart = false;
 	private boolean isEnd = false;
 	private boolean isNoOp;
 	
-	protected AbstractFlowNode embeddedFlowNode(FlowDependency embeddedFlowNode) {
-		this.embeddedFlowNode = embeddedFlowNode;
+	protected AbstractFlowNode flowReferenceNode(FlowReference flowReferenceNode) {
+		this.flowReferenceNode = flowReferenceNode;
 		return this;
 	}
 	
@@ -121,13 +121,13 @@ public class AbstractFlowNode implements FlowNode {
 	}
 
 	@Override
-	public boolean hasEmbeddedFlow() {
-		return embeddedFlowNode != null;
+	public boolean hasFlowReference() {
+		return flowReferenceNode != null;
 	}
 
 	@Override
-	public FlowDependency embeddedFlowNode() {
-		return embeddedFlowNode;
+	public FlowReference flowReferenceNode() {
+		return flowReferenceNode;
 	}
 
 	@Override

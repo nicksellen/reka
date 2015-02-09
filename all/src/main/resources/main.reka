@@ -68,6 +68,13 @@ app {
   	  inspect
       http/router {
         GET / {
+          runp boo-yah {
+          	println I am printing
+          	println I am printing some more
+          	sleep 1s
+          	sleep 1s
+          	sleep 1s
+          }
           put:response.content hey
         }
       }

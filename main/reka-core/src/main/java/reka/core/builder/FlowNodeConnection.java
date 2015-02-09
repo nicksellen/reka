@@ -1,5 +1,6 @@
 package reka.core.builder;
 
+import static java.lang.String.format;
 import reka.api.flow.FlowNode;
 import reka.api.run.RouteKey;
 
@@ -35,6 +36,11 @@ public class FlowNodeConnection {
 	
 	public boolean optional() {
 		return optional;
+	}
+	
+	@Override
+	public String toString() {
+		return format("FlowNodeConnection(source=%s, destination=%s, key=%s, optional=%s", source, destination, key, optional);
 	}
 
 	@Override

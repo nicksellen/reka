@@ -7,8 +7,8 @@ public interface FlowNode extends FlowSegment {
 	boolean hasOperationSupplier();
     OperationSupplier<?> operationSupplier();
     
-	boolean hasEmbeddedFlow();
-	FlowDependency embeddedFlowNode();
+	boolean hasFlowReference();
+	FlowReference flowReferenceNode();
 	
 	boolean isNoOp();
 	

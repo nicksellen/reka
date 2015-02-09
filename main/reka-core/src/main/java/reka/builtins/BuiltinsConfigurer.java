@@ -26,11 +26,13 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.EmbeddedFlowConfigurer;
+import reka.FlowReferenceConfigurer;
 import reka.api.Path;
 import reka.api.Path.Response;
 import reka.api.content.Content;
@@ -428,11 +430,42 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 	
 	public static class SleepConfigurer implements OperationConfigurer {
 
+		private static final Pattern re = Pattern.compile("^([0-9]+(?:\\.[0-9]+)?)(ms|m|s)?$");
+		
 		private long ms = 1000L;
 		
 		@Conf.Val
 		public void timeout(String val) {
-			ms = Long.valueOf(val);
+			Matcher m = re.matcher(val);
+			if (!m.find()) invalidConfig("invalid sleep pattern, try something like 2.2s or 850ms");
+			String num = m.group(1);
+			String unit = m.group(2);
+			if (unit == null) unit = "ms";
+			if (num.contains(".")) {
+				double n = Double.valueOf(num);
+				switch (unit) {
+				case "m":
+					ms = Math.round(n * 1000 * 60);
+					break;
+				case "s":
+					ms = Math.round(n * 1000);
+					break;
+				default:
+					ms = Math.round(n);
+				}
+			} else {
+				long n = Long.valueOf(num);
+				switch (unit) {
+				case "m":
+					ms = n * 1000 * 60;
+					break;
+				case "s":
+					ms = n * 1000;
+					break;
+				default:
+					ms = n;
+				}
+			}
 		}
 		
 		@Override
@@ -465,8 +498,15 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 		
 		private final List<OperationConfigurer> items = new ArrayList<>();
 		
+		private String label;
+		
 		public RunParallelConfigurer(ConfigurerProvider provider) {
 			this.provider = provider;
+		}
+		
+		@Conf.Val
+		public void label(String val) {
+			label = val;
 		}
 		
 		@Conf.Each
@@ -477,6 +517,7 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 
 		@Override
 		public void setup(OperationSetup ops) {
+			if (label != null) ops.label(label);
 			ops.parallel(par -> {
 				items.forEach(item -> par.add(item));
 			});
@@ -548,7 +589,7 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 			if (config.hasBody()) {
 				configurer = configure(new SequenceConfigurer(provider), config);
 			} else if (config.hasValue()) {
-				configurer = new EmbeddedFlowConfigurer().name(config.valueAsString());
+				configurer = new FlowReferenceConfigurer().name(config.valueAsString());
 			} else {
 				invalidConfig("must have body or value");
 			}

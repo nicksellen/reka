@@ -25,7 +25,7 @@ import reka.api.data.Data;
 import reka.api.data.DiffContentConsumer;
 import reka.api.data.MutableData;
 import reka.api.flow.Flow;
-import reka.core.builder.FlowBuilders;
+import reka.core.builder.FlowBuilderGroup;
 import reka.core.data.memory.MutableMemoryData;
 
 public class FlowTest {
@@ -67,7 +67,7 @@ public class FlowTest {
 		
 		AtomicLong counter = new AtomicLong();
 		
-		Flow flow = FlowBuilders.createFlow(path("flow"), 
+		Flow flow = FlowBuilderGroup.createFlow(path("flow"), 
 			parallel(
 				operation("mutate1", data -> {
 					mutateData1(data);

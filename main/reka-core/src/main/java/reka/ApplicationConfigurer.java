@@ -46,7 +46,7 @@ import reka.config.Config;
 import reka.config.configurer.Configurer.ErrorCollector;
 import reka.config.configurer.ErrorReporter;
 import reka.config.configurer.annotations.Conf;
-import reka.core.builder.FlowBuilders;
+import reka.core.builder.FlowBuilderGroup;
 import reka.core.builder.FlowVisualizer;
 import reka.core.builder.Flows;
 import reka.core.config.MultiConfigurerProvider;
@@ -121,7 +121,7 @@ public class ApplicationConfigurer implements ErrorReporter {
     }
     
     public Collection<FlowVisualizer> visualize() {
-        FlowBuilders flowsBuilder = new FlowBuilders();
+        FlowBuilderGroup flowsBuilder = new FlowBuilderGroup();
     	ModuleInitializer initializer = ModuleConfigurer.buildInitializer(rootModule);
     	
     	MultiConfigurerProvider provider = new MultiConfigurerProvider(initializer.collector().providers);
@@ -209,8 +209,8 @@ public class ApplicationConfigurer implements ErrorReporter {
     public CompletableFuture<Application> build(String identity, int applicationVersion) {
     	return safelyCompletable(future -> {
     		
-    		FlowBuilders initflowBuilders = new FlowBuilders();
-    		FlowBuilders flowBuilders = new FlowBuilders();
+    		FlowBuilderGroup initflowBuilders = new FlowBuilderGroup();
+    		FlowBuilderGroup flowBuilders = new FlowBuilderGroup();
     		
 	    	ModuleInitializer initializer = ModuleConfigurer.buildInitializer(rootModule);
 	    	
@@ -264,11 +264,11 @@ public class ApplicationConfigurer implements ErrorReporter {
     	private final CompletableFuture<Application> future;
     	
     	private final String identity;
-    	private final FlowBuilders flowBuilders;
+    	private final FlowBuilderGroup flowBuilders;
     	
     	public ApplicationInitializer(
 				CompletableFuture<Application> future, String identity,
-				FlowBuilders flowBuilders,
+				FlowBuilderGroup flowBuilders,
 				ApplicationBuilder applicationBuilder,
 				ModuleInitializer initializer, Map<Path, FlowTest> tests) {
 			this.future = future;

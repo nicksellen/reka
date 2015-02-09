@@ -11,7 +11,6 @@ import static reka.core.runtime.handlers.DSL.haltedHandlers;
 import static reka.core.runtime.handlers.DSL.op;
 import static reka.core.runtime.handlers.DSL.routing;
 import static reka.util.Util.runtime;
-import static reka.util.Util.unwrap;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -21,7 +20,6 @@ import java.util.concurrent.ExecutorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.api.data.Data;
 import reka.api.flow.FlowNode;
 import reka.api.flow.FlowOperation;
 import reka.api.run.Execution;
@@ -151,7 +149,7 @@ class NodeBuilder {
 		
 		if (node.hasOperationSupplier()) {
 			operation = node.operationSupplier().get();	
-		} else if (!node.isNoOp() && !node.isEnd() && !node.hasEmbeddedFlow()) {
+		} else if (!node.isNoOp() && !node.isEnd() && !node.hasFlowReference()) {
 			throw new IllegalStateException(format("node [%s] must have supplier, be subscribable, or embedded flow reference", name()));
 		}
 
@@ -192,9 +190,9 @@ class NodeBuilder {
 					throw runtime("unknown executor group %s", execution.toString());
 				}
 				
-			} else if (node.hasEmbeddedFlow()) {
+			} else if (node.hasFlowReference()) {
 				sb.append("embedded ");
-				action = new EmbeddedFlowAction(factory.getFlow(node.embeddedFlowNode().flowName()), next, halted, error);
+				action = new EmbeddedFlowAction(factory.getFlow(node.flowReferenceNode().flowName()), next, halted, error);
 			} else {
 				action = next;
 			}

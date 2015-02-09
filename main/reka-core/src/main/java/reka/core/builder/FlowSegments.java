@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.util.Arrays.asList;
+import static reka.api.Path.path;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -54,8 +55,8 @@ public class FlowSegments extends AbstractFlowNode {
 		return new Parallel(items.toArray(new FlowSegment[items.size()]));
 	}
 	
-	public static FlowSegment embeddedFlow(String embeddedFlowName) {
-		return new EmbeddedFlowNode(embeddedFlowName, embeddedFlowName);
+	public static FlowSegment flowReference(String flowName) {
+		return new FlowReferenceNode(flowName, path(flowName));
 	}
 
 	public static FlowNode createStartNode(String name) {

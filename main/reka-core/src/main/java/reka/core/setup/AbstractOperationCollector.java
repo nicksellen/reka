@@ -33,6 +33,7 @@ abstract class AbstractOperationCollector implements OperationSetup {
 	private final List<Supplier<FlowSegment>> suppliers = new ArrayList<>();
 	
 	private String label;
+	private boolean newContext = false;
 	
 	public AbstractOperationCollector(Path basename, IdentityStore store) {
 		this.basename = basename;
@@ -42,6 +43,12 @@ abstract class AbstractOperationCollector implements OperationSetup {
 	@Override
 	public final OperationSetup label(String label) {
 		this.label = label;
+		return this;
+	}
+
+	@Override
+	public final OperationSetup useNewContext() {
+		this.newContext = true;
 		return this;
 	}
 	
@@ -172,6 +179,7 @@ abstract class AbstractOperationCollector implements OperationSetup {
 		FlowSegment segment = build(built);
 		if (meta.size() > 0) segment = createMetaSegment(segment, meta);
 		if (label != null && !label.isEmpty()) segment = createLabelSegment(label, segment);
+		if (newContext) segment = segment.withNewContext();
 		return segment;
 	}
 

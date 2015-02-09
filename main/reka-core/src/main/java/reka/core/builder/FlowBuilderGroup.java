@@ -2,13 +2,16 @@ package reka.core.builder;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static reka.core.builder.FlowConnector.connectSegments;
+import static java.util.Collections.unmodifiableCollection;
+import static reka.core.builder.FlowConnector.connectionsFor;
 import static reka.core.builder.FlowSegments.createStartNode;
 import static reka.core.builder.FlowSegments.createSubscribeableEndNode;
 import static reka.core.builder.FlowSegments.seq;
 import static reka.util.Util.runtime;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -16,6 +19,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import reka.api.Path;
 import reka.api.flow.Flow;
@@ -27,7 +33,9 @@ import reka.core.runtime.Node;
 
 import com.google.common.collect.ImmutableMap;
 
-public class FlowBuilders {
+public class FlowBuilderGroup {
+	
+	private final Logger log = LoggerFactory.getLogger(getClass());
 	
 	private static class BackgroundThreadFactory implements ThreadFactory {
 		
@@ -38,27 +46,26 @@ public class FlowBuilders {
 			  Thread t = new Thread(Thread.currentThread().getThreadGroup(), r,
                       "reka-background-" + threadNumber.getAndIncrement(),
                       0);
-				if (t.isDaemon())
-				    t.setDaemon(false);
-				if (t.getPriority() != Thread.NORM_PRIORITY)
-				    t.setPriority(Thread.NORM_PRIORITY);
+				if (t.isDaemon()) t.setDaemon(false);
+				if (t.getPriority() != Thread.NORM_PRIORITY) t.setPriority(Thread.NORM_PRIORITY);
 				return t;
 		}
 		
 	}
 	
+	// TODO: this definately shouldn't be in here! it's for tasks to run on in the background
 	private static final ExecutorService BACKGROUND_EXECUTOR = Executors.newCachedThreadPool(new BackgroundThreadFactory());
 	
 	private final Map<Path,FlowInfo> roots = new HashMap<>();
 	
 	public static Flow createFlow(Path name, FlowSegment segment) {
-		FlowBuilders b = new FlowBuilders();
+		FlowBuilderGroup b = new FlowBuilderGroup();
 		b.add(name, segment);
 		return b.build().flow(name);
 	}
 	
 	public static FlowVisualizer createVisualizer(Path name, FlowSegment segment) {
-		FlowBuilders builders = new FlowBuilders();
+		FlowBuilderGroup builders = new FlowBuilderGroup();
 		builders.add(name, segment);
 		return builders.buildVisualizersMaps().get(name);
 	}
@@ -123,7 +130,7 @@ public class FlowBuilders {
 		
 	}
 	
-	public FlowBuilders add(Path name, FlowSegment segment) {
+	public FlowBuilderGroup add(Path name, FlowSegment segment) {
 		checkState(!roots.containsKey(name), "duplicate root names not allows [%s is already registered]", name);
 		roots.put(name, new FlowInfo(name, segment));
 		return this;
@@ -135,7 +142,7 @@ public class FlowBuilders {
 	
 	public Flows build() {
 		
-		for (FlowInfo root : roots.values()) {
+		for (FlowInfo root : new ArrayList<>(roots.values())) {
 			createFlow(root, true);
 		}
 		
@@ -184,7 +191,14 @@ public class FlowBuilders {
 	private void createFlow(FlowInfo info, boolean buildFlow) {
 		if (info.built()) return;
 		
-		FlowConnector connections = connectSegments(info.segment());
+		FlowConnector connections = connectionsFor(info.name(), info.segment());
+		
+		for (Entry<Path, FlowSegment> e : connections.childContextSegments().entrySet()) {
+			add(e.getKey(), e.getValue());
+			//createFlow(new FlowInfo(e.getKey(), e.getValue()), buildFlow);
+		}
+		
+		log.info("building flow {}, conns: {}, nodes: {}", info.name, connections.connections().size(), connections.nodes().size());
 		
 		connectors.put(info.name(), connections);
 		
@@ -224,8 +238,8 @@ public class FlowBuilders {
 				type = NodeType.START;
 			} else if (node.isEnd()) {
 				type = NodeType.END;
-			} else if (node.hasEmbeddedFlow()) {
-				type = NodeType.EMBEDDED;
+			} else if (node.hasFlowReference()) {
+				type = NodeType.REFERENCE;
 			}
 			idToType.put(id, type);
 		}
@@ -278,7 +292,7 @@ public class FlowBuilders {
 		}
 		
 		if (current.optional() || 
-			current.builder().node().hasEmbeddedFlow() || 
+			current.builder().node().hasFlowReference() || 
 			current.builder().node().isEnd() ||
 			(trigger != null && hasMultipleParents)) {
 			// a node that needs to notify downstream nodes when it is halted

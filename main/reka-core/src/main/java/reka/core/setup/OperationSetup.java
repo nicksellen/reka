@@ -28,6 +28,7 @@ public interface OperationSetup extends Supplier<FlowSegment> {
 	MutableData meta();
 	
 	OperationSetup label(String label);
+	OperationSetup useNewContext();
 	
 	OperationSetup add(String name, Function<IdentityStore,? extends SimpleFlowOperation> store);
 	OperationSetup add(Supplier<FlowSegment> supplier);

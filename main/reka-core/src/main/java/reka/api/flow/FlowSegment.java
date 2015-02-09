@@ -16,6 +16,10 @@ public interface FlowSegment {
 	
 	boolean isNode();
 	
+	default boolean isNewContext() {
+		return false;
+	}
+	
 	Data meta();
 
     // all optional (well, should be)
@@ -23,5 +27,27 @@ public interface FlowSegment {
     RouteKey key();
     String label();
 	FlowNode node();
+	
+	default FlowSegment withNewContext() {
+		return new FlowSegmentProxy(this){
+
+			@Override
+			public boolean isNewContext() {
+				return true;
+			}
+			
+		};
+	}
+	
+	default FlowSegment clearNewContext() {
+		return new FlowSegmentProxy(this){
+
+			@Override
+			public boolean isNewContext() {
+				return false;
+			}
+			
+		};
+	}
 	
 }

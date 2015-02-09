@@ -11,7 +11,7 @@ public interface FlowVisualizer {
 	<T> T build(GraphVisualizer<T> graph);
 
 	public static enum NodeType {
-		NORMAL, START, END, EMBEDDED
+		NORMAL, START, END, REFERENCE
 	}
 	
 	public static interface GraphVisualizer <T> {
