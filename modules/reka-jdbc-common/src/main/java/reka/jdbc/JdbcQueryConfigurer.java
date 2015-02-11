@@ -16,13 +16,13 @@ public class JdbcQueryConfigurer implements OperationConfigurer {
 	private final JdbcConfiguration config;
 	private Path out = root();
 	
-	private boolean first = false;
+	private boolean firstOnly = false;
     
     private StringWithVars queryFn;
 	
-	public JdbcQueryConfigurer(JdbcConfiguration config,boolean first) {
+	public JdbcQueryConfigurer(JdbcConfiguration config,boolean firstOnly) {
 		this.config = config;
-		this.first = first;
+		this.firstOnly = firstOnly;
 	}
 	
 	@Conf.Config
@@ -54,7 +54,7 @@ public class JdbcQueryConfigurer implements OperationConfigurer {
 	@Override
 	public void setup(OperationSetup ops) {
 	    requireNonNull(queryFn, "you didn't pick a query!");
-		ops.add("run", store -> new JdbcQuery(config, store.get(POOL), queryFn, first, out));
+		ops.add("run", store -> new JdbcQuery(config, store.get(POOL), queryFn, firstOnly, out));
 	}
 
 }

@@ -46,17 +46,17 @@ public class JdbcQuery implements Operation {
 	private final JdbcConfiguration config;
 	
 	private final StringWithVars query;
-	private final boolean first;
+	private final boolean firstOnly;
 	private final String queryWithPlaceholders;
 	private final JdbcConnectionProvider provider;
 	private final Path resultField;
 	
 	private volatile Meta meta;
 	
-	public JdbcQuery(JdbcConfiguration config, JdbcConnectionProvider provider, StringWithVars query, boolean first, Path resultPath) {
+	public JdbcQuery(JdbcConfiguration config, JdbcConnectionProvider provider, StringWithVars query, boolean firstOnly, Path resultPath) {
 		this.config = config;
 		this.query = query;
-		this.first = first;
+		this.firstOnly = firstOnly;
 		this.queryWithPlaceholders = query.withPlaceholder("?");
 		this.provider = provider;
 		this.resultField = resultPath;
@@ -179,7 +179,7 @@ public class JdbcQuery implements Operation {
 		
 		int columnCount = meta.count;
 		
-		if (first) {
+		if (firstOnly) {
 			
 			if (result.next()) {
 				data.putMap(root(), map -> {
