@@ -527,10 +527,10 @@ public class MutableMemoryData implements MutableDataProvider<Object> {
 	
 	@SuppressWarnings("unchecked")
 	private Object get(Object obj, PathElement e) {
-		if (e.isIndex() && obj instanceof List) {
-			return listGet((List<Object>) obj, e.index());
-		} else if (e.isKey() && obj instanceof Map) {
+		if (e.isKey() && obj instanceof Map) {
 			return mapGet((Map<String,Object>) obj, e.name());
+		} else if (e.isIndex() && obj instanceof List) {
+			return listGet((List<Object>) obj, e.index());
 		} else if (e.isEmpty() && obj instanceof Content) {
 			return (Content) obj;
 		}
@@ -590,7 +590,7 @@ public class MutableMemoryData implements MutableDataProvider<Object> {
 		if (p.isEmpty()) return o;
 		
 		PathElement[] es = p.toArray();
-		root = ensureCorrectType(root, es[0]);
+		root = ensureCorrectTypeForElement(root, es[0]);
 		
 		Object obj = root, objNext;
 		PathElement elem = es[0], elemNext;
@@ -601,13 +601,12 @@ public class MutableMemoryData implements MutableDataProvider<Object> {
 
 			// TODO need to handle the case append=true here...
 			// it's not quite clear what you'd expect with append=true in the middle of your path?
-			
-			if (elemNext.isIndexical() && !(objNext instanceof List)) {
-				objNext = createList();
-				internalPutElement(obj, elem, objNext);
-			} else if (elemNext.isKey() && !(objNext instanceof Map)) {
+			if (elemNext.isKey() && !(objNext instanceof Map)) {
 				objNext = createMap();
 				internalPutElement(obj, elem, objNext);				
+			} else if (elemNext.isIndexical() && !(objNext instanceof List)) {
+				objNext = createList();
+				internalPutElement(obj, elem, objNext);
 			}
 			
 			obj = objNext;
@@ -623,26 +622,24 @@ public class MutableMemoryData implements MutableDataProvider<Object> {
 		return root;
 	}
 	
-	private Object ensureCorrectType(Object root, PathElement e) {
-		if (e.isIndex() && !(root instanceof List)) {
-			return createList();
-		} else if (e.isNextIndex() && !(root instanceof List)) {
-			return createList();
-		} else if (e.isKey() && !(root instanceof Map)) {
+	private Object ensureCorrectTypeForElement(Object obj, PathElement e) {
+		if (e.isKey() && !(obj instanceof Map)) {
 			return createMap();
-		}
-		return root;
+		} else if (e.isIndexical() && !(obj instanceof List)) {
+			return createList();
+		} 
+		return obj;
 	}
 	
 	@SuppressWarnings("unchecked")
 	private void internalPutElement(Object obj, PathElement e, Object o) {
 		// MUST have the correct obj for element type already
-		if (e.isIndex()) {
+		if (e.isKey()) {
+			mapPut((Map<String,Object>) obj, e.name(), o);
+		} else if (e.isIndex()) {
 			listSet((List<Object>) obj, e.index(), o);
 		} else if (e.isNextIndex()) {
 			listAdd((List<Object>) obj, o);
-		} else if (e.isKey()) {
-			mapPut((Map<String,Object>) obj, e.name(), o);
 		} else {
 			throw new IllegalArgumentException(format("can't put %s -> %s", e, o));
 		}
