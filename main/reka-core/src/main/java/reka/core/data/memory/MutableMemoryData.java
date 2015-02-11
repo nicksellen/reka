@@ -4,9 +4,7 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.range;
 import static reka.api.Path.dots;
-import static reka.api.Path.path;
 import static reka.api.Path.root;
-import static reka.api.Path.slashes;
 import static reka.api.Path.PathElements.nextIndex;
 import static reka.api.content.Contents.booleanValue;
 import static reka.api.content.Contents.doubleValue;
@@ -29,7 +27,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -157,7 +154,6 @@ public class MutableMemoryData implements MutableDataProvider<Object> {
 		AtomicInteger c = new AtomicInteger();
 		
 		MutableData d1 = MutableMemoryData.create();
-		MutableData d2 = MutableMemoryData.create();
 		
 		d1.putMap("person", m -> {
 			m.putString("name", "nick");
