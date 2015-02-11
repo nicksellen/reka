@@ -182,7 +182,7 @@ public class ApplicationManager implements Iterable<Entry<String,Application>>, 
 	
 	public int version(String identity) {
 		AtomicInteger v = versions.get(identity);
-		return v != null ? v.get() : -1;
+		return v != null ? v.get() : 0;
 	}
 	
 	public int nextVersion(String identity) {
@@ -269,7 +269,7 @@ public class ApplicationManager implements Iterable<Entry<String,Application>>, 
 
 		@Override
 		public void run(TaskResult res) {
-			int version = incomingVersion != -1 ? incomingVersion : nextVersion(identity);
+			int version = incomingVersion > 0 ? incomingVersion : nextVersion(identity);
 
 			Optional<Application> previous = Optional.ofNullable(applications.get(identity));
 			
@@ -308,7 +308,7 @@ public class ApplicationManager implements Iterable<Entry<String,Application>>, 
 							log.info("deployed [{}] listening on {}", app.fullName(), app.network().stream().map(Object::toString).collect(joining(", ")));
 							notifyDeployListeners(identity, app, reports);
 							subscriber.ok(identity, version, app);
-							versions.putIfAbsent(identity, new AtomicInteger());
+							versions.putIfAbsent(identity, new AtomicInteger(1));
 							versions.get(identity).set(version);
 						} else if (t != null) {
 							onError.accept(t);
