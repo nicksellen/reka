@@ -1,13 +1,26 @@
 package reka.util;
 
 import static java.util.Arrays.asList;
+import static reka.util.Util.unchecked;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 public interface AsyncShutdown {
+	
+	void shutdown(Result res);
+	default void shutdownAndWait() {
+		FutureResult f = resultFuture();
+		shutdown(f);
+		try {
+			f.future().get();
+		} catch (InterruptedException | ExecutionException e) {
+			throw unchecked(e);
+		}
+	}
 	
 	public static void shutdownAll(Collection<? extends AsyncShutdown> things, Result res) {
 		shutdownAll(things).whenComplete((nothing, t) -> {
@@ -86,7 +99,5 @@ public interface AsyncShutdown {
 	public static FutureResult resultFuture() {
 		return new FutureResult();
 	}
-	
-	void shutdown(Result res);
 	
 }

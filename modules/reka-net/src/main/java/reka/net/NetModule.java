@@ -32,7 +32,7 @@ public class NetModule implements Module {
 		module.submodule(slashes("http/sessions"), () -> new HttpSessionsConfigurer());
 		module.submodule(slashes("websockets"), () -> new WebsocketConfigurer(server));
 		module.submodule(slashes("socket"), () -> new SocketConfigurer(server));
-		module.onShutdown(res -> server.shutdown(res));
+		module.onShutdown(server::shutdown);
 		
 	}
 

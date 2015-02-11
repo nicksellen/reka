@@ -16,10 +16,12 @@ import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.epoll.EpollSocketChannel;
 import io.netty.channel.group.ChannelGroup;
+import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.util.concurrent.GlobalEventExecutor;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -62,6 +64,8 @@ public class NetServerManager {
 	
 	private final Class<? extends ServerChannel> nettyServerChannelType;
 	private final Class<? extends Channel> nettyClientChannelType;
+
+	private final ChannelGroup channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
 	
 	public NetServerManager() {
 		epoll = Epoll.isAvailable();
@@ -162,14 +166,14 @@ public class NetServerManager {
 
 		private PortHandler httpRemove(String host) {
 			if (httpHandler.remove(host)) {
-				if (isEmpty()) stop();
+				if (isEmpty()) shutdownAndWait();
 			}
 			return this;
 		}
 
 		private PortHandler websocketRemove(String host) {
 			if (websocketHandler.remove(host)) {
-				if (isEmpty()) stop();
+				if (isEmpty()) shutdownAndWait();
 			}
 			return this;
 		}
@@ -273,7 +277,7 @@ public class NetServerManager {
 			channels(settings, channels -> {
 				channels.disconnect();
 			});
-			stop();
+			shutdownAndWait();
 			return this;
 		}
 
@@ -291,7 +295,7 @@ public class NetServerManager {
 		
 	}
 	
-	private abstract class PortHandler {
+	private abstract class PortHandler implements AsyncShutdown {
 		
 		private final int port;
 		private final SslSettings sslSettings;
@@ -321,15 +325,19 @@ public class NetServerManager {
 			return sslSettings;
 		}
 		
-		protected void stop() {
+		public void shutdown(Result res) {
 			if (channel != null) {
-				try {
-					channel.close().sync();
+				channel.close().addListener(future -> {
 					log.info("closed port {}", port);
-				} catch (InterruptedException e) {
-					throw unchecked(e);
-				}
+					if (future.isSuccess()) {
+						res.complete();
+					} else {
+						res.completeExceptionally(future.cause());
+					}
+				});
 				channel = null;
+			} else {
+				res.complete();
 			}
 		}
 		
@@ -360,6 +368,8 @@ public class NetServerManager {
 			try {
 				
 				channel = bootstrap.bind().sync().channel();
+				
+				channels.add(channel);
 				
 				log.info("opened port {}", port);
 				
@@ -603,13 +613,18 @@ public class NetServerManager {
 	}
 
 	public void shutdown(AsyncShutdown.Result res) {
-		handlers.values().forEach(port -> port.stop());
-		nettyEventGroup.shutdownGracefully().addListener(future -> {
-			if (future.isSuccess()) {
-				res.complete();
-			} else {
-				res.completeExceptionally(future.cause());
-			}
+		channels.close().addListener(future1 -> {
+			
+			// just ignore the errors from the channels
+			
+			nettyEventGroup.shutdownGracefully().addListener(future2 -> {
+				if (future2.isSuccess()) {
+					res.complete();
+				} else {
+					res.completeExceptionally(future2.cause());
+				}
+			});
+			
 		});
 	}
 
