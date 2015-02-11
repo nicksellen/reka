@@ -47,7 +47,7 @@ public class UseNetPlayConfigurer extends ModuleConfigurer  {
 			reg.onPause(version -> server.pause(id, version));
 			reg.onResume(version -> server.resume(id, version));
 			
-			reg.network(port, settings.isSsl() ? "https" : "http", details -> {
+			reg.network(port, settings.protocolString(), details -> {
 				details.putString("host", addy);
 			});
 			

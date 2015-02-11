@@ -185,7 +185,7 @@ public class WebsocketConfigurer extends ModuleConfigurer {
 					reg.flowFor(message).ifPresent(flow -> ws.onMessage(flow));					
 				});
 				
-				reg.network(listen.port(), ssl != null ? "wss" : "ws", details -> {
+				reg.network(listen.port(), settings.protocolString(), details -> {
 					details.putString("host", listen.host());
 				});
 				

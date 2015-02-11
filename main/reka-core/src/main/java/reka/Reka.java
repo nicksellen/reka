@@ -8,8 +8,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
@@ -23,6 +26,7 @@ import reka.core.app.manager.ApplicationManager.DeploySubscriber;
 import reka.core.module.ModuleManager;
 import reka.dirs.AppDirs;
 import reka.dirs.BaseDirs;
+import reka.util.AsyncShutdown;
 
 public class Reka {
 	
@@ -54,8 +58,18 @@ public class Reka {
 			
 			@Override
 			public void run() {
-				manager.shutdown();
-				moduleManager.shutdown();
+				long started = System.nanoTime();
+				System.out.printf("shutdown started\n");
+				try {
+					AsyncShutdown.shutdownAll(manager, moduleManager).get(10, TimeUnit.SECONDS);
+					long took = (System.nanoTime() - started) / 1000000;
+					System.out.printf("shutdown complete after %dms\n", took);
+				} catch (InterruptedException | ExecutionException | TimeoutException e) {
+					long took = (System.nanoTime() - started) / 1000000;
+					System.err.printf("shutdown complete with error after %dms\n", took);
+				}
+				System.out.flush();
+				System.err.flush();
 			}
 			
 		});

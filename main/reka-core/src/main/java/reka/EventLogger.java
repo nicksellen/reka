@@ -6,7 +6,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.channels.FileChannel.MapMode;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -14,9 +16,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 
 import reka.api.data.Data;
-import reka.core.app.manager.ApplicationManager.EventType;
 
 public class EventLogger {
 
@@ -39,7 +41,7 @@ public class EventLogger {
 	private final FileOutputStream out;
 	private final FileChannel fc;
 	
-	private final AtomicLong eventid;
+	private volatile long eventid;
 	
 	public EventLogger(String path) {
 		try {
@@ -48,7 +50,7 @@ public class EventLogger {
 				out = new FileOutputStream(file, true);
 				fc = out.getChannel();
 				fc.lock(); // TODO: doesn't seem to do what I'm expecting!
-				eventid = new AtomicLong(findPreviousEventId());
+				eventid = findPreviousEventId();
 			}
 		} catch (IOException e) {
 			throw unchecked(e);
@@ -104,21 +106,19 @@ public class EventLogger {
 		}
 	}
 	
-	public long nextEventId() {
-		return eventid.incrementAndGet();
-	}
-	
-	public void write(long eid, EventType type, Data data) {
+	public long write(String type, Data data) {
 		try {
+			byte[] json = data.toJson().getBytes(StandardCharsets.UTF_8);
 			synchronized (lock) {
 				out.write(date);
 				out.write(SPACE);
-				out.write(Long.toString(eid).getBytes(StandardCharsets.UTF_8));
+				out.write(Long.toString(++eventid).getBytes(StandardCharsets.UTF_8));
 				out.write(SPACE);
-				out.write(type.toString().getBytes(StandardCharsets.UTF_8));
+				out.write(type.getBytes(StandardCharsets.UTF_8));
 				out.write(SPACE);
-				out.write(data.toJson().getBytes(StandardCharsets.UTF_8));
+				out.write(json);
 				out.write(NEWLINE);
+				return eventid;
 			}
 		} catch (IOException e) {
 			throw unchecked(e);

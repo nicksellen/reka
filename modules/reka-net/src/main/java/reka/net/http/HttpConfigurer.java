@@ -121,7 +121,7 @@ public class HttpConfigurer extends ModuleConfigurer {
 					reg.onPause(version -> server.pause(id, version));
 					reg.onResume(version -> server.resume(id, version));
 					
-					reg.network(listen.port(), settings.isSsl() ? "https" : "http", details -> {
+					reg.network(listen.port(), settings.protocolString(), details -> {
 						details.putString("host", listen.host());
 					});
 				

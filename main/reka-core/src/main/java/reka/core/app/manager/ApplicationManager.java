@@ -26,6 +26,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -38,7 +39,6 @@ import reka.EventLogger;
 import reka.Reka;
 import reka.admin.AdminUtils;
 import reka.api.Path;
-import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.flow.Flow;
 import reka.config.NavigableConfig;
@@ -53,11 +53,24 @@ import reka.core.setup.ModuleStatusReport;
 import reka.core.setup.StatusProvider;
 import reka.dirs.AppDirs;
 import reka.dirs.BaseDirs;
+import reka.util.AsyncShutdown;
 
-public class ApplicationManager implements Iterable<Entry<String,Application>> {
+public class ApplicationManager implements Iterable<Entry<String,Application>>, AsyncShutdown {
 
 	public static enum EventType {
+		
 		status, deploy, undeploy, system;
+		
+		private final String val;
+		
+		EventType() {
+			this.val = format("reka:%s", toString());
+		}
+		
+		public String val() {
+			return val;
+		}
+		
 	}
 	
 	public static interface DeploySubscriber {
@@ -100,12 +113,13 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 	private final BlockingDeque<AsyncApplicationTask> q = new LinkedBlockingDeque<>();
 	
 	private final AsyncApplicationTask UPDATE_STATUS = new UpdateStatus().async();
+	private final ScheduledFuture<?> scheduledStatus;
 
 	public ApplicationManager(BaseDirs dirs, ModuleManager moduleManager) {
 		this.basedirs = dirs;
 		this.moduleManager = moduleManager;
 		executor.submit(new WaitForNextTask());
-		Reka.SCHEDULED_SERVICE.scheduleAtFixedRate(() -> q.push(UPDATE_STATUS), 1, 1, TimeUnit.SECONDS);
+		scheduledStatus = Reka.SCHEDULED_SERVICE.scheduleAtFixedRate(() -> q.push(UPDATE_STATUS), 1, 1, TimeUnit.SECONDS);
 		emitSystemMessage("started");
 	}
 	
@@ -120,7 +134,7 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 	}
 	
 	public void undeploy(String identity) {
-		q.push(new UndeployApplication(identity).async());
+		q.push(new UndeployApplication(identity));
 	}
 	
 	public void addListener(Flow flow, EventType... eventTypes) {
@@ -199,7 +213,7 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 		
 	}
 	
-	private class UndeployApplication implements ApplicationTask {
+	private class UndeployApplication implements AsyncApplicationTask {
 		
 		private final String identity;
 		
@@ -208,14 +222,31 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 		}
 
 		@Override
-		public void run() {
-			Application app = applications.remove(identity);
-			versions.remove(identity);
-			if (app == null) return;
-			app.undeploy();
-			status.remove(identity);
-			log.info("undeployed [{}]", app.fullName());
-			notifyUndeployListeners(identity, app);
+		public void run(TaskResult res) {
+			Application app = applications.get(identity);
+			if (app == null) {
+				res.complete();
+				return;
+			};
+			app.shutdown(new Result(){
+
+				@Override
+				public void complete() {
+					status.remove(identity);
+					versions.remove(identity);
+					applications.remove(identity);
+					log.info("undeployed [{}]", app.fullName());
+					notifyUndeployListeners(identity, app);
+					res.complete();
+				}
+
+				@Override
+				public void completeExceptionally(Throwable t) {
+					// should I do anything here?
+					res.completeExceptionally(t);
+				}
+				
+			});
 		}
 		
 	}
@@ -334,17 +365,11 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 	}
 	
 	private void emit(EventType type, MutableData incomingData) {
-
-		// TODO: perhaps delegate this eventLogger business to a db...
-		
-		long eid = eventLogger.nextEventId();
-		Data data = incomingData.putLong("eid", eid).immutable();
-
-		eventLogger.write(eid, type, data);
-		
+		long eid = eventLogger.write(type.val, incomingData);
+		incomingData.putLong("eid", eid);
 		listeners.forEach(listener -> {
 			if (listener.types.contains(type)) {
-				listener.flow.prepare().mutableData(MutableMemoryData.from(data)).stats(false).run();
+				listener.flow.prepare().mutableData(MutableMemoryData.from(incomingData)).stats(false).run();
 			}
 		});
 		
@@ -355,10 +380,26 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 	}
 
 
-	public void shutdown() {
-		emitSystemMessage("shutting down");
-		applications.values().forEach(app -> app.undeploy());
-		emitSystemMessage("shutdown complete");
+	@Override
+	public void shutdown(AsyncShutdown.Result res) {
+		emitSystemMessage("shutting down manager");
+		AsyncShutdown.shutdownAll(applications.values(), new AsyncShutdown.Result() {
+
+			@Override
+			public void complete() {
+				scheduledStatus.cancel(true);
+				emitSystemMessage("manager shutdown complete");
+				res.complete();
+			}
+			
+			@Override
+			public void completeExceptionally(Throwable t) {
+				scheduledStatus.cancel(true);
+				emitSystemMessage("manager shutdown complete with error");
+				res.completeExceptionally(t);
+			}
+			
+		});
 	}
 	
 	private static interface TaskResult {

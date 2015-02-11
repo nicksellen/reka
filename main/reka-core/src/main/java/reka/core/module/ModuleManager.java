@@ -12,14 +12,16 @@ import reka.api.Path;
 import reka.config.processor.ConfigConverter;
 import reka.config.processor.MultiConverter;
 import reka.config.processor.Processor;
+import reka.util.AsyncShutdown;
 
-public class ModuleManager {
+
+public class ModuleManager implements AsyncShutdown {
 	
 	private final Set<ModuleMeta> modules = new HashSet<>();
 	
 	private final List<ModuleInfo> moduleInfos = new ArrayList<>();
 	private final List<ConfigConverter> converters = new ArrayList<>();
-	private final List<Runnable> shutdownHandlers = new ArrayList<>();
+	private final List<AsyncShutdown> shutdownHandlers = new ArrayList<>();
 	private final Set<PortChecker> portCheckers = new HashSet<>();
 	
 	public ModuleManager(Collection<ModuleMeta> incoming) {
@@ -68,8 +70,8 @@ public class ModuleManager {
 		return portCheckers;
 	}
 	
-	public void shutdown() {
-		shutdownHandlers.forEach(handler -> handler.run());
+	@Override
+	public void shutdown(AsyncShutdown.Result res) {
+		AsyncShutdown.shutdownAll(shutdownHandlers, res);
 	}
-
 }

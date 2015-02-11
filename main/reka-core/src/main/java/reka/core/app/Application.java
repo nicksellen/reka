@@ -2,10 +2,14 @@ package reka.core.app;
 
 import static java.lang.String.format;
 import static java.util.Comparator.naturalOrder;
+import static reka.util.Util.unchecked;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.IntConsumer;
 
@@ -17,8 +21,9 @@ import reka.core.builder.FlowVisualizer;
 import reka.core.builder.Flows;
 import reka.core.setup.NetworkInfo;
 import reka.core.setup.StatusProvider;
+import reka.util.AsyncShutdown;
 
-public class Application {
+public class Application implements AsyncShutdown {
 
 	private final Path name;
 	private final Data meta;
@@ -147,16 +152,6 @@ public class Application {
 		return names;
 	}
 	
-	public void undeploy() {
-		undeployConsumers.forEach(c -> { 
-			try {
-				c.accept(version);
-			} catch (Throwable t) {
-				t.printStackTrace();
-			}	
-		});
-	}
-	
 	public void pause() {
 		pauseConsumers.forEach(c -> { 
 			try {
@@ -175,6 +170,29 @@ public class Application {
 				t.printStackTrace();
 			}	
 		});
+	}
+	
+
+	public void undeploy() {
+		FutureResult f = AsyncShutdown.resultFuture();
+		shutdown(f);
+		try {
+			f.future().get(10, TimeUnit.SECONDS);
+		} catch (InterruptedException | ExecutionException | TimeoutException e) {
+			throw unchecked(e);
+		}
+	}
+
+	@Override
+	public void shutdown(Result res) {
+		undeployConsumers.forEach(c -> { 
+			try {
+				c.accept(version);
+			} catch (Throwable t) {
+				t.printStackTrace();
+			}	
+		});
+		res.complete();
 	}
 
 }

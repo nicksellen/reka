@@ -13,6 +13,7 @@ import reka.PortChecker;
 import reka.api.Path;
 import reka.config.processor.ConfigConverter;
 import reka.core.setup.ModuleConfigurer;
+import reka.util.AsyncShutdown;
 
 public class ModuleDefinition {
 	
@@ -21,7 +22,7 @@ public class ModuleDefinition {
 	
 	private final List<ModuleInfo> modules = new ArrayList<>();
 	private final List<ConfigConverter> converters = new ArrayList<>();
-	private final List<Runnable> shutdownHandlers = new ArrayList<>();
+	private final List<AsyncShutdown> shutdownHandlers = new ArrayList<>();
 	private final Set<PortChecker> portCheckers = new HashSet<>();
 	
 	public ModuleDefinition(Path base, String version) {
@@ -48,7 +49,7 @@ public class ModuleDefinition {
 		return this;
 	}
 
-	public void onShutdown(Runnable handler) {
+	public void onShutdown(AsyncShutdown handler) {
 		shutdownHandlers.add(handler);
 	}
 	
@@ -64,7 +65,7 @@ public class ModuleDefinition {
 		return portCheckers;
 	}
 	
-	protected Collection<Runnable> shutdownHandlers() {
+	protected Collection<AsyncShutdown> shutdownHandlers() {
 		return shutdownHandlers;
 	}
 

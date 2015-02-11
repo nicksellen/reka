@@ -1,6 +1,7 @@
 package reka.net;
 
 import static java.lang.String.format;
+import static reka.util.Util.runtime;
 
 import java.io.File;
 import java.io.IOException;
@@ -131,6 +132,27 @@ public class NetSettings {
 
 	public boolean isSsl() {
 		return sslSettings != null;
+	}
+	
+	public String protocolString() {
+		switch (type) {
+		case HTTP:
+			if (isSsl()) {
+				return "https";
+			} else {
+				return "http";
+			}
+		case WEBSOCKET:
+			if (isSsl()) {
+				return "wss";
+			} else {
+				return "ws";
+			}
+		case SOCKET:
+			return "socket";
+		default:
+			throw runtime("unknown protocol for %s", this);
+		}
 	}
 	
 	public SslSettings sslSettings() {

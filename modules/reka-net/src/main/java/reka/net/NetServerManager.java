@@ -44,6 +44,7 @@ import reka.net.http.server.HttpOrWebsocket;
 import reka.net.http.server.HttpsInitializer;
 import reka.net.socket.SocketHandler;
 import reka.net.websockets.WebsocketHandler;
+import reka.util.AsyncShutdown;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -601,13 +602,15 @@ public class NetServerManager {
 		
 	}
 
-	public void shutdown() {
+	public void shutdown(AsyncShutdown.Result res) {
 		handlers.values().forEach(port -> port.stop());
-		try {
-			nettyEventGroup.shutdownGracefully().await();
-		} catch (InterruptedException e) {
-			throw unchecked(e);
-		}
+		nettyEventGroup.shutdownGracefully().addListener(future -> {
+			if (future.isSuccess()) {
+				res.complete();
+			} else {
+				res.completeExceptionally(future.cause());
+			}
+		});
 	}
 
 	public final PortChecker portChecker = new PortChecker() {
