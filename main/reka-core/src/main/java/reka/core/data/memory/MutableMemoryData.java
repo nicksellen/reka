@@ -4,7 +4,9 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.range;
 import static reka.api.Path.dots;
+import static reka.api.Path.path;
 import static reka.api.Path.root;
+import static reka.api.Path.slashes;
 import static reka.api.Path.PathElements.nextIndex;
 import static reka.api.content.Contents.booleanValue;
 import static reka.api.content.Contents.doubleValue;
@@ -22,12 +24,12 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -125,6 +127,7 @@ public class MutableMemoryData implements MutableDataProvider<Object> {
 	
 	public static void main(String[] args) {
 		
+		/*
 		List<Data> reports = new ArrayList<>();
 		
 		reports.add(MutableMemoryData.create().putString("name", "first"));
@@ -147,7 +150,34 @@ public class MutableMemoryData implements MutableDataProvider<Object> {
 			System.out.printf("%s\n", path);
 		});
 		
-		//new MutableMemoryData().run();
+		 *
+		 */
+		
+		AtomicInteger c = new AtomicInteger();
+		
+		MutableData d1 = MutableMemoryData.create();
+		MutableData d2 = MutableMemoryData.create();
+		
+		d1.putMap("person", m -> {
+			m.putString("name", "nick");
+			m.putString("interests", "cycling");
+		});
+		
+		System.out.printf("%d: %s\n", c.incrementAndGet(), d1.toPrettyJson());
+		
+		d1.at(dots("person.interests")).forEachContent((path, content) -> {
+			System.out.printf("%s -> %s\n", path.dots(), content);
+		});
+		
+		d1.putOrAppend(dots("person.interests"), utf8("running"));
+		d1.putOrAppend(dots("person.interests[+].[+].[+].woah"), utf8("sprinting"));
+		
+		d1.at(dots("person.interests")).forEachContent((path, content) -> {
+			System.out.printf("%s -> %s\n", path.dots(), content);
+		});
+		
+		System.out.printf("%d: %s\n", c.incrementAndGet(), d1.toPrettyJson());
+		
 	}
 	
 	public void run() {
@@ -562,15 +592,16 @@ public class MutableMemoryData implements MutableDataProvider<Object> {
 		for (int i = 1; i < es.length; i++) {
 			objNext = get(obj, elem);
 			elemNext = es[i];
-			
+
 			// TODO need to handle the case append=true here...
+			// it's not quite clear what you'd expect with append=true in the middle of your path?
 			
 			if (elemNext.isIndexical() && !(objNext instanceof List)) {
 				objNext = createList();
-				put(obj, elem, objNext);
+				internalPutElement(obj, elem, objNext);
 			} else if (elemNext.isKey() && !(objNext instanceof Map)) {
 				objNext = createMap();
-				put(obj, elem, objNext);				
+				internalPutElement(obj, elem, objNext);				
 			}
 			
 			obj = objNext;
@@ -578,9 +609,9 @@ public class MutableMemoryData implements MutableDataProvider<Object> {
 		}
 		
 		if (append) {
-			putOrAppend(obj, es[es.length - 1], o);
+			internalPutOrAppendElement(obj, elem, o);
 		} else {
-			put(obj, es[es.length - 1], o);
+			internalPutElement(obj, elem, o);
 		}
 		
 		return root;
@@ -598,36 +629,31 @@ public class MutableMemoryData implements MutableDataProvider<Object> {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public Object put(Object root, PathElement e, Object o) {
-		if (e.isEmpty()) {
-			root = o;
-		} else if (e.isIndex()) {
-			if (!(root instanceof List)) root = createList();
-			listSet((List<Object>) root, e.index(), o);
+	private void internalPutElement(Object obj, PathElement e, Object o) {
+		// MUST have the correct obj for element type already
+		if (e.isIndex()) {
+			listSet((List<Object>) obj, e.index(), o);
 		} else if (e.isNextIndex()) {
-			if (!(root instanceof List)) root = createList();
-			listAdd((List<Object>) root, o);
+			listAdd((List<Object>) obj, o);
 		} else if (e.isKey()) {
-			if (!(root instanceof Map)) root = createMap();
-			mapPut((Map<String,Object>) root, e.name(), o);
+			mapPut((Map<String,Object>) obj, e.name(), o);
 		} else {
 			throw new IllegalArgumentException(format("can't put %s -> %s", e, o));
 		}
-		return root;
 	}
 	
-	private Object putOrAppend(Object obj, PathElement e, Object o) {
+	private void internalPutOrAppendElement(Object obj, PathElement e, Object o) {
+		// MUST have the correct obj for element type already
 		Object existing = get(obj, e);
 		if (existing instanceof List) {
-			put(existing, nextIndex(), o);
-			return obj;
+			internalPutElement(existing, nextIndex(), o);
 		} else if (existing != null) {
 			List<Object> l = createList();
 			l.add(existing);
 			l.add(o);
-			return put(obj, e, l);
+			internalPutElement(obj, e, l);
 		} else {
-			return put(obj, e, o);
+			internalPutElement(obj, e, o);
 		}
 	}
 	
