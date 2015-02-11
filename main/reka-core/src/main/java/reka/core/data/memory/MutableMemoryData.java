@@ -29,6 +29,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -175,8 +176,13 @@ public class MutableMemoryData implements MutableDataProvider<Object> {
 		d1.at(dots("person.interests")).forEachContent((path, content) -> {
 			System.out.printf("%s -> %s\n", path.dots(), content);
 		});
+
 		
 		System.out.printf("%d: %s\n", c.incrementAndGet(), d1.toPrettyJson());
+		
+		Data b = d1.at(dots("person.interests.nothing.here"));
+		
+		System.out.printf("b: %s\n", b.toPrettyJson());
 		
 	}
 	
@@ -555,7 +561,7 @@ public class MutableMemoryData implements MutableDataProvider<Object> {
 	public Object get(Object obj, Path p) {
 		for (PathElement e : p) {
 			obj = get(obj, e);
-			if (obj == null) break;
+			if (obj == null) return null;
 		}
 		return obj;
 	}
