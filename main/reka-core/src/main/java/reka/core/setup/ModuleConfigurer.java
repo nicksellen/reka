@@ -24,7 +24,6 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import reka.PortChecker;
 import reka.PortRequirement;
 import reka.api.IdentityStore;
 import reka.api.Path;
@@ -80,7 +79,6 @@ public abstract class ModuleConfigurer {
 		public final List<Runnable> shutdownHandlers;
 		public final List<Supplier<StatusProvider>> statuses;
 		public final List<Consumer<ApplicationCheck>> checks;
-		public final List<PortChecker> portCheckers;
 		public final List<PortRequirement> portRequirements;
 		
 		public ModuleCollector() {
@@ -90,7 +88,6 @@ public abstract class ModuleConfigurer {
 			shutdownHandlers = new ArrayList<>();
 			statuses = new ArrayList<>();
 			checks = new ArrayList<>();
-			portCheckers = new ArrayList<>();
 			portRequirements = new ArrayList<>();
 		}
 
@@ -101,7 +98,6 @@ public abstract class ModuleConfigurer {
 			this.shutdownHandlers = immutable(parent.shutdownHandlers);
 			this.statuses = immutable(parent.statuses);
 			this.checks = immutable(parent.checks);
-			this.portCheckers = immutable(parent.portCheckers);
 			this.portRequirements = immutable(parent.portRequirements);
 		}
 

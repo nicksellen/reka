@@ -1,4 +1,4 @@
-package reka;
+package reka.core.app;
 
 import java.util.ArrayList;
 import java.util.List;

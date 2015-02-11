@@ -1,4 +1,4 @@
-package reka;
+package reka.core.app;
 
 import static java.lang.String.format;
 import static java.util.Comparator.naturalOrder;

@@ -1,9 +1,9 @@
 package reka.admin;
 
 import static reka.api.Path.dots;
-import reka.ApplicationManager;
 import reka.api.Path;
 import reka.config.configurer.annotations.Conf;
+import reka.core.app.manager.ApplicationManager;
 import reka.core.setup.OperationConfigurer;
 import reka.core.setup.OperationSetup;
 

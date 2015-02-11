@@ -3,9 +3,9 @@ package reka.admin;
 import java.util.List;
 import java.util.Optional;
 
-import reka.Application;
-import reka.ApplicationManager;
 import reka.api.data.MutableData;
+import reka.core.app.Application;
+import reka.core.app.manager.ApplicationManager;
 import reka.core.runtime.NoFlowVisualizer;
 import reka.core.setup.ModuleStatusReport;
 

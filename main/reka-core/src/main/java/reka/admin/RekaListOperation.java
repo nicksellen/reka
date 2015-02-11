@@ -1,10 +1,10 @@
 package reka.admin;
 
-import reka.Application;
-import reka.ApplicationManager;
 import reka.api.Path;
 import reka.api.data.MutableData;
 import reka.api.run.Operation;
+import reka.core.app.Application;
+import reka.core.app.manager.ApplicationManager;
 import reka.core.data.memory.MutableMemoryData;
 
 

@@ -96,7 +96,7 @@ public class ProcessConfigurer extends ModuleConfigurer {
 				ProcessManager manager = registration.store().get(PROCESS_MANAGER);
 				
 				manager.addListener(line -> {
-					flow.prepare().data(MutableMemoryData.create().putString("out", line)).run();
+					flow.prepare().mutableData(MutableMemoryData.create().putString("out", line)).run();
 				});
 				
 			});

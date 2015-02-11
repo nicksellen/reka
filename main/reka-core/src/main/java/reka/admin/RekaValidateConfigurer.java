@@ -6,11 +6,11 @@ import static reka.util.Util.runtime;
 import java.util.UUID;
 import java.util.function.Function;
 
-import reka.ApplicationManager;
 import reka.api.data.Data;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
+import reka.core.app.manager.ApplicationManager;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.core.setup.OperationConfigurer;

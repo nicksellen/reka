@@ -82,7 +82,7 @@ public class SocketHandler extends SimpleChannelInboundHandler<String> {
 	
     private void trigger(List<Flow> flows, Data data, ChannelHandlerContext ctx) {
     	for (Flow flow : flows) {
-    		flow.prepare().data(MutableMemoryData.from(data)).complete(resultData -> {
+    		flow.prepare().mutableData(MutableMemoryData.from(data)).complete(resultData -> {
 				resultData.getContent("reply").ifPresent(content -> {
 					ctx.channel().writeAndFlush(content.asUTF8());
 				});

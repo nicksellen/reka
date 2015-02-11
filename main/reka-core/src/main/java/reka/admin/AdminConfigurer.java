@@ -12,8 +12,6 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.ApplicationManager;
-import reka.ApplicationManager.EventType;
 import reka.api.Path;
 import reka.api.content.Content;
 import reka.api.data.Data;
@@ -28,6 +26,8 @@ import reka.config.processor.DocumentationConverter;
 import reka.config.processor.IncludeConverter;
 import reka.config.processor.MultiConverter;
 import reka.config.processor.Processor;
+import reka.core.app.manager.ApplicationManager;
+import reka.core.app.manager.ApplicationManager.EventType;
 import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
 

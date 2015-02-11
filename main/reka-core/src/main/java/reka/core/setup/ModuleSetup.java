@@ -16,7 +16,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import reka.PortChecker;
 import reka.PortRequirement;
 import reka.api.IdentityKey;
 import reka.api.IdentityStore;
@@ -127,11 +126,6 @@ public class ModuleSetup {
 
 	public ModuleSetup check(Consumer<ApplicationCheck> check) {
 		collector.checks.add(check);
-		return this;
-	}
-	
-	public ModuleSetup registerPortChecker(PortChecker checker) {
-		collector.portCheckers.add(checker);
 		return this;
 	}
 	

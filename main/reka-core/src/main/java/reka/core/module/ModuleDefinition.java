@@ -3,9 +3,13 @@ package reka.core.module;
 import static reka.api.Path.root;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 
+import reka.PortChecker;
 import reka.api.Path;
 import reka.config.processor.ConfigConverter;
 import reka.core.setup.ModuleConfigurer;
@@ -18,6 +22,7 @@ public class ModuleDefinition {
 	private final List<ModuleInfo> modules = new ArrayList<>();
 	private final List<ConfigConverter> converters = new ArrayList<>();
 	private final List<Runnable> shutdownHandlers = new ArrayList<>();
+	private final Set<PortChecker> portCheckers = new HashSet<>();
 	
 	public ModuleDefinition(Path base, String version) {
 		this.base = base;
@@ -37,20 +42,29 @@ public class ModuleDefinition {
 		converters.add(converter);
 		return this;
 	}
+	
+	public ModuleDefinition registerPortChecker(PortChecker checker) {
+		this.portCheckers.add(checker);
+		return this;
+	}
 
 	public void onShutdown(Runnable handler) {
 		shutdownHandlers.add(handler);
 	}
 	
-	protected List<ModuleInfo> modules() {
+	protected Collection<ModuleInfo> modules() {
 		return modules;
 	}
 	
-	protected List<ConfigConverter> converters() {
+	protected Collection<ConfigConverter> converters() {
 		return converters;
 	}
 	
-	protected List<Runnable> shutdownHandlers() {
+	protected Collection<PortChecker> portCheckers() {
+		return portCheckers;
+	}
+	
+	protected Collection<Runnable> shutdownHandlers() {
 		return shutdownHandlers;
 	}
 

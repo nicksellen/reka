@@ -2,10 +2,10 @@ package reka.admin;
 
 import java.util.function.Function;
 
-import reka.ApplicationManager;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.run.Operation;
+import reka.core.app.manager.ApplicationManager;
 import reka.dirs.AppDirs;
 import reka.dirs.BaseDirs;
 

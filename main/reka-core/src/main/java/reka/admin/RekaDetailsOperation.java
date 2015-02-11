@@ -2,11 +2,11 @@ package reka.admin;
 
 import java.util.function.Function;
 
-import reka.ApplicationManager;
 import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.run.Operation;
+import reka.core.app.manager.ApplicationManager;
 
 public class RekaDetailsOperation implements Operation {
 	

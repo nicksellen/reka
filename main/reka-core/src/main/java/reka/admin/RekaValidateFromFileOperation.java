@@ -8,7 +8,6 @@ import static reka.api.Path.PathElements.nextIndex;
 import java.io.File;
 import java.util.function.Function;
 
-import reka.ApplicationManager;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.run.RouteCollector;
@@ -18,6 +17,7 @@ import reka.config.FileSource;
 import reka.config.Source;
 import reka.config.SourceLinenumbers;
 import reka.config.configurer.Configurer.InvalidConfigurationException;
+import reka.core.app.manager.ApplicationManager;
 import reka.util.Util;
 
 public class RekaValidateFromFileOperation implements RouterOperation {

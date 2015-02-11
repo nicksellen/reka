@@ -15,8 +15,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-import reka.ApplicationManager.EventType;
 import reka.api.data.Data;
+import reka.core.app.manager.ApplicationManager.EventType;
 
 public class EventLogger {
 

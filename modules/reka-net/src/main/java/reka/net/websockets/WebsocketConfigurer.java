@@ -124,8 +124,6 @@ public class WebsocketConfigurer extends ModuleConfigurer {
 		module.operation(slashes("tag/rm"), provider -> new SocketTagRemoveConfigurer(server));
 		module.operation(slashes("tag/send"), provider -> new SocketTagSendConfigurer(server));
 		
-		module.registerPortChecker(server.portChecker);
-		
 		listens.forEach(listen -> {
 			module.requirePort(listen.port(), Optional.of(listen.host()));	
 		});

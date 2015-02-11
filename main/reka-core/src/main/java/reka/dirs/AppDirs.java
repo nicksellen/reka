@@ -1,8 +1,8 @@
 package reka.dirs;
 
 import static java.lang.String.format;
-import static reka.util.Util.decode64;
-import static reka.util.Util.encode64;
+import static reka.util.Util.decode32;
+import static reka.util.Util.encode32;
 import static reka.util.Util.unchecked;
 
 import java.io.IOException;
@@ -11,7 +11,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
-import reka.IdentityAndVersion;
+import reka.core.app.IdentityAndVersion;
 
 public class AppDirs extends AbstractDirs implements Dirs {
 	
@@ -20,11 +20,11 @@ public class AppDirs extends AbstractDirs implements Dirs {
 	}
 	
 	public static String dirnameFor(String identity) {
-		return format("%s", encode64(identity));
+		return format("%s", encode32(identity));
 	}
 	
 	public static String toDir(IdentityAndVersion identityAndVersion) {
-		return format("%s/%d", encode64(identityAndVersion.identity()), identityAndVersion.version());
+		return format("%s/%d", encode32(identityAndVersion.identity()), identityAndVersion.version());
 	}
 	
 	public static Map<IdentityAndVersion,Path> listApps(BaseDirs dirs) {
@@ -32,7 +32,7 @@ public class AppDirs extends AbstractDirs implements Dirs {
 		Map<String,java.nio.file.Path> appPaths = new HashMap<>();
 		try {
 			Files.list(dirs.app()).forEach(identityPath -> {
-				String identity = decode64(identityPath.getFileName().toString());
+				String identity = decode32(identityPath.getFileName().toString());
 				try {
 					Files.list(identityPath).forEach(versionPath -> {
 						try {

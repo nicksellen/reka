@@ -100,7 +100,7 @@ public class SMTPServerConfigurer extends ModuleConfigurer {
 		public void accept(Data data) {
 			flows.forEach(flow -> {
 				flow.prepare()
-				.data(MutableMemoryData.create().merge(data))
+				.mutableData(MutableMemoryData.create().merge(data))
 				.complete(new Subscriber(){
 
 					@Override

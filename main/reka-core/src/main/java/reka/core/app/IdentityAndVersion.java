@@ -1,4 +1,4 @@
-package reka;
+package reka.core.app;
 
 public class IdentityAndVersion {
 	

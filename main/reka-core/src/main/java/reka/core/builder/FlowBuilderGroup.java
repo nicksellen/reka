@@ -2,7 +2,6 @@ package reka.core.builder;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static java.util.Collections.unmodifiableCollection;
 import static reka.core.builder.FlowConnector.connectionsFor;
 import static reka.core.builder.FlowSegments.createStartNode;
 import static reka.core.builder.FlowSegments.createSubscribeableEndNode;
@@ -11,7 +10,6 @@ import static reka.util.Util.runtime;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -35,6 +33,7 @@ import com.google.common.collect.ImmutableMap;
 
 public class FlowBuilderGroup {
 	
+	@SuppressWarnings("unused")
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	
 	private static class BackgroundThreadFactory implements ThreadFactory {
@@ -193,12 +192,9 @@ public class FlowBuilderGroup {
 		
 		FlowConnector connections = connectionsFor(info.name(), info.segment());
 		
-		for (Entry<Path, FlowSegment> e : connections.childContextSegments().entrySet()) {
+		for (Entry<Path, FlowSegment> e : connections.newContextSegments().entrySet()) {
 			add(e.getKey(), e.getValue());
-			//createFlow(new FlowInfo(e.getKey(), e.getValue()), buildFlow);
 		}
-		
-		log.info("building flow {}, conns: {}, nodes: {}", info.name, connections.connections().size(), connections.nodes().size());
 		
 		connectors.put(info.name(), connections);
 		

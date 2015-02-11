@@ -12,9 +12,6 @@ import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.Application;
-import reka.ApplicationManager;
-import reka.ApplicationManager.DeploySubscriber;
 import reka.api.Path;
 import reka.api.content.Content;
 import reka.api.content.types.BinaryContent;
@@ -22,6 +19,9 @@ import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.run.AsyncOperation;
 import reka.config.FileSource;
+import reka.core.app.Application;
+import reka.core.app.manager.ApplicationManager;
+import reka.core.app.manager.ApplicationManager.DeploySubscriber;
 import reka.dirs.AppDirs;
 import reka.dirs.BaseDirs;
 

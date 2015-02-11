@@ -15,10 +15,11 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.ApplicationManager.DeploySubscriber;
 import reka.admin.AdminModule;
 import reka.config.ConfigBody;
 import reka.config.FileSource;
+import reka.core.app.manager.ApplicationManager;
+import reka.core.app.manager.ApplicationManager.DeploySubscriber;
 import reka.core.module.ModuleManager;
 import reka.dirs.AppDirs;
 import reka.dirs.BaseDirs;

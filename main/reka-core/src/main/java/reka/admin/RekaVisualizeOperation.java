@@ -18,13 +18,13 @@ import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.ApplicationManager;
 import reka.api.Path;
 import reka.api.Path.Response;
 import reka.api.content.Content;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.run.Operation;
+import reka.core.app.manager.ApplicationManager;
 import reka.core.builder.DotGraphVisualizer;
 import reka.core.builder.FlowVisualizer;
 import reka.util.Graphviz;

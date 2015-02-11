@@ -1,4 +1,4 @@
-package reka;
+package reka.core.app;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.WeakHashMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -33,6 +32,9 @@ import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import reka.FlowTest;
+import reka.RootModule;
+import reka.TestConfigurer;
 import reka.api.IdentityKey;
 import reka.api.Path;
 import reka.api.content.Content;
@@ -63,24 +65,25 @@ import reka.dirs.AppDirs;
 
 public class ApplicationConfigurer implements ErrorReporter {
 	
-	private static final WeakHashMap<Application,Collection<PortChecker>> PORT_CHECKERS = new WeakHashMap<>();
+	private static final ExecutorService executor = Executors.newCachedThreadPool(); // just used for app configure/deployments
 	
-	private static final ExecutorService executor = Executors.newSingleThreadExecutor(); // just used for app configure/deployments
-	
-	private final Logger log = LoggerFactory.getLogger(getClass());
-	
+	private static final Logger log = LoggerFactory.getLogger(ApplicationConfigurer.class);
     private Path applicationName;
-    
-    private final MutableData meta = MutableMemoryData.create();
-    
-    public ApplicationConfigurer(AppDirs dirs, ModuleManager modules) {
-        rootModule = new RootModule(dirs, modules.modules());
-    }
-    
+
+	
+	private final ModuleManager modules;
+
     private final List<Config> defs = new ArrayList<>();
     private final List<Config> testConfigs = new ArrayList<>();
     
     private final ModuleConfigurer rootModule;
+    
+    private final MutableData meta = MutableMemoryData.create();
+    
+    public ApplicationConfigurer(AppDirs dirs, ModuleManager modules) {
+    	this.modules = modules;
+        rootModule = new RootModule(dirs, modules.modules());
+    }
     
     @Conf.At("name")
     public void name(String val) {
@@ -165,27 +168,19 @@ public class ApplicationConfigurer implements ErrorReporter {
     }
     
     private void runPortCheckers(String identity, ModuleInitializer initializer) {
-    	Set<PortChecker> ran = new HashSet<>();
-    	List<String> errors = new ArrayList<>();
-    	PORT_CHECKERS.values().forEach(checkers -> {
-    		checkers.forEach(checker -> {
-    			if (!ran.contains(checker)) {    			
-	    			ran.add(checker);
-	    			initializer.collector().portRequirements.forEach(req -> {
-	    				if (!checker.check(identity, req.port(), req.host())) {
-	    					if (req.host().isPresent()) {
-	    						errors.add(format("host:port %s:%d is not available", req.host().get(), req.port()));
-	    					} else {
-	    						errors.add(format("port %d is not available", req.port()));
-	    					}
-	    				}
-	    			});
-    			}
-    		});
+    	Set<String> errors = new HashSet<>();
+    	modules.portCheckers().forEach(checker -> {
+			initializer.collector().portRequirements.forEach(req -> {
+				if (!checker.check(identity, req.port(), req.host())) {
+					if (req.host().isPresent()) {
+						errors.add(format("%s:%d is not available", req.host().get(), req.port()));
+					} else {
+						errors.add(format("%d is not available", req.port()));
+					}
+				}
+			});
     	});
-    	if (!errors.isEmpty()) {
-    		throw new RuntimeException(errors.stream().collect(joining(", ")));
-    	}
+    	if (!errors.isEmpty()) throw runtime(errors.stream().collect(joining(", ")));
     }
     
     public static class TriggerSetup {
@@ -254,7 +249,7 @@ public class ApplicationConfigurer implements ErrorReporter {
 	    	// ok, initialize this thing!
 	    	
 	    	ApplicationInitializer appi = new ApplicationInitializer(future, identity, flowBuilders, applicationBuilder, initializer, tests);
-	    	initializer.flow().prepare().coordinationExecutor(executor).operationExecutor(executor).data(MutableMemoryData.create()).complete(appi).run();
+	    	initializer.flow().prepare().operationExecutor(executor).mutableData(MutableMemoryData.create()).complete(appi).run();
     	
     	});
     }
@@ -313,131 +308,152 @@ public class ApplicationConfigurer implements ErrorReporter {
 				initflow.consumer.accept(initFlows.flow(initflow.name));
 			});
   */
-			
-	    	try {
+			safelyCompletable(future, () -> {
 	    		
 	    		log.debug("building main flows");
 	    		
 				Flows flows = flowBuilders.build();
 				
-				// run tests!
+				applicationBuilder.flows(flows);
 				
-				int testCaseCount = (int)tests.values().stream().flatMap(t -> t.cases().stream()).count();
-				
-				log.info("running {} tests", testCaseCount);
-				
-				if (testCaseCount > 0) {
-				
-					CountDownLatch latch = new CountDownLatch(testCaseCount);
+				runTests(flows, tests, identity).whenComplete((ignored, ex) -> {
 					
-					AtomicBoolean failed = new AtomicBoolean(false);
-					
-					List<String> testErrors = Collections.synchronizedList(new ArrayList<>());
-					
-					tests.forEach((name, test) -> {
-						Flow flow = flows.flow(name);
-						
-						test.cases().forEach(testCase -> {
-						
-							MutableData initialData = MutableMemoryData.create();
-							initialData.merge(testCase.initial());
-							flow.runWithSingleThreadedExecutor(executor, initialData, new Subscriber(){
-								
-								@Override
-								public void ok(MutableData data) {
-									try {
-										data.diffContentFrom(testCase.expect(), (path, type, expected, actual) -> {
-											if (type == DiffContentType.ADDED) return; // don't mind extra data for now...
-											Optional<Content> initvalue = testCase.initial().getContent(path);
-											if (!initvalue.isPresent() || !initvalue.get().equals(actual)) {
-												testErrors.add(format("%s : %s\ncontent at %s %s - expected [%s] got [%s]", name.join(" / "), testCase.name(), path.dots(), type, expected, actual));
-												failed.set(true);
-											}
-										});
-									} catch (Throwable t) {
-										t.printStackTrace();
-									} finally {
-										latch.countDown();
-									}
-								}
-								
-								@Override
-								public void halted() {
-									log.error("test halted");
-									failed.set(true);
-									latch.countDown();
-								}
-								
-								@Override
-								public void error(Data data, Throwable t) {
-									log.error("test failed to run", t);
-									failed.set(true);
-									latch.countDown();
-								}
-								
-							}, true);
-						
-						});
-					});
-					
-					if (!latch.await(10, TimeUnit.SECONDS)) {
-						String msg = format("failed to deploy [%s] because tests timed out", identity);
-						log.error(msg);
-				    	future.completeExceptionally(runtime(msg));
-						return;
-					} else if (failed.get()) {
-						String msg = format("failed to deploy [%s] because tests failed:\n%s", identity, 
-												testErrors.stream().map(s -> format("- %s", s)) .collect(joining("\n")));
-						log.error(msg);
-				    	future.completeExceptionally(runtime(msg));
+					if (ex != null) {
+						future.completeExceptionally(ex);
 						return;
 					}
 					
-				}
-				
-				applicationBuilder.flows(flows);
-				
-				initializer.collector().triggers.forEach(triggers -> {
+					initializer.collector().triggers.forEach(triggers -> {
+						
+						Map<IdentityKey<Flow>,Flow> m = new HashMap<>();
+						
+						triggers.get().forEach(trigger -> {
+							m.put(trigger.key(), flows.flow(triggerPath(trigger)));
+						});
+						
+						MultiFlowRegistration mr = new MultiFlowRegistration(applicationBuilder.version(), identity, triggers.store(), m);
+						triggers.consumer().accept(mr);
+						
+						applicationBuilder.network().addAll(mr.network());
+						applicationBuilder.undeployConsumers().addAll(mr.undeployConsumers());
+						applicationBuilder.pauseConsumers().addAll(mr.pauseConsumers());
+						applicationBuilder.resumeConsumers().addAll(mr.resumeConsumers());
+						
+			    	});
 					
-					Map<IdentityKey<Flow>,Flow> m = new HashMap<>();
-					
-					triggers.get().forEach(trigger -> {
-						m.put(trigger.key(), flows.flow(triggerPath(trigger)));
+					initializer.collector().shutdownHandlers.forEach(runnable -> {
+						applicationBuilder.undeployConsumers().add(version -> {
+							try {
+								runnable.run();
+							} catch (Throwable t) {
+								log.error(format("shutdown handler error for %s", identity), t);
+							}
+						});
 					});
 					
-					MultiFlowRegistration mr = new MultiFlowRegistration(applicationBuilder.version(), identity, triggers.store(), m);
-					triggers.consumer().accept(mr);
+					applicationBuilder.statusProviders().addAll(initializer.collector().statuses.stream().map(Supplier::get).collect(toList()));
 					
-					applicationBuilder.network().addAll(mr.network());
-					applicationBuilder.undeployConsumers().addAll(mr.undeployConsumers());
-					applicationBuilder.pauseConsumers().addAll(mr.pauseConsumers());
-					applicationBuilder.resumeConsumers().addAll(mr.resumeConsumers());
+					Application app = applicationBuilder.build();
 					
-		    	});
-				
-				initializer.collector().shutdownHandlers.forEach(runnable -> {
-					applicationBuilder.undeployConsumers().add(version -> {
-						try {
-							runnable.run();
-						} catch (Throwable t) {
-							t.printStackTrace();
-						}
-					});
+			    	future.complete(app);
+					
 				});
 				
-				applicationBuilder.statusProviders().addAll(initializer.collector().statuses.stream().map(Supplier::get).collect(toList()));
-				
-				Application app = applicationBuilder.build();
-				
-				ApplicationConfigurer.PORT_CHECKERS.put(app, initializer.collector().portCheckers);
-				
-		    	future.complete(app);
-	    	
-	    	} catch (Throwable t) {
-	    		future.completeExceptionally(t);
-	    	}
+			});
 		}
     	
     }
+
+
+	private static CompletableFuture<Void> runTests(Flows flows, Map<Path, FlowTest> tests, String identity) {
+		
+		CompletableFuture<Void> future = new CompletableFuture<>();
+		
+		int testCaseCount = (int)tests.values().stream().flatMap(t -> t.cases().stream()).count();
+
+		if (testCaseCount == 0) {
+			future.complete(null);
+			return future;
+		}
+		
+		log.info("running {} tests", testCaseCount);
+		
+		CountDownLatch latch = new CountDownLatch(testCaseCount);
+		
+		AtomicBoolean failed = new AtomicBoolean(false);
+		
+		List<String> testErrors = Collections.synchronizedList(new ArrayList<>());
+		
+		tests.forEach((name, test) -> {
+			Flow flow = flows.flow(name);
+			
+			test.cases().forEach(testCase -> {
+				
+				flow.prepare().operationExecutor(executor).data(testCase.initial()).run(new Subscriber(){
+					
+					@Override
+					public void ok(MutableData data) {
+						try {
+							data.diffContentFrom(testCase.expect(), (path, type, expected, actual) -> {
+								if (type == DiffContentType.ADDED) return; // don't mind extra data for now...
+								Optional<Content> initvalue = testCase.initial().getContent(path);
+								if (!initvalue.isPresent() || !initvalue.get().equals(actual)) {
+									testErrors.add(format("%s : %s\ncontent at %s %s - expected [%s] got [%s]", name.join(" / "), testCase.name(), path.dots(), type, expected, actual));
+									failed.set(true);
+								}
+							});
+						} catch (Throwable t) {
+							testErrors.add(format("%s : %s\nexception during test - %s", name.join(" / "), testCase.name(), t.getMessage()));
+							failed.set(true);
+						} finally {
+							latch.countDown();
+						}
+					}
+					
+					@Override
+					public void halted() {
+						log.error("test halted");
+						failed.set(true);
+						latch.countDown();
+					}
+					
+					@Override
+					public void error(Data data, Throwable t) {
+						log.error("test failed to run", t);
+						failed.set(true);
+						latch.countDown();
+					}
+					
+				});
+			
+			});
+		});
+		
+		executor.execute(() -> {
+		
+			try {
+				if (latch.await(10, TimeUnit.SECONDS)) {
+					
+					if (failed.get()) {
+						String msg = format("failed to deploy [%s] because tests failed:\n%s", identity, 
+												testErrors.stream().map(s -> format("- %s", s)) .collect(joining("\n")));
+						log.error(msg);
+						future.completeExceptionally(runtime(msg));
+					} else {
+						future.complete(null);
+					}
+				} else {
+					String msg = format("failed to deploy [%s] because tests timed out", identity);
+					log.error(msg);
+					future.completeExceptionally(runtime(msg));
+				} 
+			} catch (Throwable t) {
+				future.completeExceptionally(t);
+			}
+
+		});
+		
+		return future;
+	}
 
 }

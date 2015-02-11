@@ -58,7 +58,7 @@ public class DefaultFlow implements Flow {
 		}
 		
 		@Override
-        public FlowRun data(MutableData value) {
+        public FlowRun mutableData(MutableData value) {
 			data = value;
 			return this;
 		}

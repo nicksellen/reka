@@ -67,7 +67,7 @@ public class NoFlow implements Flow {
     }
 
     @Override
-    public FlowRun data(MutableData value) {
+    public FlowRun mutableData(MutableData value) {
       data = value;
       return this;
     }
@@ -98,7 +98,7 @@ public class NoFlow implements Flow {
   public void run(ExecutorService coordinationExecutor,
       ExecutorService operationExecutor, MutableData data,
       Subscriber subscriber, boolean statsEnabled) {
-      new NoFlowRun().data(data).complete(subscriber).stats(statsEnabled).run();
+      new NoFlowRun().mutableData(data).complete(subscriber).stats(statsEnabled).run();
   }
   
 }

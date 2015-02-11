@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 
 import reka.ModuleMeta;
+import reka.PortChecker;
 import reka.api.Path;
 import reka.config.processor.ConfigConverter;
 import reka.config.processor.MultiConverter;
@@ -19,6 +20,7 @@ public class ModuleManager {
 	private final List<ModuleInfo> moduleInfos = new ArrayList<>();
 	private final List<ConfigConverter> converters = new ArrayList<>();
 	private final List<Runnable> shutdownHandlers = new ArrayList<>();
+	private final Set<PortChecker> portCheckers = new HashSet<>();
 	
 	public ModuleManager(Collection<ModuleMeta> incoming) {
 		
@@ -42,6 +44,7 @@ public class ModuleManager {
 		module.module().setup(setup);
 		moduleInfos.addAll(setup.modules());
 		converters.addAll(setup.converters());
+		portCheckers.addAll(setup.portCheckers());
 		shutdownHandlers.addAll(setup.shutdownHandlers());
 	}
 	
@@ -59,6 +62,10 @@ public class ModuleManager {
 			keys.add(e.name());
 		}
 		return keys; 
+	}
+	
+	public Collection<PortChecker> portCheckers() {
+		return portCheckers;
 	}
 	
 	public void shutdown() {

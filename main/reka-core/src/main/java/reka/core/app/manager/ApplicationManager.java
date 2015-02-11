@@ -1,4 +1,4 @@
-package reka;
+package reka.core.app.manager;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.String.format;
@@ -27,11 +27,15 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import reka.EventLogger;
+import reka.Reka;
 import reka.admin.AdminUtils;
 import reka.api.Path;
 import reka.api.data.Data;
@@ -40,6 +44,8 @@ import reka.api.flow.Flow;
 import reka.config.NavigableConfig;
 import reka.config.Source;
 import reka.config.parser.ConfigParser;
+import reka.core.app.Application;
+import reka.core.app.ApplicationConfigurer;
 import reka.core.builder.FlowVisualizer;
 import reka.core.data.memory.MutableMemoryData;
 import reka.core.module.ModuleManager;
@@ -49,257 +55,9 @@ import reka.dirs.AppDirs;
 import reka.dirs.BaseDirs;
 
 public class ApplicationManager implements Iterable<Entry<String,Application>> {
-	
-	private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-	
-	private final Logger log = LoggerFactory.getLogger(getClass());
-	private final EventLogger eventLogger = new EventLogger("/tmp/rekalog");
-	
-	private final BaseDirs basedirs;
-	private final ModuleManager moduleManager;
-	
-	private final ConcurrentMap<String,Application> applications = new ConcurrentHashMap<>();
-	private final ConcurrentMap<String,AtomicInteger> versions = new ConcurrentHashMap<>();
-	
-	private final ConcurrentMap<String,List<ModuleStatusReport>> status = new ConcurrentHashMap<>();
-	
-	private final List<EventListener> listeners = Collections.synchronizedList(new ArrayList<>());
-	
-	private final BlockingDeque<ApplicationTask> q = new LinkedBlockingDeque<>();
-	
-	private final ApplicationTask UPDATE_STATUS = new UpdateStatus();
 
-	public ApplicationManager(BaseDirs dirs, ModuleManager moduleManager) {
-		this.basedirs = dirs;
-		this.moduleManager = moduleManager;
-		executor.submit(new WaitForNextTask());
-		Reka.SCHEDULED_SERVICE.scheduleAtFixedRate(() -> q.push(UPDATE_STATUS), 1, 1, TimeUnit.SECONDS);
-		emitSystemMessage("started");
-	}
-	
-	private static interface ApplicationTask extends Runnable { }
-	
-	private class WaitForNextTask implements ApplicationTask {
-
-		@Override
-		public void run() {
-			try {
-				executor.submit(q.take());
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-		
-	}
-	
-	private class UpdateStatus implements ApplicationTask {
-
-		@Override
-		public void run() {
-			try {
-				Map<String, List<ModuleStatusReport>> changed = new HashMap<>();
-				applications.forEach((identity, app) -> {
-					List<ModuleStatusReport> appStatus = reportsFor(app);
-					List<ModuleStatusReport> previousAppStatus = status.put(identity, appStatus);
-					if (previousAppStatus != null && !appStatus.equals(previousAppStatus)) {
-						changed.put(identity, appStatus);
-					}
-				});
-				if (!changed.isEmpty()) {
-					notifyStatusListeners(changed);
-				}
-			} catch (Throwable t) {
-				t.printStackTrace();
-			} finally {
-				executor.submit(new WaitForNextTask());
-			}
-		}
-		
-	}
-	
-	private class UndeployApplication implements ApplicationTask {
-		
-		private final String identity;
-		
-		public UndeployApplication(String identity) {
-			this.identity = identity;
-		}
-
-		@Override
-		public void run() {
-			log.info("running undeploy task {}", identity);
-			try {
-				Application app = applications.remove(identity);
-				versions.remove(identity);
-				if (app == null) return;
-				app.undeploy();
-				status.remove(identity);
-				log.info("undeployed [{}]", app.fullName());
-				notifyUndeployListeners(identity, app);
-			} finally {
-				executor.submit(new WaitForNextTask());
-			}
-		}
-		
-	}
-	
-	private class DeployApplication implements ApplicationTask {
-
-		private final String identity;
-		private final int incomingVersion;
-		private final NavigableConfig originalConfig;
-		private final File constrainTo;
-		private final DeploySubscriber subscriber;
-		
-		public DeployApplication(String identity, int version, NavigableConfig originalConfig, File constrainTo, DeploySubscriber subscriber) {
-			this.identity = identity;
-			this.incomingVersion = version;
-			this.originalConfig = originalConfig;
-			this.constrainTo = constrainTo != null ? constrainTo : new File("/");
-			this.subscriber = subscriber;
-		}
-
-		@Override
-		public void run() {
-			int version = incomingVersion != -1 ? incomingVersion : nextVersion(identity);
-			
-			log.info("running deploy task {}", identity);
-
-			Optional<Application> previous = Optional.ofNullable(applications.get(identity));
-			
-			try {
-				
-				checkArgument(constrainTo.isDirectory(), "constraint dir %s is not a dir", constrainTo.getAbsolutePath());
-				
-				log.info("deploying {} v{}", identity, version);
-				
-				NavigableConfig config = moduleManager.processor().process(originalConfig);
-				
-				AppDirs dirs = basedirs.resolve(identity, version);
-				
-				dirs.mkdirs();
-				
-				ApplicationConfigurer configurer = configure(new ApplicationConfigurer(dirs, moduleManager), config);
-				
-				configurer.checkValid(identity);
-				
-				previous.ifPresent(Application::pause);
-				
-				configurer.build(identity, version).whenComplete((app, ex) -> {
-					try {
-						if (app != null) {
-							applications.put(identity, app);
-							previous.ifPresent(Application::undeploy);
-							List<ModuleStatusReport> reports = reportsFor(app);
-							status.put(identity, reports);
-							log.info("deployed [{}] listening on {}", app.fullName(), app.network().stream().map(Object::toString).collect(joining(", ")));
-							notifyDeployListeners(identity, app, reports);
-							subscriber.ok(identity, version, app);
-							versions.putIfAbsent(identity, new AtomicInteger());
-							versions.get(identity).set(version);
-						} else if (ex != null) {
-							log.info("exception whilst deploying!");
-							subscriber.error(identity, ex);
-							previous.ifPresent(Application::resume);
-						}
-					} finally {
-						executor.submit(new WaitForNextTask());
-					}
-				});
-				
-			} catch (Throwable t) {
-				subscriber.error(identity, t);
-				previous.ifPresent(Application::resume);
-				executor.submit(new WaitForNextTask());
-			}
-		}
-		
-	}
-	
-	private static List<ModuleStatusReport> reportsFor(Application app) {
-		List<ModuleStatusReport> appStatus = app.statusProviders().stream().map(StatusProvider::report).collect(toList());
-		appStatus.sort(comparing(ModuleStatusReport::name));
-		return appStatus;
-	}
-	
-	private static class EventListener {
-		private final Flow flow;
-		private final EnumSet<EventType> types;
-		EventListener(Flow flow, EventType[] types) {
-			this.flow = flow;
-			this.types = EnumSet.copyOf(asList(types));
-		}
-	}
-	
-	public void addListener(Flow flow, EventType... eventTypes) {
-		listeners.add(new EventListener(flow, eventTypes));
-	}
-	
-	public void removeListener(Flow flow) {
-		Iterator<EventListener> it = listeners.iterator();
-		while (it.hasNext()) {
-			if (it.next().flow.equals(flow)) {
-				it.remove();
-			}
-		}
-	}
-	
-	public void undeploy(String identity) {
-		q.push(new UndeployApplication(identity));
-	}
-
-	private void notifyDeployListeners(String identity, Application app, List<ModuleStatusReport> reports) {
-		emit(EventType.deploy, AdminUtils.putAppDetails(MutableMemoryData.create(), app, Optional.of(reports))
-				.putString("id", identity));
-	}
-	
-	private void notifyUndeployListeners(String identity, Application app) {
-		emit(EventType.undeploy, MutableMemoryData.create()
-				.putString("id", identity)
-				.putInt("version", app.version())
-				.putString("name", app.fullName()));
-	}
-	
-	private void notifyStatusListeners(Map<String, List<ModuleStatusReport>> changed) {
-		changed.forEach((identity, reports) -> {			
-			emit(EventType.status, MutableMemoryData.create()
-				.putString("id", identity)
-				.putList("status", list -> {
-					reports.forEach(report -> {
-						list.add(report.data());
-					});
-				}));
-		});
-	}
-	
 	public static enum EventType {
 		status, deploy, undeploy, system;
-	}
-	
-	private void emit(EventType type, MutableData incomingData) {
-
-		// TODO: perhaps delegate this eventLogger business to a db...
-		
-		long eid = eventLogger.nextEventId();
-		Data data = incomingData.putLong("eid", eid).immutable();
-
-		//log.info("emitting event {}: {}", type, data);
-		eventLogger.write(eid, type, data);
-		
-		listeners.forEach(listener -> {
-			if (listener.types.contains(type)) {
-				listener.flow.prepare().data(MutableMemoryData.from(data)).stats(false).run();
-			}
-		});
-	}
-	
-	private void emitSystemMessage(String message) {
-		emit(EventType.system, MutableMemoryData.create().putString("message", message));
-	}
-
-	public void validate(String identity, Source source) {
-		NavigableConfig config = moduleManager.processor().process(ConfigParser.fromSource(source));
-		configure(new ApplicationConfigurer(basedirs.mktemp(), moduleManager), config).checkValid(identity);
 	}
 	
 	public static interface DeploySubscriber {
@@ -324,6 +82,33 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 		void error(String identity, Throwable t);
 	}
 	
+	private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+	
+	private final Logger log = LoggerFactory.getLogger(getClass());
+	private final EventLogger eventLogger = new EventLogger("/tmp/rekalog");
+	
+	private final BaseDirs basedirs;
+	private final ModuleManager moduleManager;
+	
+	private final ConcurrentMap<String,Application> applications = new ConcurrentHashMap<>();
+	private final ConcurrentMap<String,AtomicInteger> versions = new ConcurrentHashMap<>();
+	
+	private final ConcurrentMap<String,List<ModuleStatusReport>> status = new ConcurrentHashMap<>();
+	
+	private final List<EventListener> listeners = Collections.synchronizedList(new ArrayList<>());
+	
+	private final BlockingDeque<AsyncApplicationTask> q = new LinkedBlockingDeque<>();
+	
+	private final AsyncApplicationTask UPDATE_STATUS = new UpdateStatus().async();
+
+	public ApplicationManager(BaseDirs dirs, ModuleManager moduleManager) {
+		this.basedirs = dirs;
+		this.moduleManager = moduleManager;
+		executor.submit(new WaitForNextTask());
+		Reka.SCHEDULED_SERVICE.scheduleAtFixedRate(() -> q.push(UPDATE_STATUS), 1, 1, TimeUnit.SECONDS);
+		emitSystemMessage("started");
+	}
+	
 	public void deployConfig(String identity, int version, NavigableConfig config, File constrainTo, DeploySubscriber subscriber) {
 		q.push(new DeployApplication(identity, version, config, constrainTo, subscriber));
 	}
@@ -332,6 +117,28 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 		File constrainTo = new File("/");
 		if (source.isFile()) constrainTo = source.file().getParentFile();
 		deployConfig(identity, version, ConfigParser.fromSource(source), constrainTo, subscriber);
+	}
+	
+	public void undeploy(String identity) {
+		q.push(new UndeployApplication(identity).async());
+	}
+	
+	public void addListener(Flow flow, EventType... eventTypes) {
+		listeners.add(new EventListener(flow, eventTypes));
+	}
+	
+	public void removeListener(Flow flow) {
+		Iterator<EventListener> it = listeners.iterator();
+		while (it.hasNext()) {
+			if (it.next().flow.equals(flow)) {
+				it.remove();
+			}
+		}
+	}
+
+	public void validate(String identity, Source source) {
+		NavigableConfig config = moduleManager.processor().process(ConfigParser.fromSource(source));
+		configure(new ApplicationConfigurer(basedirs.mktemp(), moduleManager), config).checkValid(identity);
 	}
 	
 	public static final Path INITIALIZER_VISUALIZER_NAME = slashes("app/initialize");
@@ -372,11 +179,253 @@ public class ApplicationManager implements Iterable<Entry<String,Application>> {
 	public Iterator<Entry<String,Application>> iterator() {
 		return applications.entrySet().iterator();
 	}
+	
+	private class UpdateStatus implements ApplicationTask {
+
+		@Override
+		public void run() {
+			Map<String, List<ModuleStatusReport>> changed = new HashMap<>();
+			applications.forEach((identity, app) -> {
+				List<ModuleStatusReport> appStatus = reportsFor(app);
+				List<ModuleStatusReport> previousAppStatus = status.put(identity, appStatus);
+				if (previousAppStatus != null && !appStatus.equals(previousAppStatus)) {
+					changed.put(identity, appStatus);
+				}
+			});
+			if (!changed.isEmpty()) {
+				notifyStatusListeners(changed);
+			}
+		}
+		
+	}
+	
+	private class UndeployApplication implements ApplicationTask {
+		
+		private final String identity;
+		
+		public UndeployApplication(String identity) {
+			this.identity = identity;
+		}
+
+		@Override
+		public void run() {
+			Application app = applications.remove(identity);
+			versions.remove(identity);
+			if (app == null) return;
+			app.undeploy();
+			status.remove(identity);
+			log.info("undeployed [{}]", app.fullName());
+			notifyUndeployListeners(identity, app);
+		}
+		
+	}
+	
+	private class DeployApplication implements AsyncApplicationTask {
+
+		private final String identity;
+		private final int incomingVersion;
+		private final NavigableConfig originalConfig;
+		private final File constrainTo;
+		private final DeploySubscriber subscriber;
+		
+		public DeployApplication(String identity, int version, NavigableConfig originalConfig, File constrainTo, DeploySubscriber subscriber) {
+			this.identity = identity;
+			this.incomingVersion = version;
+			this.originalConfig = originalConfig;
+			this.constrainTo = constrainTo != null ? constrainTo : new File("/");
+			this.subscriber = subscriber;
+		}
+
+		@Override
+		public void run(TaskResult res) {
+			int version = incomingVersion != -1 ? incomingVersion : nextVersion(identity);
+
+			Optional<Application> previous = Optional.ofNullable(applications.get(identity));
+			
+			Consumer<Throwable> onError = t -> {
+				log.error("exception whilst deploying!");
+				subscriber.error(identity, t);
+				previous.ifPresent(Application::resume);
+				res.completeExceptionally(t);
+			};
+			
+			try {
+				
+				checkArgument(constrainTo.isDirectory(), "constraint dir %s is not a dir", constrainTo.getAbsolutePath());
+				
+				log.info("deploying {} v{}", identity, version);
+				
+				NavigableConfig config = moduleManager.processor().process(originalConfig);
+				
+				AppDirs dirs = basedirs.resolve(identity, version);
+				
+				dirs.mkdirs();
+				
+				ApplicationConfigurer configurer = configure(new ApplicationConfigurer(dirs, moduleManager), config);
+				
+				configurer.checkValid(identity);
+				
+				previous.ifPresent(Application::pause);
+				
+				configurer.build(identity, version).whenComplete((app, t) -> {
+					try {
+						if (app != null) {
+							applications.put(identity, app);
+							previous.ifPresent(Application::undeploy);
+							List<ModuleStatusReport> reports = reportsFor(app);
+							status.put(identity, reports);
+							log.info("deployed [{}] listening on {}", app.fullName(), app.network().stream().map(Object::toString).collect(joining(", ")));
+							notifyDeployListeners(identity, app, reports);
+							subscriber.ok(identity, version, app);
+							versions.putIfAbsent(identity, new AtomicInteger());
+							versions.get(identity).set(version);
+						} else if (t != null) {
+							onError.accept(t);
+						}
+					} finally {
+						res.complete();
+					}
+				});
+				
+			} catch (Throwable t) {
+				onError.accept(t);
+			}
+		}
+		
+	}
+	
+	private static List<ModuleStatusReport> reportsFor(Application app) {
+		List<ModuleStatusReport> appStatus = app.statusProviders().stream().map(StatusProvider::report).collect(toList());
+		appStatus.sort(comparing(ModuleStatusReport::name));
+		return appStatus;
+	}
+	
+	private static class EventListener {
+		private final Flow flow;
+		private final EnumSet<EventType> types;
+		EventListener(Flow flow, EventType[] types) {
+			this.flow = flow;
+			this.types = EnumSet.copyOf(asList(types));
+		}
+	}
+
+	private void notifyDeployListeners(String identity, Application app, List<ModuleStatusReport> reports) {
+		emit(EventType.deploy, AdminUtils.putAppDetails(MutableMemoryData.create(), app, Optional.of(reports))
+				.putString("id", identity));
+	}
+	
+	private void notifyUndeployListeners(String identity, Application app) {
+		emit(EventType.undeploy, MutableMemoryData.create()
+				.putString("id", identity)
+				.putInt("version", app.version())
+				.putString("name", app.fullName()));
+	}
+	
+	private void notifyStatusListeners(Map<String, List<ModuleStatusReport>> changed) {
+		changed.forEach((identity, reports) -> {			
+			emit(EventType.status, MutableMemoryData.create()
+				.putString("id", identity)
+				.putList("status", list -> {
+					reports.forEach(report -> {
+						list.add(report.data());
+					});
+				}));
+		});
+	}
+	
+	private void emit(EventType type, MutableData incomingData) {
+
+		// TODO: perhaps delegate this eventLogger business to a db...
+		
+		long eid = eventLogger.nextEventId();
+		Data data = incomingData.putLong("eid", eid).immutable();
+
+		eventLogger.write(eid, type, data);
+		
+		listeners.forEach(listener -> {
+			if (listener.types.contains(type)) {
+				listener.flow.prepare().mutableData(MutableMemoryData.from(data)).stats(false).run();
+			}
+		});
+		
+	}
+	
+	private void emitSystemMessage(String message) {
+		emit(EventType.system, MutableMemoryData.create().putString("message", message));
+	}
+
 
 	public void shutdown() {
 		emitSystemMessage("shutting down");
 		applications.values().forEach(app -> app.undeploy());
 		emitSystemMessage("shutdown complete");
+	}
+	
+	private static interface TaskResult {
+		void complete();
+		void completeExceptionally(Throwable t);
+	}
+	
+	private static interface ApplicationTask {
+		void run() throws Exception;
+		default AsyncApplicationTask async() {
+			return new AsyncApplicationTask(){
+
+				@Override
+				public void run(TaskResult res) throws Exception {
+					ApplicationTask.this.run();
+					res.complete();
+				}
+				
+			};
+		}
+	}
+	
+	private static interface AsyncApplicationTask {
+		void run(TaskResult res) throws Exception;
+	}
+	
+	private class WaitForNextTask implements Runnable {
+
+		@Override
+		public void run() {
+			try {
+				submit(q.take());
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		
+	}
+	
+	private void submit(AsyncApplicationTask task) {
+		executor.submit(() -> {
+			AtomicBoolean done = new AtomicBoolean(false);
+			try {
+				task.run(new TaskResult() {
+
+					
+					@Override
+					public void complete() {
+						if (done.compareAndSet(false, true)) {
+							executor.submit(new WaitForNextTask());
+						}
+					}
+					
+					@Override
+					public void completeExceptionally(Throwable t) {
+						if (done.compareAndSet(false, true)) {
+							executor.submit(new WaitForNextTask());
+						}
+					}
+					
+				});
+			} catch (Throwable t) {
+				if (done.compareAndSet(false, true)) {
+					executor.submit(new WaitForNextTask());
+				}
+			}
+		});
 	}
 	
 }

@@ -101,8 +101,6 @@ public class HttpConfigurer extends ModuleConfigurer {
 		module.operation(path("request"), provider -> new HttpRequestConfigurer(server.nettyEventGroup(), server.nettyChannelType()));
 		module.operation(path("req"), provider -> new HttpRequestConfigurer(server.nettyEventGroup(), server.nettyChannelType()));
 		module.operation(path("auth"), provider -> new BasicAuthConfigurer(provider));
-
-		module.registerPortChecker(server.portChecker);
 		
 		listens.forEach(listen -> {
 			module.requirePort(listen.port(), Optional.of(listen.host()));	

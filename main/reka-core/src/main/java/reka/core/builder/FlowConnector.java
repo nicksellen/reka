@@ -63,7 +63,7 @@ public class FlowConnector {
 		return flowName;
 	}
 
-	public Map<Path,FlowSegment> childContextSegments() {
+	public Map<Path,FlowSegment> newContextSegments() {
 		return newContextSegments;
 	}
 

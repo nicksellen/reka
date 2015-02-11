@@ -1,8 +1,8 @@
 package reka.admin;
 
 import static reka.api.Path.path;
-import reka.ApplicationManager;
 import reka.api.Path;
+import reka.core.app.manager.ApplicationManager;
 import reka.core.module.Module;
 import reka.core.module.ModuleDefinition;
 

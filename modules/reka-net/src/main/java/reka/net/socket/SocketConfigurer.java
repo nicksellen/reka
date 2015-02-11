@@ -75,11 +75,10 @@ public class SocketConfigurer extends ModuleConfigurer {
 		
 		module.operation(path("send"), provider -> new SocketSendConfigurer(server));
 		module.operation(path("broadcast"), provider -> new SocketBroadcastConfigurer(server));
+		module.operation(slashes("tag"), provider -> new SocketTagAddConfigurer(server));
 		module.operation(slashes("tag/add"), provider -> new SocketTagAddConfigurer(server));
 		module.operation(slashes("tag/rm"), provider -> new SocketTagRemoveConfigurer(server));
 		module.operation(slashes("tag/send"), provider -> new SocketTagSendConfigurer(server));
-	
-		module.registerPortChecker(server.portChecker);
 		
 		module.status(store -> new SocketStatusProvider(server, store.get(Sockets.SETTINGS)));
 		

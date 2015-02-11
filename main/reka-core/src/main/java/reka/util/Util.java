@@ -30,6 +30,8 @@ import java.util.zip.ZipInputStream;
 
 import org.codehaus.jackson.JsonGenerator;
 
+import com.google.common.io.BaseEncoding;
+
 import reka.api.JsonProvider;
 import reka.config.Source;
 import reka.config.SourceLinenumbers;
@@ -126,16 +128,22 @@ public class Util {
 		return new AbstractMap.SimpleEntry<K,V>(key, value);
 	}
 	
-	public static <T> CompletableFuture<T> safelyCompletable(ThrowingConsumer<CompletableFuture<T>> consumer) {
-    	CompletableFuture<T> future = new CompletableFuture<>();
+	public static <T> CompletableFuture<T> safelyCompletable(CompletableFuture<T> future, ThrowingRunnable runnable) {
 		try {
-			consumer.accept(future);
+			runnable.run();
 		} catch (Throwable t) {
 			if (!future.isDone()) {
 				future.completeExceptionally(t);
 			}
 		}
 		return future;
+	}
+	
+	public static <T> CompletableFuture<T> safelyCompletable(ThrowingConsumer<CompletableFuture<T>> consumer) {
+    	CompletableFuture<T> future = new CompletableFuture<>();
+		return safelyCompletable(future, () -> {
+			consumer.accept(future);
+		});
 	}
 		
 	public static void ignoreExceptions(ThrowingRunnable r) {
@@ -183,6 +191,7 @@ public class Util {
 
 	private static final Encoder BASE64_ENCODER = Base64.getEncoder();
 	private static final Decoder BASE64_DECODER = Base64.getDecoder();
+	private static final BaseEncoding BASE32 = BaseEncoding.base32().omitPadding().lowerCase();
 	
 	public static String encode64(String val) {
 		return BASE64_ENCODER.encodeToString(val.getBytes(StandardCharsets.UTF_8));
@@ -190,6 +199,14 @@ public class Util {
 	
 	public static String decode64(String val) {
 		return new String(BASE64_DECODER.decode(val), StandardCharsets.UTF_8);
+	}
+	
+	public static String encode32(String val) {
+		return BASE32.encode(val.getBytes(StandardCharsets.UTF_8));
+	}
+	
+	public static String decode32(String val) {
+		return new String(BASE32.decode(val), StandardCharsets.UTF_8);
 	}
 	
 	public static void deleteRecursively(java.nio.file.Path path) {
