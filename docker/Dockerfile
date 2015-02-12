@@ -6,4 +6,6 @@ RUN ln -s /usr/bin/dot /usr/local/bin/dot
 ADD reka.jar reka.jar
 ADD config config
 
+ENV REKA_ENV docker
+
 CMD ["java", "-jar", "reka.jar", "config/main.reka"]

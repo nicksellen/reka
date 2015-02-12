@@ -1,0 +1,10 @@
+module modules/reka-command-0.1.0.jar
+module modules/reka-common-0.1.0.jar
+module modules/reka-h2-0.1.0.jar
+module modules/reka-jade-0.1.0.jar
+module modules/reka-jsx-0.1.0.jar
+module modules/reka-less-0.1.0.jar
+module modules/reka-mustache-0.1.0.jar
+module modules/reka-net-0.1.0.jar
+module modules/reka-postgres-0.1.0.jar
+module modules/reka-smtp-0.1.0.jar

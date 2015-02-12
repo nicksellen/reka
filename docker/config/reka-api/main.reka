@@ -1,13 +1,13 @@
-name newapi
+name reka api
 
 reka
 
-filesystem fs {
+fs {
   dir /
 }
 
-http {
-  @env CONTAINER {
+net/http {
+  @env(CONTAINER) {
     when docker {
       listen api.reka
     }
@@ -16,7 +16,7 @@ http {
     }
   }
   on request {
-    run main
+    run main  
   }
 }
 
@@ -31,8 +31,9 @@ def main {
       reka/list response.content
     }
     GET /apps/:appid* {
-      reka/get response.content {
-        app :appid
+      reka/get {
+        id :appid
+        out response.content
       }
     }
     GET /apps/:appid*/flows/:flow*.:format {
@@ -43,39 +44,21 @@ def main {
       }
     }
     POST /apps/:appid* {
-      fs/mktmpdir tmpdir
-      unzip {
+      reka/deploy {
+        id :appid
         data request.content
-        out :tmpdir
       }
-      fs/type :tmpdir/main.reka {
-        when file {
-          reka/deploy {
-            identity :appid
-            filename :tmpdir/main.reka
-          }
-          reka/get app {
-            app :appid
-          }
-          putv response {
-            status 200
-            content running ':app.name' as [:appid]
-          }
-        }
-        when dir {
-          putv response {
-            status 400
-            content main.reka should be a file
-          }            
-        }
-        when missing {
-          putv response {
-            status 400
-            content missing main.reka
-          }            
+      reka/get {
+        id :appid
+        out app
+      }
+      putv response {
+        status 200
+        content :app
+        headers {
+          Content-Type application/json
         }
       }
-      fs/rm :tmpdir 
     }
     named undeploy app {
       DELETE /apps/:appid* {

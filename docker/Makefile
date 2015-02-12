@@ -1,6 +1,8 @@
 name=reka
 image=nicksellen/${name}
 
+docker_modules = command net jade mustache smtp less jsx common postgres h2
+
 runlocal: copy
 
 	@rm -rf data
@@ -29,19 +31,22 @@ runlocalnolog: copy
 
 copy: 
 
-	@echo "Removing existing bundles dir"
-	@sudo rm -rf config/bundles
+	@echo "Removing existing modules dir"
+	@sudo rm -rf config/modules
 
-	@mkdir config/bundles
+	@mkdir config/modules
 
-	@echo "Copying built jars into local dir"
-	@cp ../bundles/reka-*/target/reka-*.jar config/bundles/
+	@for module in $(docker_modules); do\
+		cp ../dist/reka/lib/modules/reka-$$module-* config/modules ; \
+	done
 
-	@cp ../main/reka-main/target/reka-main-*.jar reka.jar
+	@rm -f config/modules.reka
 
-	@echo "Making bundles.reka"
+	@for module in `ls config/modules`; do\
+		echo "module modules/$$module" >> config/modules.reka; \
+	done
 
-	@for b in `find config/bundles -type f -name '*.jar'`; do echo bundle bundles/`basename $$b`; done > config/bundles.reka
+	@cp ../build/reka-main*.jar reka.jar
 
 stop: 
 	@-docker kill ${name} >/dev/null
