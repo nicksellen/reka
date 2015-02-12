@@ -103,6 +103,7 @@ public class ApplicationConfigurer implements ErrorReporter {
     }
     
     @Conf.Each("def")
+    @Conf.Each("on")
     public void def(Config config) {
     	checkConfig(config.hasValue(), "you must provide a value/name");
     	defs.add(config);
