@@ -5,7 +5,7 @@ dist_modules = command net jade mustache smtp less jsx common postgres h2
 
 dist_dir = dist/reka
 
-.PHONY: clean clean-build clean-dist upload-s3 test install-main build-main build-modules
+.PHONY: clean clean-build clean-dist upload-s3 test install-main build-main
 
 all: clean dist
 
@@ -20,9 +20,6 @@ test:
 
 build-main:
 	@cd main && mvn -DskipTests clean package
-
-build-modules: install-main
-	@cd bundles && mvn -DskipTests clean package
 
 install-main:
 	@cd main && mvn -DskipTests clean install
