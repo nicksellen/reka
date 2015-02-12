@@ -3,6 +3,7 @@ package reka.jdbc;
 import static reka.api.Path.path;
 import static reka.api.Path.root;
 import static reka.api.content.Contents.booleanValue;
+import static reka.api.content.Contents.doubleValue;
 import static reka.api.content.Contents.integer;
 import static reka.api.content.Contents.longValue;
 import static reka.api.content.Contents.nullValue;
@@ -221,6 +222,9 @@ public class JdbcQuery implements Operation {
 		Meta(ResultSetMetaData meta) throws SQLException {
 			try {
 				tablename = path(meta.getTableName(1).toLowerCase());
+				if (tablename.isEmpty()) {
+					tablename = path("results");	
+				}
 			} catch (SQLException e) {
 				tablename = path("results");
 			}
@@ -255,6 +259,10 @@ public class JdbcQuery implements Operation {
 		case Types.INTEGER:
 			item.put(path, integer(result.getInt(column)));
 			return;
+		case Types.NUMERIC:
+			// TODO: not sure how to handle the big decimal scenario
+			item.put(path, doubleValue(result.getBigDecimal(column).doubleValue()));
+			break;
 		case Types.BIGINT:
 			item.put(path, longValue(result.getLong(column)));
 			return;
@@ -273,17 +281,26 @@ public class JdbcQuery implements Operation {
 			return;
 		default:
 			switch (meta.typeNames[column]) {
+			case "uuid":
+				item.put(path, utf8(result.getString(column)));
+				break;
 			case "json":
-				try {
-					@SuppressWarnings("unchecked")
-					Map<String,Object> m = json.readValue(result.getString(column), Map.class);
-					item.put(path, MutableMemoryData.createFromMap(m));
-				} catch (IOException e) {
-					throw unchecked(e);
+				String jsonStr = result.getString(column);
+				if (jsonStr != null) {
+					try {
+						@SuppressWarnings("unchecked")
+						Map<String,Object> m = json.readValue(jsonStr, Map.class);
+						item.put(path, MutableMemoryData.createFromMap(m));
+					} catch (IOException e) {
+						throw unchecked(e);
+					}
+				} else {
+					item.put(path, nullValue());
 				}
 				return;
 			case "bool":
 				item.put(path, booleanValue(result.getBoolean(column)));
+				break;
 			default:
 				throw runtime("don't know how to handle column type [%d] / [%s]", meta.types[column], meta.typeNames[column]);
 			}

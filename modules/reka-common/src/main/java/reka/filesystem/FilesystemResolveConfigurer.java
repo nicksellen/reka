@@ -20,11 +20,13 @@ public class FilesystemResolveConfigurer implements OperationConfigurer {
 	private Function<Data,String> outFn;
 	
 	@Conf.At("in")
+	@Conf.At("from")
 	public void in(String val) {
 		inFn = StringWithVars.compile(val);
 	}
 	
 	@Conf.At("out")
+	@Conf.At("into")
 	public void out(String val) {
 		outFn = StringWithVars.compile(val);
 	}

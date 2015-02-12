@@ -27,6 +27,7 @@ public class MustacheRenderConfigurer implements OperationConfigurer {
 	}
 	
 	@Conf.At("out")
+	@Conf.At("into")
 	public void out(String value) {
 		out = dots(value);
 	}

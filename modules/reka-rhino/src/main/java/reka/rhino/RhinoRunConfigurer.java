@@ -32,6 +32,7 @@ public class RhinoRunConfigurer implements OperationConfigurer {
 	}
 	
 	@Conf.At("out")
+	@Conf.At("into")
 	public void out(String val) {
 		out = dots(val);
 	}

@@ -28,6 +28,7 @@ public class RekaVisualizeConfigurer implements OperationConfigurer {
 	private Path out = Response.CONTENT;
 	
 	@Conf.At("out")
+	@Conf.At("into")
 	public void out(String val) {
 		out = dots(val);
 	}

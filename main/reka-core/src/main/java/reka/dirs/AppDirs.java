@@ -11,9 +11,14 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import reka.core.app.IdentityAndVersion;
 
 public class AppDirs extends AbstractDirs implements Dirs {
+	
+	private static final Logger log = LoggerFactory.getLogger(AppDirs.class);
 	
 	public static String dirnameFor(String identity, int version) {
 		return toDir(IdentityAndVersion.create(identity, version));
@@ -32,7 +37,13 @@ public class AppDirs extends AbstractDirs implements Dirs {
 		Map<String,java.nio.file.Path> appPaths = new HashMap<>();
 		try {
 			Files.list(dirs.app()).forEach(identityPath -> {
-				String identity = decode32(identityPath.getFileName().toString());
+				String identity;
+				try {
+					identity = decode32(identityPath.getFileName().toString());
+				} catch (Throwable t) {
+					log.info("not base32, ignoring: {}", identityPath.toAbsolutePath().toString());
+					return;
+				}
 				try {
 					Files.list(identityPath).forEach(versionPath -> {
 						try {

@@ -102,12 +102,14 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 		
 		@Conf.Val
 		@Conf.At("in")
+		@Conf.At("from")
 		public void in(String val) {
 			inFn = StringWithVars.compile(val).andThen(s -> dots(s));
 			if (outFn == null) outFn = inFn;
 		}
 
 		@Conf.At("out")
+		@Conf.At("into")
 		public void out(String val) {
 			outFn = StringWithVars.compile(val).andThen(s -> dots(s));
 		}
@@ -236,6 +238,7 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 		
 		@Conf.Val
 		@Conf.At("out")
+		@Conf.At("into")
 		public void out(String val) {
 			out = dots(val);
 		}

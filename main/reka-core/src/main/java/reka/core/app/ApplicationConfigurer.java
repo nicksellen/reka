@@ -249,7 +249,10 @@ public class ApplicationConfigurer implements ErrorReporter {
 	    	// ok, initialize this thing!
 	    	
 	    	ApplicationInitializer appi = new ApplicationInitializer(future, identity, flowBuilders, applicationBuilder, initializer, tests);
-	    	initializer.flow().prepare().operationExecutor(executor).mutableData(MutableMemoryData.create()).complete(appi).run();
+	    	
+	    	log.debug("initializing app");
+	    	
+	    	initializer.flow().prepare().operationExecutor(executor).mutableData(MutableMemoryData.create()).run(appi);
     	
     	});
     }
@@ -282,14 +285,13 @@ public class ApplicationConfigurer implements ErrorReporter {
     	
     	@Override
 		public void halted() {
-    		log.debug("halted whilst initializing app :(");
-			future.cancel(true);
+    		log.error("halted whilst initializing app :(");
+			future.completeExceptionally(runtime("halted whilst initializing app :("));
 		}
 
 		@Override
 		public void error(Data data, Throwable t) {
-			log.debug("error whilst initializing app :( {} {}", t.getMessage(), data.toPrettyJson());
-			//t.printStackTrace();
+			log.error("error whilst initializing app :( {} {}", t.getMessage(), data.toPrettyJson());
 			future.completeExceptionally(t);
 		}
 		

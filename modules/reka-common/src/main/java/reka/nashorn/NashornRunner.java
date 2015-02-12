@@ -5,6 +5,7 @@ import java.util.Map;
 import javax.script.CompiledScript;
 
 public interface NashornRunner {
+	static final String REKA_OUTPUT_PROPERTY = "out";
 	CompiledScript compile(String source);
-	Map<String,Object> run(CompiledScript compiledScript, Map<String, Object> data);
+	Object run(CompiledScript compiledScript, Map<String, Object> data);
 }

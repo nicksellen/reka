@@ -14,7 +14,7 @@ import reka.core.util.StringWithVars;
 public class JdbcQueryConfigurer implements OperationConfigurer {
 
 	private final JdbcConfiguration config;
-	private Path out = root();
+	private Path into = root();
 	
 	private boolean firstOnly = false;
     
@@ -29,10 +29,10 @@ public class JdbcQueryConfigurer implements OperationConfigurer {
 	public void config(Config config) {
 	    if (config.hasDocument()) {
 	        queryFn = StringWithVars.compile(config.documentContentAsString());
-	        if (config.hasValue() && out == null) {
-	        	out = dots(config.valueAsString());
+	        if (config.hasValue() && into == null) {
+	        	into = dots(config.valueAsString());
 	        }
-	    } else if (config.hasValue() && !config.hasBody()) {
+	    } else if (config.hasValue()) {
 	        queryFn = StringWithVars.compile(config.valueAsString());
 	    }
 	}
@@ -47,14 +47,15 @@ public class JdbcQueryConfigurer implements OperationConfigurer {
     }
     
     @Conf.At("out")
+    @Conf.At("into")
     public void out(String val) {
-        out = dots(val);
+        into = dots(val);
     }
 	
 	@Override
 	public void setup(OperationSetup ops) {
 	    requireNonNull(queryFn, "you didn't pick a query!");
-		ops.add("run", store -> new JdbcQuery(config, store.get(POOL), queryFn, firstOnly, out));
+		ops.add("run", store -> new JdbcQuery(config, store.get(POOL), queryFn, firstOnly, into));
 	}
 
 }

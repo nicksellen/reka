@@ -25,7 +25,6 @@ import reka.core.data.memory.MutableMemoryData;
 import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
 
-
 public class SMTPServerConfigurer extends ModuleConfigurer {
 
 	private static final Logger log = LoggerFactory.getLogger(SMTPServerConfigurer.class);

@@ -17,6 +17,8 @@ import javax.script.ScriptException;
 import javax.script.SimpleBindings;
 import javax.script.SimpleScriptContext;
 
+import reka.nashorn.ThreadLocalNashornRunner.Collector;
+import reka.nashorn.ThreadLocalNashornRunner.EvenSimplerScriptContext;
 import jdk.nashorn.api.scripting.NashornScriptEngine;
 import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
@@ -82,9 +84,12 @@ public class SingleThreadedNashornRunner implements NashornRunner {
 		synchronized (lock) {
 			try {
 				return compiler.compile(new StringBuilder()
-					.append("(function(){\n")
-						.append(source)
-					.append("\n}).call(null)").toString());
+					.append("REKA.collect({ ")
+						.append(REKA_OUTPUT_PROPERTY)
+						.append(": (function(){\n")
+							.append(source)
+						.append("\n}).call(null)\n")
+					.append("});").toString());
 			} catch (ScriptException e) {
 				throw unchecked(e);
 			}
@@ -92,17 +97,19 @@ public class SingleThreadedNashornRunner implements NashornRunner {
 	}
 
 	@Override
-	public Map<String,Object> run(CompiledScript compiledScript, Map<String,Object> data) {
+	public Object run(CompiledScript compiledScript, Map<String,Object> data) {
 		synchronized (lock) {
 			Map<String,Object> map = new HashMap<>();
 			Bindings bindings = new SimpleBindings(map);
 			bindings.putAll(data);
+			Collector collector = new Collector();
+			bindings.put("REKA", collector);
 			try {
 				compiledScript.eval(new EvenSimplerScriptContext(global, bindings));
 			} catch (ScriptException e) {
 				throw unchecked(e);
 			}
-			return map;
+			return collector.result;
 		}
 	}
 	

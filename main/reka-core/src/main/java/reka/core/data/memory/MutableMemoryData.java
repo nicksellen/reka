@@ -72,6 +72,10 @@ public class MutableMemoryData implements MutableDataProvider<Object> {
 		return new MutableDataWrapper<>(convertMap(map), MutableMemoryData.INSTANCE);
 	}
 	
+	public static MutableData createFromList(List<Object> list) {
+		return new MutableDataWrapper<>(convertList(list), MutableMemoryData.INSTANCE);
+	}
+	
 	private static Map<String,Object> convertMap(Map<String,Object> map) {
 		for (Entry<String, Object> e : map.entrySet()) {
 			e.setValue(convertValue(e.getValue()));
@@ -104,13 +108,13 @@ public class MutableMemoryData implements MutableDataProvider<Object> {
 			return NullContent.INSTANCE;
 		} else if (obj instanceof String) {
 			return utf8((String) obj);
-		} else if (long.class.isInstance(obj)) {
+		} else if (long.class.isInstance(obj) || Long.class.isInstance(obj)) {
 			return longValue((long) obj);
-		} else if (int.class.isInstance(obj)) {
+		} else if (int.class.isInstance(obj) || Integer.class.isInstance(obj)) {
 			return integer((int) obj);
-		} else if (double.class.isInstance(obj)) {
+		} else if (double.class.isInstance(obj) || Double.class.isInstance(obj)) {
 			return doubleValue((double) obj);
-		} else if (boolean.class.isInstance(obj)) {
+		} else if (boolean.class.isInstance(obj) || Boolean.class.isInstance(obj)) {
 			return booleanValue((boolean) obj);
 		} else {
 			throw runtime("don't know how to make %s (%s) a Content", obj, obj.getClass());

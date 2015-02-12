@@ -1,6 +1,10 @@
 package reka.core.runtime.handlers;
 
 import static java.lang.String.format;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.core.runtime.FlowContext;
@@ -48,8 +52,11 @@ public class RuntimeNode implements Node {
 		error.error(data, context, t);
 	}
 	
+	private final Logger log = LoggerFactory.getLogger(getClass());
+	
 	@Override
 	public String toString() {
+		log.debug("rtnode: <<{}>> <<{}>> <<{}>> <<{}>>", name, next, halted, error);
 		return format("%s(id=%s,name=%s,next=%s,halted=%s,error=%s)", 
 				getClass().getSimpleName(), 
 				id, 

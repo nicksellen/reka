@@ -21,6 +21,7 @@ public class MarkdownConfigurer implements OperationConfigurer {
 	}
 	
 	@Conf.At("in")
+	@Conf.At("from")
 	public void in(String val) {
 		if (StringWithVars.hasVars(val)) {
 			inFn = StringWithVars.compile(val).andThen(v -> dots(v));
@@ -32,6 +33,7 @@ public class MarkdownConfigurer implements OperationConfigurer {
 	}
 	
 	@Conf.At("out")
+	@Conf.At("into")
 	public void out(String val) {
 		if (StringWithVars.hasVars(val)) {
 			outFn = StringWithVars.compile(val).andThen(v -> dots(v));

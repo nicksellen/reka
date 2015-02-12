@@ -27,12 +27,14 @@ public class JsxModule implements Module {
 		return path("jsx");
 	}
 	
+	private static final Object lock = new Object();
+	
 	private static final Logger log = LoggerFactory.getLogger(JsxModule.class);
 	
 	private static volatile NashornRunner runner;
 	private static volatile CompiledScript jsxCompiler;
 	
-	private static boolean initialized = false;
+	private static volatile boolean initialized = false;
 	
 	public static NashornRunner runner() {
 		if (!initialized) initialize();
@@ -45,16 +47,20 @@ public class JsxModule implements Module {
 	}
 	
 	private static void initialize() {
-		try {
-			String version = "0.11.2";
-			log.info("initializing jsx engine ({})", version);
-			String init = Resources.toString(JsxModule.class.getResource("/env.js"), StandardCharsets.UTF_8);
-			String jsxTransformer = Resources.toString(JsxModule.class.getResource("/JSXTransformer-" + version + ".js"), StandardCharsets.UTF_8);
-			runner = new SingleThreadedNashornRunner(asList(init, jsxTransformer));
-			String compiler = Resources.toString(JsxModule.class.getResource("/compiler.js"), StandardCharsets.UTF_8);
-			jsxCompiler = runner.compile(compiler);
-		} catch (IOException e) {
-			throw unchecked(e);
+		synchronized (lock) {
+			if (initialized) return;
+			try {
+				String version = "0.11.2";
+				log.info("initializing jsx engine ({})", version);
+				String init = Resources.toString(JsxModule.class.getResource("/env.js"), StandardCharsets.UTF_8);
+				String jsxTransformer = Resources.toString(JsxModule.class.getResource("/JSXTransformer-" + version + ".js"), StandardCharsets.UTF_8);
+				runner = new SingleThreadedNashornRunner(asList(init, jsxTransformer));
+				String compiler = Resources.toString(JsxModule.class.getResource("/compiler.js"), StandardCharsets.UTF_8);
+				jsxCompiler = runner.compile(compiler);
+				initialized = true;
+			} catch (IOException e) {
+				throw unchecked(e);
+			}
 		}
 	}
 

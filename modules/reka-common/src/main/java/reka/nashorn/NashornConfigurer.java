@@ -137,10 +137,9 @@ public class NashornConfigurer extends ModuleConfigurer {
 					
 					Map<String,Object> m = new HashMap<>();
 					m.put("data", Data.NONE);
-					m.put("out", new HashMap<>());
 					
 					MutableData data = MutableMemoryData.create();
-					Object outval = js.run(js.compile(src), m).get("out");
+					Object outval = js.run(js.compile(src), m);
 					if (outval instanceof Map) {
 						MutableMemoryData.createFromMap((Map<String,Object>) outval).forEachContent((path, content) -> {
 							data.put(path, content);

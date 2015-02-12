@@ -3,6 +3,7 @@ import static reka.api.Path.root;
 import static reka.api.content.Contents.utf8;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import static reka.util.Util.hex;
+import static reka.util.Util.runtime;
 import static reka.util.Util.unchecked;
 
 import java.io.File;
@@ -12,6 +13,9 @@ import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import reka.api.IdentityKey;
 import reka.api.Path;
@@ -29,6 +33,8 @@ import reka.core.setup.OperationSetup;
 
 
 public class JsxConfigurer extends ModuleConfigurer {
+	
+	private final Logger log = LoggerFactory.getLogger(getClass());
 	
 	protected static final IdentityKey<String> COMPILED = IdentityKey.named("compiled jsx");
 	
@@ -62,13 +68,15 @@ public class JsxConfigurer extends ModuleConfigurer {
 						data.put("src", jsx);
 						Map<String,Object> map = new HashMap<>();
 						map.put("data", data);
-						JsxModule.runner().run(JsxModule.jsxCompiler(), map);
-						compiled = data.get("code").toString();
+						Object result = JsxModule.runner().run(JsxModule.jsxCompiler(), map);
+						if (!(result instanceof String)) throw runtime("compiler.js must return a String");
+						compiled = (String) result;
 						Files.write(cacheFile.toPath(), compiled.getBytes(StandardCharsets.UTF_8));
 					}
 					store.put(COMPILED, compiled);
-				} catch (Exception e) {
-					throw unchecked(e);
+				} catch (Throwable t) {
+					t.printStackTrace();
+					throw unchecked(t);
 				}
 			});
 		});

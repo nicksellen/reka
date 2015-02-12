@@ -12,11 +12,13 @@ public class BCryptHashpwConfigurer implements OperationConfigurer {
 	private Path out = dots("bcrypt.hash");
 	
 	@Conf.At("in")
+	@Conf.At("from")
 	public void in(String val) {
 		in = dots(val);
 	}
 	
 	@Conf.At("out")
+	@Conf.At("into")
 	public void out(String val) {
 		out = dots(val);
 	}

@@ -47,6 +47,7 @@ public class FilesystemModule implements Module {
 		}
 		
 		@Conf.At("out")
+		@Conf.At("into")
 		public void data(String val) {
 			dataPathFn = StringWithVars.compile(val).andThen(path -> dots(path));
 		}
@@ -103,6 +104,7 @@ public class FilesystemModule implements Module {
 		}
 		
 		@Conf.At("out")
+		@Conf.At("into")
 		public void data(String val) {
 			dataPathFn = StringWithVars.compile(val).andThen(path -> dots(path));
 		}

@@ -3,6 +3,7 @@ package reka.nashorn;
 import static reka.util.Util.runtime;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.script.CompiledScript;
@@ -29,13 +30,17 @@ public class NashornRunOperation implements Operation {
 	public void call(MutableData data) {
 		Map<String,Object> m = new HashMap<>();
 		m.put("data", data.viewAsMap());
-		m.put("out", new HashMap<>());
-		Object outval = runner.run(compiled, m).get("out");
+		Object outval = runner.run(compiled, m);
 		if (outval instanceof Map) {
 			MutableMemoryData.createFromMap((Map<String,Object>) outval).forEachContent((path, content) -> 
 				data.put(out.add(path), content));
+		} else if (outval instanceof List) {
+			MutableMemoryData.createFromList((List<Object>) outval).forEachContent((path, content) -> 
+				data.put(out.add(path), content));
 		} else if (outval instanceof String) {
 			data.putString(out, (String) outval);
+		} else if (outval == null) {
+			// fine. null is fine.
 		} else {
 			throw runtime("not sure what to do with %s", outval);
 		}

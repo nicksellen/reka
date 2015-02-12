@@ -18,11 +18,13 @@ public class UnzipConfigurer implements OperationConfigurer {
 	private Function<Data,java.nio.file.Path> outputDirFn;
 	
 	@Conf.At("data")
+	@Conf.At("from")
 	public void in(String val) {
 		dataPathFn = StringWithVars.compile(val).andThen(v -> dots(v));
 	}
 	
 	@Conf.At("out")
+	@Conf.At("into")
 	public void out(String val) {
 		outputDirFn = StringWithVars.compile(val).andThen(s -> new File(s).toPath());
 	}

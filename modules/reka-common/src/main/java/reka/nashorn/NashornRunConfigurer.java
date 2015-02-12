@@ -17,15 +17,21 @@ public class NashornRunConfigurer implements OperationConfigurer {
 		this.out = defaultWriteTo;
 	}
 
+	@Conf.Val
 	@Conf.At("out")
+	@Conf.At("into")
 	public void out(String val) {
 		out = dots(val);
 	}
 	
 	@Conf.Config
+	@Conf.At("script")
 	public void config(Config config) {
 		if (config.hasDocument()) {
 			script = config.documentContentAsString();
+			if (config.hasValue()) {
+				out = dots(config.valueAsString());
+			}
 		} else if (config.hasValue()) {
 			script = config.valueAsString();
 		}

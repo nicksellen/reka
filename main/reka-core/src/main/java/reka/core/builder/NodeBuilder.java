@@ -1,5 +1,6 @@
 package reka.core.builder;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -33,6 +34,7 @@ import reka.core.runtime.Node;
 import reka.core.runtime.NodeChild;
 import reka.core.runtime.handlers.ActionHandler;
 import reka.core.runtime.handlers.ControlHandler;
+import reka.core.runtime.handlers.DoNothing;
 import reka.core.runtime.handlers.ErrorHandler;
 import reka.core.runtime.handlers.HaltedHandler;
 import reka.core.runtime.handlers.RuntimeNode;
@@ -211,9 +213,18 @@ class NodeBuilder {
 			main = stateHandler;
 			halted = stateHandler;
 		}
+		
+		// TODO: is this ok?
+		if (halted == null) {
+			halted = DoNothing.INSTANCE;
+		}
 
 		//main = new TimeLoggerAction(id, main, error);
 
+		checkNotNull(main, "main was null");
+		checkNotNull(halted, "halted was null");
+		checkNotNull(error, "error was null");
+		
 		RuntimeNode rtNode = new RuntimeNode(id, name, main, halted, error);
 		log.debug("\n  built node {} -> \n    {}\n    {}", id, sb.toString().trim(), rtNode);
 		
