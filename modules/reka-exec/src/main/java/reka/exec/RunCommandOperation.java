@@ -1,4 +1,4 @@
-package reka.command;
+package reka.exec;
 
 import static java.util.Arrays.asList;
 import static reka.util.Util.unchecked;

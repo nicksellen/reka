@@ -3,7 +3,69 @@ app api @include(api.reka)
 //app ui @include(ui/main.reka)
 
 app {
+
+	name execute command
+	
+	exec name-fn <<-
+		#!/bin/bash
+		echo -n your name is $NAME
+	---
+	
+	test run bash process {
+		run {
+			name-fn
+		}
+		case peter {
+			input {
+				name peter
+			}
+			expect {
+				result.out your name is peter
+			}
+		}
+		case james {
+			input {
+				name james
+			}
+			expect {
+				result.out your name is james
+			}
+		}
+	}
+
+}
+
+app {
   name hello
+  
+  adder
+  
+  // tests run in parallel
+  
+  test the counter {
+  	run {
+  		adder/inc
+  		adder/sum
+  	}
+  	
+  	// cases run sequentially
+  	
+  	case one increment {
+  		expect {
+  			sum 1
+  		}
+  	}
+  	case another increment {
+  		expect {
+  			sum 2
+  		}
+  	}
+  	case another increment {
+  		expect {
+  			sum 3
+  		}
+  	}
+  }
   
   test basic things {
   	run {

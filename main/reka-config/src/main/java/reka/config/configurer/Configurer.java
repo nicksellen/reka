@@ -376,37 +376,6 @@ public class Configurer {
 		}
 		return null;
 	}
-	
-	protected static String rootExceptionMessage(Throwable t) {
-		Collection<String> msgs = allExceptionMessages(t);
-		return msgs.isEmpty() ? "unknown" : msgs.iterator().next();
-	}
-	
-	protected static Throwable rootCause(Throwable t) {
-		Throwable cause = t.getCause();
-		while (cause != null) {
-			t = cause;
-			cause = t.getCause();
-		}
-		return t;
-	}
-	
-	protected static Collection<String> allExceptionMessages(Throwable original) {
-		List<String> result = new ArrayList<>();
-		
-		Throwable t = original;
-		
-		while (t != null) {
-			if (t.getMessage() != null) {
-				result.add(t.getMessage());
-			}
-			t = t.getCause();
-		}
-		
-		Collections.reverse(result);
-		
-		return result;
-	}
 
 	protected void checkDeprecation(Method method, Config config) {
 		
@@ -1126,6 +1095,37 @@ public class Configurer {
 		} else {
 			return Collections.emptySet();
 		}
+	}
+
+	protected static String rootExceptionMessage(Throwable t) {
+		Collection<String> msgs = allExceptionMessages(t);
+		return msgs.isEmpty() ? "unknown" : msgs.iterator().next();
+	}
+	
+	protected static Throwable rootCause(Throwable t) {
+		Throwable cause = t.getCause();
+		while (cause != null) {
+			t = cause;
+			cause = t.getCause();
+		}
+		return t;
+	}
+	
+	protected static Collection<String> allExceptionMessages(Throwable original) {
+		List<String> result = new ArrayList<>();
+		
+		Throwable t = original;
+		
+		while (t != null) {
+			if (t.getMessage() != null) {
+				result.add(t.getMessage());
+			}
+			t = t.getCause();
+		}
+		
+		Collections.reverse(result);
+		
+		return result;
 	}
 	
 }

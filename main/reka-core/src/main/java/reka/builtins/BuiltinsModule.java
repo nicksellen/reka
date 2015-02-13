@@ -3,6 +3,7 @@ package reka.builtins;
 import static reka.api.Path.path;
 import static reka.api.Path.root;
 import reka.api.Path;
+import reka.builtins.adder.AdderConfigurer;
 import reka.config.processor.CommentConverter;
 import reka.config.processor.DocumentationConverter;
 import reka.config.processor.IncludeConverter;
@@ -22,6 +23,7 @@ public class BuiltinsModule implements Module {
 		module.main(() -> new BuiltinsConfigurer());
 		
 		module.submodule(path("timer"), () -> new TimerConfigurer());
+		module.submodule(path("adder"), () -> new AdderConfigurer());
 		
 		// the ordering of these is very important! be careful :)
 		

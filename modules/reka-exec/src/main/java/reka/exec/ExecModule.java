@@ -1,20 +1,20 @@
-package reka.command;
+package reka.exec;
 
 import static reka.api.Path.path;
 import reka.api.Path;
 import reka.core.module.Module;
 import reka.core.module.ModuleDefinition;
 
-public class CommandModule implements Module {
+public class ExecModule implements Module {
 
 	@Override
 	public Path base() {
-		return path("command");
+		return path("exec");
 	}
 	
 	@Override
 	public void setup(ModuleDefinition module) {
-		module.main(() -> new CommandConfigurer());
+		module.main(() -> new ExecConfigurer());
 	}
 
 }

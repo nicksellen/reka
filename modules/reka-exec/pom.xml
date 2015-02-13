@@ -2,7 +2,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>io.reka</groupId>
-	<artifactId>reka-command</artifactId>
+	<artifactId>reka-exec</artifactId>
 	<version>0.1.0</version>
 
 	<properties>
@@ -50,7 +50,7 @@
 							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
 						</manifest>
 						<manifestEntries>
-							<Reka-Module>reka.command.CommandModule</Reka-Module>
+							<Reka-Module>reka.exec.ExecModule</Reka-Module>
 						</manifestEntries>
 					</archive>
 				</configuration>

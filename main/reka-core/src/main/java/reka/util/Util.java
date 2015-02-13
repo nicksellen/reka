@@ -1,6 +1,7 @@
 package reka.util;
 
 import static java.lang.String.format;
+import static java.util.stream.Collectors.joining;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
@@ -16,6 +17,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Base64.Decoder;
 import java.util.Base64.Encoder;
 import java.util.List;
@@ -307,6 +310,41 @@ public class Util {
 		} catch (InterruptedException e) {
 			throw unchecked(e);
 		}
+	}
+
+	public static String rootExceptionMessage(Throwable t) {
+		Collection<String> msgs = allExceptionMessages(t);
+		return msgs.isEmpty() ? "unknown" : msgs.iterator().next();
+	}
+	
+	public static Throwable rootCause(Throwable t) {
+		Throwable cause = t.getCause();
+		while (cause != null) {
+			t = cause;
+			cause = t.getCause();
+		}
+		return t;
+	}
+	
+	public static String allExceptionMessages(Throwable t, String joiner) {
+		return allExceptionMessages(t).stream().collect(joining(joiner));
+	}
+	
+	public static Collection<String> allExceptionMessages(Throwable original) {
+		List<String> result = new ArrayList<>();
+		
+		Throwable t = original;
+		
+		while (t != null) {
+			if (t.getMessage() != null) {
+				result.add(t.getMessage());
+			}
+			t = t.getCause();
+		}
+		
+		Collections.reverse(result);
+		
+		return result;
 	}
 	
 }

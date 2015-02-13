@@ -35,6 +35,7 @@ public interface FlowContext {
     ExecutorService coordinationExecutor();
     
 	long flowId();
+    long contextId();
 	long started();
 	boolean statsEnabled();
     

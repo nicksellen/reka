@@ -1,5 +1,7 @@
 package reka.api.run;
 
+import static reka.util.Util.runtime;
+
 import java.util.function.BiConsumer;
 
 import reka.api.data.MutableData;
@@ -23,6 +25,9 @@ public interface AsyncOperation extends SimpleFlowOperation {
 	public static interface OperationResult {
 		void done();
 		void error(Throwable t);
+		default void error(String msg, Object... objs) {
+			error(runtime(msg, objs));
+		}
 	}
 	
 }

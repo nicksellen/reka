@@ -93,7 +93,7 @@ public class TestConfigurer {
 		}
 		
 		public void addToList(List<FlowTestCase> testCases) {
-			if (!initial.equals(Data.NONE) && !expect.equals(Data.NONE)) {
+			if (!expect.equals(Data.NONE)) {
 				testCases.add(new FlowTestCase(name, initial, expect));	
 			}
 		}

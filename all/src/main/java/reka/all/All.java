@@ -20,6 +20,7 @@ import reka.config.NavigableConfig;
 import reka.config.parser.ConfigParser;
 import reka.core.module.ModuleManager;
 import reka.core.module.RekaGuiceModule;
+import reka.exec.ExecModule;
 import reka.filesystem.FilesystemModule;
 import reka.h2.H2Module;
 import reka.jade.JadeModule;
@@ -63,6 +64,7 @@ public class All {
 				ProcessModule.class,
 				MustacheModule.class,
 				H2Module.class,
+				ExecModule.class,
 				PostgresModule.class,
 				JsxModule.class,
 				CommonModule.class,

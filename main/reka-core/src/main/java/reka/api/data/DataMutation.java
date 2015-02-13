@@ -3,6 +3,7 @@ package reka.api.data;
 import static reka.api.Path.path;
 import static reka.api.Path.PathElements.name;
 import static reka.api.content.Contents.booleanValue;
+import static reka.api.content.Contents.doubleValue;
 import static reka.api.content.Contents.integer;
 import static reka.api.content.Contents.longValue;
 import static reka.api.content.Contents.nullValue;
@@ -62,6 +63,10 @@ public interface DataMutation<T> {
 	
 	default T putLong(Path path, long val) {
 		return put(path, longValue(val));
+	}
+
+	default T putDouble(Path path, double val) {
+		return put(path, doubleValue(val));
 	}
 	
 	default T putLong(PathElement element, long val) {

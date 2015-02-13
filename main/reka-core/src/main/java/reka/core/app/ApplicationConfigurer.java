@@ -8,14 +8,17 @@ import static reka.api.Path.slashes;
 import static reka.config.configurer.Configurer.configure;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import static reka.core.config.ConfigUtils.configToData;
+import static reka.util.Util.allExceptionMessages;
 import static reka.util.Util.runtime;
 import static reka.util.Util.safelyCompletable;
+import static reka.util.Util.unwrap;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -24,15 +27,19 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import reka.FlowTest;
+import reka.FlowTest.FlowTestCase;
+import reka.Reka;
 import reka.RootModule;
 import reka.TestConfigurer;
 import reka.api.IdentityKey;
@@ -69,7 +76,6 @@ public class ApplicationConfigurer implements ErrorReporter {
 	
 	private static final Logger log = LoggerFactory.getLogger(ApplicationConfigurer.class);
     private Path applicationName;
-
 	
 	private final ModuleManager modules;
 
@@ -372,91 +378,121 @@ public class ApplicationConfigurer implements ErrorReporter {
 		
 		CompletableFuture<Void> future = new CompletableFuture<>();
 		
-		int testCaseCount = (int)tests.values().stream().flatMap(t -> t.cases().stream()).count();
+		//int testCaseCount = (int)tests.values().stream().flatMap(t -> t.cases().stream()).count();
 
-		if (testCaseCount == 0) {
+		if (tests.isEmpty()) {
 			future.complete(null);
 			return future;
 		}
 		
-		log.info("running {} tests", testCaseCount);
+		log.info("running {} tests", tests.size());
 		
-		CountDownLatch latch = new CountDownLatch(testCaseCount);
-		
-		AtomicBoolean failed = new AtomicBoolean(false);
+		AtomicInteger remaining = new AtomicInteger(tests.size());
 		
 		List<String> testErrors = Collections.synchronizedList(new ArrayList<>());
+
+		ScheduledFuture<?> timeout = Reka.SCHEDULED_SERVICE.schedule(() -> {
+			future.completeExceptionally(runtime("failed to deploy [%s] because tests timed out", identity));
+		}, 10, TimeUnit.SECONDS);
+		
+		Runnable testsFinished = () -> {
+			if (future.isDone()) return; // too late
+			timeout.cancel(true);
+			if (testErrors.isEmpty()) {
+				future.complete(null);
+			} else {
+				String msg = format("failed to deploy [%s] because tests failed:\n%s", identity, 
+						testErrors.stream().map(s -> format("- %s", s)) .collect(joining("\n")));
+				log.error(msg);
+				future.completeExceptionally(runtime(msg));
+			}
+		};
 		
 		tests.forEach((name, test) -> {
-			Flow flow = flows.flow(name);
-			
-			test.cases().forEach(testCase -> {
-				
-				flow.prepare().operationExecutor(executor).data(testCase.initial()).run(new Subscriber(){
-					
-					@Override
-					public void ok(MutableData data) {
-						try {
-							data.diffContentFrom(testCase.expect(), (path, type, expected, actual) -> {
-								if (type == DiffContentType.ADDED) return; // don't mind extra data for now...
-								Optional<Content> initvalue = testCase.initial().getContent(path);
-								if (!initvalue.isPresent() || !initvalue.get().equals(actual)) {
-									testErrors.add(format("%s : %s\ncontent at %s %s - expected [%s] got [%s]", name.join(" / "), testCase.name(), path.dots(), type, expected, actual));
-									failed.set(true);
-								}
-							});
-						} catch (Throwable t) {
-							testErrors.add(format("%s : %s\nexception during test - %s", name.join(" / "), testCase.name(), t.getMessage()));
-							failed.set(true);
-						} finally {
-							latch.countDown();
-						}
-					}
-					
-					@Override
-					public void halted() {
-						log.error("test halted");
-						failed.set(true);
-						latch.countDown();
-					}
-					
-					@Override
-					public void error(Data data, Throwable t) {
-						log.error("test failed to run", t);
-						failed.set(true);
-						latch.countDown();
-					}
-					
-				});
-			
+			SequentialTestCasesRunner.run(name, flows.flow(name), test.cases(), errors -> {
+				testErrors.addAll(errors);
+				if (remaining.decrementAndGet() == 0) {
+					testsFinished.run();
+				}
 			});
 		});
-		
-		executor.execute(() -> {
-		
-			try {
-				if (latch.await(10, TimeUnit.SECONDS)) {
-					
-					if (failed.get()) {
-						String msg = format("failed to deploy [%s] because tests failed:\n%s", identity, 
-												testErrors.stream().map(s -> format("- %s", s)) .collect(joining("\n")));
-						log.error(msg);
-						future.completeExceptionally(runtime(msg));
-					} else {
-						future.complete(null);
-					}
-				} else {
-					String msg = format("failed to deploy [%s] because tests timed out", identity);
-					log.error(msg);
-					future.completeExceptionally(runtime(msg));
-				} 
-			} catch (Throwable t) {
-				future.completeExceptionally(t);
-			}
-
-		});
-		
+				
 		return future;
+	}
+	
+	public static class SequentialTestCasesRunner {
+		
+		private final Path name;
+		private final Flow flow;
+		private final Iterator<FlowTestCase> cases;
+		private final List<String> testErrors = new ArrayList<>();
+		private final Consumer<List<String>> completion;
+		
+		public static void run(Path name, Flow flow, List<FlowTestCase> cases, Consumer<List<String>> completion) {
+			new SequentialTestCasesRunner(name, flow, cases, completion).runNext();
+		}
+		
+		private SequentialTestCasesRunner(Path name, Flow flow, List<FlowTestCase> cases, Consumer<List<String>> completion) {
+			this.name = name;
+			this.flow = flow;
+			this.cases = cases.iterator();
+			this.completion = completion;
+		}
+		
+		private void complete() {
+			completion.accept(testErrors);
+		}
+		
+		private void runNext() {
+			
+			if (!cases.hasNext()) {
+				complete();
+				return;
+			}
+			
+			FlowTestCase testCase = cases.next();
+			
+			flow.prepare().operationExecutor(executor).data(testCase.initial()).run(new Subscriber(){
+				
+				@Override
+				public void ok(MutableData data) {
+					try {
+						data.diffContentFrom(testCase.expect(), (path, type, expected, actual) -> {
+							if (type == DiffContentType.ADDED) return; // don't mind extra data for now...
+							Optional<Content> initvalue = testCase.initial().getContent(path);
+							if (!initvalue.isPresent() || !initvalue.get().equals(actual)) {
+								if (actual != null && expected != null &&
+									actual.toString().equals(expected.toString())) {
+									// let this go by...
+									// TODO: how to handle equals of numeric types?
+								} else {
+									testErrors.add(format("%s : %s\ncontent at %s %s - expected [%s] got [%s]", name.join(" / "), testCase.name(), path.dots(), type, expected, actual));
+								}
+							}
+						});
+					} catch (Throwable t) {
+						t.printStackTrace();
+						testErrors.add(format("%s : %s\nexception during test - %s", name.join(" / "), testCase.name(), allExceptionMessages(t, ", ")));
+					} finally {
+						runNext();
+					}
+				}
+				
+				@Override
+				public void halted() {
+					log.error("test halted");
+					runNext();
+				}
+				
+				@Override
+				public void error(Data data, Throwable t) {
+					log.error("test failed to run", t);
+					runNext();
+				}
+				
+			});
+			
+		}
 	}
 
 }

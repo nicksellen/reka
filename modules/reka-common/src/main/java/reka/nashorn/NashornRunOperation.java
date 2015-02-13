@@ -39,10 +39,18 @@ public class NashornRunOperation implements Operation {
 				data.put(out.add(path), content));
 		} else if (outval instanceof String) {
 			data.putString(out, (String) outval);
+		} else if (outval instanceof Integer) {
+			data.putInt(out, (Integer) outval);
+		} else if (outval instanceof Long) {
+			data.putLong(out, (Long) outval);
+		} else if (outval instanceof Double) {
+			data.putDouble(out, (Double) outval);
+		} else if (outval instanceof Boolean) {
+			data.putBool(out, (Boolean) outval);
 		} else if (outval == null) {
 			// fine. null is fine.
 		} else {
-			throw runtime("not sure what to do with %s", outval);
+			throw runtime("not sure what to do with %s (%s)", outval, outval.getClass());
 		}
 	}
 

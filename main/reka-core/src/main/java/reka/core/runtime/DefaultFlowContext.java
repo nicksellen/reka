@@ -2,12 +2,11 @@ package reka.core.runtime;
 
 import static reka.util.Util.unchecked;
 
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
-
+import java.util.concurrent.atomic.AtomicLong;
 
 import reka.api.data.Data;
 import reka.api.data.MutableData;
@@ -21,6 +20,10 @@ import reka.core.runtime.handlers.stateful.NodeState;
 
 public class DefaultFlowContext implements FlowContext {
 
+	private static final AtomicLong contextIds = new AtomicLong();
+	
+	private final long contextId = contextIds.incrementAndGet();
+	
 	public static FlowContext create(long flowId, ExecutorService operationExecutor, ExecutorService coordinationExecutor, 
 			                         Subscriber subscriber, FlowStats stats) {
 		return new DefaultFlowContext(flowId, operationExecutor, coordinationExecutor, subscriber, stats);
@@ -58,6 +61,11 @@ public class DefaultFlowContext implements FlowContext {
 	@Override
 	public long flowId() {
 		return flowId;
+	}
+	
+	@Override
+	public long contextId() {
+		return contextId;
 	}
 
 	@Override
