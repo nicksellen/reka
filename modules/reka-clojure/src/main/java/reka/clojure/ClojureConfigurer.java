@@ -1,0 +1,113 @@
+package reka.clojure;
+
+import static java.lang.String.format;
+import static reka.api.Path.root;
+import static reka.config.configurer.Configurer.Preconditions.checkConfig;
+import static reka.util.Util.runtime;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
+
+import reka.api.IdentityKey;
+import reka.api.data.MutableData;
+import reka.config.Config;
+import reka.config.ConfigBody;
+import reka.config.configurer.annotations.Conf;
+import reka.core.data.memory.MutableMemoryData;
+import reka.core.setup.ModuleConfigurer;
+import reka.core.setup.ModuleSetup;
+
+import com.google.common.io.Resources;
+
+public class ClojureConfigurer extends ModuleConfigurer {
+
+	protected static final IdentityKey<ClojureEnv> CLOJURE_ENV = IdentityKey.named("clojure env");
+	
+	private final static String REKA_CLJ;
+	
+	static {
+		try {
+			REKA_CLJ = Resources.toString(Resources.getResource(ClojureConfigurer.class, "/reka.clj"), StandardCharsets.UTF_8);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	private final Map<String,ConfigBody> triggerFns = new HashMap<>(); 
+	
+	public static void main(String[] args) throws InterruptedException {
+		
+		ClojureEnv a = ClojureEnv.create(ClojureConfigurer.class.getClassLoader());
+		ClojureEnv b = ClojureEnv.create(ClojureConfigurer.class.getClassLoader());
+		
+		a.eval("(ns nick)\n(defn doit [m] (println (into {} m)))");
+		b.eval("(ns nick)\n(defn doit [m] (println \"alex\"))");
+		
+		MutableData data = MutableMemoryData.create();
+		data.putString("name", "james");
+		a.run("nick/doit", data.viewAsMap());
+		b.run("nick/doit", data.viewAsMap());
+		
+		a.shutdown();
+		b.shutdown();
+		
+	}
+	
+	private String script;
+	
+	@Conf.Config
+	@Conf.At("script")
+	public void config(Config config) {
+		if (config.hasDocument()) {
+			script = config.documentContentAsString();
+		}
+	}
+	
+	@Conf.Each("defn")
+	public void defn(Config config) {
+		checkConfig(config.hasValue(), "must have a value");
+		triggerFns.put(config.valueAsString(), config.body());
+	}
+	
+	@Override
+	public void setup(ModuleSetup module) {
+		
+		module.setupInitializer(init -> {
+		
+			init.run("initialize environment", store -> {
+				
+				ClojureEnv env = ClojureEnv.create(ClojureConfigurer.class.getClassLoader());
+
+				env.eval(REKA_CLJ);
+				
+				store.put(CLOJURE_ENV, env);
+	
+				// forward declare all the callbacks so the initialization can refer to them (they'll be overwritten later..._
+				triggerFns.forEach((name, body) -> {
+					env.run("reka/define-callback", name, (Runnable) () -> {
+						throw runtime("sorry you can't use callback %s during initialization", name);
+					});
+				});
+				
+				env.eval(script);
+			});
+		});
+		
+		module.onShutdown("shutdown env", store -> {
+			store.remove(CLOJURE_ENV).ifPresent(ClojureEnv::shutdown);
+		});
+		
+		triggerFns.forEach((name, body) -> {
+			module.trigger(format("on %s", name), body, reg -> {
+				reg.store().get(CLOJURE_ENV).run("reka/define-callback", name, (Runnable) () -> {
+					reg.flow().run();
+				});
+			});
+		});
+		
+		module.operation(root(), provider -> new ClojureRunConfigurer());
+	}
+	
+}
