@@ -7,8 +7,14 @@ import static reka.util.Util.runtime;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import reka.api.IdentityKey;
 import reka.api.data.MutableData;
@@ -23,7 +29,11 @@ import com.google.common.io.Resources;
 
 public class ClojureConfigurer extends ModuleConfigurer {
 
+	@SuppressWarnings("unused")
+	private final Logger log = LoggerFactory.getLogger(getClass());
+	
 	protected static final IdentityKey<ClojureEnv> CLOJURE_ENV = IdentityKey.named("clojure env");
+	protected static final IdentityKey<List<Runnable>> SHUTDOWN_CALLBACKS = IdentityKey.named("shutdown callbacks");
 	
 	private final static String REKA_CLJ;
 	
@@ -82,7 +92,14 @@ public class ClojureConfigurer extends ModuleConfigurer {
 
 				env.eval(REKA_CLJ);
 				
+				List<Runnable> shutdownCallbacks = new ArrayList<>();
+				
+				env.run("reka/set-shutdown-collector", (Consumer<Runnable>) f -> {
+					shutdownCallbacks.add(f);
+				});
+				
 				store.put(CLOJURE_ENV, env);
+				store.put(SHUTDOWN_CALLBACKS, shutdownCallbacks);
 	
 				// forward declare all the callbacks so the initialization can refer to them (they'll be overwritten later..._
 				triggerFns.forEach((name, body) -> {
@@ -96,7 +113,14 @@ public class ClojureConfigurer extends ModuleConfigurer {
 		});
 		
 		module.onShutdown("shutdown env", store -> {
-			store.remove(CLOJURE_ENV).ifPresent(ClojureEnv::shutdown);
+
+			store.remove(CLOJURE_ENV).ifPresent(env -> {
+				store.remove(SHUTDOWN_CALLBACKS).ifPresent(callbacks -> {
+					callbacks.forEach(Runnable::run);
+				});
+				env.shutdown();
+			});
+			
 		});
 		
 		triggerFns.forEach((name, body) -> {

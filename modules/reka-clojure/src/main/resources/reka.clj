@@ -1,5 +1,13 @@
 (ns reka)
 
+(def shutdown-collector (atom (fn [])))
+
+(defn set-shutdown-collector [collector]
+  (reset! shutdown-collector collector))
+
+(defn on-shutdown [f]
+  (.accept @shutdown-collector f))
+
 (defn call-from-reka [f m]
   (f (into {} m)))
 

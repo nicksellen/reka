@@ -10,6 +10,8 @@
   <packaging>pom</packaging>
 
   <modules>
+    <module>clojure-env</module>
+    <module>reka-clojure</module>
     <module>reka-jdbc-common</module>
     <module>reka-exec</module>
     <module>reka-net</module>
