@@ -81,14 +81,30 @@ public class ClojureConfigurer extends ModuleConfigurer {
 		triggerFns.put(config.valueAsString(), config.body());
 	}
 	
+	private final Map<String,ClojureEnv> envs = new HashMap<>();
+	private final Map<String,Integer> versions = new HashMap<>();
+	
 	@Override
 	public void setup(ModuleSetup module) {
 		
 		module.setupInitializer(init -> {
 		
-			init.run("initialize environment", store -> {
+			init.run("initialize environment", (idv, store) -> {
+
+				versions.put(idv.identity(), idv.version());
 				
-				ClojureEnv env = ClojureEnv.create(ClojureConfigurer.class.getClassLoader());
+				envs.computeIfPresent(idv.identity(), (id, env) -> {
+					// this is doing a file based refresh I don't know
+					// whether it'll work for me but it's a start...
+					log.info("refreshing existing clojure env for {}", id);
+					env.run("reka/do-refresh");
+					return env;
+				});
+				
+				ClojureEnv env = envs.computeIfAbsent(idv.identity(), id -> {
+					log.info("creating new clojure env for {}", id);
+					return ClojureEnv.create(ClojureConfigurer.class.getClassLoader());
+				});
 
 				env.eval(REKA_CLJ);
 				
@@ -109,17 +125,28 @@ public class ClojureConfigurer extends ModuleConfigurer {
 				});
 				
 				env.eval(script);
+				
+				envs.put(idv.identity(), env);
 			});
 		});
 		
-		module.onShutdown("shutdown env", store -> {
+		module.onShutdown("shutdown env", (idv, store) -> {
+			
+			if (false) {
 
-			store.remove(CLOJURE_ENV).ifPresent(env -> {
-				store.remove(SHUTDOWN_CALLBACKS).ifPresent(callbacks -> {
-					callbacks.forEach(Runnable::run);
+			//if (versions.get(idv.identity()) == idv.version()) {
+				log.info("shutting down env for {} as {} == {}", idv.identity(), versions.get(idv.identity()), idv.version());
+				store.remove(CLOJURE_ENV).ifPresent(env -> {
+					store.remove(SHUTDOWN_CALLBACKS).ifPresent(callbacks -> {
+						callbacks.forEach(Runnable::run);
+					});
+					env.shutdown();
 				});
-				env.shutdown();
-			});
+				
+				envs.remove(idv.identity());
+			//}
+				
+			}
 			
 		});
 		

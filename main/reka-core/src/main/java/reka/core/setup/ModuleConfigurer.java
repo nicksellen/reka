@@ -31,6 +31,7 @@ import reka.api.flow.Flow;
 import reka.api.flow.FlowSegment;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
+import reka.core.app.IdentityAndVersion;
 import reka.core.builder.FlowVisualizer;
 import reka.core.builder.SingleFlow;
 import reka.core.module.ModuleInfo;
@@ -67,8 +68,8 @@ public abstract class ModuleConfigurer {
 
 	}
 
-	public static ModuleInitializer buildInitializer(ModuleConfigurer root) {
-		return Utils.process(root);
+	public static ModuleInitializer buildInitializer(IdentityAndVersion idv, ModuleConfigurer root) {
+		return Utils.process(idv, root);
 	}
 
 	public static class ModuleCollector {
@@ -117,7 +118,7 @@ public abstract class ModuleConfigurer {
 
 	private static class Utils {
 		
-		public static ModuleInitializer process(ModuleConfigurer root) {
+		public static ModuleInitializer process(IdentityAndVersion idv, ModuleConfigurer root) {
 
 			ModuleCollector collector = new ModuleCollector();
 
@@ -133,7 +134,7 @@ public abstract class ModuleConfigurer {
 				
 				IdentityStore store = IdentityStore.createConcurrentIdentityStore();
 
-				ModuleSetup init = new ModuleSetup(module.info(), module.fullAliasOrName(), store, collector);
+				ModuleSetup init = new ModuleSetup(idv, module.info(), module.fullAliasOrName(), store, collector);
 				module.setup(init);
 				
 				if (init.includeDefaultStatus() && module.info() != null) {

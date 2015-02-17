@@ -1,5 +1,7 @@
 package reka.core.app;
 
+import java.util.UUID;
+
 public class IdentityAndVersion {
 	
 	public static IdentityAndVersion create(String identity, int version) {
@@ -20,6 +22,10 @@ public class IdentityAndVersion {
 
 	public int version() {
 		return version;
+	}
+
+	public static IdentityAndVersion tmp() {
+		return create(String.format("tmp/%s", UUID.randomUUID().toString()), 1);
 	}
 	
 }

@@ -127,9 +127,9 @@ public class ApplicationConfigurer implements ErrorReporter {
         return applicationName;
     }
     
-    public Collection<FlowVisualizer> visualize() {
+    public Collection<FlowVisualizer> visualize(IdentityAndVersion idv) {
         FlowBuilderGroup flowsBuilder = new FlowBuilderGroup();
-    	ModuleInitializer initializer = ModuleConfigurer.buildInitializer(rootModule);
+    	ModuleInitializer initializer = ModuleConfigurer.buildInitializer(idv, rootModule);
     	
     	MultiConfigurerProvider provider = new MultiConfigurerProvider(initializer.collector().providers);
     	Map<Path,Supplier<FlowSegment>> configuredFlows = new HashMap<>();
@@ -141,8 +141,8 @@ public class ApplicationConfigurer implements ErrorReporter {
     	return flowsBuilder.buildVisualizers();
     }
     
-    public void checkValid(String identity) {
-    	ModuleInitializer initializer = ModuleConfigurer.buildInitializer(rootModule);
+    public void checkValid(IdentityAndVersion idv) {
+    	ModuleInitializer initializer = ModuleConfigurer.buildInitializer(idv, rootModule);
     	MultiConfigurerProvider configurerProvider = new MultiConfigurerProvider(initializer.collector().providers);
     	initializer.collector().triggers.forEach(triggers -> triggers.get().forEach(trigger -> {
     		trigger.supplier().apply(configurerProvider).bind(trigger.base(), triggers.store()).get();
@@ -153,7 +153,7 @@ public class ApplicationConfigurer implements ErrorReporter {
     	testConfigs.forEach(config -> {
     		configure(new TestConfigurer(configurerProvider), config).build();
     	});
-    	runChecks(identity, initializer);
+    	runChecks(idv.identity(), initializer);
     }
     
     private void runChecks(String identity, ModuleInitializer initializer) {
@@ -168,7 +168,6 @@ public class ApplicationConfigurer implements ErrorReporter {
     	if (!checkErrors.isEmpty()) {
     		throw new RuntimeException(checkErrors.stream().collect(joining(", ")));
     	}
-    	runPortCheckers(identity, initializer);
     }
     
     private void runPortCheckers(String identity, ModuleInitializer initializer) {
@@ -211,9 +210,12 @@ public class ApplicationConfigurer implements ErrorReporter {
     		FlowBuilderGroup initflowBuilders = new FlowBuilderGroup();
     		FlowBuilderGroup flowBuilders = new FlowBuilderGroup();
     		
-	    	ModuleInitializer initializer = ModuleConfigurer.buildInitializer(rootModule);
+    		
+    		
+	    	ModuleInitializer initializer = ModuleConfigurer.buildInitializer(IdentityAndVersion.create(identity, applicationVersion), rootModule);
 	    	
 	    	runChecks(identity, initializer);
+	    	runPortCheckers(identity, initializer);
 	    	
 	    	ApplicationBuilder applicationBuilder = new ApplicationBuilder();
 	    	

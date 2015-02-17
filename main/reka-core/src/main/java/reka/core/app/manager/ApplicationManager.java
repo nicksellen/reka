@@ -46,6 +46,7 @@ import reka.config.Source;
 import reka.config.parser.ConfigParser;
 import reka.core.app.Application;
 import reka.core.app.ApplicationConfigurer;
+import reka.core.app.IdentityAndVersion;
 import reka.core.builder.FlowVisualizer;
 import reka.core.data.memory.MutableMemoryData;
 import reka.core.module.ModuleManager;
@@ -151,8 +152,9 @@ public class ApplicationManager implements Iterable<Entry<String,Application>>, 
 	}
 
 	public void validate(String identity, Source source) {
+		IdentityAndVersion idv = IdentityAndVersion.create(identity, versions.get(identity).get());
 		NavigableConfig config = moduleManager.processor().process(ConfigParser.fromSource(source));
-		configure(new ApplicationConfigurer(basedirs.mktemp(), moduleManager), config).checkValid(identity);
+		configure(new ApplicationConfigurer(basedirs.mktemp(), moduleManager), config).checkValid(idv);
 	}
 	
 	public static final Path INITIALIZER_VISUALIZER_NAME = slashes("app/initialize");
@@ -169,7 +171,7 @@ public class ApplicationManager implements Iterable<Entry<String,Application>>, 
 	}
 	
 	public Collection<FlowVisualizer> visualize(NavigableConfig config) {
-		return configure(new ApplicationConfigurer(basedirs.mktemp(), moduleManager), config).visualize();
+		return configure(new ApplicationConfigurer(basedirs.mktemp(), moduleManager), config).visualize(IdentityAndVersion.tmp());
 	}
 	
 	public Optional<Application> get(String identity) {
@@ -284,6 +286,7 @@ public class ApplicationManager implements Iterable<Entry<String,Application>>, 
 				
 				checkArgument(constrainTo.isDirectory(), "constraint dir %s is not a dir", constrainTo.getAbsolutePath());
 				
+				IdentityAndVersion idv = IdentityAndVersion.create(identity, version);
 				log.info("deploying {} v{}", identity, version);
 				
 				NavigableConfig config = moduleManager.processor().process(originalConfig);
@@ -294,7 +297,7 @@ public class ApplicationManager implements Iterable<Entry<String,Application>>, 
 				
 				ApplicationConfigurer configurer = configure(new ApplicationConfigurer(dirs, moduleManager), config);
 				
-				configurer.checkValid(identity);
+				configurer.checkValid(idv);
 				
 				previous.ifPresent(Application::pause);
 				

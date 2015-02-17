@@ -23,6 +23,11 @@
 			<version>0.1.319.0-6b1aca-alpha</version>
 		</dependency>
 		<dependency>
+			<groupId>org.clojure</groupId>
+			<artifactId>tools.namespace</artifactId>
+			<version>0.2.9</version>
+		</dependency>
+		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
 			<version>1.7.5</version>

@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -23,6 +24,7 @@ import reka.api.Path;
 import reka.api.flow.Flow;
 import reka.api.flow.FlowSegment;
 import reka.config.ConfigBody;
+import reka.core.app.IdentityAndVersion;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.core.module.ModuleInfo;
@@ -30,6 +32,7 @@ import reka.core.setup.ModuleConfigurer.ModuleCollector;
 
 public class ModuleSetup {
 	
+	private final IdentityAndVersion idv;
 	private final ModuleInfo info;
 	private final ModuleCollector collector;
 	private final Path path;
@@ -38,7 +41,8 @@ public class ModuleSetup {
 	
 	private boolean includeDefaultStatus = true;
 	
-	public ModuleSetup(ModuleInfo info, Path path, IdentityStore store, ModuleCollector collector) {
+	public ModuleSetup(IdentityAndVersion idv, ModuleInfo info, Path path, IdentityStore store, ModuleCollector collector) {
+		this.idv = idv;
 		this.info = info;
 		this.path = path;
 		this.store = store;
@@ -62,13 +66,17 @@ public class ModuleSetup {
 	
 	public ModuleSetup setupInitializer(Consumer<ModuleOperationSetup> init) {
 		OperationSetup e = new SequentialCollector(path, store);
-		init.accept(new ModuleOperationSetup(e));
+		init.accept(new ModuleOperationSetup(idv, e));
 		segments.add(e);
 		return this;
 	}
 	
 	public void onShutdown(String name, Consumer<IdentityStore> handler) {
 		collector.shutdownHandlers.add(() -> handler.accept(store));
+	}
+	
+	public void onShutdown(String name, BiConsumer<IdentityAndVersion, IdentityStore> handler) {
+		collector.shutdownHandlers.add(() -> handler.accept(idv, store));
 	}
 	
 	public ModuleSetup operation(Path name, Function<ConfigurerProvider,OperationConfigurer> c) {
