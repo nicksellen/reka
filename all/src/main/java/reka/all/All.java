@@ -23,6 +23,7 @@ import reka.core.module.RekaGuiceModule;
 import reka.exec.ExecModule;
 import reka.filesystem.FilesystemModule;
 import reka.h2.H2Module;
+import reka.irc.IrcModule;
 import reka.jade.JadeModule;
 import reka.jsx.JsxModule;
 import reka.less.LessModule;
@@ -69,6 +70,7 @@ public class All {
 				JsxModule.class,
 				CommonModule.class,
 				LessModule.class,
+				IrcModule.class,
 				JadeModule.class,
 				//UseNetPlayModule.class,
 				SmtpModule.class,

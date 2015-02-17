@@ -46,7 +46,7 @@ public class ExecCommandOperation implements AsyncOperation {
 		env.clear();
 		data.forEachContent((path, content) -> {
 			String key = path.join("__").toUpperCase().replaceAll("[^A-Z0-9]", "_");
-			String val = content.asUTF8();
+			String val = content.toString();
 			env.put(key, val);
 		});
 		
@@ -80,13 +80,17 @@ public class ExecCommandOperation implements AsyncOperation {
 					}
 				}
 				
-				timeout.cancel(true);
-				
-				data.putInt(statusInto, process.exitValue());
-				data.putString(outInto, new String(outBytes.toByteArray(), StandardCharsets.UTF_8));
-				data.putString(errInto, new String(errBytes.toByteArray(), StandardCharsets.UTF_8));
+				if (!timeout.isDone()) {
 
-				res.done();
+					timeout.cancel(true);
+					
+					data.putInt(statusInto, process.exitValue());
+					data.putString(outInto, new String(outBytes.toByteArray(), StandardCharsets.UTF_8));
+					data.putString(errInto, new String(errBytes.toByteArray(), StandardCharsets.UTF_8));
+
+					res.done();
+
+				}
 
 			} catch (Throwable t) {
 				res.error(t);

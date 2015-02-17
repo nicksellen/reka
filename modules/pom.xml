@@ -10,6 +10,7 @@
   <packaging>pom</packaging>
 
   <modules>
+    <module>reka-irc</module>
     <module>clojure-env</module>
     <module>reka-clojure</module>
     <module>reka-jdbc-common</module>
