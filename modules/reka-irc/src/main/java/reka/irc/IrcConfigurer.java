@@ -6,15 +6,17 @@ import static reka.util.Util.runtime;
 import reka.api.IdentityKey;
 import reka.api.flow.Flow;
 import reka.config.Config;
-import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
-import reka.core.data.memory.MutableMemoryData;
+import reka.core.builder.TriggerHelper;
 import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
-import reka.irc.RekaBot.IrcListener;
-
 
 public class IrcConfigurer extends ModuleConfigurer {
+	
+	private static final IdentityKey<Flow> MESSAGE = IdentityKey.named("on message");
+	private static final IdentityKey<Flow> PRIVATE_MESSAGE = IdentityKey.named("on private message");
+	
+	private final TriggerHelper triggers = new TriggerHelper();
 	
 	public static final IdentityKey<RekaBot> BOT = IdentityKey.named("bot");
 	
@@ -22,9 +24,6 @@ public class IrcConfigurer extends ModuleConfigurer {
 	private String hostname;
 	private String channel;
 	private String key;
-
-
-	private ConfigBody onMessage;
 
 	@Conf.At("name")
 	public void name(String val) {
@@ -51,8 +50,10 @@ public class IrcConfigurer extends ModuleConfigurer {
 		checkConfig(config.hasValue(), "must have a value");
 		switch (config.valueAsString()) {
 		case "message":
-			checkConfig(onMessage == null, "can only have one message handler at the moment");
-			onMessage = config.body();
+			triggers.addTrigger(MESSAGE, config.body());
+			break;
+		case "private message":
+			triggers.addTrigger(PRIVATE_MESSAGE, config.body());
 			break;
 		default:
 			throw runtime("unknown trigger %s", config.valueAsString());
@@ -65,42 +66,25 @@ public class IrcConfigurer extends ModuleConfigurer {
 		module.operation(path("send"), provider -> new IrcSendConfigurer());
 		
 		module.setupInitializer(init -> {
-			
 			init.run("create bot", store -> {
 				store.put(BOT, new RekaBot(name, hostname, channel, key));
 			});
-			
 		});
 
 		module.onShutdown("disconnect", store -> {
 			store.remove(BOT).ifPresent(RekaBot::shutdown);
 		});
 
-		if (onMessage != null) {
-			module.trigger("on message", onMessage, reg -> {
-				RekaBot bot = reg.store().get(BOT);
-				Flow flow = reg.flow();
-				bot.addListener(new IrcListener() {
-					
-					@Override
-					public void onMessage(String channel, String sender, String login, String hostname, String message) {
-						flow.prepare().data(MutableMemoryData.create()
-								.putString("channel", channel)
-								.putString("sender", sender)
-								.putString("login", login)
-								.putString("hostname", hostname)
-								.putString("message", message)).run();
-					}
-					
-					@Override
-					public void onConnect() {
-					}
-
-				});
-				bot.connect();
-			});
-		}
-		
+		module.triggers(triggers.build(), reg -> {
+			RekaBot bot = reg.store().get(BOT);
+			reg.flowFor(MESSAGE).ifPresent(flow -> {
+				bot.addListener(new IrcMessageFlowListener(flow));
+			});	
+			reg.flowFor(PRIVATE_MESSAGE).ifPresent(flow -> {
+				bot.addListener(new IrcPrivateMessageFlowListener(flow));
+			});	
+			bot.connect();
+		});
 		
 	}
 }

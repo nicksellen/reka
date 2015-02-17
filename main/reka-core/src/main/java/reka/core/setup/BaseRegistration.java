@@ -87,4 +87,8 @@ abstract class BaseRegistration {
 		return network;
 	}
 	
+	public void done() {
+		// TODO: implement this, callback when you've finished registering (or maybe have a special async version)
+	}
+	
 }

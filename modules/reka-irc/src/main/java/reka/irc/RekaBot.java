@@ -14,6 +14,7 @@ public class RekaBot {
 	
 	public static interface IrcListener {
 		void onMessage(String channel, String sender, String login, String hostname, String message);
+		void onPrivateMessage(String sender, String login, String hostname, String message);
 		void onConnect();
 	}
 	
@@ -26,6 +27,14 @@ public class RekaBot {
 		protected void onConnect() {
 			super.onConnect();
 			listeners.forEach(IrcListener::onConnect);
+		}
+
+		@Override
+		protected void onPrivateMessage(String sender, String login, String hostname, String message) {
+			super.onPrivateMessage(sender, login, hostname, message);
+			listeners.forEach(listener -> {
+				listener.onPrivateMessage(sender, login, hostname, message);
+			});
 		}
 
 		@Override

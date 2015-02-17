@@ -4,15 +4,34 @@ import static reka.api.Path.dots;
 import static reka.api.Path.root;
 import static reka.api.content.Contents.booleanValue;
 import static reka.api.content.Contents.utf8;
+import static reka.config.configurer.Configurer.configure;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
+
+import java.util.Collection;
+import java.util.function.Function;
+
 import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.config.Config;
+import reka.config.ConfigBody;
 import reka.core.data.memory.MutableMemoryData;
+import reka.core.setup.OperationConfigurer;
 
 public class ConfigUtils {
 
+	public static Function<ConfigurerProvider,OperationConfigurer> combine(Collection<ConfigBody> bodies) {
+		return provider -> {
+			return ops -> {
+				ops.parallel(par -> {
+					bodies.forEach(body -> {
+						par.add(configure(new SequenceConfigurer(provider), body));
+					});
+				});
+			};
+		};
+	}
+	
 	public static Data configToData(Config config) {
 		Path path = config.hasKey() ? root().add(dots(config.key())) : root().add(0);
 		return addConfigToData(config, MutableMemoryData.create(), path).immutable();

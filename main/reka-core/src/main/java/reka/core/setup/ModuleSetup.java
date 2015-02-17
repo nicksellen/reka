@@ -137,6 +137,13 @@ public class ModuleSetup {
 		return trigger(IdentityKey.named(name), supplier, c);
 	}
 	
+	public ModuleSetup triggersWithBodies(Map<IdentityKey<Flow>,ConfigBody> bodies, Consumer<MultiFlowRegistration> cs) {
+		collector.triggers.add(new TriggerCollection(bodies.entrySet().stream().map(e -> {
+			return new Trigger(path, e.getKey(), provider -> configure(new SequenceConfigurer(provider), e.getValue()));
+		}).collect(toList()), cs, store));
+		return this;
+	}
+	
 	public ModuleSetup triggers(Map<IdentityKey<Flow>,Function<ConfigurerProvider, OperationConfigurer>> suppliers, Consumer<MultiFlowRegistration> cs) {
 		collector.triggers.add(new TriggerCollection(suppliers.entrySet().stream().map(e -> new Trigger(path, e.getKey(), e.getValue())).collect(toList()), cs, store));
 		return this;

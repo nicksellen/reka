@@ -17,11 +17,10 @@ import javax.script.ScriptException;
 import javax.script.SimpleBindings;
 import javax.script.SimpleScriptContext;
 
-import reka.nashorn.ThreadLocalNashornRunner.Collector;
-import reka.nashorn.ThreadLocalNashornRunner.EvenSimplerScriptContext;
 import jdk.nashorn.api.scripting.NashornScriptEngine;
 import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
+import reka.nashorn.ThreadLocalNashornRunner.Collector;
 
 import com.google.common.collect.ImmutableMap;
 

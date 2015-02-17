@@ -8,24 +8,18 @@ import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import static reka.util.Util.runtime;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import reka.api.IdentityKey;
 import reka.api.flow.Flow;
 import reka.config.Config;
-import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
-import reka.core.config.ConfigurerProvider;
-import reka.core.config.SequenceConfigurer;
+import reka.core.builder.TriggerHelper;
 import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
-import reka.core.setup.OperationConfigurer;
 import reka.net.NetServerManager;
 import reka.net.NetSettings;
 import reka.net.NetSettings.SslSettings;
@@ -40,6 +34,10 @@ import reka.net.http.HostAndPort;
 import reka.net.http.SslConfigurer;
 
 public class WebsocketConfigurer extends ModuleConfigurer {
+
+	private static final IdentityKey<Flow> CONNECT = IdentityKey.named("on connect");
+	private static final IdentityKey<Flow> DISCONNECT = IdentityKey.named("on disconnect");
+	private static final IdentityKey<Flow> MESSAGE = IdentityKey.named("on message");
 	
 	private final Pattern listenPortOnly = Pattern.compile("^[0-9]+$");
 	private final Pattern listenHostAndPort = Pattern.compile("^(.+):([0-9]+)$");
@@ -54,9 +52,7 @@ public class WebsocketConfigurer extends ModuleConfigurer {
 		this.server = server;
 	}
 	
-	private final List<ConfigBody> onConnect = new ArrayList<>();
-	private final List<ConfigBody> onDisconnect = new ArrayList<>();
-	private final List<ConfigBody> onMessage = new ArrayList<>();
+	private final TriggerHelper triggers = new TriggerHelper();
 
 	@Conf.Each("listen")
 	public void listen(String val) {
@@ -86,31 +82,20 @@ public class WebsocketConfigurer extends ModuleConfigurer {
 	public void on(Config config) {
 		checkConfig(config.hasValue(), "must have a value");
 		checkConfig(config.hasBody(), "must have a body");
+		
 		switch (config.valueAsString()) {
 		case "connect":
-			onConnect.add(config.body());
+			triggers.addTrigger(CONNECT, config.body());
 			break;
 		case "disconnect":
-			onDisconnect.add(config.body());
+			triggers.addTrigger(DISCONNECT, config.body());
 			break;
 		case "message":
-			onMessage.add(config.body());
+			triggers.addTrigger(MESSAGE, config.body());
 			break;
 		default:
 			throw runtime("unknown trigger %s", config.valueAsString());
 		}
-	}
-
-	private static Function<ConfigurerProvider,OperationConfigurer> combine(List<ConfigBody> bodies) {
-		return provider -> {
-			return ops -> {
-				ops.parallel(par -> {
-					bodies.forEach(body -> {
-						par.add(configure(new SequenceConfigurer(provider), body));
-					});
-				});
-			};
-		};
 	}
 	
 	@Override
@@ -130,22 +115,6 @@ public class WebsocketConfigurer extends ModuleConfigurer {
 		
 		module.status(store -> new SocketStatusProvider(server, store.get(Sockets.SETTINGS)));
 		
-		Map<IdentityKey<Flow>,Function<ConfigurerProvider, OperationConfigurer>> triggers = new HashMap<>();
-		
-		IdentityKey<Flow> connect = IdentityKey.named("on connect");
-		IdentityKey<Flow> disconnect = IdentityKey.named("on disconnect");
-		IdentityKey<Flow> message = IdentityKey.named("on message");
-		
-		if (!onConnect.isEmpty()) {
-			triggers.put(connect, combine(onConnect));
-		}
-		if (!onDisconnect.isEmpty()) {
-			triggers.put(disconnect, combine(onDisconnect));
-		}
-		if (!onMessage.isEmpty()) {
-			triggers.put(message, combine(onMessage));
-		}
-		
 		if (listens.isEmpty()) return;
 		
 		module.setupInitializer(init -> {
@@ -159,8 +128,7 @@ public class WebsocketConfigurer extends ModuleConfigurer {
 			});
 		});
 		
-		module.triggers(triggers, reg -> {
-			
+		module.triggers(triggers.build(), reg -> {
 			for (HostAndPort listen : listens) {
 			
 				String host = listen.host();
@@ -180,9 +148,9 @@ public class WebsocketConfigurer extends ModuleConfigurer {
 				}
 				
 				server.deployWebsocket(identity, settings, ws -> {
-					reg.flowFor(connect).ifPresent(flow -> ws.onConnect(flow));
-					reg.flowFor(disconnect).ifPresent(flow -> ws.onDisconnect(flow));
-					reg.flowFor(message).ifPresent(flow -> ws.onMessage(flow));					
+					reg.flowFor(CONNECT).ifPresent(flow -> ws.onConnect(flow));
+					reg.flowFor(DISCONNECT).ifPresent(flow -> ws.onDisconnect(flow));
+					reg.flowFor(MESSAGE).ifPresent(flow -> ws.onMessage(flow));					
 				});
 				
 				reg.network(listen.port(), settings.protocolString(), details -> {
@@ -190,9 +158,10 @@ public class WebsocketConfigurer extends ModuleConfigurer {
 				});
 				
 				reg.onUndeploy(version -> server.undeploy(identity, version));
-				
 			}
 		});
+		
+		
 	}
 	
 }
