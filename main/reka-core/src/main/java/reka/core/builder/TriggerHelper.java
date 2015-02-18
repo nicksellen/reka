@@ -4,6 +4,7 @@ import static reka.core.config.ConfigUtils.combine;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 
 import reka.api.IdentityKey;
@@ -19,7 +20,7 @@ public class TriggerHelper {
 
 	private final ListMultimap<IdentityKey<Flow>,ConfigBody> triggers = ArrayListMultimap.create();
 	
-	public TriggerHelper addTrigger(IdentityKey<Flow> key, ConfigBody body) {
+	public TriggerHelper add(IdentityKey<Flow> key, ConfigBody body) {
 		System.out.printf("addTrigger %s\n", key.name());
 		triggers.put(key, body);
 		return this;
@@ -31,6 +32,14 @@ public class TriggerHelper {
 			result.put(key, combine(bodies));
 		}); 
 		return result;
+	}
+
+	public boolean isEmpty() {
+		return triggers.isEmpty();
+	}
+	
+	public Set<IdentityKey<Flow>> keySet() {
+		return triggers.keySet();
 	}
 	
 }

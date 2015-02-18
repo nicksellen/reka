@@ -54,4 +54,9 @@ public class DataMapView extends AbstractMap<String, Object> {
 		return entrySet;
 	}
 	
+	@Override
+	public String toString() {
+		return data.toJson();
+	}
+	
 }

@@ -19,5 +19,10 @@ public class DataListView extends AbstractList<Object> {
 	public int size() {
 		return data.size();
 	}
+	
+	@Override
+	public String toString() {
+		return data.toJson();
+	}
 
 }

@@ -50,10 +50,10 @@ public class IrcConfigurer extends ModuleConfigurer {
 		checkConfig(config.hasValue(), "must have a value");
 		switch (config.valueAsString()) {
 		case "message":
-			triggers.addTrigger(MESSAGE, config.body());
+			triggers.add(MESSAGE, config.body());
 			break;
 		case "private message":
-			triggers.addTrigger(PRIVATE_MESSAGE, config.body());
+			triggers.add(PRIVATE_MESSAGE, config.body());
 			break;
 		default:
 			throw runtime("unknown trigger %s", config.valueAsString());

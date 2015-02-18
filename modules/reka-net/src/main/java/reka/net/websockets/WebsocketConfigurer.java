@@ -85,13 +85,13 @@ public class WebsocketConfigurer extends ModuleConfigurer {
 		
 		switch (config.valueAsString()) {
 		case "connect":
-			triggers.addTrigger(CONNECT, config.body());
+			triggers.add(CONNECT, config.body());
 			break;
 		case "disconnect":
-			triggers.addTrigger(DISCONNECT, config.body());
+			triggers.add(DISCONNECT, config.body());
 			break;
 		case "message":
-			triggers.addTrigger(MESSAGE, config.body());
+			triggers.add(MESSAGE, config.body());
 			break;
 		default:
 			throw runtime("unknown trigger %s", config.valueAsString());

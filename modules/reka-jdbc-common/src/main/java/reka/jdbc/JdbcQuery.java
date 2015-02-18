@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
@@ -32,6 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import reka.api.Path;
 import reka.api.content.Content;
+import reka.api.data.Data;
 import reka.api.data.MapMutation;
 import reka.api.data.MutableData;
 import reka.api.run.Operation;
@@ -85,10 +85,14 @@ public class JdbcQuery implements Operation {
 				
 				for (int i = 0; i < query.vars().size(); i++) {
 					Variable v = query.vars().get(i);
-					Optional<Content> o = data.getContent(v.path());
+					Data val = data.at(v.path());
 					Object value = null;
-					if (o.isPresent()) {
-						value = o.get().value();
+					if (val.isPresent()) {
+						if (val.isContent()) {
+							value = val.content().value();
+						} else {
+							value = val.toJson();
+						}
 					} else if (v.hasDefaultValue()) {
 						value = v.defaultValue();
 					}
@@ -183,7 +187,8 @@ public class JdbcQuery implements Operation {
 		if (firstOnly) {
 			
 			if (result.next()) {
-				data.putMap(root(), map -> {
+				Path into = resultField.isEmpty() ? root() : resultField;
+				data.putMap(into, map -> {
 					for (int column = 1; column < columnCount + 1; column++) {
 						putResult(map, meta.keys[column], meta, result, column);
 					}
@@ -194,9 +199,9 @@ public class JdbcQuery implements Operation {
 			
 			Path tableName = meta.tablename;
 			
-			Path p = resultField.isEmpty() ? tableName : resultField;
+			Path into = resultField.isEmpty() ? tableName : resultField;
 			
-			data.putList(p, list -> {
+			data.putList(into, list -> {
 				while (result.next()) {
 					list.addMap(map -> {
 						for (int column = 1; column < columnCount + 1; column++) {
@@ -285,6 +290,7 @@ public class JdbcQuery implements Operation {
 				item.put(path, utf8(result.getString(column)));
 				break;
 			case "json":
+			case "jsonb":
 				String jsonStr = result.getString(column);
 				if (jsonStr != null) {
 					try {

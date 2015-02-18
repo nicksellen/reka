@@ -50,7 +50,7 @@ public abstract class JdbcBaseModule extends ModuleConfigurer {
 	private final Map<String,List<Data>> seeds = new HashMap<>();
 	
 	private List<String> sqls = new ArrayList<>();
-	private String username, password;
+	protected String username, password;
 	
 	private boolean returnGeneratedKeys = false;
 	
