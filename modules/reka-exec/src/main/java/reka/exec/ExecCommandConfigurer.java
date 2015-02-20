@@ -7,13 +7,13 @@ import reka.config.configurer.annotations.Conf;
 import reka.core.setup.OperationConfigurer;
 import reka.core.setup.OperationSetup;
 
-public class ExecRunConfigurer implements OperationConfigurer {
+public class ExecCommandConfigurer implements OperationConfigurer {
 	
 	private final String[] command;
 	
 	private Path into = path("result");
 	
-	public ExecRunConfigurer(String[] command) {
+	public ExecCommandConfigurer(String[] command) {
 		this.command = command;
 	}
 	

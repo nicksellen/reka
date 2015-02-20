@@ -120,7 +120,7 @@ public class ApplicationManager implements Iterable<Entry<String,Application>>, 
 		this.basedirs = dirs;
 		this.moduleManager = moduleManager;
 		executor.submit(new WaitForNextTask());
-		scheduledStatus = Reka.SCHEDULED_SERVICE.scheduleAtFixedRate(() -> q.push(UPDATE_STATUS), 1, 1, TimeUnit.SECONDS);
+		scheduledStatus = Reka.SharedExecutors.scheduled.scheduleAtFixedRate(() -> q.push(UPDATE_STATUS), 1, 1, TimeUnit.SECONDS);
 		emitSystemMessage("started");
 	}
 	

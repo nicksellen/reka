@@ -1,10 +1,13 @@
 package reka.exec;
 
+import static reka.api.Path.path;
 import static reka.api.Path.root;
+import static reka.config.configurer.Configurer.configure;
 import static reka.util.Util.unchecked;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
 import reka.config.Config;
@@ -15,12 +18,54 @@ import reka.core.setup.ModuleSetup;
 public class ExecConfigurer extends ModuleConfigurer {
 	
 	private String[] command;
+	private SshConfig ssh;
 	
 	@Conf.Config
 	public void config(Config config) {
 		if (config.hasDocument()) {
 			setScript(config.documentContent());
 		}
+	}
+	
+	@Conf.At("script")
+	public void script(Config config) {
+		if (config.hasDocument()) {
+			setScript(config.documentContent());
+		} else if (config.hasValue()) {
+			setScript(config.valueAsString().getBytes(StandardCharsets.UTF_8));
+		}
+	}
+	
+	@Conf.At("ssh")
+	public void ssh(Config config) {
+		ssh = configure(new ExecSshConfigurer(), config).build();
+	}
+	
+	public static class ExecSshConfigurer {
+		
+		private String hostname;
+		private int port = 22;
+		private String user;
+		
+		@Conf.At("hostname")
+		public void hostname(String val) {
+			hostname = val;
+		}
+		
+		@Conf.At("port")
+		public void port(int val) {
+			port = val;
+		}
+		
+		@Conf.At("user")
+		public void user(String val) {
+			user = val;
+		}
+		
+		public SshConfig build() {
+			return new SshConfig(hostname, port, user);
+		}
+		
 	}
 	
 	private void setScript(byte[] script) {
@@ -35,26 +80,13 @@ public class ExecConfigurer extends ModuleConfigurer {
 		}
 	}
 	
-	/*
-	
-	
-	@Conf.EachChildOf("args")
-	public void arg(Config config) {
-		args.add(config.key());
-		if (config.hasValue()) {
-			args.add(config.valueAsString());
-		}
-	}
-	
-	@Conf.Each("arg")
-	public void arg(String val) {
-		args.add(val);
-	}
-	*/
-	
 	@Override
 	public void setup(ModuleSetup module) {
-		module.operation(root(), provider -> new ExecRunConfigurer(command));
+		if (ssh != null) {
+			module.operation(root(), provider -> new ExecSshCommandConfigurer(command, ssh));
+		} else {
+			module.operation(root(), provider -> new ExecCommandConfigurer(command));
+		}
 	}
 
 }

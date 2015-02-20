@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -30,7 +31,12 @@ import reka.util.AsyncShutdown;
 
 public class Reka {
 	
-	public static final ScheduledExecutorService SCHEDULED_SERVICE = Executors.newSingleThreadScheduledExecutor();
+	public static interface SharedExecutors {
+
+		public static final ExecutorService general = Executors.newCachedThreadPool();
+		public static final ScheduledExecutorService scheduled = Executors.newSingleThreadScheduledExecutor();	
+		
+	}
 	
 	public static final String REKA_ENV = "REKA_ENV";
 	

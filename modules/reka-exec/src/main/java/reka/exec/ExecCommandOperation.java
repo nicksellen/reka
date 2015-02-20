@@ -56,7 +56,7 @@ public class ExecCommandOperation implements AsyncOperation {
 			
 				Process process = builder.start();
 				
-				ScheduledFuture<?> timeout = Reka.SCHEDULED_SERVICE.schedule(() -> {
+				ScheduledFuture<?> timeout = Reka.SharedExecutors.scheduled.schedule(() -> {
 					try {
 						process.destroyForcibly();
 					} catch (Throwable t) {
