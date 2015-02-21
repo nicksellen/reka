@@ -46,6 +46,7 @@ public class ExecSshCommandOperation implements AsyncOperation {
 												   PasswordUtils.createOneOff(config.passphrase()));
 			
 			ssh.authPublickey(config.user(), keyProvider);
+			ssh.getConnection().getKeepAlive().setKeepAliveInterval(30);
 		} catch (Throwable t) {
 			t.printStackTrace();
 			throw unchecked(t);
