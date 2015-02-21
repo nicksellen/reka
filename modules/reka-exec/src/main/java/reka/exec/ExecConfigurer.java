@@ -1,12 +1,12 @@
 package reka.exec;
 
-import static reka.api.Path.path;
 import static reka.api.Path.root;
 import static reka.config.configurer.Configurer.configure;
 import static reka.util.Util.unchecked;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
@@ -46,6 +46,7 @@ public class ExecConfigurer extends ModuleConfigurer {
 		private String hostname;
 		private int port = 22;
 		private String user;
+		private char[] privateKey, publicKey, passphrase;
 		
 		@Conf.At("hostname")
 		public void hostname(String val) {
@@ -62,8 +63,27 @@ public class ExecConfigurer extends ModuleConfigurer {
 			user = val;
 		}
 		
+		@Conf.At("private-key")
+		public void privateKey(Config config) {
+			privateKey = bytesToChars(config.documentContent());
+		}
+		
+		@Conf.At("public-key")
+		public void publicKey(Config config) {
+			publicKey = bytesToChars(config.documentContent());
+		}
+		
+		@Conf.At("passphrase")
+		public void passphrase(String val) {
+			passphrase = bytesToChars(val.getBytes(StandardCharsets.UTF_8));
+		}
+		
+		private char[] bytesToChars(byte[] bytes) {
+			return StandardCharsets.UTF_8.decode(ByteBuffer.wrap(bytes)).array();
+		}
+		
 		public SshConfig build() {
-			return new SshConfig(hostname, port, user);
+			return new SshConfig(hostname, port, user, privateKey, publicKey, passphrase);
 		}
 		
 	}

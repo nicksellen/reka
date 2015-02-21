@@ -140,14 +140,15 @@ public class RekaConfigurer {
 		modules.addAll(defaultModules);
 		
 		boolean classLoadingError = false;
+		ClassLoader base = BouncyCastleLoader.classloader(Reka.class.getClassLoader());
 		for (JarModule jar : addedModules) {
-			ClassLoader cl = new URLClassLoader(new URL[] { jar.url }, Reka.class.getClassLoader());
+			ClassLoader cl = new URLClassLoader(new URL[] { jar.url }, base);
 			try {
 				Object obj = cl.loadClass(jar.classname).newInstance();
 				Module module = (Module) obj;
 				modules.add(new ModuleMeta(jar.version, module));
 				
-			} catch (ClassCastException | ClassNotFoundException | InstantiationException | IllegalAccessException error) {
+			} catch (Throwable error) {
 				error.printStackTrace();
 				log.error("couldn't load {} from {}", jar.classname, jar.url);
 				classLoadingError = true;

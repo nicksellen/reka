@@ -1,24 +1,25 @@
 package reka.exec;
 
 import static reka.api.Path.path;
-
-import java.lang.reflect.Field;
-
 import reka.api.Path;
 import reka.core.module.Module;
 import reka.core.module.ModuleDefinition;
 
 public class ExecModule implements Module {
 
-	static {
+	/*
+	private static final Logger log = LoggerFactory.getLogger(ExecModule.class);
+	static {	
 		try {
 			Field field = Class.forName("javax.crypto.JceSecurity").getDeclaredField("isRestricted");
 			field.setAccessible(true);
 			field.set(null, java.lang.Boolean.FALSE);
-		} catch (Exception ex) {
+		} catch (Throwable ex) {
 			ex.printStackTrace();
+			log.error("error doing something with jce", ex);
 		}
 	}
+	*/
 
 	@Override
 	public Path base() {

@@ -1,20 +1,19 @@
 package reka.exec;
 
-import static java.lang.String.format;
 import static reka.util.Util.unchecked;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import net.schmizz.sshj.SSHClient;
-import net.schmizz.sshj.common.IOUtils;
 import net.schmizz.sshj.connection.channel.direct.Session;
 import net.schmizz.sshj.connection.channel.direct.Session.Command;
+import net.schmizz.sshj.userauth.keyprovider.KeyProvider;
+import net.schmizz.sshj.userauth.password.PasswordUtils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,21 +28,24 @@ public class ExecSshCommandOperation implements AsyncOperation {
 	
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
-	private final String[] command;
 	private final Path outInto, errInto, statusInto;
 	private final int timeoutSeconds = 5;
 	
 	private final SSHClient ssh = new SSHClient();
 	
 	public ExecSshCommandOperation(String[] command, SshConfig config, Path into) {
-		this.command = command;
 		this.outInto = into.add("out");
 		this.errInto = into.add("err");
 		this.statusInto = into.add("status");
 		try {
-			ssh.loadKnownHosts();
+			ssh.addHostKeyVerifier("b5:63:de:5c:ef:a9:5a:a2:7a:c7:51:55:d3:85:72:d3");
 			ssh.connect(config.hostname(), config.port());
-			ssh.authPublickey(config.user());
+			
+			KeyProvider keyProvider = ssh.loadKeys(config.privateKeyAsString(), 
+												   config.publicKeyAsString(), 
+												   PasswordUtils.createOneOff(config.passphrase()));
+			
+			ssh.authPublickey(config.user(), keyProvider);
 		} catch (Throwable t) {
 			t.printStackTrace();
 			throw unchecked(t);
@@ -55,23 +57,37 @@ public class ExecSshCommandOperation implements AsyncOperation {
 
 		
 		Reka.SharedExecutors.general.execute(() -> {
+			final AtomicReference<Session> sessionRef = new AtomicReference<>();
+			final AtomicReference<Command> commandRef = new AtomicReference<>();
+			
+			ScheduledFuture<?> timeout = Reka.SharedExecutors.scheduled.schedule(() -> {
+				try {
+					Command cmd = commandRef.get();
+					if (cmd != null) {
+						cmd.close();	
+					}
+					Session session = sessionRef.get();
+					if (session != null) {
+						session.close();
+					}
+				} catch (Throwable t) {
+					log.error("error closing channel", t);
+				}
+				res.error("timed out after %ds", timeoutSeconds);
+			}, timeoutSeconds, TimeUnit.SECONDS);
 			
 			try {
+				final Session session;
 				
-				final Session session = ssh.startSession();
+				synchronized (ssh) {	
+					session = ssh.startSession();
+					sessionRef.set(session);
+				}
 				
 		        try {
-		        	final Command cmd = session.exec("hostname");
-
-					ScheduledFuture<?> timeout = Reka.SharedExecutors.scheduled.schedule(() -> {
-						try {
-							cmd.close();
-							session.close();
-						} catch (Throwable t) {
-							log.error("error closing channel", t);
-						}
-						res.error("timed out after %ds", timeoutSeconds);
-					}, timeoutSeconds, TimeUnit.SECONDS);
+		        	
+		        	final Command cmd = session.exec("ifconfig -a");
+		        	commandRef.set(cmd);
 		        
 		        	InputStream err = cmd.getErrorStream();
 					InputStream out = cmd.getInputStream();

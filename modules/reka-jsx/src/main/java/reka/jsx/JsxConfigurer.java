@@ -34,6 +34,7 @@ import reka.core.setup.OperationSetup;
 
 public class JsxConfigurer extends ModuleConfigurer {
 	
+	@SuppressWarnings("unused")
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	
 	protected static final IdentityKey<String> COMPILED = IdentityKey.named("compiled jsx");

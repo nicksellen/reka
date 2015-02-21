@@ -10,6 +10,7 @@
   <packaging>pom</packaging>
 
   <modules>
+    <module>bouncycastle-loader</module>
     <module>reka-irc</module>
     <module>clojure-env</module>
     <module>reka-clojure</module>

@@ -29,7 +29,6 @@ import com.google.common.io.Resources;
 
 public class ClojureConfigurer extends ModuleConfigurer {
 
-	@SuppressWarnings("unused")
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	
 	protected static final IdentityKey<ClojureEnv> CLOJURE_ENV = IdentityKey.named("clojure env");
@@ -131,7 +130,7 @@ public class ClojureConfigurer extends ModuleConfigurer {
 		});
 		
 		module.onShutdown("shutdown env", (idv, store) -> {
-			
+			/* work in progress...
 			if (false) {
 
 			//if (versions.get(idv.identity()) == idv.version()) {
@@ -147,6 +146,7 @@ public class ClojureConfigurer extends ModuleConfigurer {
 			//}
 				
 			}
+			*/
 			
 		});
 		
