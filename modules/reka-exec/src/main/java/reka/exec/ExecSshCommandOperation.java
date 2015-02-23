@@ -38,7 +38,10 @@ public class ExecSshCommandOperation implements AsyncOperation {
 		this.errInto = into.add("err");
 		this.statusInto = into.add("status");
 		try {
-			ssh.addHostKeyVerifier("b5:63:de:5c:ef:a9:5a:a2:7a:c7:51:55:d3:85:72:d3");
+			for (String hostkey : config.hostkeys()) {
+				ssh.addHostKeyVerifier(hostkey);
+			}
+			ssh.useCompression();
 			ssh.connect(config.hostname(), config.port());
 			
 			KeyProvider keyProvider = ssh.loadKeys(config.privateKeyAsString(), 

@@ -11,8 +11,10 @@ import org.kohsuke.args4j.CmdLineException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import reka.BouncyCastleLoader;
 import reka.JsonModule;
 import reka.ModuleMeta;
+import reka.Reka;
 import reka.RekaConfigurer;
 import reka.builtins.BuiltinsModule;
 import reka.common.CommonModule;
@@ -51,7 +53,7 @@ public class Main {
 		.stream().map(m -> new ModuleMeta("core", m)).collect(toList());
 		
 		NavigableConfig conf = new ModuleManager(defaultModules).processor().process(ConfigParser.fromFile(file));
-		configure(new RekaConfigurer(file.getParentFile().toPath(), defaultModules), conf).build().run();
+		configure(new RekaConfigurer(file.getParentFile().toPath(), defaultModules, BouncyCastleLoader.classloader(Reka.class.getClassLoader())), conf).build().run();
 		
 	}
 

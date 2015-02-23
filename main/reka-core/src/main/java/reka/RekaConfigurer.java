@@ -29,6 +29,8 @@ import reka.dirs.BaseDirs;
 
 public class RekaConfigurer {
 	
+	private final ClassLoader classloader;
+	
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
 	private final Map<String,ConfigBody> apps = new HashMap<>();
@@ -59,9 +61,10 @@ public class RekaConfigurer {
 		}
 	}
 	
-	public RekaConfigurer(Path moduleBasedir, List<ModuleMeta> modules) {
+	public RekaConfigurer(Path moduleBasedir, List<ModuleMeta> modules, ClassLoader classloader) {
 		this.moduleBasedir = moduleBasedir;
 		this.defaultModules.addAll(modules);
+		this.classloader = classloader;
 	}
 	
 	@Conf.At("appdir")
@@ -140,9 +143,9 @@ public class RekaConfigurer {
 		modules.addAll(defaultModules);
 		
 		boolean classLoadingError = false;
-		ClassLoader base = BouncyCastleLoader.classloader(Reka.class.getClassLoader());
+		
 		for (JarModule jar : addedModules) {
-			ClassLoader cl = new URLClassLoader(new URL[] { jar.url }, base);
+			ClassLoader cl = new URLClassLoader(new URL[] { jar.url }, classloader);
 			try {
 				Object obj = cl.loadClass(jar.classname).newInstance();
 				Module module = (Module) obj;

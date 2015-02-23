@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
 
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
@@ -47,6 +49,7 @@ public class ExecConfigurer extends ModuleConfigurer {
 		private int port = 22;
 		private String user;
 		private char[] privateKey, publicKey, passphrase;
+		private final List<String> hostkeys = new ArrayList<>();
 		
 		@Conf.At("hostname")
 		public void hostname(String val) {
@@ -78,12 +81,17 @@ public class ExecConfigurer extends ModuleConfigurer {
 			passphrase = bytesToChars(val.getBytes(StandardCharsets.UTF_8));
 		}
 		
+		@Conf.Each("hostkey")
+		public void hostkey(String val) {
+			hostkeys.add(val);
+		}
+		
 		private char[] bytesToChars(byte[] bytes) {
 			return StandardCharsets.UTF_8.decode(ByteBuffer.wrap(bytes)).array();
 		}
 		
 		public SshConfig build() {
-			return new SshConfig(hostname, port, user, privateKey, publicKey, passphrase);
+			return new SshConfig(hostname, port, user, privateKey, publicKey, passphrase, hostkeys);
 		}
 		
 	}

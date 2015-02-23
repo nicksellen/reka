@@ -79,13 +79,16 @@
 			<artifactId>reka-smtp</artifactId>
 			<version>0.1.0</version>
 		</dependency>
-		<!-- 
 		<dependency>
-			<groupId>io.reka</groupId>
-			<artifactId>reka-use-net-play</artifactId>
-			<version>0.1.0</version>
+			<artifactId>bcprov-jdk15on</artifactId>
+			<groupId>org.bouncycastle</groupId>
+			<version>1.51</version>
 		</dependency>
-		 -->
+		<dependency>
+			<artifactId>bcpkix-jdk15on</artifactId>
+			<groupId>org.bouncycastle</groupId>
+			<version>1.51</version>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -105,5 +108,5 @@
 			</plugin>
 		</plugins>
 	</build>
-	
+
 </project>

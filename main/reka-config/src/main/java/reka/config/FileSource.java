@@ -95,7 +95,7 @@ public class FileSource extends AbstractSource {
 		if (isConstrained()) {
 			if (!other.startsWith(constraint().toPath())) {
 				log.error("tried to load nested file {} but we have a constraint {}", other, constrainTo.getAbsolutePath());
-				throw new RuntimeException("illegal path!");
+				throw new RuntimeException(format("invalid path [%s] - outside application root", other));
 			}
 		}
     	

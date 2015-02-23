@@ -376,8 +376,6 @@ public class ApplicationConfigurer implements ErrorReporter {
 	private static CompletableFuture<Void> runTests(Flows flows, Map<Path, FlowTest> tests, String identity) {
 		
 		CompletableFuture<Void> future = new CompletableFuture<>();
-		
-		//int testCaseCount = (int)tests.values().stream().flatMap(t -> t.cases().stream()).count();
 
 		if (tests.isEmpty()) {
 			future.complete(null);

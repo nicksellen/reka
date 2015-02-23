@@ -5,19 +5,23 @@ import static java.util.stream.Collectors.toList;
 import static reka.config.configurer.Configurer.configure;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.kohsuke.args4j.CmdLineException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import reka.BouncyCastleLoader;
 import reka.JsonModule;
 import reka.ModuleMeta;
+import reka.Reka;
 import reka.RekaConfigurer;
 import reka.builtins.BuiltinsModule;
 import reka.common.CommonModule;
 import reka.config.NavigableConfig;
 import reka.config.parser.ConfigParser;
+import reka.core.module.Module;
 import reka.core.module.ModuleManager;
 import reka.core.module.RekaGuiceModule;
 import reka.exec.ExecModule;
@@ -58,28 +62,31 @@ public class All {
 		
 		final Injector injector = Guice.createInjector(new RekaGuiceModule());
 		
-		List<ModuleMeta> defaultModules = asList(
-				BuiltinsModule.class,
-				FilesystemModule.class,
-				NashornModule.class,
-				ProcessModule.class,
-				MustacheModule.class,
-				H2Module.class,
-				ExecModule.class,
-				PostgresModule.class,
-				JsxModule.class,
-				CommonModule.class,
-				LessModule.class,
-				IrcModule.class,
-				JadeModule.class,
-				//UseNetPlayModule.class,
-				SmtpModule.class,
-				JsonModule.class,
-				NetModule.class
-			).stream().map(c -> new ModuleMeta("snapshot", injector.getInstance(c))).collect(toList());
+		List<Class<? extends Module>> moduleClasses = new ArrayList<>();
+		
+		moduleClasses.addAll(asList(
+			BuiltinsModule.class,
+			FilesystemModule.class,
+			NashornModule.class,
+			ProcessModule.class,
+			MustacheModule.class,
+			H2Module.class,
+			ExecModule.class,
+			PostgresModule.class,
+			JsxModule.class,
+			CommonModule.class,
+			LessModule.class,
+			IrcModule.class,
+			JadeModule.class,
+			SmtpModule.class,
+			JsonModule.class,
+			NetModule.class
+		));
+		
+		List<ModuleMeta> defaultModules = moduleClasses.stream().map(c -> new ModuleMeta("snapshot", injector.getInstance(c))).collect(toList());
 		
 		NavigableConfig conf = new ModuleManager(defaultModules).processor().process(ConfigParser.fromFile(file));
-		configure(new RekaConfigurer(file.getParentFile().toPath(), defaultModules), conf).build().run();
+		configure(new RekaConfigurer(file.getParentFile().toPath(), defaultModules, BouncyCastleLoader.classloader(Reka.class.getClassLoader())), conf).build().run();
 		
 	}
 

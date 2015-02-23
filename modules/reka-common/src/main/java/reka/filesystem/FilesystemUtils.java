@@ -22,7 +22,7 @@ public class FilesystemUtils {
 	
 	private static Path check(Path basedir, Path path) {
 		try {
-			if (!path.startsWith(basedir) || Files.isSameFile(basedir, path)) throw runtime("illegal path");
+			if (!path.startsWith(basedir) || Files.isSameFile(basedir, path)) throw runtime("invalid path [%s] - outside application route", path);
 			return path;
 		} catch (IOException e) {
 			throw unchecked(e);

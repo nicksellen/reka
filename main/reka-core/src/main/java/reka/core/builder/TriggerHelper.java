@@ -21,7 +21,6 @@ public class TriggerHelper {
 	private final ListMultimap<IdentityKey<Flow>,ConfigBody> triggers = ArrayListMultimap.create();
 	
 	public TriggerHelper add(IdentityKey<Flow> key, ConfigBody body) {
-		System.out.printf("addTrigger %s\n", key.name());
 		triggers.put(key, body);
 		return this;
 	}

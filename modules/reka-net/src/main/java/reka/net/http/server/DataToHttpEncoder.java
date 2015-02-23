@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -55,7 +56,6 @@ public class DataToHttpEncoder extends MessageToMessageEncoder<Data> {
 
 	private static final String TEXT_PLAIN = "text/plain";
 	private static final String APPLICATION_JSON = "application/json";
-	private static final byte[] NOT_FOUND = "not found\n".getBytes(StandardCharsets.UTF_8);
 
 	private final Logger logger = LoggerFactory.getLogger("http-encoder");
 	private final boolean ssl;
@@ -78,11 +78,13 @@ public class DataToHttpEncoder extends MessageToMessageEncoder<Data> {
 	protected void encode(ChannelHandlerContext context, Data data, List<Object> out) throws Exception {
 
 		try {
-			HttpResponseStatus responseStatus = HttpResponseStatus.valueOf(Integer.valueOf(data.getString(Response.STATUS).orElse("200")));
+			
+			HttpResponseStatus responseStatus = null;
+			ByteBuf buffer = null;
+			File file = null;
+			String contentType = null;
 
 			Data maybeContent = data.at(Response.CONTENT);
-
-			ByteBuf buffer = null;
 
 			boolean headRequest = data.existsAt(Response.HEAD);
 
@@ -90,8 +92,11 @@ public class DataToHttpEncoder extends MessageToMessageEncoder<Data> {
 				logger.info("sending HEAD response");
 			}
 
-			File file = null;
-			String contentType = null;
+			Optional<String> status = data.getString(Response.STATUS);
+			
+			if (status.isPresent()) {
+				responseStatus = HttpResponseStatus.valueOf(Integer.valueOf(status.get())); 
+			}
 
 			if (maybeContent.isContent()) {
 
@@ -132,10 +137,13 @@ public class DataToHttpEncoder extends MessageToMessageEncoder<Data> {
 				}
 				contentType = APPLICATION_JSON;
 
-			} else if (!responseStatus.equals(HttpResponseStatus.NO_CONTENT)) {
-				// 404
-				buffer = context.alloc().buffer();
-				buffer.writeBytes(NOT_FOUND);
+			} else if (responseStatus == null) {
+				// no content
+				responseStatus = HttpResponseStatus.NO_CONTENT;
+			}
+			
+			if (responseStatus == null) {
+				responseStatus = HttpResponseStatus.OK;
 			}
 
 			HttpResponse response;
