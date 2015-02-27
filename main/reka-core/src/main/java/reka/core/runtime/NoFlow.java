@@ -4,6 +4,7 @@ import static reka.api.Path.empty;
 
 import java.util.concurrent.ExecutorService;
 
+import reka.api.IdentityStoreReader;
 import reka.api.Path;
 import reka.api.data.MutableData;
 import reka.api.flow.Flow;
@@ -77,6 +78,11 @@ public class NoFlow implements Flow {
       return this;
     }
 
+	@Override
+	public FlowRun store(IdentityStoreReader value) {
+		return this;
+	}
+
     @Override
     public void run() {
       subscriber.ok(data);
@@ -97,7 +103,7 @@ public class NoFlow implements Flow {
   @Override
   public void run(ExecutorService coordinationExecutor,
       ExecutorService operationExecutor, MutableData data,
-      Subscriber subscriber, boolean statsEnabled) {
+      Subscriber subscriber, IdentityStoreReader store, boolean statsEnabled) {
       new NoFlowRun().mutableData(data).complete(subscriber).stats(statsEnabled).run();
   }
   

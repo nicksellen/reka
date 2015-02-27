@@ -3,6 +3,7 @@ package reka.api.flow;
 
 import java.util.concurrent.ExecutorService;
 
+import reka.api.IdentityStoreReader;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.run.Subscriber;
@@ -13,6 +14,7 @@ public interface FlowRun {
     FlowRun operationExecutor(ExecutorService executor);
     FlowRun coordinationExecutor(ExecutorService executor);
     FlowRun mutableData(MutableData value);
+    FlowRun store(IdentityStoreReader value);
     FlowRun stats(boolean enabled);
     
     void run();

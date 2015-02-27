@@ -32,5 +32,10 @@ public class ConcurrentIdentityStore implements IdentityStore {
 	public <T> Optional<T> remove(IdentityKey<T> key) {
 		return Optional.ofNullable((T) map.remove(identityHashCode(key)));
 	}
+
+	@Override
+	public IdentityStoreReader immutable() {
+		return ImmutableIdentityStore.from(map);
+	}
 	
 }

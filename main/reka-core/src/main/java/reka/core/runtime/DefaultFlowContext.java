@@ -8,6 +8,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicLong;
 
+import reka.api.IdentityStoreReader;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.flow.Flow.FlowStats;
@@ -25,14 +26,15 @@ public class DefaultFlowContext implements FlowContext {
 	private final long contextId = contextIds.incrementAndGet();
 	
 	public static FlowContext create(long flowId, ExecutorService operationExecutor, ExecutorService coordinationExecutor, 
-			                         Subscriber subscriber, FlowStats stats) {
-		return new DefaultFlowContext(flowId, operationExecutor, coordinationExecutor, subscriber, stats);
+			                         Subscriber subscriber, IdentityStoreReader store, FlowStats stats) {
+		return new DefaultFlowContext(flowId, operationExecutor, coordinationExecutor, subscriber, store, stats);
 	}
 
 	private final FlowStats stats;
 	private final ExecutorService operationExecutor;
 	private final ExecutorService coordinationExecutor;
 	private final Map<Integer, NodeState> states = new HashMap<>();
+	private final IdentityStoreReader store;
 	private final Subscriber subscriber;
 	private final long flowId;
 	private final long started;
@@ -45,12 +47,13 @@ public class DefaultFlowContext implements FlowContext {
 
 	private DefaultFlowContext(long flowId, ExecutorService operationExecutor,
 			ExecutorService coordinationExecutor, Subscriber subscriber,
-			FlowStats stats) {
+			IdentityStoreReader store, FlowStats stats) {
 		this.operationExecutor = operationExecutor;
 		this.coordinationExecutor = coordinationExecutor;
 		this.subscriber = subscriber;
 		this.flowId = flowId;
 		this.stats = stats;
+		this.store = store;
 		this.statsEnabled = stats != null;
 		started = System.nanoTime();
 		if (statsEnabled) stats.requests.increment();
@@ -148,6 +151,11 @@ public class DefaultFlowContext implements FlowContext {
 	@Override
 	public boolean statsEnabled() {
 		return statsEnabled;
+	}
+
+	@Override
+	public IdentityStoreReader store() {
+		return store;
 	}
 
 	private boolean hasCorrectThread() {

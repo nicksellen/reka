@@ -10,8 +10,10 @@ import java.nio.charset.StandardCharsets;
 
 import org.junit.Test;
 
+import reka.api.IdentityStore;
 import reka.api.data.MutableData;
 import reka.api.run.Operation;
+import reka.api.run.OperationContext;
 import reka.core.data.memory.MutableMemoryData;
 
 import com.google.common.io.Resources;
@@ -27,7 +29,7 @@ public class JRubyTest {
 		for (int i = 0; i < 10000; i++) {
 			MutableData data = MutableMemoryData.create();
 			data.putString("name", "omg " + i);
-			op.call(data);
+			op.call(data, new OperationContext(IdentityStore.emptyReader()));
 			assertThat(data.getString("out").get(), equalTo("name is omg " + i));
 		}
 		System.out.printf("end\n");
@@ -45,7 +47,7 @@ public class JRubyTest {
 		MutableData data = MutableMemoryData.create();
 		data.putString(dots("something.deep.in.here"), "yay");
 		data.putString("name", "omg");
-		op.call(data);
+		op.call(data, new OperationContext(IdentityStore.emptyReader()));
 		System.out.printf("data is: %s\n", data.toPrettyJson());
 	}
 	

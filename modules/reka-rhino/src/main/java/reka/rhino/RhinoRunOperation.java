@@ -9,6 +9,7 @@ import org.mozilla.javascript.ScriptableObject;
 import reka.api.Path;
 import reka.api.data.MutableData;
 import reka.api.run.Operation;
+import reka.api.run.OperationContext;
 
 public class RhinoRunOperation implements Operation {
 
@@ -23,7 +24,7 @@ public class RhinoRunOperation implements Operation {
 	}
 	
 	@Override
-	public void call(MutableData data) {
+	public void call(MutableData data, OperationContext ctx) {
 		addObjectToData(data, out, runJavascriptWithParentScope(scope, script, data));
 	}
 	

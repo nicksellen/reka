@@ -15,6 +15,7 @@ import reka.api.content.Content;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.run.Operation;
+import reka.api.run.OperationContext;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.setup.OperationConfigurer;
@@ -87,7 +88,7 @@ public class Coercion {
 		}
 
 		@Override
-		public void call(MutableData data) {
+		public void call(MutableData data, OperationContext ctx) {
 			
 			for (Entry<Path, CoercionType> e : coercions) {
 				Path path = e.getKey();
@@ -117,7 +118,7 @@ public class Coercion {
 		}
 
 		@Override
-		public void call(MutableData data) {
+		public void call(MutableData data, OperationContext ctx) {
 			Data val = data.at(path);
 			if (val.isContent()) {
 				Content content = val.content();
@@ -136,7 +137,7 @@ public class Coercion {
 		}
 
 		@Override
-		public void call(MutableData data) {
+		public void call(MutableData data, OperationContext ctx) {
 			Data val = data.at(path);
 			if (val.isContent()) {
 				data.put(path, booleanValue(Boolean.valueOf(val.content().asUTF8())));

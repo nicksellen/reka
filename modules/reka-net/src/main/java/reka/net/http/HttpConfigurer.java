@@ -102,6 +102,21 @@ public class HttpConfigurer extends ModuleConfigurer {
 		module.operation(path("req"), provider -> new HttpRequestConfigurer(server.nettyEventGroup(), server.nettyChannelType()));
 		module.operation(path("auth"), provider -> new BasicAuthConfigurer(provider));
 		
+		module.operation(path("head"), provider -> new HttpHeadConfigurer());
+		module.operation(path("write"), provider -> new HttpWriteConfigurer());
+		module.operation(path("end"), provider -> new HttpEndConfigurer());
+		
+		/*
+		 * TODO: make this, I need a nice api for provider.add(path("head"), new HttpHeadConfigurer() etc
+		//module.operation(path("streaming"), provider -> provider.add)
+		 
+		module.operation(path("streaming"), provider -> {
+			provider = provider.add(path("head"), provider -> new HttpHeadConfigurer());
+			provider = provider.add(path("write"), provider -> new HttpWriteConfigurer());
+			return new SequenceConfigurer(provider);
+		});
+		*/
+		
 		listens.forEach(listen -> {
 			module.requirePort(listen.port(), Optional.of(listen.host()));	
 		});

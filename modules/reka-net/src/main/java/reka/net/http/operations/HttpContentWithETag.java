@@ -13,6 +13,7 @@ import reka.api.content.Content;
 import reka.api.content.Contents;
 import reka.api.data.MutableData;
 import reka.api.run.Operation;
+import reka.api.run.OperationContext;
 import reka.net.http.operations.HttpContentUtils.ContentAndType;
 
 import com.google.common.hash.HashFunction;
@@ -43,7 +44,7 @@ public class HttpContentWithETag implements Operation {
 	}
 
 	@Override
-	public void call(MutableData data) {
+	public void call(MutableData data, OperationContext ctx) {
 		if (data.existsAt(Request.Headers.IF_NONE_MATCH) && etagValue.equals(data.getString(Request.Headers.IF_NONE_MATCH).orElse(""))) {
 			data.put(Response.CONTENT, EMPTY)
 				.put(Response.STATUS, NOT_MODIFIED);

@@ -69,25 +69,25 @@ public class FlowTest {
 		
 		Flow flow = FlowBuilderGroup.createFlow(path("flow"), 
 			parallel(
-				operation("mutate1", data -> {
+				operation("mutate1", (data, ctx) -> {
 					mutateData1(data);
 					counter.incrementAndGet();
 				}),
-				asyncOperation("mutate2", (data, result) -> {
+				asyncOperation("mutate2", (data, ctx, res) -> {
 					otherExecutor.execute(() -> {
 						mutateData2(data);
-						result.done();
+						res.done();
 						counter.incrementAndGet();
 					});
 				}),
-				operation("mutate3", data -> {
+				operation("mutate3", (data, ctx) -> {
 					mutateData3(data);
 					counter.incrementAndGet();
 				}),
-				asyncOperation("mutate4", (data, result) -> {
+				asyncOperation("mutate4", (data, ctx, res) -> {
 					otherExecutor.execute(() -> {
 						mutateData4(data);
-						result.done();
+						res.done();
 						counter.incrementAndGet();
 					});
 				})

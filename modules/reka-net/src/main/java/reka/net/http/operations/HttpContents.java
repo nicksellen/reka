@@ -19,6 +19,7 @@ import reka.api.content.Content;
 import reka.api.data.MutableData;
 import reka.api.flow.FlowOperation;
 import reka.api.run.AsyncOperation;
+import reka.api.run.OperationContext;
 import reka.api.run.RouteCollector;
 import reka.api.run.RouteKey;
 import reka.api.run.RouterOperation;
@@ -56,9 +57,9 @@ public abstract class HttpContents implements FlowOperation {
 		}
 
 		@Override
-		public void call(MutableData data, OperationResult ctx) {
+		public void call(MutableData data, OperationContext ctx, OperationResult res) {
 			process(data);
-			ctx.done();
+			res.done();
 		}
 		
 	}

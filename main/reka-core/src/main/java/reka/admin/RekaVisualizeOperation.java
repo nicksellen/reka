@@ -24,6 +24,7 @@ import reka.api.content.Content;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.run.Operation;
+import reka.api.run.OperationContext;
 import reka.core.app.manager.ApplicationManager;
 import reka.core.builder.DotGraphVisualizer;
 import reka.core.builder.FlowVisualizer;
@@ -54,7 +55,7 @@ public class RekaVisualizeOperation implements Operation {
 	}
 	
 	@Override
-	public void call(MutableData data) {
+	public void call(MutableData data, OperationContext ctx) {
 		
 		HashCode hash = data.hash(Hashing.sha1().newHasher()).hash();
 		

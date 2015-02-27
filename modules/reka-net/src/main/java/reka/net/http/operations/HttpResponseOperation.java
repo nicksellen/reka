@@ -13,6 +13,7 @@ import reka.api.Path.Response;
 import reka.api.content.Content;
 import reka.api.data.MutableData;
 import reka.api.run.Operation;
+import reka.api.run.OperationContext;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -39,7 +40,7 @@ public class HttpResponseOperation implements Operation {
 
 
 	@Override
-	public void call(MutableData data) {
+	public void call(MutableData data, OperationContext ctx) {
 		
 		for (Entry<String, Content> header : headers.entrySet()) {
 			data.put(Response.HEADERS.add(header.getKey()), header.getValue());

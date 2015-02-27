@@ -20,6 +20,7 @@ import reka.api.content.Content;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.run.Operation;
+import reka.api.run.OperationContext;
 
 public class FilesystemWrite implements Operation {
 	
@@ -36,7 +37,7 @@ public class FilesystemWrite implements Operation {
 	}
 	
 	@Override
-	public void call(MutableData data) {
+	public void call(MutableData data, OperationContext ctx) {
 		
 		Path dataIn = dataPathFn.apply(data);
 		

@@ -7,6 +7,7 @@ import org.apache.commons.mail.SimpleEmail;
 
 import reka.api.data.MutableData;
 import reka.api.run.Operation;
+import reka.api.run.OperationContext;
 import reka.core.util.StringWithVars;
 
 public class SMTPSendOperation implements Operation {
@@ -38,7 +39,7 @@ public class SMTPSendOperation implements Operation {
 	}
 	
 	@Override
-	public void call(final MutableData data) {
+	public void call(final MutableData data, OperationContext ctx) {
 		
 		try {
 			

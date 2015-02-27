@@ -42,7 +42,7 @@ public class EmbeddedFlowAction implements ActionHandler {
 				context.handleError(error, data, t);
 			}
 			
-		}, context.statsEnabled());	
+		}, context.store(), context.statsEnabled());	
 	}
 
 }

@@ -17,10 +17,10 @@ import java.security.NoSuchAlgorithmException;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Base64.Decoder;
 import java.util.Base64.Encoder;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -33,12 +33,12 @@ import java.util.zip.ZipInputStream;
 
 import org.codehaus.jackson.JsonGenerator;
 
-import com.google.common.io.BaseEncoding;
-
 import reka.api.JsonProvider;
 import reka.config.Source;
 import reka.config.SourceLinenumbers;
 import reka.config.configurer.Configurer.InvalidConfigurationException;
+
+import com.google.common.io.BaseEncoding;
 
 public class Util {
 	

@@ -26,6 +26,8 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import reka.api.IdentityStore;
+import reka.api.ImmutableIdentityStore.Builder;
 import reka.api.Path;
 import reka.api.Path.Request;
 import reka.api.Path.Response;
@@ -34,6 +36,7 @@ import reka.api.data.MutableData;
 import reka.api.flow.Flow;
 import reka.api.run.Subscriber;
 import reka.core.data.memory.MutableMemoryData;
+import reka.net.NetModule;
 
 @ChannelHandler.Sharable
 public class HttpHostHandler extends SimpleChannelInboundHandler<MutableData> {
@@ -230,7 +233,9 @@ public class HttpHostHandler extends SimpleChannelInboundHandler<MutableData> {
 	}
 	
 	private void executeFlow(ChannelHandlerContext context, Flow flow, MutableData data, String host) {
-		flow.run(context.executor(), context.executor(), data, new ChannelHandlerContextDataSubscriber(context), true);
+		Builder store = IdentityStore.immutableBuilder();
+		store.put(NetModule.Keys.channel, context.channel());
+		flow.run(context.executor(), context.executor(), data, new ChannelHandlerContextDataSubscriber(context), store.build(), true);
 	}
 
 	private static String rootExceptionMessage(Throwable t) {

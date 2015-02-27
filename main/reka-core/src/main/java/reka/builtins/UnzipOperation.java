@@ -16,6 +16,7 @@ import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.run.Operation;
+import reka.api.run.OperationContext;
 
 public class UnzipOperation implements Operation {
 	
@@ -28,7 +29,7 @@ public class UnzipOperation implements Operation {
 	}
 	
 	@Override
-	public void call(MutableData data) {
+	public void call(MutableData data, OperationContext ctx) {
 		Path dataPath = dataPathFn.apply(data);
 		java.nio.file.Path outputDir = outputDirFn.apply(data);
 		

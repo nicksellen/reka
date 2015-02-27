@@ -4,6 +4,7 @@ import java.util.concurrent.atomic.LongAdder;
 
 import reka.api.data.MutableData;
 import reka.api.run.Operation;
+import reka.api.run.OperationContext;
 
 public class DecrementOperation implements Operation {
 
@@ -14,7 +15,7 @@ public class DecrementOperation implements Operation {
 	}
 	
 	@Override
-	public void call(MutableData data) {
+	public void call(MutableData data, OperationContext ctx) {
 		adder.decrement();
 	}
 

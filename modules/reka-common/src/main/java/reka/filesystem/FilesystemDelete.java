@@ -8,6 +8,7 @@ import java.util.function.Function;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.run.Operation;
+import reka.api.run.OperationContext;
 
 public class FilesystemDelete implements Operation {
 	
@@ -20,7 +21,7 @@ public class FilesystemDelete implements Operation {
 	}
 	
 	@Override
-	public void call(MutableData data) {
+	public void call(MutableData data, OperationContext ctx) {
 		deleteRecursively(resolveAndCheck(basedir, filenameFn.apply(data)));
 	}
 

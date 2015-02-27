@@ -22,6 +22,7 @@ import reka.api.flow.FlowNode;
 import reka.api.flow.FlowOperation;
 import reka.api.flow.FlowSegment;
 import reka.api.run.Operation;
+import reka.api.run.OperationContext;
 import reka.api.run.RouterOperation;
 import reka.builtins.BuiltinsConfigurer;
 import reka.config.Config;
@@ -98,7 +99,7 @@ public class PutTest {
 		
 		FlowOperation op = firstNode(v).operationSupplier().get();
 		if (op instanceof Operation) {
-			callSync((Operation) op, data);
+			callSync((Operation) op, data, new OperationContext(IdentityStore.emptyReader()));
 		} else if (op instanceof RouterOperation) {
 			callRouting((RouterOperation) op, data);
 		} else {
@@ -121,8 +122,8 @@ public class PutTest {
 		return null;
 	}
 
-	private static void callSync(Operation op, MutableData data) {
-		op.call(data);
+	private static void callSync(Operation op, MutableData data, OperationContext ctx) {
+		op.call(data, ctx);
 	}
 	
 	private static void callRouting(RouterOperation op, MutableData data) {

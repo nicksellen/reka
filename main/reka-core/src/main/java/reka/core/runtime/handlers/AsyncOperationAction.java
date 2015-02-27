@@ -3,6 +3,7 @@ package reka.core.runtime.handlers;
 import reka.api.data.MutableData;
 import reka.api.run.AsyncOperation;
 import reka.api.run.AsyncOperation.OperationResult;
+import reka.api.run.OperationContext;
 import reka.core.runtime.FlowContext;
 
 public class AsyncOperationAction implements ActionHandler {
@@ -20,7 +21,8 @@ public class AsyncOperationAction implements ActionHandler {
 	@Override
 	public void call(MutableData data, FlowContext context) {
 		context.operationExecutor().execute(() -> {
-			op.call(data, new OperationResult(){
+			// TODO: don't create a new one each time
+			op.call(data, new OperationContext(context.store()), new OperationResult(){
 	
 				@Override
 				public void done() {

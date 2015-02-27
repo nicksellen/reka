@@ -5,6 +5,7 @@ import java.util.concurrent.ExecutorService;
 import reka.api.data.MutableData;
 import reka.api.run.AsyncOperation;
 import reka.api.run.AsyncOperation.OperationResult;
+import reka.api.run.OperationContext;
 import reka.core.runtime.FlowContext;
 
 public class BackgroundAsyncOperationAction implements ActionHandler {
@@ -25,7 +26,8 @@ public class BackgroundAsyncOperationAction implements ActionHandler {
 	public void call(MutableData data, FlowContext context) {
 		backgroundExecutor.execute(() -> {
 			try {
-				op.call(data, new OperationResult(){
+				// TODO: don't create new one each time
+				op.call(data, new OperationContext(context.store()), new OperationResult(){
 		
 					@Override
 					public void done() {

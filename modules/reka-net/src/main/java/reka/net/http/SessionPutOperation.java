@@ -10,6 +10,7 @@ import reka.api.Path.Response;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.run.Operation;
+import reka.api.run.OperationContext;
 
 public class SessionPutOperation implements Operation {
 	
@@ -28,7 +29,7 @@ public class SessionPutOperation implements Operation {
 	}
 	
 	@Override
-	public void call(MutableData data) {
+	public void call(MutableData data, OperationContext ctx) {
 		Optional<String> o = data.getString(getSessionIdPath);
 		String id;
 		if (o.isPresent()) {

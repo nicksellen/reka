@@ -19,6 +19,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import reka.api.IdentityStore;
 import reka.api.data.Data;
 import reka.api.flow.Flow.FlowStats;
 import reka.api.run.AsyncOperation;
@@ -52,7 +53,7 @@ public class ModularNodeTest {
 		final AtomicReference<Data> result = new AtomicReference<>();
 		
 		Node child = new RuntimeNode(0, "child", 
-			syncOperation((data) -> data.put(dots("example.from.child"), utf8("hello from child")), 
+			syncOperation((data, ctx) -> data.put(dots("example.from.child"), utf8("hello from child")), 
 					  subscribers((data) -> {
 						  log.debug("it was called! with : {}\n", data.toPrettyJson());
 						  result.set(data);
@@ -61,12 +62,12 @@ public class ModularNodeTest {
 		
 		RouteKey somechild = RouteKey.named("some child");
 		
-		Node parent = new RuntimeNode(1, "parent", syncOperation((data) ->
+		Node parent = new RuntimeNode(1, "parent", syncOperation((data, ctx) ->
 					data.putString(dots("example.from.parent"), "hello from parent"),
 					actionHandlers(asList(new NodeChild(child, false, somechild).node()), DoNothing.INSTANCE), DoNothing.INSTANCE), DoNothing.INSTANCE, DoNothing.INSTANCE);
 		
 		parent.call(MutableMemoryData.create(), 
-					DefaultFlowContext.create(1, Executors.newCachedThreadPool(), Executors.newSingleThreadExecutor(), Subscriber.DO_NOTHING, stats));
+					DefaultFlowContext.create(1, Executors.newCachedThreadPool(), Executors.newSingleThreadExecutor(), Subscriber.DO_NOTHING, IdentityStore.emptyReader(), stats));
 
 		if (latch.await(1, TimeUnit.SECONDS)) {
 			assertThat(result.get().getString(dots("example.from.child")).orElse("not found"), equalTo("hello from child"));
@@ -88,10 +89,10 @@ public class ModularNodeTest {
 		final ExecutorService executor2 =Executors.newCachedThreadPool();
 		final AtomicReference<Data> result = new AtomicReference<>();
 		
-		Node child = new RuntimeNode(0, "child", new AsyncOperationAction(AsyncOperation.create((data, ctx) -> { 
+		Node child = new RuntimeNode(0, "child", new AsyncOperationAction(AsyncOperation.create((data, ctx, res) -> { 
 			executor2.submit(() -> { 
 				data.put(dots("example.from.child.async"), utf8("I am from async"));
-				ctx.done();
+				res.done();
 			});
 		}), DSL.subscriber((data) -> {
 			log.debug("it was called! with : {}\n", data.toPrettyJson());
@@ -101,11 +102,11 @@ public class ModularNodeTest {
 		
 		RouteKey somechild = RouteKey.named("some child");
 		
-		Node parent = new RuntimeNode(1, "parent", syncOperation((data) ->
+		Node parent = new RuntimeNode(1, "parent", syncOperation((data, ctx) ->
 					data.put(dots("example.from.parent"), utf8("hello from parent")),
 					actionHandlers(asList(new NodeChild(child, false, somechild).node()), DoNothing.INSTANCE), DoNothing.INSTANCE), DoNothing.INSTANCE, DoNothing.INSTANCE);
 		
-		parent.call(MutableMemoryData.create(), DefaultFlowContext.create(1, executor, coordinator, Subscriber.DO_NOTHING, stats));
+		parent.call(MutableMemoryData.create(), DefaultFlowContext.create(1, executor, coordinator, Subscriber.DO_NOTHING, IdentityStore.emptyReader(), stats));
 
 		
 

@@ -3,6 +3,7 @@ package reka.api.flow;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.LongAdder;
 
+import reka.api.IdentityStoreReader;
 import reka.api.Path;
 import reka.api.data.MutableData;
 import reka.api.run.Subscriber;
@@ -20,10 +21,10 @@ public interface Flow extends Comparable<Flow> {
 
     FlowRun prepare();
     
-    void run(ExecutorService operationExecutor, ExecutorService coordinationExecutor, MutableData data, Subscriber subscriber, boolean statsEnabled);
+    void run(ExecutorService operationExecutor, ExecutorService coordinationExecutor, MutableData data, Subscriber subscriber, IdentityStoreReader store, boolean statsEnabled);
 
-    default void runWithSingleThreadedExecutor(ExecutorService singleThreadedCoordinator, MutableData data, Subscriber subscriber, boolean statsEnabled) {
-    	run(singleThreadedCoordinator, singleThreadedCoordinator, data, subscriber, statsEnabled);
+    default void runWithSingleThreadedExecutor(ExecutorService singleThreadedCoordinator, MutableData data, Subscriber subscriber, IdentityStoreReader store, boolean statsEnabled) {
+    	run(singleThreadedCoordinator, singleThreadedCoordinator, data, subscriber, store, statsEnabled);
     }
     
     @Override

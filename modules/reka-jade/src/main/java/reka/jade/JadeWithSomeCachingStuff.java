@@ -30,6 +30,7 @@ import reka.api.Path.Response;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.run.Operation;
+import reka.api.run.OperationContext;
 import reka.core.util.ReadObservedMap;
 
 import com.google.common.cache.Cache;
@@ -121,7 +122,7 @@ public class JadeWithSomeCachingStuff implements Operation, JsonProvider {
 	}
 	
 	@Override
-	public void call(MutableData data) {
+	public void call(MutableData data, OperationContext ctx) {
 		if (useCache.get()) { 
 			runWithCache(data); 
 		} else {
@@ -329,7 +330,7 @@ public class JadeWithSomeCachingStuff implements Operation, JsonProvider {
 		}
 
 		@Override
-		public void call(MutableData data) {
+		public void call(MutableData data, OperationContext ctx) {
 			if (mainResponse) data.putString(Response.Headers.CONTENT_TYPE, "text/html");
 			data.putString(outputPath, jade.renderTemplate(template, simpleMap(data)));
 		}

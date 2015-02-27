@@ -2,6 +2,7 @@ package reka.clojure;
 
 import reka.api.data.MutableData;
 import reka.api.run.Operation;
+import reka.api.run.OperationContext;
 
 public class ClojureRunOperation implements Operation {
 	
@@ -14,7 +15,7 @@ public class ClojureRunOperation implements Operation {
 	}
 
 	@Override
-	public void call(MutableData data) {
+	public void call(MutableData data, OperationContext ctx) {
 		runtime.run(namespacedFn, data.viewAsMap());
 	}
 	

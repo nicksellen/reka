@@ -55,7 +55,7 @@ import reka.config.configurer.annotations.Conf;
 import reka.core.builder.FlowBuilderGroup;
 import reka.core.builder.FlowVisualizer;
 import reka.core.builder.Flows;
-import reka.core.config.MultiConfigurerProvider;
+import reka.core.config.DefaultConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.core.data.memory.MutableMemoryData;
 import reka.core.module.ModuleManager;
@@ -131,7 +131,7 @@ public class ApplicationConfigurer implements ErrorReporter {
         FlowBuilderGroup flowsBuilder = new FlowBuilderGroup();
     	ModuleInitializer initializer = ModuleConfigurer.buildInitializer(idv, rootModule);
     	
-    	MultiConfigurerProvider provider = new MultiConfigurerProvider(initializer.collector().providers);
+    	DefaultConfigurerProvider provider = new DefaultConfigurerProvider(initializer.collector().providers);
     	Map<Path,Supplier<FlowSegment>> configuredFlows = new HashMap<>();
     	defs.forEach((config) -> 
 			configuredFlows.put(path(config.valueAsString()), 
@@ -143,7 +143,7 @@ public class ApplicationConfigurer implements ErrorReporter {
     
     public void checkValid(IdentityAndVersion idv) {
     	ModuleInitializer initializer = ModuleConfigurer.buildInitializer(idv, rootModule);
-    	MultiConfigurerProvider configurerProvider = new MultiConfigurerProvider(initializer.collector().providers);
+    	DefaultConfigurerProvider configurerProvider = new DefaultConfigurerProvider(initializer.collector().providers);
     	initializer.collector().triggers.forEach(triggers -> triggers.get().forEach(trigger -> {
     		trigger.supplier().apply(configurerProvider).bind(trigger.base(), triggers.store()).get();
     	}));
@@ -226,7 +226,7 @@ public class ApplicationConfigurer implements ErrorReporter {
 	    	
 	    	Map<Path,FlowTest> tests = new HashMap<>();
 	    	
-	    	MultiConfigurerProvider configurerProvider = new MultiConfigurerProvider(initializer.collector().providers);
+	    	DefaultConfigurerProvider configurerProvider = new DefaultConfigurerProvider(initializer.collector().providers);
 	    	
 	    	initializer.collector().initflows.forEach(initflow -> {
 	    		initflowBuilders.add(initflow.name, 

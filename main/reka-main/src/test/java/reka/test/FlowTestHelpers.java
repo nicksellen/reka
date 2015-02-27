@@ -9,6 +9,7 @@ import reka.api.data.MutableData;
 import reka.api.flow.FlowOperation;
 import reka.api.run.AsyncOperation;
 import reka.api.run.Operation;
+import reka.api.run.OperationContext;
 import reka.api.run.RouteCollector;
 import reka.api.run.RouteKey;
 import reka.api.run.RouterOperation;
@@ -34,7 +35,7 @@ public class FlowTestHelpers {
 		return new Operation() {
 
 			@Override
-			public void call(MutableData data) {
+			public void call(MutableData data, OperationContext ctx) {
 				counter.incrementAndGet();
 			}
 			
@@ -42,10 +43,10 @@ public class FlowTestHelpers {
 	}
 
 	public static FlowOperation asyncCountingFunction(final AtomicInteger counter) {
-		return AsyncOperation.create((data, ctx) -> {
+		return AsyncOperation.create((data, ctx, res) -> {
 			executor.submit(() -> {
 				counter.incrementAndGet();
-				ctx.done();
+				res.done();
 			});
 		});
 	}
@@ -56,7 +57,7 @@ public class FlowTestHelpers {
 		return new Operation() {
 
 			@Override
-			public void call(MutableData data) {
+			public void call(MutableData data, OperationContext ctx) {
 				latch.countDown();
 			}
 			

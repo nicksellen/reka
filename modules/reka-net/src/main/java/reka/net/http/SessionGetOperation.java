@@ -7,6 +7,7 @@ import reka.api.Path.Request;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.run.Operation;
+import reka.api.run.OperationContext;
 
 public class SessionGetOperation implements Operation {
 	
@@ -20,7 +21,7 @@ public class SessionGetOperation implements Operation {
 	}
 	
 	@Override
-	public void call(MutableData data) {
+	public void call(MutableData data, OperationContext ctx) {
 		
 		data.getString(sessionIdPath).ifPresent(sessionid -> {
 			store.find(sessionid).ifPresent(sessdata -> {

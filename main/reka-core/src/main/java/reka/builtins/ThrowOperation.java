@@ -5,6 +5,7 @@ import java.util.function.Function;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.run.Operation;
+import reka.api.run.OperationContext;
 
 public class ThrowOperation implements Operation {
 	
@@ -15,7 +16,7 @@ public class ThrowOperation implements Operation {
 	}
 
 	@Override
-	public void call(MutableData data) {
+	public void call(MutableData data, OperationContext ctx) {
 		throw new RuntimeException(msgFn.apply(data));
 	}
 	

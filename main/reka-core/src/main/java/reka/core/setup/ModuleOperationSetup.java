@@ -7,6 +7,7 @@ import reka.api.IdentityStore;
 import reka.api.data.MutableData;
 import reka.api.run.AsyncOperation;
 import reka.api.run.Operation;
+import reka.api.run.OperationContext;
 import reka.core.app.IdentityAndVersion;
 import reka.core.setup.ModuleSetup.DoneCallback;
 
@@ -26,7 +27,7 @@ public class ModuleOperationSetup {
 			return new Operation() {
 				
 				@Override
-				public void call(MutableData data) {
+				public void call(MutableData data, OperationContext ctx) {
 					c.accept(store);
 				}
 				
@@ -40,7 +41,7 @@ public class ModuleOperationSetup {
 			return new Operation() {
 				
 				@Override
-				public void call(MutableData data) {
+				public void call(MutableData data, OperationContext ctx) {
 					c.accept(idv, store);
 				}
 				
@@ -51,7 +52,7 @@ public class ModuleOperationSetup {
 	
 	public ModuleOperationSetup runAsync(String name, BiConsumer<IdentityStore, DoneCallback> c) {
 		ops.add(name, store -> {
-			return AsyncOperation.create((data, ctx) -> c.accept(store, () -> ctx.done()));
+			return AsyncOperation.create((data, ctx, res) -> c.accept(store, () -> res.done()));
 		});
 		return this;
 	}

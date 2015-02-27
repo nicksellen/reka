@@ -14,6 +14,7 @@ import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.run.Operation;
+import reka.api.run.OperationContext;
 import reka.config.configurer.Configurer.ErrorCollector;
 import reka.config.configurer.ErrorReporter;
 import reka.config.configurer.annotations.Conf;
@@ -122,7 +123,7 @@ public class JsonModule implements Module {
 		}
 
 		@Override
-		public void call(MutableData data) {
+		public void call(MutableData data, OperationContext ctx) {
 			Data val = data.at(inFn.apply(data));
 			if (val.isContent()) {
 				try {
@@ -147,7 +148,7 @@ public class JsonModule implements Module {
 		}
 
 		@Override
-		public void call(MutableData data) {
+		public void call(MutableData data, OperationContext ctx) {
 			data.putString(outFn.apply(data), data.at(inFn.apply(data)).toJson());
 		}
 		

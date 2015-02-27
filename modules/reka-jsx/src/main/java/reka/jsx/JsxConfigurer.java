@@ -24,6 +24,7 @@ import reka.api.content.Content;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.run.Operation;
+import reka.api.run.OperationContext;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.setup.ModuleConfigurer;
@@ -109,7 +110,7 @@ public class JsxConfigurer extends ModuleConfigurer {
 		}
 
 		@Override
-		public void call(MutableData data) {
+		public void call(MutableData data, OperationContext ctx) {
 			Path out = outFn.apply(data);
 			data.put(out, content);
 			if (out.equals(Response.CONTENT)) {

@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.joining;
 import static reka.api.Path.slashes;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
@@ -14,11 +15,11 @@ import reka.api.flow.FlowSegment;
 import reka.config.Config;
 import reka.core.setup.FlowSegmentBiFunction;
 
-public class MultiConfigurerProvider implements ConfigurerProvider {
+public class DefaultConfigurerProvider implements ConfigurerProvider {
 
 	private final Map<Path, FlowSegmentBiFunction> providers;
 	
-	public MultiConfigurerProvider(Map<Path, FlowSegmentBiFunction> providers) {
+	public DefaultConfigurerProvider(Map<Path, FlowSegmentBiFunction> providers) {
 		this.providers = providers;
 	}
 	
@@ -34,6 +35,13 @@ public class MultiConfigurerProvider implements ConfigurerProvider {
 	@Override
 	public Collection<Path> types() {
 		return providers.keySet();
+	}
+
+	@Override
+	public ConfigurerProvider add(Path type, FlowSegmentBiFunction provider) {
+		Map<Path,FlowSegmentBiFunction> newProviders = new HashMap<>(providers);
+		newProviders.put(type, provider);
+		return new DefaultConfigurerProvider(newProviders);
 	}
 
 }

@@ -5,6 +5,7 @@ import java.util.function.Function;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.run.AsyncOperation;
+import reka.api.run.OperationContext;
 
 public class ProcessCallOperation implements AsyncOperation {
 
@@ -17,10 +18,10 @@ public class ProcessCallOperation implements AsyncOperation {
 	}
 	
 	@Override
-	public void call(MutableData data, OperationResult ctx) {
+	public void call(MutableData data, OperationContext ctx, OperationResult res) {
 		manager.send(lineFn.apply(data), output -> {
 			data.putString("out", output);
-			ctx.done();
+			res.done();
 		});
 	}
 	

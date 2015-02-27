@@ -6,6 +6,7 @@ import reka.api.Path.Response;
 import reka.api.content.Content;
 import reka.api.data.MutableData;
 import reka.api.run.Operation;
+import reka.api.run.OperationContext;
 import reka.net.http.operations.HttpContentUtils.ContentAndType;
 
 public class HttpContent implements Operation {
@@ -19,7 +20,7 @@ public class HttpContent implements Operation {
 	}
 
 	@Override
-	public void call(MutableData data) {
+	public void call(MutableData data, OperationContext ctx) {
 		data.put(Response.CONTENT, content)
 		    .put(Response.Headers.CONTENT_TYPE, contentType);
 	}

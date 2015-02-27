@@ -6,6 +6,7 @@ import reka.api.Path;
 import reka.api.Path.Response;
 import reka.api.data.MutableData;
 import reka.api.run.Operation;
+import reka.api.run.OperationContext;
 import de.neuland.jade4j.model.JadeModel;
 import de.neuland.jade4j.template.JadeTemplate;
 
@@ -24,7 +25,7 @@ public class JadeRender implements Operation {
 	}
 
 	@Override
-	public void call(MutableData data) {
+	public void call(MutableData data, OperationContext ctx) {
 		if (mainResponse) data.putString(Response.Headers.CONTENT_TYPE, "text/html");
 		StringWriter writer = new StringWriter();
         template.process(new JadeModel(data.at(in).viewAsMap()), writer);

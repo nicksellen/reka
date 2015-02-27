@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import reka.api.Path;
 import reka.api.data.MutableData;
 import reka.api.run.Operation;
+import reka.api.run.OperationContext;
 
 public class FilesystemMktempDir implements Operation {
 
@@ -20,7 +21,7 @@ public class FilesystemMktempDir implements Operation {
 	}
 
 	@Override
-	public void call(MutableData data) {
+	public void call(MutableData data, OperationContext ctx) {
 		try {
 			Files.createDirectories(tmpdirbase);
 			java.nio.file.Path tmp = Files.createTempDirectory(tmpdirbase, "fs.tmp.");

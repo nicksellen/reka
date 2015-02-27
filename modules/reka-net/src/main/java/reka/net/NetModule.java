@@ -2,9 +2,11 @@ package reka.net;
 
 import static reka.api.Path.path;
 import static reka.api.Path.slashes;
+import io.netty.channel.Channel;
 
 import javax.inject.Singleton;
 
+import reka.api.IdentityKey;
 import reka.api.Path;
 import reka.core.module.Module;
 import reka.core.module.ModuleDefinition;
@@ -15,6 +17,10 @@ import reka.net.websockets.WebsocketConfigurer;
 
 @Singleton
 public class NetModule implements Module {
+	
+	public static interface Keys {
+		static final IdentityKey<Channel> channel = IdentityKey.named("netty channel");
+	}
 
 	private final NetServerManager server = new NetServerManager();
 

@@ -4,6 +4,7 @@ import static reka.util.Util.unwrap;
 
 import java.util.concurrent.ExecutorService;
 
+import reka.api.IdentityStoreReader;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.core.runtime.handlers.ActionHandler;
@@ -38,6 +39,8 @@ public interface FlowContext {
     long contextId();
 	long started();
 	boolean statsEnabled();
+	
+	IdentityStoreReader store();
     
     // call from any thread
 	void handleAction(ActionHandler next, ErrorHandler error, MutableData data);

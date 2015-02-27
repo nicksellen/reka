@@ -16,6 +16,7 @@ import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.run.AsyncOperation;
 import reka.api.run.Operation;
+import reka.api.run.OperationContext;
 import reka.config.configurer.annotations.Conf;
 import reka.core.module.Module;
 import reka.core.module.ModuleDefinition;
@@ -131,7 +132,7 @@ public class TwilioModule implements Module {
 		}
 		
 		@Override
-		public void call(MutableData data, OperationResult ctx) {
+		public void call(MutableData data, OperationContext ctx, OperationResult res) {
 			TwilioRestClient client = new TwilioRestClient(sid, token);
 			 
 		    Map<String, String> params = new HashMap<String, String>();
@@ -160,7 +161,7 @@ public class TwilioModule implements Module {
 				throw unchecked(e);
 			}
 			
-			ctx.done();
+			res.done();
 			
 		}
 		
@@ -185,7 +186,7 @@ public class TwilioModule implements Module {
 		}
 
 		@Override
-		public void call(MutableData data) {
+		public void call(MutableData data, OperationContext ctx) {
 			TwilioRestClient client = new TwilioRestClient(sid, token);
 			 
 		    Map<String, String> params = new HashMap<String, String>();

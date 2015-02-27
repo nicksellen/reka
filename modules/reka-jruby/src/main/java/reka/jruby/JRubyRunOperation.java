@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import reka.api.Path;
 import reka.api.data.MutableData;
 import reka.api.run.Operation;
+import reka.api.run.OperationContext;
 import reka.core.data.memory.MutableMemoryData;
 
 public class JRubyRunOperation implements Operation {
@@ -32,7 +33,7 @@ public class JRubyRunOperation implements Operation {
 	}
 
 	@Override
-	public void call(MutableData data) {
+	public void call(MutableData data, OperationContext ctx) {
 		
 		Object result = container.callMethod(null, methodName, data, Object.class);
 		

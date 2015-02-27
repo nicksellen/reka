@@ -41,6 +41,7 @@ import reka.api.data.MutableData;
 import reka.api.flow.FlowSegment;
 import reka.api.run.AsyncOperation;
 import reka.api.run.Operation;
+import reka.api.run.OperationContext;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.Configurer.ErrorCollector;
@@ -144,7 +145,7 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 		}
 
 		@Override
-		public void call(MutableData data) {
+		public void call(MutableData data, OperationContext ctx) {
 			Data val = data.at(inFn.apply(data));
 			if (val.isContent()) {
 				data.putList(outFn.apply(data), list -> {
@@ -213,7 +214,7 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 		}
 
 		@Override
-		public void call(MutableData data) {
+		public void call(MutableData data, OperationContext ctx) {
 			log.info(data.at(at).toPrettyJson());
 		}
 		
@@ -265,7 +266,7 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 		}
 		
 		@Override
-		public void call(MutableData data) {
+		public void call(MutableData data, OperationContext ctx) {
 			char[] buf = new char[length];
 			
 			for (int i = 0; i < length; i++) {
@@ -322,7 +323,7 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 		}
 		
 		@Override
-		public void call(MutableData data) {
+		public void call(MutableData data, OperationContext ctx) {
 			System.out.println(msg.apply(data));
 		}
 		
@@ -353,7 +354,7 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 		}
 
 		@Override
-		public void call(MutableData data) {
+		public void call(MutableData data, OperationContext ctx) {
 			data.getContent(path).ifPresent(content -> {
 				data.putString(path, content.asUTF8().toUpperCase());
 			});
@@ -387,7 +388,7 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 		}
 
 		@Override
-		public void call(MutableData data) {
+		public void call(MutableData data, OperationContext ctx) {
 			data.getContent(path).ifPresent(content -> {
 				data.putString(path, content.asUTF8().toLowerCase());
 			});
@@ -426,7 +427,7 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 		}
 		
 		@Override
-		public void call(MutableData data) {
+		public void call(MutableData data, OperationContext ctx) {
 			data.putString(out, UUID.randomUUID().toString());
 		}
 		
@@ -491,8 +492,8 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 		}
 
 		@Override
-		public void call(MutableData data, OperationResult ctx) {
-			e.schedule(() -> ctx.done(), ms, TimeUnit.MILLISECONDS);
+		public void call(MutableData data, OperationContext ctx, OperationResult res) {
+			e.schedule(() -> res.done(), ms, TimeUnit.MILLISECONDS);
 		}
 	}
 	
@@ -603,7 +604,7 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 		}
 
 		@Override
-		public void call(MutableData data) {
+		public void call(MutableData data, OperationContext ctx) {
 			data.putString(out, template.apply(data));
 		}
 		
@@ -661,7 +662,7 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 		}
 
 		@Override
-		public void call(MutableData data) {
+		public void call(MutableData data, OperationContext ctx) {
 			log.info(msgFn.apply(data));
 		}
 		
@@ -694,7 +695,7 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 		}
 		
 		@Override
-		public void call(MutableData data) {
+		public void call(MutableData data, OperationContext ctx) {
 			for (Entry<Path,Path> e : entries) {
 				Data d = data.at(e.getKey());
 				
@@ -827,7 +828,7 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 		}
 		
 		@Override
-		public void call(MutableData data) {
+		public void call(MutableData data, OperationContext ctx) {
 			data.put(out, content);
 		}
 		
@@ -844,7 +845,7 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 		}
 		
 		@Override
-		public void call(MutableData data) {
+		public void call(MutableData data, OperationContext ctx) {
 			datavalue.forEachContent((path, content) -> {
 				data.put(out.add(path), content);
 			});
@@ -881,7 +882,7 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 		}
 		
 		@Override
-		public void call(MutableData data) {
+		public void call(MutableData data, OperationContext ctx) {
 			dataonly.forEachContent((path, content) -> {
 				data.put(path, content);
 			});

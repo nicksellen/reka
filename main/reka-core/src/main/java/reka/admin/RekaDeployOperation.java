@@ -18,6 +18,7 @@ import reka.api.content.types.BinaryContent;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.run.AsyncOperation;
+import reka.api.run.OperationContext;
 import reka.config.FileSource;
 import reka.core.app.Application;
 import reka.core.app.manager.ApplicationManager;
@@ -42,7 +43,7 @@ public class RekaDeployOperation implements AsyncOperation {
 	}
 	
 	@Override
-	public void call(MutableData data, OperationResult ctx) {
+	public void call(MutableData data, OperationContext ctx, OperationResult res) {
 
 		Path dataPath = dataPathFn.apply(data);
 		String identity = identityFn.apply(data);
@@ -83,7 +84,7 @@ public class RekaDeployOperation implements AsyncOperation {
 			public void ok(String identity, int version, Application application) {
 				log.info("deploying {} ok", identity);
 				data.putString("message", "created application!");
-				ctx.done();
+				res.done();
 				
 				// delete a few old versions...
 				for (int v = version - 3; v >= 0; v--) {
@@ -96,7 +97,7 @@ public class RekaDeployOperation implements AsyncOperation {
 			public void error(String identity, Throwable t) {
 				t = unwrap(t);
 				log.error("failed to deploy [{}] - {}", identity, t.getMessage());
-				ctx.error(t);
+				res.error(t);
 				deleteRecursively(dirs.app());
 			}
 			

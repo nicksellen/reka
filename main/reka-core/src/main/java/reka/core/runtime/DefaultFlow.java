@@ -4,6 +4,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 
+import reka.api.IdentityStore;
+import reka.api.IdentityStoreReader;
 import reka.api.Path;
 import reka.api.data.MutableData;
 import reka.api.flow.Flow;
@@ -37,6 +39,7 @@ public class DefaultFlow implements Flow {
 		private MutableData data;
 		private ExecutorService operationExecutor;
 		private ExecutorService coordinationExecutor;
+		private IdentityStoreReader store;
 		private boolean stats = true;
 		
 		@Override
@@ -64,6 +67,12 @@ public class DefaultFlow implements Flow {
 		}
 
 		@Override
+		public FlowRun store(IdentityStoreReader value) {
+			store = value;
+			return this;
+		}
+
+		@Override
 		public FlowRun stats(boolean enabled) {
 			stats = enabled;
 			return this;
@@ -75,7 +84,8 @@ public class DefaultFlow implements Flow {
 			if (operationExecutor == null) operationExecutor = DEFAULT_OPERATION_EXECUTOR;
 			if (coordinationExecutor == null) coordinationExecutor = DEFAULT_COORDINATOR_EXECUTOR;
 			if (subscriber == null) subscriber = Subscriber.DO_NOTHING;
-			DefaultFlow.this.run(operationExecutor, coordinationExecutor, data, subscriber, stats);
+			if (store == null) store = IdentityStore.emptyReader();
+			DefaultFlow.this.run(operationExecutor, coordinationExecutor, data, subscriber, store, stats);
 		}
 	}
 	
@@ -91,12 +101,12 @@ public class DefaultFlow implements Flow {
 	
 	@Override
 	public void run(Subscriber subscriber) {
-		run(DEFAULT_OPERATION_EXECUTOR, DEFAULT_COORDINATOR_EXECUTOR, MutableMemoryData.create(), subscriber, true);
+		run(DEFAULT_OPERATION_EXECUTOR, DEFAULT_COORDINATOR_EXECUTOR, MutableMemoryData.create(), subscriber, IdentityStore.emptyReader(), true);
 	}
 	
 	@Override
-	public void run(ExecutorService operationExecutor, ExecutorService coordinationExecutor, MutableData data, Subscriber subscriber, boolean statsEnabled) {
-		DefaultFlowContext.create(id, operationExecutor, coordinationExecutor, subscriber, statsEnabled ? stats : null).handleAction(head, (d, c, t) -> {
+	public void run(ExecutorService operationExecutor, ExecutorService coordinationExecutor, MutableData data, Subscriber subscriber, IdentityStoreReader store, boolean statsEnabled) {
+		DefaultFlowContext.create(id, operationExecutor, coordinationExecutor, subscriber, store, statsEnabled ? stats : null).handleAction(head, (d, c, t) -> {
 			subscriber.error(d, t);
 		}, data);
 	}

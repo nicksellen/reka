@@ -24,6 +24,7 @@ import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.run.Operation;
+import reka.api.run.OperationContext;
 import reka.builtins.BuiltinsConfigurer.PutDataOperation;
 import reka.config.Config;
 import reka.config.ConfigBody;
@@ -211,7 +212,7 @@ public class NashornConfigurer extends ModuleConfigurer {
 		}
 
 		@Override
-		public void call(MutableData data) {
+		public void call(MutableData data, OperationContext ctx) {
 			datavalue.forEachContent((path, content) -> {
 				data.put(out.add(path), content);
 			});

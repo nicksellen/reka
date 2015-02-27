@@ -22,6 +22,7 @@ import reka.Reka;
 import reka.api.Path;
 import reka.api.data.MutableData;
 import reka.api.run.AsyncOperation;
+import reka.api.run.OperationContext;
 
 
 public class ExecSshCommandOperation implements AsyncOperation {
@@ -57,7 +58,7 @@ public class ExecSshCommandOperation implements AsyncOperation {
 	}
 	
 	@Override
-	public void call(MutableData data, OperationResult res) {
+	public void call(MutableData data, OperationContext ctx, OperationResult res) {
 
 		
 		Reka.SharedExecutors.general.execute(() -> {

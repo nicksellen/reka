@@ -28,6 +28,7 @@ import org.apache.http.client.utils.URIBuilder;
 import reka.api.Path;
 import reka.api.data.MutableData;
 import reka.api.run.AsyncOperation;
+import reka.api.run.OperationContext;
 import reka.net.http.server.HttpResponseToDatasetDecoder;
 
 public class HttpRequestOperation implements AsyncOperation {
@@ -60,7 +61,7 @@ public class HttpRequestOperation implements AsyncOperation {
 	}
 
 	@Override
-	public void call(MutableData data, OperationResult res) {
+	public void call(MutableData data, OperationContext ctx, OperationResult res) {
 
 		bootstrap.connect(host, port).addListener(new ChannelFutureListener() {
 

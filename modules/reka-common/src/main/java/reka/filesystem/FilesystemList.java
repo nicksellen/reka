@@ -12,6 +12,7 @@ import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.run.Operation;
+import reka.api.run.OperationContext;
 
 public class FilesystemList implements Operation {
 	
@@ -34,7 +35,7 @@ public class FilesystemList implements Operation {
 	}
 
 	@Override
-	public void call(MutableData data) {
+	public void call(MutableData data, OperationContext ctx) {
 
 		Path dataOut = dataPathFn.apply(data);
 		

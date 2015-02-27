@@ -3,6 +3,7 @@ package reka.admin;
 import reka.api.Path;
 import reka.api.data.MutableData;
 import reka.api.run.Operation;
+import reka.api.run.OperationContext;
 import reka.core.app.Application;
 import reka.core.app.manager.ApplicationManager;
 import reka.core.data.memory.MutableMemoryData;
@@ -20,7 +21,7 @@ public class RekaListOperation implements Operation {
 	}
 
 	@Override
-	public void call(MutableData data) {
+	public void call(MutableData data, OperationContext ctx) {
 		data.putList(out, list -> {
 			manager.forEach(e -> {
 				String identity = e.getKey();
