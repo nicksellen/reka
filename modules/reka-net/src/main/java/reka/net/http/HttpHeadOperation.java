@@ -25,7 +25,6 @@ public class HttpHeadOperation implements Operation {
 			// we're going off the rails now, so we don't want to decode the result data
 			// TODO: this should be contained in a streaming block config construct
 			channel.pipeline().remove(DataToHttpEncoder.class);
-			
 			DefaultHttpResponse response = new DefaultHttpResponse(HTTP_1_1, HttpResponseStatus.OK);
 			HttpHeaders.setTransferEncodingChunked(response);
 			HttpHeaders.setHeader(response, HttpHeaders.Names.CONTENT_TYPE, "text/plain");

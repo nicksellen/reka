@@ -1,0 +1,79 @@
+
+description core module
+
+operations {
+  put {
+    description <<- markdown
+      Puts one or more static values into the data structure.
+      See @see(putv) for dynamic value version.
+    ---
+    example one line subkey and value {
+      config {
+        put:my-key my value
+      }
+    }
+    example two values in a block {
+      config {
+        put {
+          key-one value one
+          key-two value two
+        }
+      }
+    }
+    example value and block {
+      config {
+        put base-key {
+          key-one value one
+          key-two value two
+        }
+      }
+      description <<- markdown
+        this results in an object with values at base-key.key-one and base-key.key-two
+      ---
+    }
+    test {
+      // same as what is currently called 'test' in the app
+      // this one would not have any app attached though, just create
+      // an operation on it's own. one flow with one operation in it.
+      // I guess it might have one copy of the module mentioned. but it couldn't
+      // have any others.
+      run {
+        put:name nick
+      }
+      expect {
+        name nick
+      }
+    }
+  }
+  putv
+  copy
+  run
+  runp
+  context
+  then
+  log
+  sleep
+  halt!
+  println
+  uppercase
+  lowercase
+  defer
+  throw
+  inspect
+  coerce
+  unzip
+  split
+  match
+  uuid/generate
+  random/string
+  coerce/int64
+  coerce/bool
+}
+
+module timer {
+
+}
+
+module adder {
+
+}
