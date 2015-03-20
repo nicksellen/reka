@@ -52,7 +52,7 @@ public class JsxConfigurer extends ModuleConfigurer {
 	public void setup(ModuleSetup module) {
 		
 		module.setupInitializer(init -> {
-			init.run("compile jsx", store -> {
+			init.run("compile jsx", ctx -> {
 				String jsx = src.toString();
 				try {
 					MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
@@ -75,7 +75,7 @@ public class JsxConfigurer extends ModuleConfigurer {
 						compiled = (String) result;
 						Files.write(cacheFile.toPath(), compiled.getBytes(StandardCharsets.UTF_8));
 					}
-					store.put(COMPILED, compiled);
+					ctx.put(COMPILED, compiled);
 				} catch (Throwable t) {
 					t.printStackTrace();
 					throw unchecked(t);
@@ -92,7 +92,7 @@ public class JsxConfigurer extends ModuleConfigurer {
 
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add("template", store -> new JsxTemplateOperation(store.get(COMPILED), outFn));
+			ops.add("template", ctx -> new JsxTemplateOperation(ctx.get(COMPILED), outFn));
 		}
 		
 	}

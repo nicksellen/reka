@@ -38,10 +38,10 @@ public class JRubyConfigurer extends ModuleConfigurer {
 	@Override
 	public void setup(ModuleSetup module) {
 		module.setupInitializer(init -> {
-			init.run("initialize runtime", store -> {
+			init.run("initialize runtime", ctx -> {
 				RubyEnv env = RubyEnv.create(gemFile);
 				env.exec(script);
-				store.put(RUBY_ENV, env);
+				ctx.put(RUBY_ENV, env);
 			});
 		});
 		module.operation(root(), provider -> new JRubyRunConfigurer(module.path()));

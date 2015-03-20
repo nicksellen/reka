@@ -46,7 +46,7 @@ public class SMTPSendConfigurer implements OperationConfigurer {
 	
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("send", store -> new SMTPSendOperation(
+		ops.add("send", ctx -> new SMTPSendOperation(
 				host, 
 				port, 
 				username, 

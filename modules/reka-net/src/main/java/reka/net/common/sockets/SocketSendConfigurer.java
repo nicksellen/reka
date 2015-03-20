@@ -32,7 +32,7 @@ public class SocketSendConfigurer implements OperationConfigurer {
 	
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("msg", store -> new SocketSendOperation(server, store.get(Sockets.SETTINGS), to, messageFn));
+		ops.add("msg", ctx -> new SocketSendOperation(server, ctx.get(Sockets.SETTINGS), to, messageFn));
 	}
 	
 }

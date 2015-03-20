@@ -80,7 +80,7 @@ public class SocketConfigurer extends ModuleConfigurer {
 		module.operation(slashes("tag/rm"), provider -> new SocketTagRemoveConfigurer(server));
 		module.operation(slashes("tag/send"), provider -> new SocketTagSendConfigurer(server));
 		
-		module.status(store -> new SocketStatusProvider(server, store.get(Sockets.SETTINGS)));
+		module.status(ctx -> new SocketStatusProvider(server, ctx.get(Sockets.SETTINGS)));
 		
 		Map<IdentityKey<Flow>,Function<ConfigurerProvider, OperationConfigurer>> triggers = new HashMap<>();
 		
@@ -99,9 +99,9 @@ public class SocketConfigurer extends ModuleConfigurer {
 		}	
 		
 		module.setupInitializer(init -> {
-			init.run("set http settings", store -> {
+			init.run("set http settings", ctx -> {
 				// FIXME: hackety hack, don't look back, these aren't the real HTTP settings!
-				store.put(Sockets.SETTINGS, NetSettings.socket(ports.get(0), null, -1));
+				ctx.put(Sockets.SETTINGS, NetSettings.socket(ports.get(0), null, -1));
 			});
 		});
 		

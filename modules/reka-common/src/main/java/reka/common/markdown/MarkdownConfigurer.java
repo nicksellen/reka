@@ -45,7 +45,7 @@ public class MarkdownConfigurer implements OperationConfigurer {
 	
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("convert", store -> new MarkdownOperation(inFn, outFn));
+		ops.add("convert", ctx -> new MarkdownOperation(inFn, outFn));
 	}
 
 }

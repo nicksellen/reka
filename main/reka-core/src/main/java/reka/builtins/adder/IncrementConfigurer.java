@@ -7,7 +7,7 @@ public class IncrementConfigurer implements OperationConfigurer {
 
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("inc", store -> new IncrementOperation(store.get(AdderConfigurer.ADDER)));
+		ops.add("inc", ctx -> new IncrementOperation(ctx.get(AdderConfigurer.ADDER)));
 	}
 
 }

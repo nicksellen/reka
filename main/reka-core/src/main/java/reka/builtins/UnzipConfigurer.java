@@ -31,7 +31,7 @@ public class UnzipConfigurer implements OperationConfigurer {
 	
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("unzip", store -> new UnzipOperation(dataPathFn, outputDirFn));
+		ops.add("unzip", ctx -> new UnzipOperation(dataPathFn, outputDirFn));
 	}
 
 }

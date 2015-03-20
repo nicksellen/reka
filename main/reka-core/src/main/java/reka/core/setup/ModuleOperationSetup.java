@@ -22,13 +22,13 @@ public class ModuleOperationSetup {
 		this.ops = ops;
 	}
 	
-	public ModuleOperationSetup run(String name, Consumer<IdentityStore> c) {
-		ops.add(name, store -> {
+	public ModuleOperationSetup run(String name, Consumer<ModuleSetupContext> c) {
+		ops.add(name, ctx -> {
 			return new Operation() {
 				
 				@Override
-				public void call(MutableData data, OperationContext ctx) {
-					c.accept(store);
+				public void call(MutableData data, OperationContext rctx) {
+					c.accept(ctx);
 				}
 				
 			};
@@ -37,12 +37,12 @@ public class ModuleOperationSetup {
 	}
 
 	public ModuleOperationSetup run(String name, BiConsumer<IdentityAndVersion, IdentityStore> c) {
-		ops.add(name, store -> {
+		ops.add(name, ctx -> {
 			return new Operation() {
 				
 				@Override
-				public void call(MutableData data, OperationContext ctx) {
-					c.accept(idv, store);
+				public void call(MutableData data, OperationContext rctx) {
+					c.accept(idv, ctx);
 				}
 				
 			};
@@ -51,8 +51,8 @@ public class ModuleOperationSetup {
 	}
 	
 	public ModuleOperationSetup runAsync(String name, BiConsumer<IdentityStore, DoneCallback> c) {
-		ops.add(name, store -> {
-			return AsyncOperation.create((data, ctx, res) -> c.accept(store, () -> res.done()));
+		ops.add(name, ctx -> {
+			return AsyncOperation.create((data, rctx, res) -> c.accept(ctx, () -> res.done()));
 		});
 		return this;
 	}

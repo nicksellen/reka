@@ -1,4 +1,4 @@
-package reka.net.http;
+package reka.net.http.streaming;
 
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 import io.netty.handler.codec.http.DefaultHttpResponse;

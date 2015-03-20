@@ -135,7 +135,7 @@ public class MatchConfigurer implements OperationConfigurer {
 	
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.router("match", store -> new MatcherOperation(matchFn, matchers, otherwise), routes -> {
+		ops.router("match", ctx -> new MatcherOperation(matchFn, matchers, otherwise), routes -> {
 			bodies.forEach((key, body) -> {
 				routes.add(key, configure(new SequenceConfigurer(provider), body));
 			});

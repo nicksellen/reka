@@ -5,9 +5,9 @@ import static reka.util.Util.unchecked;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import javax.script.Bindings;
 import javax.script.Compilable;
@@ -24,6 +24,9 @@ import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import reka.api.data.MutableData;
+import reka.core.data.memory.MutableMemoryData;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -124,12 +127,10 @@ public class ThreadLocalNashornRunner implements NashornRunner {
 
 	@Override
 	public Object run(CompiledScript compiledScript, Map<String,Object> data) {
-		
-		Map<String,Object> map = new HashMap<>();
-		Bindings bindings = new SimpleBindings(map);
-		bindings.putAll(data);
+
 		Collector collector = new Collector();
-		bindings.put("REKA", collector);
+		data.put("REKA", collector);
+		Bindings bindings = new SimpleBindings(NashornDataWrapper.wrapMap(data));
 		
 		try {
 			compiledScript.eval(new EvenSimplerScriptContext(global.get(), bindings));
@@ -155,8 +156,8 @@ public class ThreadLocalNashornRunner implements NashornRunner {
 		scripts.add("b = 5");
 		scripts.add("c = { woah: 'yeah' }");
 		scripts.add("d = function(){}");
-		//NashornRunner runner = new ThreadLocalNashornRunner(scripts);
-		NashornRunner runner = new SingleThreadedNashornRunner(scripts);
+		NashornRunner runner = new ThreadLocalNashornRunner(scripts);
+		//NashornRunner runner = new SingleThreadedNashornRunner(scripts);
 		
 		/*
 		
@@ -177,12 +178,49 @@ public class ThreadLocalNashornRunner implements NashornRunner {
 		
 		*/
 		
-		System.out.printf("%s\n", runner.run(runner.compile("data.name = 'nick'; return { name: 'peter', age: 22, data: data, interests: ['running', 'swimming'] };"), justOut()));
+		//System.out.printf("%s\n", runner.run(runner.compile("data.name = 'nick'; return { name: 'peter', age: 22, data: data, data2: data2, len: data2.things.length, interests: ['running', 'swimming'] };"), runData()));
+			
+		runner.run(runner.compile(
+			"print('actual array', [].constructor); " +
+			"print('actual array', [].map, [] instanceof Array); " +
+			"print('list', data2.things.map, data2.things instanceof Array); " +
+			"print('list', data2.things.constructor); " +
+			"print('d3', data3.things.map, data3.things instanceof Array); " +
+			"print('l', l.map, l instanceof Array); " +
+			"print('a', a.map, a instanceof Array); " +
+			"print('a2', a.map, a2 instanceof Array); " +
+			"var a3 = []; data2.things.forEach(function(v){a3.push(v);}); print('a3', a3.map, a3 instanceof Array); " +
+			"print('length', data2.things.length); "+
+			"print('size', data2.things.length); " + 
+			"print('length', typeof data2.length);"
+		), runData());
 	}
 	
-	private static Map<String,Object> justOut() {
+	private static Map<String,Object> runData() {
 		Map<String,Object> m = new HashMap<>();
 		m.put("data", new HashMap<>());
+		MutableData data = MutableMemoryData.create();
+		
+		List<String> simplelist = new ArrayList<>();
+		simplelist.add("one");
+		simplelist.add("two");
+		simplelist.add("three");
+		
+		String[] simplearray = new String[]{"one", "two", "three", "four"};
+		
+		data.putList("things", list -> {
+			list.addString("a");
+			list.addString("b");
+		});
+		
+		m.put("data2", data.viewAsMap());
+		m.put("data3", ScriptObjectMirror.wrap(data.viewAsMap(), null));
+		m.put("l", simplelist);
+		//Object l2 = jdk.nashorn.internal.objects.NativeJava.from(null, simplelist);
+		//log.info("l2", l2);
+		//m.put("l2", l2);
+		m.put("a", simplearray);
+		m.put("a2", ScriptObjectMirror.wrapArray(simplearray, null));
 		return m;
 	}
 	
@@ -198,14 +236,19 @@ public class ThreadLocalNashornRunner implements NashornRunner {
 		return convertMap(som);
 	}
 	
-	private static Map<String,Object> convertMap(ScriptObjectMirror map) {
-		Map<String,Object> newmap = new HashMap<>(map.size());
-		for (Entry<String, Object> e : map.entrySet()) {
-			newmap.put(e.getKey(), convertValue(e.getValue()));
-		}
-		return newmap;
+	private static Map<String,Object> convertMap(ScriptObjectMirror in) {
+		Map<String,Object> out = new HashMap<>(in.size());
+		in.forEach((k,v) -> out.put(k, convertValue(v)));
+		return out;
 	}
 	
+	private static Map<String,Object> convertMap(Map<String,Object> in) {
+		Map<String,Object> out = new HashMap<>(in.size());
+		in.forEach((k,v) -> out.put(k.toString(), convertValue(v)));
+		return out;
+	}
+	
+	@SuppressWarnings("unchecked")
 	private static Object convertValue(Object obj) {
 		if (obj instanceof ScriptObjectMirror) {
 			ScriptObjectMirror som = (ScriptObjectMirror) obj;
@@ -214,6 +257,10 @@ public class ThreadLocalNashornRunner implements NashornRunner {
 			} else {
 				return convertMap(som);
 			}
+		} else if (obj instanceof jdk.nashorn.internal.objects.NativeArray) {
+			return convertNativeArray((jdk.nashorn.internal.objects.NativeArray) obj);
+		} else if (obj instanceof Map) {
+			return convertMap((Map<String,Object>) obj);
 		} else {
 			return obj;
 		}
@@ -222,7 +269,16 @@ public class ThreadLocalNashornRunner implements NashornRunner {
 	private static List<Object> convertArray(ScriptObjectMirror list) {
 		List<Object> newlist = new ArrayList<>(list.size());
 		for (Object o : list.values()) {
-			newlist.add(o);
+			newlist.add(convertValue(o));
+		}
+		return newlist;
+	}
+	
+	private static List<Object> convertNativeArray(jdk.nashorn.internal.objects.NativeArray a) {
+		List<Object> newlist = new ArrayList<>(a.size());
+		Iterator<Object> it = a.valueIterator();
+		while (it.hasNext()) {
+			newlist.add(convertValue(it.next()));
 		}
 		return newlist;
 	}

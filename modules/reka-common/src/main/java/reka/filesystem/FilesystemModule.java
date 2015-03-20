@@ -64,7 +64,7 @@ public class FilesystemModule implements Module {
 		
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add("read", store -> new FilesystemRead(basedir, dataPathFn, filenameFn, download));
+			ops.add("read", ctx -> new FilesystemRead(basedir, dataPathFn, filenameFn, download));
 		}
 		
 	}
@@ -87,7 +87,7 @@ public class FilesystemModule implements Module {
 		
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add("delete", store -> new FilesystemDelete(basedir, filenameFn));
+			ops.add("delete", ctx -> new FilesystemDelete(basedir, filenameFn));
 		}
 		
 	}
@@ -116,7 +116,7 @@ public class FilesystemModule implements Module {
 		
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add("list", store -> new FilesystemList(basedir, dataPathFn, dirFn));
+			ops.add("list", ctx -> new FilesystemList(basedir, dataPathFn, dirFn));
 		}
 		
 	}
@@ -138,7 +138,7 @@ public class FilesystemModule implements Module {
 		
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add("mktmpdir", store -> new FilesystemMktempDir(tmpdir, dirname));
+			ops.add("mktmpdir", ctx -> new FilesystemMktempDir(tmpdir, dirname));
 		}
 		
 	}
@@ -187,7 +187,7 @@ public class FilesystemModule implements Module {
 
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.router("type", store -> new FilesystemType(basedir, pathFn), router -> {
+			ops.router("type", ctx -> new FilesystemType(basedir, pathFn), router -> {
 				if (whenDir != null) router.add(FilesystemType.DIR, whenDir);
 				if (whenFile != null) router.add(FilesystemType.FILE, whenFile);
 				if (whenMissing != null) router.add(FilesystemType.MISSING, whenMissing);

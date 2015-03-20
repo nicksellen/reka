@@ -29,6 +29,9 @@ import reka.net.http.configurers.HttpRedirectConfigurer;
 import reka.net.http.configurers.HttpRequestConfigurer;
 import reka.net.http.configurers.HttpRouterConfigurer;
 import reka.net.http.operations.BasicAuthConfigurer;
+import reka.net.http.streaming.HttpEndConfigurer;
+import reka.net.http.streaming.HttpHeadConfigurer;
+import reka.net.http.streaming.HttpWriteConfigurer;
 
 public class HttpConfigurer extends ModuleConfigurer {
 	

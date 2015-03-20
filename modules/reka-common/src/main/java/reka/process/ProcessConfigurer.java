@@ -103,7 +103,7 @@ public class ProcessConfigurer extends ModuleConfigurer {
 		}
 		
 		module.setupInitializer(init -> {
-			init.run("start process", store -> {
+			init.run("start process", ctx -> {
 				try {
 					ProcessBuilder builder = new ProcessBuilder();
 					builder.command(command);
@@ -116,17 +116,17 @@ public class ProcessConfigurer extends ModuleConfigurer {
 						manager = new MultiProcessManager(builder, processes, noreply);
 					}
 					manager.start();
-					store.put(PROCESS_MANAGER, manager);
+					ctx.put(PROCESS_MANAGER, manager);
 				} catch (Exception e) {
 					throw unchecked(e);
 				}
 			});
 		});
 		
-		module.status(store -> store.get(PROCESS_MANAGER));
+		module.status(ctx -> ctx.get(PROCESS_MANAGER));
 		
-		module.onShutdown("kill process", store -> {
-			store.lookup(PROCESS_MANAGER).ifPresent(ProcessManager::shutdown);
+		module.onShutdown("kill process", ctx -> {
+			ctx.lookup(PROCESS_MANAGER).ifPresent(ProcessManager::shutdown);
 		});
 		
 		module.operation(root(), provider -> new ProcessCallConfigurer(noreply));

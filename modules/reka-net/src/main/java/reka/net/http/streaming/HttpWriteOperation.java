@@ -1,4 +1,4 @@
-package reka.net.http;
+package reka.net.http.streaming;
 
 import java.nio.charset.StandardCharsets;
 

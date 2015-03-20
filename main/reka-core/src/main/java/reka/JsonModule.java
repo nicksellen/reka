@@ -77,7 +77,7 @@ public class JsonModule implements Module {
 
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add("parse", store -> new JsonParseOperation(inFn, outFn));
+			ops.add("parse", ctx -> new JsonParseOperation(inFn, outFn));
 		}
 		
 	}
@@ -108,7 +108,7 @@ public class JsonModule implements Module {
 
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add("stringify", store -> new JsonStringifyOperation(inFn, outFn));
+			ops.add("stringify", ctx -> new JsonStringifyOperation(inFn, outFn));
 		}
 		
 	}

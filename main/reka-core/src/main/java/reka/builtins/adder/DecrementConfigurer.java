@@ -7,7 +7,7 @@ public class DecrementConfigurer implements OperationConfigurer {
 
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("dec", store -> new DecrementOperation(store.get(AdderConfigurer.ADDER)));
+		ops.add("dec", ctx -> new DecrementOperation(ctx.get(AdderConfigurer.ADDER)));
 	}
 
 }

@@ -13,12 +13,12 @@ import reka.core.setup.StatusProvider;
 
 public class ApplicationBuilder {
 
-	private final List<NetworkInfo> network = new ArrayList<>();
+	public final List<NetworkInfo> network = new ArrayList<>();
 	
-	private final List<IntConsumer> undeployConsumers = new ArrayList<>();
-	private final List<IntConsumer> pauseConsumers = new ArrayList<>();
-	private final List<IntConsumer> resumeConsumers = new ArrayList<>();
-	private final List<StatusProvider> statusProviders = new ArrayList<>();
+	public final List<IntConsumer> undeployConsumers = new ArrayList<>();
+	public final List<IntConsumer> pauseConsumers = new ArrayList<>();
+	public final List<IntConsumer> resumeConsumers = new ArrayList<>();
+	public final List<StatusProvider> statusProviders = new ArrayList<>();
 
 	private Path name;
 	private Data meta;
@@ -52,26 +52,6 @@ public class ApplicationBuilder {
 	
 	public void initializerVisualizer(FlowVisualizer visualizer) {
 		this.visualizer = visualizer;
-	}
-
-	public List<NetworkInfo> network() {
-		return network;
-	}
-	
-	public List<IntConsumer> undeployConsumers() {
-		return undeployConsumers;
-	}
-	
-	public List<IntConsumer> pauseConsumers() {
-		return pauseConsumers;
-	}
-	
-	public List<IntConsumer> resumeConsumers() {
-		return resumeConsumers;
-	}
-	
-	public List<StatusProvider> statusProviders() {
-		return statusProviders;
 	}
 
 	public Application build() {

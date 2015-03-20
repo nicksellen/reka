@@ -15,7 +15,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import reka.api.IdentityStore;
 import reka.api.Path;
 import reka.api.data.MutableData;
 import reka.api.flow.FlowSegment;
@@ -28,16 +27,16 @@ abstract class AbstractOperationCollector implements OperationSetup {
 	
 	private final Path basename;
 	
-	private final IdentityStore store;
+	private final ModuleSetupContext ctx;
 	private final MutableData meta = MutableMemoryData.create();
 	private final List<Supplier<FlowSegment>> suppliers = new ArrayList<>();
 	
 	private String label;
 	private boolean newContext = false;
 	
-	public AbstractOperationCollector(Path basename, IdentityStore store) {
+	public AbstractOperationCollector(Path basename, ModuleSetupContext ctx) {
 		this.basename = basename;
-		this.store = store;
+		this.ctx = ctx;
 	}
 	
 	@Override
@@ -58,17 +57,17 @@ abstract class AbstractOperationCollector implements OperationSetup {
 	}
 
 	@Override
-	public final OperationSetup add(String name, Function<IdentityStore,? extends SimpleFlowOperation> c) {
+	public final OperationSetup add(String name, Function<ModuleSetupContext,? extends SimpleFlowOperation> c) {
 		addNode(name, c);
 		return this;
 	}
 
 	@Override
 	public final OperationSetup router(String name, 
-			                           Function<IdentityStore,? extends RouterOperation> router, 
+			                           Function<ModuleSetupContext,? extends RouterOperation> router, 
 			                           Consumer<RouterSetup> routes) {
 		
-		suppliers.add(() -> routerNode(basename.add(name).slashes(), () -> router.apply(store)));
+		suppliers.add(() -> routerNode(basename.add(name).slashes(), () -> router.apply(ctx)));
 		
 		parallel(par -> {
 			routes.accept(new RouterSetup(){
@@ -106,7 +105,7 @@ abstract class AbstractOperationCollector implements OperationSetup {
 	@Override
 	public final OperationSetup add(OperationConfigurer configurer) {
 		add(() -> {
-			OperationSetup ops = OperationSetup.createSequentialCollector(basename, store);
+			OperationSetup ops = OperationSetup.createSequentialCollector(basename, ctx);
 			configurer.setup(ops);	
 			return ops.get();
 		});
@@ -115,7 +114,7 @@ abstract class AbstractOperationCollector implements OperationSetup {
 	
 	@Override
 	public final <T> OperationSetup eachParallel(Iterable<T> it, BiConsumer<T, OperationSetup> c) {
-		OperationSetup e = new ParallelCollector(basename, store);
+		OperationSetup e = new ParallelCollector(basename, ctx);
 		for (T v : it) {
 			e.sequential(s -> c.accept(v, s));
 		}
@@ -125,7 +124,7 @@ abstract class AbstractOperationCollector implements OperationSetup {
 
 	@Override
 	public final OperationSetup sequential(Consumer<OperationSetup> seq) {
-		OperationSetup e = new SequentialCollector(basename, store);
+		OperationSetup e = new SequentialCollector(basename, ctx);
 		seq.accept(e);
 		add(e);
 		return this;
@@ -133,7 +132,7 @@ abstract class AbstractOperationCollector implements OperationSetup {
 
 	@Override
 	public final OperationSetup sequential(String label, Consumer<OperationSetup> seq) {
-		OperationSetup e = new SequentialCollector(basename, store);
+		OperationSetup e = new SequentialCollector(basename, ctx);
 		seq.accept(e);
 		add(() -> createLabelSegment(label, e.get()));
 		return this;
@@ -141,7 +140,7 @@ abstract class AbstractOperationCollector implements OperationSetup {
 
 	@Override
 	public final OperationSetup namedInputSeq(RouteKey key, Consumer<OperationSetup> seq) {
-		OperationSetup e = new SequentialCollector(basename, store);
+		OperationSetup e = new SequentialCollector(basename, ctx);
 		seq.accept(e);
 		add(() -> createNamedInputSegment(key, e.get()));
 		return this;
@@ -150,7 +149,7 @@ abstract class AbstractOperationCollector implements OperationSetup {
 	@Override
 	public final OperationSetup namedInput(RouteKey key, OperationConfigurer configurer) {
 		add(() -> {
-			OperationSetup ops = OperationSetup.createSequentialCollector(basename, store);
+			OperationSetup ops = OperationSetup.createSequentialCollector(basename, ctx);
 			configurer.setup(ops);	
 			return createNamedInputSegment(key, ops.get());
 		});
@@ -159,7 +158,7 @@ abstract class AbstractOperationCollector implements OperationSetup {
 
 	@Override
 	public final OperationSetup parallel(Consumer<OperationSetup> par) {
-		OperationSetup e = new ParallelCollector(basename, store);
+		OperationSetup e = new ParallelCollector(basename, ctx);
 		par.accept(e);
 		add(e);
 		return this;
@@ -167,7 +166,7 @@ abstract class AbstractOperationCollector implements OperationSetup {
 	
 	@Override
 	public final OperationSetup parallel(String label, Consumer<OperationSetup> par) {
-		OperationSetup e = new ParallelCollector(basename, store);
+		OperationSetup e = new ParallelCollector(basename, ctx);
 		par.accept(e);
 		add(() -> createLabelSegment(label, e.get()));
 		return this;
@@ -183,13 +182,8 @@ abstract class AbstractOperationCollector implements OperationSetup {
 		return segment;
 	}
 
-	@Override
-	public OperationSetup defer(Supplier<FlowSegment> supplier) {
-		throw new UnsupportedOperationException("I haven't made this bit yet");
-	}
-
-	private void addNode(String name, Function<IdentityStore,? extends SimpleFlowOperation> c) {
-		add(() -> node(basename.add(name).slashes(), () -> c.apply(store)));
+	private void addNode(String name, Function<ModuleSetupContext,? extends SimpleFlowOperation> c) {
+		add(() -> node(basename.add(name).slashes(), () -> c.apply(ctx)));
 	}
 	
 	abstract FlowSegment build(Collection<FlowSegment> segments);

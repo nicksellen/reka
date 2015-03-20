@@ -38,7 +38,7 @@ public class HttpRequestConfigurer implements OperationConfigurer {
 
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("request", store -> new HttpRequestOperation(group, channelType, url, out));
+		ops.add("request", ctx -> new HttpRequestOperation(group, channelType, url, out));
 	}
 
 }

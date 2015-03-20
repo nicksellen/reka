@@ -23,6 +23,8 @@ import reka.api.IdentityStore;
 import reka.api.Path;
 import reka.api.flow.Flow;
 import reka.api.flow.FlowSegment;
+import reka.api.run.Operation;
+import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.core.app.IdentityAndVersion;
 import reka.core.config.ConfigurerProvider;
@@ -36,16 +38,16 @@ public class ModuleSetup {
 	private final ModuleInfo info;
 	private final ModuleCollector collector;
 	private final Path path;
-	private final IdentityStore store;
+	private final ModuleSetupContext ctx;
 	private final List<Supplier<FlowSegment>> segments = new ArrayList<>();	
 	
 	private boolean includeDefaultStatus = true;
 	
-	public ModuleSetup(IdentityAndVersion idv, ModuleInfo info, Path path, IdentityStore store, ModuleCollector collector) {
+	public ModuleSetup(IdentityAndVersion idv, ModuleInfo info, Path path, ModuleSetupContext ctx, ModuleCollector collector) {
 		this.idv = idv;
 		this.info = info;
 		this.path = path;
-		this.store = store;
+		this.ctx = ctx;
 		this.collector = collector;
 	}
 	
@@ -65,24 +67,28 @@ public class ModuleSetup {
 	}
 	
 	public ModuleSetup setupInitializer(Consumer<ModuleOperationSetup> init) {
-		OperationSetup e = new SequentialCollector(path, store);
+		OperationSetup e = new SequentialCollector(path, ctx);
 		init.accept(new ModuleOperationSetup(idv, e));
 		segments.add(e);
 		return this;
 	}
 	
-	public void onShutdown(String name, Consumer<IdentityStore> handler) {
-		collector.shutdownHandlers.add(() -> handler.accept(store));
+	public void onShutdown(String name, Consumer<ModuleSetupContext> handler) {
+		collector.shutdownHandlers.add(() -> handler.accept(ctx));
 	}
 	
 	public void onShutdown(String name, BiConsumer<IdentityAndVersion, IdentityStore> handler) {
-		collector.shutdownHandlers.add(() -> handler.accept(idv, store));
+		collector.shutdownHandlers.add(() -> handler.accept(idv, ctx));
+	}
+	
+	public ModuleSetup simpleOperation(Path name, Function<Config,Operation> fn) {
+		return this;
 	}
 	
 	public ModuleSetup operation(Path name, Function<ConfigurerProvider,OperationConfigurer> c) {
 		
 		FlowSegmentBiFunction f = (provider, config) -> {
-			return configure(c.apply(provider), config).bind(path, store);
+			return configure(c.apply(provider), config).bind(path, ctx);
 		};
 		
 		// register it under two names, the full path (e.g. net/http/router):
@@ -98,13 +104,13 @@ public class ModuleSetup {
 	
 	public void status(Function<IdentityStore, StatusDataProvider> c) {
 		includeDefaultStatus = false;
-		collector.statuses.add(() -> StatusProvider.create(info.name().slashes(), path.slashes(), info.version(), c.apply(store)));
+		collector.statuses.add(() -> StatusProvider.create(info.name().slashes(), path.slashes(), info.version(), c.apply(ctx)));
 	}
 	
 	public ModuleSetup initflow(String name, ConfigBody body, Consumer<InitFlowSetup> init) {
 		Function<ConfigurerProvider, OperationConfigurer> supplier = provider -> configure(new SequenceConfigurer(provider), body);
-		collector.initflows.add(new InitFlow(path.add(name), supplier, store, flow -> {
-			init.accept(new InitFlowSetup(flow, store));
+		collector.initflows.add(new InitFlow(path.add(name), supplier, ctx, flow -> {
+			init.accept(new InitFlowSetup(flow, ctx));
 		}));
 		return this;
 	}
@@ -148,12 +154,12 @@ public class ModuleSetup {
 	public ModuleSetup triggersWithBodies(Map<IdentityKey<Flow>,ConfigBody> bodies, Consumer<MultiFlowRegistration> cs) {
 		collector.triggers.add(new TriggerCollection(bodies.entrySet().stream().map(e -> {
 			return new Trigger(path, e.getKey(), provider -> configure(new SequenceConfigurer(provider), e.getValue()));
-		}).collect(toList()), cs, store));
+		}).collect(toList()), cs, ctx));
 		return this;
 	}
 	
 	public ModuleSetup triggers(Map<IdentityKey<Flow>,Function<ConfigurerProvider, OperationConfigurer>> suppliers, Consumer<MultiFlowRegistration> cs) {
-		collector.triggers.add(new TriggerCollection(suppliers.entrySet().stream().map(e -> new Trigger(path, e.getKey(), e.getValue())).collect(toList()), cs, store));
+		collector.triggers.add(new TriggerCollection(suppliers.entrySet().stream().map(e -> new Trigger(path, e.getKey(), e.getValue())).collect(toList()), cs, ctx));
 		return this;
 	}
 

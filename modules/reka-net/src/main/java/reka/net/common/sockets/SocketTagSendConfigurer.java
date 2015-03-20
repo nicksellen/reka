@@ -35,9 +35,9 @@ public class SocketTagSendConfigurer implements OperationConfigurer {
 	
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("tag/send", store -> {
+		ops.add("tag/send", ctx -> {
 			Function<Data,ChannelMatcher> fn = data -> new ChannelTagMatcher(tagFn.apply(data));
-			return new SocketBroadcastWithMatcherOperation(server, store.get(Sockets.SETTINGS), messageFn, fn);
+			return new SocketBroadcastWithMatcherOperation(server, ctx.get(Sockets.SETTINGS), messageFn, fn);
 		});
 	}
 	

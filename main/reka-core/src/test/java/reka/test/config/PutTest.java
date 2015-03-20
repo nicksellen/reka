@@ -30,6 +30,7 @@ import reka.config.NavigableConfig;
 import reka.config.configurer.Configurer.InvalidConfigurationException;
 import reka.core.data.memory.MutableMemoryData;
 import reka.core.runtime.DefaultRouteCollector;
+import reka.core.setup.ModuleSetupContext;
 import reka.core.setup.OperationConfigurer;
 import reka.core.setup.OperationSetup;
 
@@ -91,7 +92,7 @@ public class PutTest {
 	}
 	
 	private static void configureThenCall(OperationConfigurer s, Config config, MutableData data) {
-		OperationSetup collector = OperationSetup.createSequentialCollector(Path.root(), IdentityStore.createConcurrentIdentityStore());
+		OperationSetup collector = OperationSetup.createSequentialCollector(Path.root(), new ModuleSetupContext(IdentityStore.createConcurrentIdentityStore()));
 		configure(s, config);
 		
 		s.setup(collector);

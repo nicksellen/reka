@@ -22,6 +22,7 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -76,48 +77,46 @@ public class MutableMemoryData implements MutableDataProvider<Object> {
 		return new MutableDataWrapper<>(convertList(list), MutableMemoryData.INSTANCE);
 	}
 	
-	private static Map<String,Object> convertMap(Map<String,Object> map) {
-		for (Entry<String, Object> e : map.entrySet()) {
-			e.setValue(convertValue(e.getValue()));
-		}
-		return map;
+	private static Map<String,Object> convertMap(Map<String,Object> in) {
+		Map<String,Object> out = new HashMap<>(in.size());
+		in.forEach((k,v) -> out.put(k, convertValue(v)));
+		return out;
 	}
 	
 	@SuppressWarnings("unchecked")
-	private static Object convertValue(Object obj) {
-		if (obj instanceof Map) {
-			return convertMap((Map<String,Object>) obj);
-		} else if (obj instanceof List) {
-			return convertList((List<Object>) obj);
-		} else if (!(obj instanceof Content)) {
-			return convertToContent(obj);
+	private static Object convertValue(Object in) {
+		if (in instanceof Map) {
+			return convertMap((Map<String,Object>) in);
+		} else if (in instanceof List) {
+			return convertList((List<Object>) in);
+		} else if (!(in instanceof Content)) {
+			return convertToContent(in);
 		} else {
-			return obj;
+			return in;
 		}
 	}
 	
-	private static List<Object> convertList(List<Object> list) {
-		for (int i = 0; i < list.size(); i++) {
-			list.set(i, convertValue(list.get(i)));
-		}
-		return list;
+	private static List<Object> convertList(List<Object> in) {
+		List<Object> out = new ArrayList<>(in.size());
+		in.forEach(item -> out.add(convertValue(item)));
+		return out;
 	}
 	
-	private static Content convertToContent(Object obj) { 
-		if (obj == null) {
+	private static Content convertToContent(Object in) { 
+		if (in == null) {
 			return NullContent.INSTANCE;
-		} else if (obj instanceof String) {
-			return utf8((String) obj);
-		} else if (long.class.isInstance(obj) || Long.class.isInstance(obj)) {
-			return longValue((long) obj);
-		} else if (int.class.isInstance(obj) || Integer.class.isInstance(obj)) {
-			return integer((int) obj);
-		} else if (double.class.isInstance(obj) || Double.class.isInstance(obj)) {
-			return doubleValue((double) obj);
-		} else if (boolean.class.isInstance(obj) || Boolean.class.isInstance(obj)) {
-			return booleanValue((boolean) obj);
+		} else if (in instanceof String) {
+			return utf8((String) in);
+		} else if (long.class.isInstance(in) || Long.class.isInstance(in)) {
+			return longValue((long) in);
+		} else if (int.class.isInstance(in) || Integer.class.isInstance(in)) {
+			return integer((int) in);
+		} else if (double.class.isInstance(in) || Double.class.isInstance(in)) {
+			return doubleValue((double) in);
+		} else if (boolean.class.isInstance(in) || Boolean.class.isInstance(in)) {
+			return booleanValue((boolean) in);
 		} else {
-			throw runtime("don't know how to make %s (%s) a Content", obj, obj.getClass());
+			throw runtime("don't know how to make %s (%s) a Content", in, in.getClass());
 		}
 	}
 	

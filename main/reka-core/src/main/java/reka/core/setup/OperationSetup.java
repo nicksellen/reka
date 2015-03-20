@@ -5,7 +5,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import reka.api.IdentityStore;
 import reka.api.Path;
 import reka.api.data.MutableData;
 import reka.api.flow.FlowSegment;
@@ -15,8 +14,8 @@ import reka.api.run.RouterOperation;
 
 public interface OperationSetup extends Supplier<FlowSegment> {
 	
-	public static OperationSetup createSequentialCollector(Path basename, IdentityStore store) {
-		return new SequentialCollector(basename, store);
+	public static OperationSetup createSequentialCollector(Path basename, ModuleSetupContext ctx) {
+		return new SequentialCollector(basename, ctx);
 	}
 	
 	public static interface RouterSetup {
@@ -30,10 +29,10 @@ public interface OperationSetup extends Supplier<FlowSegment> {
 	OperationSetup label(String label);
 	OperationSetup useNewContext();
 	
-	OperationSetup add(String name, Function<IdentityStore,? extends SimpleFlowOperation> store);
+	OperationSetup add(String name, Function<ModuleSetupContext,? extends SimpleFlowOperation> store);
 	OperationSetup add(Supplier<FlowSegment> supplier);
 	
-	OperationSetup router(String name, Function<IdentityStore,? extends RouterOperation> store, Consumer<RouterSetup> routes);
+	OperationSetup router(String name, Function<ModuleSetupContext,? extends RouterOperation> store, Consumer<RouterSetup> routes);
 	
 	OperationSetup add(OperationConfigurer configurer);
 	
@@ -47,7 +46,5 @@ public interface OperationSetup extends Supplier<FlowSegment> {
 	OperationSetup parallel(String label, Consumer<OperationSetup> par);
 	
 	<T> OperationSetup eachParallel(Iterable<T> it, BiConsumer<T, OperationSetup> seq);
-
-	OperationSetup defer(Supplier<FlowSegment> supplier);
 	
 }

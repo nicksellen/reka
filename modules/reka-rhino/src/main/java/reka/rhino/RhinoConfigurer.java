@@ -56,11 +56,11 @@ public class RhinoConfigurer extends ModuleConfigurer {
 		
 		module.setupInitializer(init -> {
 		
-			init.run("create js scope", store -> {
+			init.run("create js scope", ctx -> {
 				Context context = Context.enter();
 				if (optimization != null) context.setOptimizationLevel(optimization);
 				try {
-					store.put(SCOPE, context.initStandardObjects(null, false));
+					ctx.put(SCOPE, context.initStandardObjects(null, false));
 				} finally {
 					Context.exit();
 				}
@@ -69,9 +69,9 @@ public class RhinoConfigurer extends ModuleConfigurer {
 			log.info("setting up {} script(s)", scripts.size());
 			
 			for (Script script : scripts) {
-				init.run("run initial javascript", store -> {
+				init.run("run initial javascript", ctx -> {
 					log.debug("running initial js");
-					runJavascriptInScope(store.get(SCOPE), script, optimization);
+					runJavascriptInScope(ctx.get(SCOPE), script, optimization);
 				});
 			}
 		});

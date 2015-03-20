@@ -18,7 +18,7 @@ public class SumConfigurer implements OperationConfigurer {
 	
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("sum", store -> new SumOperation(store.get(AdderConfigurer.ADDER), into));
+		ops.add("sum", ctx -> new SumOperation(ctx.get(AdderConfigurer.ADDER), into));
 	}
 
 }

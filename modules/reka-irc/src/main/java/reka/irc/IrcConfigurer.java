@@ -66,13 +66,13 @@ public class IrcConfigurer extends ModuleConfigurer {
 		module.operation(path("send"), provider -> new IrcSendConfigurer());
 		
 		module.setupInitializer(init -> {
-			init.run("create bot", store -> {
-				store.put(BOT, new RekaBot(name, hostname, channel, key));
+			init.run("create bot", ctx -> {
+				ctx.put(BOT, new RekaBot(name, hostname, channel, key));
 			});
 		});
 
-		module.onShutdown("disconnect", store -> {
-			store.remove(BOT).ifPresent(RekaBot::shutdown);
+		module.onShutdown("disconnect", ctx -> {
+			ctx.remove(BOT).ifPresent(RekaBot::shutdown);
 		});
 
 		module.triggers(triggers.build(), reg -> {

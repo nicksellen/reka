@@ -25,7 +25,7 @@ public class ExecCommandConfigurer implements OperationConfigurer {
 
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("run", store -> new ExecCommandOperation(command, into));
+		ops.add("run", ctx -> new ExecCommandOperation(command, into));
 	}
 
 }

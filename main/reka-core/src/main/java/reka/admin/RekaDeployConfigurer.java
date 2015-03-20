@@ -39,7 +39,7 @@ public class RekaDeployConfigurer implements OperationConfigurer {
 	
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("deploy", store -> new RekaDeployOperation(manager, dirs.basedirs(), dataPathFn, identityFn));
+		ops.add("deploy", ctx -> new RekaDeployOperation(manager, dirs.basedirs(), dataPathFn, identityFn));
 	}
 	
 }

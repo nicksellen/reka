@@ -56,7 +56,7 @@ public class RekaVisualizeConfigurer implements OperationConfigurer {
 	@Override
 	public void setup(OperationSetup ops) {
 		if (appIdentityFn != null) {
-			ops.add("visualize", store -> new VisualizeAppOperation(manager, appIdentityFn, flowNameFn, formatFn, out, stylesheet));
+			ops.add("visualize", ctx -> new VisualizeAppOperation(manager, appIdentityFn, flowNameFn, formatFn, out, stylesheet));
 		} else {
 			throw new RuntimeException("put the errors in the proper place nick!");
 		}

@@ -120,12 +120,12 @@ public abstract class JdbcBaseModule extends ModuleConfigurer {
 		
 		module.setupInitializer(init -> {
 			
-			init.run("create connection pool", store -> {
-				store.put(POOL, connectionProvider(username, password));
+			init.run("create connection pool", ctx -> {
+				ctx.put(POOL, connectionProvider(username, password));
 			});
 
 			if (!migrations.isEmpty()) {
-				init.run("run migrations", store -> {
+				init.run("run migrations", ctx -> {
 					Path tmpdir = null;
 					try {
 						tmpdir = Files.createTempDirectory("jdbc");
@@ -147,7 +147,7 @@ public abstract class JdbcBaseModule extends ModuleConfigurer {
 						}
 						Flyway flyway = new Flyway();
 						flyway.setClassLoader(Flyway.class.getClassLoader());
-						flyway.setDataSource(store.get(POOL).dataSource());
+						flyway.setDataSource(ctx.get(POOL).dataSource());
 						flyway.setLocations(format("filesystem:%s", tmpdir.toFile().getAbsolutePath()));
 						flyway.migrate();
 						
@@ -165,8 +165,8 @@ public abstract class JdbcBaseModule extends ModuleConfigurer {
 				});
 			}
 			
-			init.run("run sql", store -> {
-				try (Connection connection = store.get(POOL).getConnection()){
+			init.run("run sql", ctx -> {
+				try (Connection connection = ctx.get(POOL).getConnection()){
 		            Statement stmt = connection.createStatement();
 		            for (String sql : sqls) {
 		            	stmt.execute(sql);
@@ -176,9 +176,9 @@ public abstract class JdbcBaseModule extends ModuleConfigurer {
 		        }
 			});
 			
-			init.run("seed data", store -> {
+			init.run("seed data", ctx -> {
 				
-				try (Connection conn = store.get(POOL).getConnection()) {
+				try (Connection conn = ctx.get(POOL).getConnection()) {
 					for (Entry<String, List<Data>> e : seeds.entrySet()) {
 						String table = e.getKey();
 						List<Data> entries = e.getValue();
@@ -229,10 +229,10 @@ public abstract class JdbcBaseModule extends ModuleConfigurer {
 		
 		});
 		
-		module.status(store -> new JdbcStatusProvider(url, store.get(POOL)));
+		module.status(ctx -> new JdbcStatusProvider(url, ctx.get(POOL)));
 		
-		module.onShutdown("close connection pool", store -> {
-			store.lookup(POOL).ifPresent(jdbc -> { 
+		module.onShutdown("close connection pool", ctx -> {
+			ctx.lookup(POOL).ifPresent(jdbc -> { 
 				try {
 					jdbc.close();
 				} catch (Exception e) {

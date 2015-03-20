@@ -15,8 +15,8 @@ public class HttpSessionsConfigurer extends ModuleConfigurer {
 	public void setup(ModuleSetup module) {
 		
 		module.setupInitializer(init -> {
-			init.run("create session storage", store -> {
-				store.put(SESSION_STORE, new SessionStore());
+			init.run("create session storage", ctx -> {
+				ctx.put(SESSION_STORE, new SessionStore());
 			});
 		});
 		

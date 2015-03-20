@@ -42,9 +42,9 @@ public class SocketBroadcastConfigurer implements OperationConfigurer {
 	@Override
 	public void setup(OperationSetup ops) {
 		if (matcherFn != null) {
-			ops.add("broadcast", store -> new SocketBroadcastWithMatcherOperation(server, store.get(Sockets.SETTINGS), messageFn, matcherFn));
+			ops.add("broadcast", ctx -> new SocketBroadcastWithMatcherOperation(server, ctx.get(Sockets.SETTINGS), messageFn, matcherFn));
 		} else {
-			ops.add("broadcast", store -> new SocketBroadcastOperation(server, store.get(Sockets.SETTINGS), messageFn));
+			ops.add("broadcast", ctx -> new SocketBroadcastOperation(server, ctx.get(Sockets.SETTINGS), messageFn));
 		}
 	}
 	

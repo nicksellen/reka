@@ -32,9 +32,9 @@ public class NashornRunOperation implements Operation {
 		Map<String,Object> m = new HashMap<>();
 		m.put("data", data.viewAsMap());
 		Object outval = runner.run(compiled, m);
+		
 		if (outval instanceof Map) {
-			MutableMemoryData.createFromMap((Map<String,Object>) outval).forEachContent((path, content) -> 
-				data.put(out.add(path), content));
+			MutableMemoryData.createFromMap((Map<String,Object>) outval).forEachContent((path, content) -> data.put(out.add(path), content));
 		} else if (outval instanceof List) {
 			MutableMemoryData.createFromList((List<Object>) outval).forEachContent((path, content) -> 
 				data.put(out.add(path), content));
@@ -49,7 +49,7 @@ public class NashornRunOperation implements Operation {
 		} else if (outval instanceof Boolean) {
 			data.putBool(out, (Boolean) outval);
 		} else if (outval == null) {
-			// fine. null is fine.
+			// ignore
 		} else {
 			throw runtime("not sure what to do with %s (%s)", outval, outval.getClass());
 		}

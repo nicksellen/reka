@@ -98,11 +98,9 @@ public class SingleThreadedNashornRunner implements NashornRunner {
 	@Override
 	public Object run(CompiledScript compiledScript, Map<String,Object> data) {
 		synchronized (lock) {
-			Map<String,Object> map = new HashMap<>();
-			Bindings bindings = new SimpleBindings(map);
-			bindings.putAll(data);
 			Collector collector = new Collector();
-			bindings.put("REKA", collector);
+			data.put("REKA", collector);
+			Bindings bindings = new SimpleBindings(NashornDataWrapper.wrapMap(data));
 			try {
 				compiledScript.eval(new EvenSimplerScriptContext(global, bindings));
 			} catch (ScriptException e) {

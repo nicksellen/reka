@@ -113,18 +113,18 @@ public class WebsocketConfigurer extends ModuleConfigurer {
 			module.requirePort(listen.port(), Optional.of(listen.host()));	
 		});
 		
-		module.status(store -> new SocketStatusProvider(server, store.get(Sockets.SETTINGS)));
+		module.status(ctx -> new SocketStatusProvider(server, ctx.get(Sockets.SETTINGS)));
 		
 		if (listens.isEmpty()) return;
 		
 		module.setupInitializer(init -> {
-			init.run("set http settings", store -> {
+			init.run("set http settings", ctx -> {
 				// FIXME: hackety hack, don't look back, these aren't the real HTTP settings!
 				int port = listens.get(0).port();
 				if (port == -1) {
 					port = ssl != null ? 443 : 80;
 				}
-				store.put(Sockets.SETTINGS, NetSettings.ws(port, listens.get(0).host(), null, -1));
+				ctx.put(Sockets.SETTINGS, NetSettings.ws(port, listens.get(0).host(), null, -1));
 			});
 		});
 		

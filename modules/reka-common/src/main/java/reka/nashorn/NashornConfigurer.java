@@ -119,8 +119,8 @@ public class NashornConfigurer extends ModuleConfigurer {
 		
 		module.setupInitializer(init -> {
 		
-			init.run("initialize runtime", store -> {
-				store.put(RUNNER, new ThreadLocalNashornRunner(scripts));
+			init.run("initialize runtime", ctx -> {
+				ctx.put(RUNNER, new ThreadLocalNashornRunner(scripts));
 			});
 
 			for (Entry<String, String> op : ops.entrySet()) {
@@ -132,9 +132,9 @@ public class NashornConfigurer extends ModuleConfigurer {
 				
 				// run the js to calculate the data we need
 				
-				init.run(format("calculate data for %s", opname), store -> {
+				init.run(format("calculate data for %s", opname), ctx -> {
 	
-					NashornRunner js = store.get(RUNNER);
+					NashornRunner js = ctx.get(RUNNER);
 					
 					Map<String,Object> m = new HashMap<>();
 					m.put("data", Data.NONE);
@@ -151,7 +151,7 @@ public class NashornConfigurer extends ModuleConfigurer {
 						throw runtime("not sure what to do with %s", outval);
 					}
 					
-					store.put(dataKey, data);
+					ctx.put(dataKey, data);
 					
 				});
 				
@@ -195,7 +195,7 @@ public class NashornConfigurer extends ModuleConfigurer {
 
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add("yay", store -> new BooOperation(store.get(key), out));
+			ops.add("yay", ctx -> new BooOperation(ctx.get(key), out));
 		}
 		
 	}
@@ -237,7 +237,7 @@ public class NashornConfigurer extends ModuleConfigurer {
 
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add("data", store -> new PutDataOperation(store.get(key), out));
+			ops.add("data", ctx -> new PutDataOperation(ctx.get(key), out));
 		}
 		
 	}

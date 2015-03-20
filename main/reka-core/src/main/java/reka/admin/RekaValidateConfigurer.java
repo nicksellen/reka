@@ -64,7 +64,7 @@ public class RekaValidateConfigurer implements OperationConfigurer {
 	
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.router("validate", store -> new RekaValidateFromFileOperation(manager, filenameFn, identityFn), routes -> {
+		ops.router("validate", ctx -> new RekaValidateFromFileOperation(manager, filenameFn, identityFn), routes -> {
 			if (whenOk != null) routes.add(RekaValidateFromFileOperation.OK, whenOk);
 			if (whenError != null) routes.add(RekaValidateFromFileOperation.ERROR, whenError);
 		});

@@ -33,7 +33,7 @@ public class FilesystemWriteConfigurer implements OperationConfigurer {
 	
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("files/write", store -> new FilesystemWrite(basedir, dataPathFn, filenameFn));
+		ops.add("files/write", ctx -> new FilesystemWrite(basedir, dataPathFn, filenameFn));
 	}
 	
 }

@@ -21,11 +21,14 @@ public interface AsyncOperation extends SimpleFlowOperation {
 	public void call(MutableData data, OperationContext ctx, OperationResult res);
 	
 	public static interface OperationResult {
+		
 		void done();
 		void error(Throwable t);
+		
 		default void error(String msg, Object... objs) {
 			error(runtime(msg, objs));
 		}
+		
 	}
 	
 }

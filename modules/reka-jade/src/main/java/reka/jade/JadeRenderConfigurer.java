@@ -76,7 +76,7 @@ public class JadeRenderConfigurer implements OperationConfigurer {
 	@Override
 	public void setup(OperationSetup ops) {
 		if (out == null) out = Path.Response.CONTENT;
-	    ops.add("jade", store -> new JadeRender(template, in, out));
+	    ops.add("jade", ctx -> new JadeRender(template, in, out));
 	}
 	
 }

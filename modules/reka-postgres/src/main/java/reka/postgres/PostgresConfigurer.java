@@ -96,7 +96,7 @@ public class PostgresConfigurer extends JdbcBaseModule {
 		if (!triggers.isEmpty()) {
 			
 			module.setupInitializer(init -> {
-				init.run("setup notify connection pool", store -> {
+				init.run("setup notify connection pool", ctx -> {
 					PGDataSource ds = new PGDataSource();
 					try {
 						URI url = new URI(asyncJdbcUrl());
@@ -105,7 +105,7 @@ public class PostgresConfigurer extends JdbcBaseModule {
 						ds.setPort(url.getPort());
 						ds.setUser(username);
 						ds.setPassword(password);
-						store.put(NOTIFY_DS, ds);
+						ctx.put(NOTIFY_DS, ds);
 					} catch (Exception e) {
 						throw unchecked(e);
 					}
@@ -140,8 +140,8 @@ public class PostgresConfigurer extends JdbcBaseModule {
 				}
 			});
 			
-			module.onShutdown("close connection", store -> {
-				store.remove(NOTIFY_CONNECTION).ifPresent(connection -> {
+			module.onShutdown("close connection", ctx -> {
+				ctx.remove(NOTIFY_CONNECTION).ifPresent(connection -> {
 					try {
 						connection.close();
 					} catch (Throwable t) {

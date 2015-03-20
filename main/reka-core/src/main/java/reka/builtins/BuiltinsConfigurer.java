@@ -25,7 +25,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -38,7 +37,6 @@ import reka.api.Path.Response;
 import reka.api.content.Content;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
-import reka.api.flow.FlowSegment;
 import reka.api.run.AsyncOperation;
 import reka.api.run.Operation;
 import reka.api.run.OperationContext;
@@ -81,7 +79,6 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
     	module.operation(path("println"), provider -> new PrintlnConfigurer());
     	module.operation(path("uppercase"), provider -> new UppercaseConfigurer());
     	module.operation(path("lowercase"), provider -> new LowercaseConfigurer());
-    	module.operation(path("defer"), provider -> new DeferConfigurer(provider));
     	
     	module.operation(path("throw"), provider -> new ThrowConfigurer());
     	module.operation(path("inspect"), provider -> new InspectConfigurer());
@@ -94,6 +91,16 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
     	
     	module.operation(path("match"), provider -> new MatchConfigurer(provider));
     	
+    	module.operation(path("simple-uppercase"), simpleOperation(config -> {
+    		Path path = dots(config.valueAsString());
+    		return (data, ctx) -> {
+    			data.getContent(path).ifPresent(content -> {
+    				data.putString(path, content.toString().toUpperCase());
+    			});
+    		};
+    	}));
+    	
+    	
 	}
 	
 	public static class SplitConfigurer implements OperationConfigurer, ErrorReporter {
@@ -102,14 +109,12 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 		private String on = ",";
 		
 		@Conf.Val
-		@Conf.At("in")
 		@Conf.At("from")
 		public void in(String val) {
 			inFn = StringWithVars.compile(val).andThen(s -> dots(s));
 			if (outFn == null) outFn = inFn;
 		}
 
-		@Conf.At("out")
 		@Conf.At("into")
 		public void out(String val) {
 			outFn = StringWithVars.compile(val).andThen(s -> dots(s));
@@ -128,7 +133,7 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add("split", store -> new SplitOperation(inFn, outFn, Splitter.on(on)));
+			ops.add("split", ctx -> new SplitOperation(inFn, outFn, Splitter.on(on)));
 		}
 		
 	}
@@ -158,35 +163,6 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 		
 	}
 	
-	public static class DeferConfigurer implements OperationConfigurer {
-
-		private final ConfigurerProvider provider;
-		
-		private String name;
-		private Supplier<FlowSegment> body;
-		
-		public DeferConfigurer(ConfigurerProvider provider) {
-			this.provider = provider;
-		}
-		
-		@Conf.Config
-		public void config(Config config) {
-			if (config.hasValue()) name = config.valueAsString();
-			if (config.hasBody()) {
-				body = configure(new SequenceConfigurer(provider), config.body()).bind();
-			}
-		}
-		
-		@Override
-		public void setup(OperationSetup ops) {
-			if (body != null) {
-				if (name != null) ops.label(name);
-				ops.defer(body);
-			}
-		}
-		
-	}
-	
 	private static final Random RANDOM = new Random();
 	
 	public static class InspectConfigurer implements OperationConfigurer {
@@ -200,7 +176,7 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add("inspect", store -> new InspectOperation(at));
+			ops.add("inspect", ctx -> new InspectOperation(at));
 		}
 		
 	}
@@ -246,7 +222,7 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 		
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add("random/string", store -> new RandomStringOperation(length, chars, RANDOM, out));
+			ops.add("random/string", ctx -> new RandomStringOperation(length, chars, RANDOM, out));
 		}
 		
 	}
@@ -289,7 +265,7 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add("throw", store -> new ThrowOperation(msgFn));
+			ops.add("throw", ctx -> new ThrowOperation(msgFn));
 		}
 		
 	}
@@ -309,7 +285,7 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 		
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add("println", store -> new PrintlnOperation(msg));
+			ops.add("println", ctx -> new PrintlnOperation(msg));
 		}
 		
 	}
@@ -340,7 +316,7 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add("uppercase", store -> new UppercaseOperation(path));
+			ops.add("uppercase", ctx -> new UppercaseOperation(path));
 		}
 		
 	}
@@ -361,6 +337,32 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 		}
 		
 	}
+	
+	public static Function<ConfigurerProvider,OperationConfigurer> simpleOperation(Function<Config,Operation> fn) {
+		return provider -> new SimpleOperationThing(fn);
+	}
+	
+	public static class SimpleOperationThing implements OperationConfigurer {
+		
+		private final Function<Config,Operation> fn;
+		
+		private Config config;
+		
+		public SimpleOperationThing(Function<Config,Operation> fn) {
+			this.fn = fn;
+		}
+		
+		@Conf.Config
+		public void config(Config config) {
+			this.config = config;
+		}
+
+		@Override
+		public void setup(OperationSetup ops) {
+			ops.add("op", ctx -> fn.apply(config));
+		}
+		
+	}
 
 	
 	public static class LowercaseConfigurer implements OperationConfigurer {
@@ -374,7 +376,7 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add("uppercase", store -> new LowercaseOperation(path));
+			ops.add("uppercase", ctx -> new LowercaseOperation(path));
 		}
 		
 	}
@@ -413,7 +415,7 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 		
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add("uuid/generate", store -> new GenerateUUIDOperation(out));
+			ops.add("uuid/generate", ctx -> new GenerateUUIDOperation(out));
 		}
 		
 	}
@@ -475,7 +477,7 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 		
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add("sleep", store -> new SleepOperation(ms));
+			ops.add("sleep", ctx -> new SleepOperation(ms));
 		}
 		
 	}
@@ -495,6 +497,7 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 		public void call(MutableData data, OperationContext ctx, OperationResult res) {
 			e.schedule(() -> res.done(), ms, TimeUnit.MILLISECONDS);
 		}
+		
 	}
 	
 	public static class RunParallelConfigurer implements OperationConfigurer {
@@ -588,7 +591,7 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 		
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add("stringwithvariables", store -> new DataContentFunctionOperation(template, out));
+			ops.add("stringwithvariables", ctx -> new DataContentFunctionOperation(template, out));
 		}
 		
 	}
@@ -648,7 +651,7 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 		
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add("log", store -> new LogOperation(msgFn));
+			ops.add("log", ctx -> new LogOperation(msgFn));
 		}
 		
 	}
@@ -681,7 +684,7 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add("copy", store -> new CopyOperation(entries.build()));
+			ops.add("copy", ctx -> new CopyOperation(entries.build()));
 		}
 		
 	}
@@ -764,10 +767,10 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 		public void setup(OperationSetup ops) {
 			if (content != null) {
 				ops.meta().put("content", content);
-				ops.add(name(), store -> new PutContentOperation(content, out));
+				ops.add(name(), ctx -> new PutContentOperation(content, out));
 			} else if (data != null) {
 				ops.meta().put("data", data);
-				ops.add(name(), store -> new PutDataOperation(data, out));
+				ops.add(name(), ctx -> new PutDataOperation(data, out));
 			} else {
 				invalidConfig("you must have content or data");
 			}
@@ -812,7 +815,7 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 		@Override
 		public void setup(OperationSetup ops) {
 			checkConfig(data != null, "you must have data");
-			ops.add(name(), store -> new PutDataWithVarsOperation(data, out));
+			ops.add(name(), ctx -> new PutDataWithVarsOperation(data, out));
 		}
 		
 	}

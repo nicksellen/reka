@@ -15,8 +15,8 @@ public class AdderConfigurer extends ModuleConfigurer {
 	@Override
 	public void setup(ModuleSetup module) {
 		module.setupInitializer(init -> {
-			init.run("create counter", store -> {
-				store.put(ADDER, new LongAdder());
+			init.run("create counter", ctx -> {
+				ctx.put(ADDER, new LongAdder());
 			});
 		});
 		module.operation(path("inc"), provider -> new IncrementConfigurer());

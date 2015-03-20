@@ -26,9 +26,9 @@ public class ProcessCallConfigurer implements OperationConfigurer {
 	@Override
 	public void setup(OperationSetup ops) {
 		if (noreply) {
-			ops.add("call (noreply)", store -> new ProcessCallNoreplyOperation(store.get(ProcessConfigurer.PROCESS_MANAGER), lineFn));
+			ops.add("call (noreply)", ctx -> new ProcessCallNoreplyOperation(ctx.get(ProcessConfigurer.PROCESS_MANAGER), lineFn));
 		} else {
-			ops.add("call", store -> new ProcessCallOperation(store.get(ProcessConfigurer.PROCESS_MANAGER), lineFn));
+			ops.add("call", ctx -> new ProcessCallOperation(ctx.get(ProcessConfigurer.PROCESS_MANAGER), lineFn));
 		}
 	}
 	

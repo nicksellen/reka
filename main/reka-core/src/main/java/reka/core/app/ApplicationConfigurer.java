@@ -145,7 +145,7 @@ public class ApplicationConfigurer implements ErrorReporter {
     	ModuleInitializer initializer = ModuleConfigurer.buildInitializer(idv, rootModule);
     	DefaultConfigurerProvider configurerProvider = new DefaultConfigurerProvider(initializer.collector().providers);
     	initializer.collector().triggers.forEach(triggers -> triggers.get().forEach(trigger -> {
-    		trigger.supplier().apply(configurerProvider).bind(trigger.base(), triggers.store()).get();
+    		trigger.supplier().apply(configurerProvider).bind(trigger.base(), triggers.ctx()).get();
     	}));
     	defs.forEach(config -> {
     		configure(new SequenceConfigurer(configurerProvider), config).bind().get();
@@ -230,13 +230,13 @@ public class ApplicationConfigurer implements ErrorReporter {
 	    	
 	    	initializer.collector().initflows.forEach(initflow -> {
 	    		initflowBuilders.add(initflow.name, 
-    					initflow.supplier.apply(configurerProvider).bind(initflow.name, initflow.store).get());
+    					initflow.supplier.apply(configurerProvider).bind(initflow.name, initflow.ctx).get());
 	    	});
 	    	
 	    	initializer.collector().triggers.forEach(triggers -> {
 	    		triggers.get().forEach(trigger -> {
 	    			flowBuilders.add(triggerPath(trigger), 
-	    					trigger.supplier().apply(configurerProvider).bind(trigger.base(), triggers.store()).get());
+	    					trigger.supplier().apply(configurerProvider).bind(trigger.base(), triggers.ctx()).get());
 	    		});
 	    	});
 	    	
@@ -339,18 +339,18 @@ public class ApplicationConfigurer implements ErrorReporter {
 							m.put(trigger.key(), flows.flow(triggerPath(trigger)));
 						});
 						
-						MultiFlowRegistration mr = new MultiFlowRegistration(applicationBuilder.version(), identity, triggers.store(), m);
+						MultiFlowRegistration mr = new MultiFlowRegistration(applicationBuilder.version(), identity, triggers.ctx(), m);
 						triggers.consumer().accept(mr);
 						
-						applicationBuilder.network().addAll(mr.network());
-						applicationBuilder.undeployConsumers().addAll(mr.undeployConsumers());
-						applicationBuilder.pauseConsumers().addAll(mr.pauseConsumers());
-						applicationBuilder.resumeConsumers().addAll(mr.resumeConsumers());
+						applicationBuilder.network.addAll(mr.network());
+						applicationBuilder.undeployConsumers.addAll(mr.undeployConsumers());
+						applicationBuilder.pauseConsumers.addAll(mr.pauseConsumers());
+						applicationBuilder.resumeConsumers.addAll(mr.resumeConsumers());
 						
 			    	});
 					
 					initializer.collector().shutdownHandlers.forEach(runnable -> {
-						applicationBuilder.undeployConsumers().add(version -> {
+						applicationBuilder.undeployConsumers.add(version -> {
 							try {
 								runnable.run();
 							} catch (Throwable t) {
@@ -359,7 +359,7 @@ public class ApplicationConfigurer implements ErrorReporter {
 						});
 					});
 					
-					applicationBuilder.statusProviders().addAll(initializer.collector().statuses.stream().map(Supplier::get).collect(toList()));
+					applicationBuilder.statusProviders.addAll(initializer.collector().statuses.stream().map(Supplier::get).collect(toList()));
 					
 					Application app = applicationBuilder.build();
 					

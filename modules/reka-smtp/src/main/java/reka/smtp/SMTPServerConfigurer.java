@@ -130,10 +130,10 @@ public class SMTPServerConfigurer extends ModuleConfigurer {
 		if (emailHandler != null) {
 			
 			module.setupInitializer(init -> {
-				init.run("start smtp server", store -> {
+				init.run("start smtp server", ctx -> {
 					RekaSmtpServer server = servers.computeIfAbsent(port, p -> new RekaSmtpServer(port));
 					server.start();
-					store.put(SERVER, server);
+					ctx.put(SERVER, server);
 				});
 			});
 			
@@ -147,7 +147,7 @@ public class SMTPServerConfigurer extends ModuleConfigurer {
 				});
 			});
 			
-			module.onShutdown("stop smtp server", store -> store.get(SERVER).stop());
+			module.onShutdown("stop smtp server", ctx -> ctx.get(SERVER).stop());
 			
 		}
 	}

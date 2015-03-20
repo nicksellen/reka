@@ -131,7 +131,7 @@ public class LessConfigurer extends ModuleConfigurer {
 		}
 
 		public void setup(OperationSetup ops) {
-			ops.add("css", store -> new LessOperation(outFn, content, sha1hex(content.asBytes())));
+			ops.add("css", ctx -> new LessOperation(outFn, content, sha1hex(content.asBytes())));
 		}
 		
 	}

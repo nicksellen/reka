@@ -132,9 +132,9 @@ public abstract class ModuleConfigurer {
 			for (ModuleConfigurer module : all) {
 				if (module.isRoot()) continue;
 				
-				IdentityStore store = IdentityStore.createConcurrentIdentityStore();
+				ModuleSetupContext ctx = new ModuleSetupContext(IdentityStore.createConcurrentIdentityStore());
 
-				ModuleSetup init = new ModuleSetup(idv, module.info(), module.fullAliasOrName(), store, collector);
+				ModuleSetup init = new ModuleSetup(idv, module.info(), module.fullAliasOrName(), ctx, collector);
 				module.setup(init);
 				
 				if (init.includeDefaultStatus() && module.info() != null) {

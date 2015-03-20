@@ -1,4 +1,4 @@
-package reka.net.http;
+package reka.net.http.streaming;
 
 import io.netty.handler.codec.http.LastHttpContent;
 import reka.api.data.MutableData;
