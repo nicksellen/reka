@@ -1,25 +1,47 @@
 package reka.net.http.server;
 
+import static reka.util.Util.unchecked;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpRequestDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslProvider;
 import io.netty.handler.stream.ChunkedWriteHandler;
+
+import javax.net.ssl.SSLException;
+
+import reka.net.NetSettings.SslSettings;
 
 public class HttpInitializer extends ChannelInitializer<SocketChannel> {
 
 	private final ChannelHandler handler;
+	private final SslContext ssl;
 	
-	public HttpInitializer(ChannelHandler handler) {
+	public HttpInitializer(ChannelHandler handler, SslSettings sslSettings) {
 		this.handler = handler;
+		if (sslSettings != null) {
+			try {
+				this.ssl = SslContext.newServerContext(SslProvider.OPENSSL, sslSettings.certChainFile(), sslSettings.keyFile());
+			} catch (SSLException e) {
+				throw unchecked(e);
+			}
+		} else {
+			this.ssl = null;
+		}
 	}
 	
 	@Override
 	protected void initChannel(SocketChannel ch) throws Exception {
 		ch.config().setAutoRead(true);
-		ch.pipeline().addLast(
+		ChannelPipeline pipeline = ch.pipeline();
+		if (ssl != null) {
+			pipeline.addLast(ssl.newHandler(ch.alloc()));
+		}
+		pipeline.addLast(
 				new HttpRequestDecoder(),
 				new HttpObjectAggregator(1024 * 1024 * 500), // 500mb
 				//new HttpContentCompressor(),

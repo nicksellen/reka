@@ -22,6 +22,7 @@ import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
 import reka.net.NetServerManager;
 import reka.net.NetSettings;
+import reka.net.NetServerManager.SocketFlows;
 import reka.net.NetSettings.SslSettings;
 import reka.net.common.sockets.SocketBroadcastConfigurer;
 import reka.net.common.sockets.SocketSendConfigurer;
@@ -147,11 +148,9 @@ public class WebsocketConfigurer extends ModuleConfigurer {
 					settings = NetSettings.ws(port, host, reg.applicationIdentity(), reg.applicationVersion());
 				}
 				
-				server.deployWebsocket(identity, settings, ws -> {
-					reg.flowFor(CONNECT).ifPresent(flow -> ws.onConnect(flow));
-					reg.flowFor(DISCONNECT).ifPresent(flow -> ws.onDisconnect(flow));
-					reg.flowFor(MESSAGE).ifPresent(flow -> ws.onMessage(flow));					
-				});
+				server.deployWebsocket(identity, settings, new SocketFlows(reg.flowFor(CONNECT),
+						  												   reg.flowFor(MESSAGE),
+						  												   reg.flowFor(DISCONNECT)));
 				
 				reg.network(listen.port(), settings.protocolString(), details -> {
 					details.putString("host", listen.host());

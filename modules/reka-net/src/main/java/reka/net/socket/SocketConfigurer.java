@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
+import reka.Identity;
 import reka.api.IdentityKey;
 import reka.api.flow.Flow;
 import reka.config.Config;
@@ -24,6 +25,7 @@ import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
 import reka.core.setup.OperationConfigurer;
 import reka.net.NetServerManager;
+import reka.net.NetServerManager.SocketFlows;
 import reka.net.NetSettings;
 import reka.net.common.sockets.SocketBroadcastConfigurer;
 import reka.net.common.sockets.SocketSendConfigurer;
@@ -80,13 +82,13 @@ public class SocketConfigurer extends ModuleConfigurer {
 		module.operation(slashes("tag/rm"), provider -> new SocketTagRemoveConfigurer(server));
 		module.operation(slashes("tag/send"), provider -> new SocketTagSendConfigurer(server));
 		
-		module.status(ctx -> new SocketStatusProvider(server, ctx.get(Sockets.SETTINGS)));
+		module.status(ctx -> new SocketStatusProvider(server, ctx.get(Sockets.IDENTITY)));
 		
 		Map<IdentityKey<Flow>,Function<ConfigurerProvider, OperationConfigurer>> triggers = new HashMap<>();
 		
 		IdentityKey<Flow> connect = IdentityKey.named("on connect");
-		IdentityKey<Flow> disconnect = IdentityKey.named("on disconnect");
 		IdentityKey<Flow> message = IdentityKey.named("on message");
+		IdentityKey<Flow> disconnect = IdentityKey.named("on disconnect");
 		
 		if (!onConnect.isEmpty()) {
 			triggers.put(connect, combine(onConnect));
@@ -98,10 +100,13 @@ public class SocketConfigurer extends ModuleConfigurer {
 			triggers.put(message, combine(onMessage));
 		}	
 		
+		Identity identity = Identity.create("websocket");
+		
 		module.setupInitializer(init -> {
 			init.run("set http settings", ctx -> {
 				// FIXME: hackety hack, don't look back, these aren't the real HTTP settings!
-				ctx.put(Sockets.SETTINGS, NetSettings.socket(ports.get(0), null, -1));
+				//ctx.put(Sockets.SETTINGS, NetSettings.socket(ports.get(0), null, -1));
+				ctx.put(Sockets.IDENTITY, identity);
 			});
 		});
 		
@@ -113,16 +118,13 @@ public class SocketConfigurer extends ModuleConfigurer {
 			
 			for (int port : ports) {
 				
-				String id = format("%s/%s", reg.applicationIdentity(), port);
 				NetSettings settings = NetSettings.socket(port, reg.applicationIdentity(), reg.applicationVersion());
 				
-				server.deploySocket(id, settings, s -> {
-					reg.flowFor(connect).ifPresent(flow -> s.onConnect(flow));
-					reg.flowFor(disconnect).ifPresent(flow -> s.onDisconnect(flow));
-					reg.flowFor(message).ifPresent(flow -> s.onMessage(flow));
-				});
+				server.deploySocket(identity, settings, new SocketFlows(reg.flowFor(connect),
+																  reg.flowFor(message),
+																  reg.flowFor(disconnect)));
 				
-				reg.onUndeploy(version -> server.undeploy(id, version));
+				reg.onUndeploy(version -> server.undeploy(identity, version));
 				
 				reg.network(port, settings.isSsl() ? "socket-ssl" : "socket");
 			}

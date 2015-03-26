@@ -159,8 +159,8 @@ public abstract class ModuleConfigurer {
 				flow = entry.getKey();
 				visualizer = entry.getValue();
 			} else {
-				flow = new NoFlow();
-				visualizer = new NoFlowVisualizer();
+				flow = NoFlow.INSTANCE;
+				visualizer = NoFlowVisualizer.INSTANCE;
 			}
 
 			return new ModuleInitializer(flow, visualizer, collector.immutable());

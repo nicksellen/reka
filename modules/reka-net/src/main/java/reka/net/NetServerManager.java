@@ -16,6 +16,8 @@ import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.epoll.EpollSocketChannel;
 import io.netty.channel.group.ChannelGroup;
+import io.netty.channel.group.ChannelGroupFuture;
+import io.netty.channel.group.ChannelMatcher;
 import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
@@ -23,29 +25,27 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.concurrent.GlobalEventExecutor;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import reka.Identity;
 import reka.PortChecker;
-import reka.api.IdentityKey;
 import reka.api.flow.Flow;
+import reka.core.runtime.NoFlow;
 import reka.net.NetSettings.SslSettings;
 import reka.net.NetSettings.Type;
 import reka.net.http.HostAndPort;
-import reka.net.http.server.HttpHostHandler;
 import reka.net.http.server.HttpInitializer;
 import reka.net.http.server.HttpOrWebsocket;
-import reka.net.http.server.HttpsInitializer;
-import reka.net.socket.SocketHandler;
-import reka.net.websockets.WebsocketHandler;
+import reka.net.socket.SocketFlowHandler;
 import reka.util.AsyncShutdown;
 
 import com.google.common.collect.ImmutableMap;
@@ -58,7 +58,7 @@ public class NetServerManager {
 	
 	private final Map<Integer,PortHandler> handlers = new HashMap<>();
 		
-	private final Map<String,NetSettings> deployed = new HashMap<>();
+	private final Map<Identity,NetSettings> deployed = new HashMap<>();
 	
 	private final boolean epoll;
 	
@@ -66,6 +66,7 @@ public class NetServerManager {
 	private final Class<? extends Channel> nettyClientChannelType;
 
 	private final ChannelGroup channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
+	private final SafeChannelGroup safeChannels = new SafeChannelGroup(channels);
 	
 	public NetServerManager() {
 		epoll = Epoll.isAvailable();
@@ -96,21 +97,12 @@ public class NetServerManager {
 
 		private final ChannelInitializer<SocketChannel> initializer;
 		
-		private final HttpHostHandler httpHandler;
-		private final WebsocketHandler websocketHandler;
-		private final HttpOrWebsocket httpOrWebsocketHandler;
+		private final HttpOrWebsocket handler;
 		
 		HttpPortHandler(int port, SslSettings sslSettings) {
 			super(port, sslSettings);
-			
-			httpHandler = new HttpHostHandler();
-			websocketHandler =  new WebsocketHandler();
-			httpOrWebsocketHandler = new HttpOrWebsocket(httpHandler, websocketHandler, sslSettings != null);
-			if (sslSettings != null) {
-				initializer = new HttpsInitializer(httpOrWebsocketHandler, sslSettings.certChainFile(), sslSettings.keyFile());
-			} else {
-				initializer = new HttpInitializer(httpOrWebsocketHandler);
-			}
+			handler = new HttpOrWebsocket(channels, port, sslSettings != null);
+			initializer = new HttpInitializer(handler, sslSettings);
 		}
 
 		@Override
@@ -124,15 +116,15 @@ public class NetServerManager {
 		}
 
 		@Override
-		public PortHandler httpAdd(String host, Flow flow) {
-			httpHandler.add(host, flow);
+		public PortHandler httpAdd(Identity identity, String host, HttpFlows flows) {
+			handler.addHttp(identity, host, flows);
 			start();
 			return this;
 		}
 
 		@Override
-		public PortHandler websocketAdd(String host, SocketTriggers triggers) {
-			websocketHandler.add(host, triggers);
+		public PortHandler websocketAdd(Identity identity, String host, SocketFlows flows) {
+			handler.addWebsocket(identity, host, flows);
 			start();
 			return this;
 		}
@@ -165,14 +157,14 @@ public class NetServerManager {
 		}
 
 		private PortHandler httpRemove(String host) {
-			if (httpHandler.remove(host)) {
+			if (handler.removeHttp(host)) {
 				if (isEmpty()) shutdownAndWait();
 			}
 			return this;
 		}
 
 		private PortHandler websocketRemove(String host) {
-			if (websocketHandler.remove(host)) {
+			if (handler.removeWebsocket(host)) {
 				if (isEmpty()) shutdownAndWait();
 			}
 			return this;
@@ -180,12 +172,12 @@ public class NetServerManager {
 		
 		@Override
 		public boolean isEmpty() {
-			return httpHandler.isEmpty() && websocketHandler.isEmpty();
+			return handler.isEmpty();
 		}
 
 		@Override
-		public PortHandler socketSet(SocketTriggers triggers) {
-			throw runtime("there is an http handler on this port, undeploy that first");
+		public PortHandler socketSet(Identity identity, SocketFlows flows) {
+			throw runtime("we are doing http on this port, undeploy this first before using it for sockets. sockets don't have a host so they can't co-exist with http.");
 		}
 
 		@Override
@@ -212,14 +204,14 @@ public class NetServerManager {
 	
 	private final class SocketPortHandler extends PortHandler {
 
-		private final SocketHandler socketHandler;
+		private final SocketFlowHandler socketHandler;
 		private final ChannelInitializer<SocketChannel> initializer;
 		
 		private volatile boolean isSet = false;
 		
 		SocketPortHandler(int port, SslSettings sslSettings) {
 			super(port, sslSettings);
-			socketHandler = new SocketHandler();
+			socketHandler = new SocketFlowHandler();
 			if (sslSettings != null) {
 				initializer = new SslSocketInitializer(socketHandler, sslSettings.certChainFile(), sslSettings.keyFile());
 			} else {
@@ -233,9 +225,9 @@ public class NetServerManager {
 		}
 
 		@Override
-		public PortHandler socketSet(SocketTriggers triggers) {
+		public PortHandler socketSet(Identity identity, SocketFlows flows) {
 			isSet = true;
-			socketHandler.setTriggers(triggers);
+			socketHandler.setFlows(flows);
 			start();
 			return this;
 		}
@@ -246,12 +238,12 @@ public class NetServerManager {
 		}
 
 		@Override
-		public PortHandler httpAdd(String host, Flow flow) {
+		public PortHandler httpAdd(Identity identity, String host, HttpFlows flows) {
 			throw unsupported();
 		}
 
 		@Override
-		public PortHandler websocketAdd(String host, SocketTriggers triggers) {
+		public PortHandler websocketAdd(Identity identity, String host, SocketFlows flows) {
 			throw unsupported();
 		}
 
@@ -312,9 +304,9 @@ public class NetServerManager {
 		public abstract boolean isHttp();
 		public abstract boolean isEmpty();
 		
-		public abstract PortHandler httpAdd(String host, Flow flow);
-		public abstract PortHandler websocketAdd(String host, SocketTriggers triggers);
-		public abstract PortHandler socketSet(SocketTriggers triggers);
+		public abstract PortHandler httpAdd(Identity identity, String host, HttpFlows flows);
+		public abstract PortHandler websocketAdd(Identity identity, String host, SocketFlows flows);
+		public abstract PortHandler socketSet(Identity identity, SocketFlows flows);
 		
 		public abstract void pause(NetSettings settings);
 		public abstract void resume(NetSettings settings);
@@ -358,10 +350,7 @@ public class NetServerManager {
 				.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
 				.childOption(ChannelOption.SO_REUSEADDR, true)
 				.childOption(ChannelOption.MAX_MESSAGES_PER_READ, Integer.MAX_VALUE)
-				
-				//.option(ChannelOption.AUTO_READ, false)
 				.childOption(ChannelOption.AUTO_READ, false)
-				
 				.childHandler(initializer());
 			
 			if (epoll) {
@@ -385,66 +374,12 @@ public class NetServerManager {
 		
 	}
 	
-	public Map<String,NetSettings> deployed() {
+	public Map<Identity,NetSettings> deployed() {
 		return ImmutableMap.copyOf(deployed);
 	}
 	
-	public static class SocketTriggers {
-		
-		private final List<IdentityKey<Object>> topicKeys = new ArrayList<>();
-		
-		private final List<Flow> onConnect = new ArrayList<>();
-		private final List<Flow> onDisconnect = new ArrayList<>();
-		private final List<Flow> onMessage = new ArrayList<>();
-		
-		public SocketTriggers topic(IdentityKey<Object> topicKey) {
-			topicKeys.add(topicKey);
-			return this;
-		}
-		
-		public SocketTriggers onConnect(Flow flow) {
-			onConnect.add(flow);
-			return this;
-		}
-		
-		public SocketTriggers onDisconnect(Flow flow) {
-			onDisconnect.add(flow);
-			return this;
-		}
-		
-		public SocketTriggers onMessage(Flow flow) {
-			onMessage.add(flow);
-			return this;
-		}
-		
-		public List<IdentityKey<Object>> topicKeys() {
-			return topicKeys;
-		}
-		
-		public List<Flow> onConnect() {
-			return onConnect;
-		}
-		
-		public List<Flow> onDisconnect() {
-			return onDisconnect;
-		}
-		
-		public List<Flow> onMessage() {
-			return onMessage;
-		}
-		
-	}
-	
-	public void channel(NetSettings settings, String channelId, Consumer<Channel> c) {
-		PortHandler handler = handlers.get(settings.port());
-		if (handler == null) return;
-		handler.channel(settings, channelId, c);
-	}
-	
-	public void channels(NetSettings settings, Consumer<ChannelGroup> c) {
-		PortHandler handler = handlers.get(settings.port());
-		if (handler == null) return;
-		handler.channels(settings, c);
+	public SafeChannelGroup channels() {
+		return safeChannels;
 	}
 	
 	public boolean isAvailable(String applicationIdentity, HostAndPort listen) {
@@ -477,35 +412,31 @@ public class NetServerManager {
 		});
 	}
 	
-	public void deployHttp(String id, Flow flow, NetSettings settings) {
+	public void deployHttp(Identity id, NetSettings settings, HttpFlows flows) {
 		checkArgument(settings.type() == Type.HTTP, "settings type must be %s", Type.HTTP.toString());
 		checkArgument(settings.host().isPresent(), "must include host");
-		log.debug("deploying [{}] with {} {}:{}", id, flow.fullName(), settings.host(), settings.port());
+		log.debug("deploying [{}] to {}:{}", id, settings.host(), settings.port());
 		deploy(id, settings, handler -> {
-			handler.httpAdd(settings.host().get(), flow);
+			handler.httpAdd(settings.host().get(), flows);
 		});
 	}
 
-	public void deployWebsocket(String id, NetSettings settings, Consumer<SocketTriggers> deploy) {
+	public void deployWebsocket(Identity id, NetSettings settings, SocketFlows flows) {
 		checkArgument(settings.type() == Type.WEBSOCKET, "settings type must be %s", Type.WEBSOCKET.toString());
 		checkArgument(settings.host().isPresent(), "must include host");
-		SocketTriggers socketTriggers = new SocketTriggers();
-		deploy.accept(socketTriggers);
 		deploy(id, settings, handler -> {
-			handler.websocketAdd(settings.host().get(), socketTriggers);
+			handler.websocketAdd(settings.host().get(), flows);
 		});
 	}
 	
-	public void deploySocket(String id, NetSettings settings, Consumer<SocketTriggers> deploy) {
+	public void deploySocket(Identity id, NetSettings settings, SocketFlows flows) {
 		checkArgument(settings.type() == Type.SOCKET, "settings type must be %s", Type.SOCKET.toString());
-		SocketTriggers socketTriggers = new SocketTriggers();
-		deploy.accept(socketTriggers);
 		deploy(id, settings, handler -> {
-			handler.socketSet(socketTriggers);
+			handler.socketSet(flows);
 		});
 	}
 
-	private void deploy(String id, NetSettings settings, Consumer<PortHandler> consumer) {
+	private void deploy(Identity identity, NetSettings settings, Consumer<PortHandler> consumer) {
 		
 		PortHandler portHandler = handlers.get(settings.port());
 
@@ -516,7 +447,7 @@ public class NetServerManager {
 			}
 		}
 		
-		NetSettings previous = deployed.put(id, settings);
+		NetSettings previous = deployed.put(identity, settings);
 		
 		boolean removePrevious = false;
 		
@@ -550,9 +481,9 @@ public class NetServerManager {
 		}
 	}
 	
-	public void undeploy(String id, int undeployVersion) {
+	public void undeploy(Identity identity, int undeployVersion) {
 		
-		NetSettings settings = deployed.get(id);
+		NetSettings settings = deployed.get(identity);
 		
 		if (settings == null) {
 			log.debug("   it didn't seem to actually be deployed ({} were though)", deployed.keySet());
@@ -564,7 +495,7 @@ public class NetServerManager {
 			return;
 		}
 		
-		deployed.remove(id);
+		deployed.remove(identity);
 		
 		PortHandler handler = handlers.get(settings.port());
 		if (handler != null) {
@@ -574,8 +505,8 @@ public class NetServerManager {
 			
 	}
 	
-	public void pause(String id, int version) {
-		NetSettings settings = deployed.get(id);
+	public void pause(Identity identity, int version) {
+		NetSettings settings = deployed.get(identity);
 	
 		if (settings == null) {
 			return;
@@ -588,14 +519,14 @@ public class NetServerManager {
 		
 		PortHandler handler = handlers.get(settings.port());
 		if (handler != null) {
-			log.debug("pausing [{}]", id);
+			log.debug("pausing [{}]", identity);
 			handler.pause(settings);
 		}
 	}
 
-	public void resume(String id, int version) {
+	public void resume(Identity identity, int version) {
 			
-		NetSettings settings = deployed.get(id);
+		NetSettings settings = deployed.get(identity);
 	
 		if (settings == null) {
 			return;
@@ -608,7 +539,7 @@ public class NetServerManager {
 		
 		PortHandler handler = handlers.get(settings.port());
 		if (handler != null) {
-			log.debug("resuming [{}]", id);
+			log.debug("resuming [{}]", identity);
 			handler.resume(settings);
 		}
 		
@@ -641,5 +572,88 @@ public class NetServerManager {
 			}
 		}
 	};
+	
+
+
+
+	public static class HttpFlows {
+		
+		private final Flow onMessage;
+		
+		public HttpFlows(Flow onMessage) {
+			this.onMessage = onMessage;
+		}
+		
+		public HttpFlows(Optional<Flow> onMessage) {
+			this.onMessage = onMessage.orElse(NoFlow.INSTANCE);
+		}
+		
+		public Flow onMessage() {
+			return onMessage;
+		}
+		
+	}
+	
+	public static class SocketFlows {
+		
+		public static final SocketFlows NO_FLOWS = new SocketFlows(NoFlow.INSTANCE, NoFlow.INSTANCE, NoFlow.INSTANCE);
+		
+		private final Flow onConnect, onMessage, onDisconnect;
+		
+		public SocketFlows(Flow onConnect, Flow onMessage, Flow onDisconnect) {
+			this.onConnect = onConnect;
+			this.onMessage = onMessage;
+			this.onDisconnect = onDisconnect;
+		}
+		
+		public SocketFlows(Optional<Flow> onConnect, Optional<Flow> onMessage, Optional<Flow> onDisconnect) {
+			this.onConnect = onConnect.orElse(NoFlow.INSTANCE);
+			this.onMessage = onMessage.orElse(NoFlow.INSTANCE);
+			this.onDisconnect = onDisconnect.orElse(NoFlow.INSTANCE);
+		}
+		
+		public Flow onConnect() {
+			return onConnect;
+		}
+		
+		public Flow onMessage() {
+			return onMessage;
+		}
+		
+		public Flow onDisconnect() {
+			return onDisconnect;
+		}
+		
+	}
+	
+	public static class SafeChannelGroup {
+		
+		private final ChannelGroup channels;
+		
+		public SafeChannelGroup(ChannelGroup channels) {
+			this.channels = channels;
+		}
+		
+		public ChannelGroupFuture writeAndFlush(Object message, ChannelMatcher matcher) {
+			return channels.writeAndFlush(message, matcher);
+		}
+
+		public ChannelGroupFuture write(Object message, ChannelMatcher matcher) {
+			return channels.write(message, matcher);
+		}
+
+		public ChannelGroupFuture disconnect(ChannelMatcher matcher) {
+			return channels.disconnect(matcher);
+		}
+
+		public ChannelGroupFuture close(ChannelMatcher matcher) {
+			return channels.close(matcher);
+		}
+		
+		public Stream<Channel> filter(Predicate<Channel> filter) {
+			return channels.stream().filter(filter);
+		}
+		
+	}
 
 }

@@ -330,19 +330,25 @@ public class Util {
 		return allExceptionMessages(t).stream().collect(joining(joiner));
 	}
 	
-	public static Collection<String> allExceptionMessages(Throwable original) {
+	private static Collection<String> allExceptionMessages(Throwable tOriginal) {
 		List<String> result = new ArrayList<>();
 		
-		Throwable t = original;
+		Throwable t = tOriginal;
 		
 		while (t != null) {
 			if (t.getMessage() != null) {
 				result.add(t.getMessage());
+			} else {
+				result.add(t.getClass().getName());
 			}
 			t = t.getCause();
 		}
 		
 		Collections.reverse(result);
+		
+		if (result.isEmpty()) {
+			result.add("unknown error");
+		}
 		
 		return result;
 	}

@@ -6,6 +6,11 @@ import reka.api.Path;
 import reka.core.builder.FlowVisualizer;
 
 public class NoFlowVisualizer implements FlowVisualizer {
+	
+	public static final FlowVisualizer INSTANCE = new NoFlowVisualizer();
+	
+	private NoFlowVisualizer() {
+	}
 
 	@Override
 	public Path name() {

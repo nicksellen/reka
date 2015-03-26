@@ -9,7 +9,8 @@ import reka.config.configurer.annotations.Conf;
 import reka.core.setup.OperationConfigurer;
 import reka.core.setup.OperationSetup;
 import reka.core.util.StringWithVars;
-import reka.net.ChannelAttrs.ChannelTagMatcher;
+import reka.net.ChannelAttrs;
+import reka.net.ChannelAttrs.AttributeContainsMatcher;
 import reka.net.NetServerManager;
 
 public class SocketTagSendConfigurer implements OperationConfigurer {
@@ -35,9 +36,9 @@ public class SocketTagSendConfigurer implements OperationConfigurer {
 	
 	@Override
 	public void setup(OperationSetup ops) {
+		
 		ops.add("tag/send", ctx -> {
-			Function<Data,ChannelMatcher> fn = data -> new ChannelTagMatcher(tagFn.apply(data));
-			return new SocketBroadcastWithMatcherOperation(server, ctx.get(Sockets.SETTINGS), messageFn, fn);
+			return new SocketBroadcastWithMatcherOperation(server, messageFn, data -> new AttributeContainsMatcher<>(ChannelAttrs.tags, tagFn.apply(data)));
 		});
 	}
 	

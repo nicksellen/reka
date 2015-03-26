@@ -40,7 +40,7 @@ import reka.net.NetModule;
 
 @ChannelHandler.Sharable
 public class HttpHostHandler extends SimpleChannelInboundHandler<MutableData> {
-	
+
 	public static final Path CLOSE_CHANNEL = dots("options.close");
 	
 	private static final Logger log = LoggerFactory.getLogger(HttpHostHandler.class);

@@ -22,6 +22,7 @@ import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
 import reka.core.setup.OperationConfigurer;
 import reka.net.NetServerManager;
+import reka.net.NetServerManager.HttpFlows;
 import reka.net.NetSettings;
 import reka.net.NetSettings.SslSettings;
 import reka.net.http.configurers.HttpContentConfigurer;
@@ -135,7 +136,7 @@ public class HttpConfigurer extends ModuleConfigurer {
 					String id = format("%s/%s/%s/http", reg.applicationIdentity(), listen.host(), listen.port());
 					NetSettings settings = httpSettings(listen, reg.applicationIdentity(), reg.applicationVersion());
 					
-					server.deployHttp(id, reg.flow(), settings);
+					server.deployHttp(id, settings, new HttpFlows(reg.flow()));
 					
 					reg.onUndeploy(version -> server.undeploy(id, version));
 					reg.onPause(version -> server.pause(id, version));
