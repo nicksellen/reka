@@ -331,39 +331,45 @@ public class ApplicationConfigurer implements ErrorReporter {
 						return;
 					}
 					
-					initializer.collector().triggers.forEach(triggers -> {
+					try {
+					
+						initializer.collector().triggers.forEach(triggers -> {
+							
+							Map<IdentityKey<Flow>,Flow> m = new HashMap<>();
+							
+							triggers.get().forEach(trigger -> {
+								m.put(trigger.key(), flows.flow(triggerPath(trigger)));
+							});
+							
+							MultiFlowRegistration mr = new MultiFlowRegistration(applicationBuilder.version(), identity, triggers.ctx(), m);
+							triggers.consumer().accept(mr);
+							
+							applicationBuilder.network.addAll(mr.network());
+							applicationBuilder.undeployConsumers.addAll(mr.undeployConsumers());
+							applicationBuilder.pauseConsumers.addAll(mr.pauseConsumers());
+							applicationBuilder.resumeConsumers.addAll(mr.resumeConsumers());
+							
+				    	});
 						
-						Map<IdentityKey<Flow>,Flow> m = new HashMap<>();
-						
-						triggers.get().forEach(trigger -> {
-							m.put(trigger.key(), flows.flow(triggerPath(trigger)));
+						initializer.collector().shutdownHandlers.forEach(runnable -> {
+							applicationBuilder.undeployConsumers.add(version -> {
+								try {
+									runnable.run();
+								} catch (Throwable t) {
+									log.error(format("shutdown handler error for %s", identity), t);
+								}
+							});
 						});
 						
-						MultiFlowRegistration mr = new MultiFlowRegistration(applicationBuilder.version(), identity, triggers.ctx(), m);
-						triggers.consumer().accept(mr);
+						applicationBuilder.statusProviders.addAll(initializer.collector().statuses.stream().map(Supplier::get).collect(toList()));
 						
-						applicationBuilder.network.addAll(mr.network());
-						applicationBuilder.undeployConsumers.addAll(mr.undeployConsumers());
-						applicationBuilder.pauseConsumers.addAll(mr.pauseConsumers());
-						applicationBuilder.resumeConsumers.addAll(mr.resumeConsumers());
+						Application app = applicationBuilder.build();
 						
-			    	});
-					
-					initializer.collector().shutdownHandlers.forEach(runnable -> {
-						applicationBuilder.undeployConsumers.add(version -> {
-							try {
-								runnable.run();
-							} catch (Throwable t) {
-								log.error(format("shutdown handler error for %s", identity), t);
-							}
-						});
-					});
-					
-					applicationBuilder.statusProviders.addAll(initializer.collector().statuses.stream().map(Supplier::get).collect(toList()));
-					
-					Application app = applicationBuilder.build();
-					
-			    	future.complete(app);
+				    	future.complete(app);
+			    	
+					} catch (Throwable t) {
+						future.completeExceptionally(t);
+					}
 					
 				});
 				

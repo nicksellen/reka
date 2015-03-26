@@ -105,6 +105,8 @@ public class HttpConfigurer extends ModuleConfigurer {
 		module.operation(path("req"), provider -> new HttpRequestConfigurer(server.nettyEventGroup(), server.nettyChannelType()));
 		module.operation(path("auth"), provider -> new BasicAuthConfigurer(provider));
 		
+		// ones that take care of writing responses
+		
 		module.operation(path("head"), provider -> new HttpHeadConfigurer());
 		module.operation(path("write"), provider -> new HttpWriteConfigurer());
 		module.operation(path("end"), provider -> new HttpEndConfigurer());

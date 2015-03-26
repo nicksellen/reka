@@ -17,11 +17,14 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import reka.api.IdentityStore;
+import reka.api.ImmutableIdentityStore.Builder;
 import reka.api.data.Data;
 import reka.api.flow.Flow;
 import reka.core.data.memory.MutableMemoryData;
 import reka.net.ChannelAttrs;
 import reka.net.ChannelAttrs.ChannelIdMatcher;
+import reka.net.NetModule;
 import reka.net.NetServerManager.SocketTriggers;
 
 @Sharable
@@ -55,7 +58,8 @@ public class SocketHandler extends SimpleChannelInboundHandler<String> {
 	}
 	
     @Override
-    public void channelActive(final ChannelHandlerContext ctx) {
+    public void channelActive(final ChannelHandlerContext ctx) throws Exception {
+    	super.channelActive(ctx);
     	String id = UUID.randomUUID().toString();
     	Channel channel = ctx.channel();
 		channel.attr(ChannelAttrs.id).set(id);
@@ -82,7 +86,9 @@ public class SocketHandler extends SimpleChannelInboundHandler<String> {
 	
     private void trigger(List<Flow> flows, Data data, ChannelHandlerContext ctx) {
     	for (Flow flow : flows) {
-    		flow.prepare().mutableData(MutableMemoryData.from(data)).complete(resultData -> {
+    		Builder store = IdentityStore.immutableBuilder();
+    		store.put(NetModule.Keys.channel, ctx.channel());
+    		flow.prepare().store(store.build()).mutableData(MutableMemoryData.from(data)).complete(resultData -> {
 				resultData.getContent("reply").ifPresent(content -> {
 					ctx.channel().writeAndFlush(content.asUTF8());
 				});

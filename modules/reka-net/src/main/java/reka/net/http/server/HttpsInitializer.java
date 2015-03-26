@@ -31,6 +31,7 @@ public class HttpsInitializer extends ChannelInitializer<SocketChannel> {
 
 	@Override
 	protected void initChannel(SocketChannel ch) throws Exception {
+		ch.config().setAutoRead(true);
 		ch.pipeline().addLast(
 				ssl.newHandler(ch.alloc()),
 				new HttpRequestDecoder(),

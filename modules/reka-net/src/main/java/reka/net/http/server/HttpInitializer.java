@@ -18,6 +18,7 @@ public class HttpInitializer extends ChannelInitializer<SocketChannel> {
 	
 	@Override
 	protected void initChannel(SocketChannel ch) throws Exception {
+		ch.config().setAutoRead(true);
 		ch.pipeline().addLast(
 				new HttpRequestDecoder(),
 				new HttpObjectAggregator(1024 * 1024 * 500), // 500mb

@@ -358,6 +358,10 @@ public class NetServerManager {
 				.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
 				.childOption(ChannelOption.SO_REUSEADDR, true)
 				.childOption(ChannelOption.MAX_MESSAGES_PER_READ, Integer.MAX_VALUE)
+				
+				//.option(ChannelOption.AUTO_READ, false)
+				.childOption(ChannelOption.AUTO_READ, false)
+				
 				.childHandler(initializer());
 			
 			if (epoll) {
@@ -366,15 +370,13 @@ public class NetServerManager {
 			}
 			
 			try {
-				
+				log.info("binding to port {}", port);
 				channel = bootstrap.bind().sync().channel();
-				
 				channels.add(channel);
-				
 				log.info("opened port {}", port);
 				
-			} catch (InterruptedException e) {
-				throw unchecked(e, "could not bind port %d", port);
+			} catch (Throwable t) {
+				throw unchecked(t, "could not bind port %d", port);
 			}
 		}
 

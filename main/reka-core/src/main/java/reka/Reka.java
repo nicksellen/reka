@@ -92,7 +92,7 @@ public class Reka {
 			throw runtime("please ensure %s has been set in your environment", REKA_ENV);
 		}
 		
-		log.info("starting reka in {}", System.getenv(REKA_ENV));
+		log.info("starting reka in {} with apps dirs {}", System.getenv(REKA_ENV), dirs.app().toString());
 
 		for (Entry<String, ConfigBody> e : configs.entrySet()) {
 			manager.deployConfig(e.getKey(), -1, e.getValue(), null, DeploySubscriber.LOG);

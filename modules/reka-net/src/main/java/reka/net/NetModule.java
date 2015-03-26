@@ -34,6 +34,8 @@ public class NetModule implements Module {
 		
 		module.registerPortChecker(server.portChecker);
 		
+		module.main(() -> new NetConfigurer(server));
+		
 		module.submodule(slashes("http"), () -> new HttpConfigurer(server));
 		module.submodule(slashes("http/sessions"), () -> new HttpSessionsConfigurer());
 		module.submodule(slashes("websockets"), () -> new WebsocketConfigurer(server));

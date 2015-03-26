@@ -56,9 +56,11 @@ public class All {
 		File file = new File(args[0]).getAbsoluteFile();
 		
 		if (!file.exists()) {
-		log.error("configuration file {} is missing", args[0]);
+			log.error("configuration file {} is missing", args[0]);
 			return;
 		};
+		
+		log.info("starting reka-server configuration {}", file.toString());
 		
 		final Injector injector = Guice.createInjector(new RekaGuiceModule());
 		
