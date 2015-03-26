@@ -185,7 +185,7 @@ public class NetServerManager {
 
 		@Override
 		public PortHandler socketSet(SocketTriggers triggers) {
-			throw unsupported();
+			throw runtime("there is an http handler on this port, undeploy that first");
 		}
 
 		@Override

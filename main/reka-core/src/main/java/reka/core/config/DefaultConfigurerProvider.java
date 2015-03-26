@@ -27,7 +27,7 @@ public class DefaultConfigurerProvider implements ConfigurerProvider {
 	public Supplier<FlowSegment> provide(String type, ConfigurerProvider parentProvider, Config config) {
 		Path typePath = slashes(type);
 		BiFunction<ConfigurerProvider, Config, Supplier<FlowSegment>> p = providers.get(typePath);
-		String typesWeCanMake = parentProvider.types().stream().map(Path::slashes).collect(joining(", "));
+		String typesWeCanMake = parentProvider.types().stream().map(Path::slashes).sorted().collect(joining(", "));
 		checkNotNull(p, "don't know how to make a [%s] (we can make [%s])", typePath.slashes(), typesWeCanMake);
 		return p.apply(parentProvider, config);
 	}
