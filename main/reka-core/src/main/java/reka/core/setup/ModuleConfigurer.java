@@ -2,8 +2,6 @@ package reka.core.setup;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
-import static java.util.Collections.unmodifiableList;
-import static java.util.Collections.unmodifiableMap;
 import static java.util.stream.Collectors.joining;
 import static reka.api.Path.slashes;
 import static reka.config.configurer.Configurer.configure;
@@ -32,6 +30,7 @@ import reka.api.flow.FlowSegment;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.app.IdentityAndVersion;
+import reka.core.app.LifecycleComponent;
 import reka.core.builder.FlowVisualizer;
 import reka.core.builder.SingleFlow;
 import reka.core.module.ModuleInfo;
@@ -68,8 +67,8 @@ public abstract class ModuleConfigurer {
 
 	}
 
-	public static ModuleInitializer buildInitializer(IdentityAndVersion idv, ModuleConfigurer root) {
-		return Utils.process(idv, root);
+	public static ModuleInitializer buildInitializer(IdentityAndVersion idv, ModuleConfigurer root, IdentityStore store) {
+		return Utils.process(idv, root, store);
 	}
 
 	public static class ModuleCollector {
@@ -77,7 +76,9 @@ public abstract class ModuleConfigurer {
 		public final Map<Path, FlowSegmentBiFunction> providers;
 		public final List<InitFlow> initflows;
 		public final List<TriggerCollection> triggers;
-		public final List<Runnable> shutdownHandlers;
+		public final List<Runnable> onUndeploy;
+		public final List<NetworkInfo> network;
+		public final List<LifecycleComponent> components;
 		public final List<Supplier<StatusProvider>> statuses;
 		public final List<Consumer<ApplicationCheck>> checks;
 		public final List<PortRequirement> portRequirements;
@@ -86,39 +87,19 @@ public abstract class ModuleConfigurer {
 			providers = new HashMap<>();
 			initflows = new ArrayList<>();
 			triggers = new ArrayList<>();
-			shutdownHandlers = new ArrayList<>();
+			onUndeploy = new ArrayList<>();
+			network = new ArrayList<>();
+			components = new ArrayList<>();
 			statuses = new ArrayList<>();
 			checks = new ArrayList<>();
 			portRequirements = new ArrayList<>();
-		}
-
-		private ModuleCollector(ModuleCollector parent) {
-			this.providers = immutable(parent.providers);
-			this.initflows = immutable(parent.initflows);
-			this.triggers = immutable(parent.triggers);
-			this.shutdownHandlers = immutable(parent.shutdownHandlers);
-			this.statuses = immutable(parent.statuses);
-			this.checks = immutable(parent.checks);
-			this.portRequirements = immutable(parent.portRequirements);
-		}
-
-		public ModuleCollector immutable() {
-			return new ModuleCollector(this);
-		}
-
-		private static <K, V> Map<K, V> immutable(Map<K, V> in) {
-			return unmodifiableMap(new HashMap<>(in));
-		}
-
-		private static <T> List<T> immutable(List<T> in) {
-			return unmodifiableList(new ArrayList<>(in));
 		}
 
 	}
 
 	private static class Utils {
 		
-		public static ModuleInitializer process(IdentityAndVersion idv, ModuleConfigurer root) {
+		public static ModuleInitializer process(IdentityAndVersion idv, ModuleConfigurer root, IdentityStore store) {
 
 			ModuleCollector collector = new ModuleCollector();
 
@@ -132,7 +113,7 @@ public abstract class ModuleConfigurer {
 			for (ModuleConfigurer module : all) {
 				if (module.isRoot()) continue;
 				
-				ModuleSetupContext ctx = new ModuleSetupContext(IdentityStore.createConcurrentIdentityStore());
+				ModuleSetupContext ctx = new ModuleSetupContext(store);
 
 				ModuleSetup init = new ModuleSetup(idv, module.info(), module.fullAliasOrName(), ctx, collector);
 				module.setup(init);
@@ -163,7 +144,7 @@ public abstract class ModuleConfigurer {
 				visualizer = NoFlowVisualizer.INSTANCE;
 			}
 
-			return new ModuleInitializer(flow, visualizer, collector.immutable());
+			return new ModuleInitializer(flow, visualizer, collector);
 		}
 
 		private static Optional<FlowSegment> buildSegment(Set<ModuleConfigurer> modules, Map<ModuleConfigurer, FlowSegment> built) {

@@ -1,6 +1,7 @@
 package reka.admin;
 
 import static reka.api.Path.dots;
+import static reka.api.Path.slashes;
 
 import java.util.function.Function;
 
@@ -22,7 +23,7 @@ public class RekaVisualizeConfigurer implements OperationConfigurer {
 	}
 	
 	private Function<Data,String> formatFn = (data) -> "dot";
-	private Function<Data,String> appIdentityFn;
+	private Function<Data,Path> appPathFn;
 	private Function<Data,String> flowNameFn;
 	private String stylesheet;
 	private Path out = Response.CONTENT;
@@ -40,7 +41,7 @@ public class RekaVisualizeConfigurer implements OperationConfigurer {
 	
 	@Conf.At("app")
 	public void identity(String val) {
-		appIdentityFn = StringWithVars.compile(val);
+		appPathFn = StringWithVars.compile(val).andThen(Path::slashes);
 	}
 	
 	@Conf.At("flow")
@@ -55,8 +56,8 @@ public class RekaVisualizeConfigurer implements OperationConfigurer {
 	
 	@Override
 	public void setup(OperationSetup ops) {
-		if (appIdentityFn != null) {
-			ops.add("visualize", ctx -> new VisualizeAppOperation(manager, appIdentityFn, flowNameFn, formatFn, out, stylesheet));
+		if (appPathFn != null) {
+			ops.add("visualize", ctx -> new VisualizeAppOperation(manager, appPathFn, flowNameFn, formatFn, out, stylesheet));
 		} else {
 			throw new RuntimeException("put the errors in the proper place nick!");
 		}

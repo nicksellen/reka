@@ -29,6 +29,12 @@ public class SocketFlowHandler extends SimpleChannelInboundHandler<String> {
 		this.flows = flows;
 	}
 	
+	public boolean unsetFlows(SocketFlows flows) {
+		if (!this.flows.equals(flows)) return false;
+		flows = SocketFlows.NO_FLOWS;
+		return true;
+	}
+	 
     @Override
     public void channelActive(final ChannelHandlerContext ctx) throws Exception {
     	super.channelActive(ctx);

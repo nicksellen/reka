@@ -1,6 +1,7 @@
 package reka.admin;
 
 import static reka.api.Path.dots;
+import static reka.api.Path.slashes;
 
 import java.util.UUID;
 import java.util.function.Function;
@@ -19,8 +20,8 @@ public class RekaDeployConfigurer implements OperationConfigurer {
 	private final ApplicationManager manager;
 	private final AppDirs dirs;
 	
-	private Function<Data, Path> dataPathFn;
-	private Function<Data,String> identityFn = (unused) -> UUID.randomUUID().toString();
+	private Function<Data,Path> dataPathFn;
+	private Function<Data,Path> appPathFn = unused -> slashes(UUID.randomUUID().toString());
 	
 	RekaDeployConfigurer(ApplicationManager manager, AppDirs dirs) {
 		this.manager = manager;
@@ -29,7 +30,7 @@ public class RekaDeployConfigurer implements OperationConfigurer {
 	
 	@Conf.At("id")
 	public void identity(String val) {
-		identityFn = StringWithVars.compile(val);
+		appPathFn = StringWithVars.compile(val).andThen(v -> slashes(v));
 	}
 	
 	@Conf.At("data")
@@ -39,7 +40,7 @@ public class RekaDeployConfigurer implements OperationConfigurer {
 	
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("deploy", ctx -> new RekaDeployOperation(manager, dirs.basedirs(), dataPathFn, identityFn));
+		ops.add("deploy", ctx -> new RekaDeployOperation(manager, dirs.basedirs(), dataPathFn, appPathFn));
 	}
 	
 }

@@ -1,13 +1,14 @@
 package io.reka.usenetplay;
 
-import static java.lang.String.format;
+import reka.Identity;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
 import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
 import reka.net.NetServerManager;
-import reka.net.NetSettings;
+import reka.net.NetServerManager.HttpFlows;
+import reka.net.http.HostAndPort;
 
 public class UseNetPlayConfigurer extends ModuleConfigurer  {
 	
@@ -31,23 +32,15 @@ public class UseNetPlayConfigurer extends ModuleConfigurer  {
 	}
 	
 	@Override
-	public void setup(ModuleSetup module) {
+	public void setup(ModuleSetup app) {
 		
-		module.trigger("on addy req", body, reg -> {
+		app.trigger("on addy req", body, reg -> {
 			
 			int port = 9090;
 			
-			String id = format("%s/%s/%s/http", reg.applicationIdentity(), addy, port);
+			app.register(server.deployHttp(app.identity(), new HostAndPort(addy, port), new HttpFlows(reg.flow())));
 			
-			NetSettings settings = NetSettings.http(port, addy, reg.applicationIdentity(), reg.applicationVersion());
-			
-			server.deployHttp(id, reg.flow(), settings);
-			
-			reg.onUndeploy(version -> server.undeploy(id, version));
-			reg.onPause(version -> server.pause(id, version));
-			reg.onResume(version -> server.resume(id, version));
-			
-			reg.network(port, settings.protocolString(), details -> {
+			app.network(port, "http", details -> {
 				details.putString("host", addy);
 			});
 			

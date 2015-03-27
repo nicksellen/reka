@@ -1,6 +1,7 @@
 package reka.dirs;
 
 import static java.lang.String.format;
+import static reka.api.Path.slashes;
 import static reka.util.Util.decode32;
 import static reka.util.Util.encode32;
 import static reka.util.Util.unchecked;
@@ -14,32 +15,32 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.core.app.IdentityAndVersion;
+import reka.core.app.PathAndVersion;
 
 public class AppDirs extends AbstractDirs implements Dirs {
 	
 	private static final Logger log = LoggerFactory.getLogger(AppDirs.class);
 	
-	public static String dirnameFor(String identity, int version) {
-		return toDir(IdentityAndVersion.create(identity, version));
+	public static String dirnameFor(reka.api.Path appPath, int version) {
+		return toDir(PathAndVersion.create(appPath, version));
 	}
 	
-	public static String dirnameFor(String identity) {
-		return format("%s", encode32(identity));
+	public static String dirnameFor(reka.api.Path appPath) {
+		return format("%s", encode32(appPath.slashes()));
 	}
 	
-	public static String toDir(IdentityAndVersion identityAndVersion) {
-		return format("%s/%d", encode32(identityAndVersion.identity()), identityAndVersion.version());
+	public static String toDir(PathAndVersion pathAndVersion) {
+		return format("%s/%d", encode32(pathAndVersion.path().slashes()), pathAndVersion.version());
 	}
 	
-	public static Map<IdentityAndVersion,Path> listApps(BaseDirs dirs) {
-		Map<String,Integer> appVersions = new HashMap<>();
-		Map<String,java.nio.file.Path> appPaths = new HashMap<>();
+	public static Map<PathAndVersion,Path> listApps(BaseDirs dirs) {
+		Map<reka.api.Path,Integer> appVersions = new HashMap<>();
+		Map<reka.api.Path,java.nio.file.Path> appPaths = new HashMap<>();
 		try {
 			Files.list(dirs.app()).forEach(identityPath -> {
-				String identity;
+				reka.api.Path path;
 				try {
-					identity = decode32(identityPath.getFileName().toString());
+					path = slashes(decode32(identityPath.getFileName().toString()));
 				} catch (Throwable t) {
 					log.info("not base32, ignoring: {}", identityPath.toAbsolutePath().toString());
 					return;
@@ -48,10 +49,10 @@ public class AppDirs extends AbstractDirs implements Dirs {
 					Files.list(identityPath).forEach(versionPath -> {
 						try {
 							int v = Integer.valueOf(versionPath.getFileName().toString());
-							Integer existingVersion = appVersions.get(identity);
+							Integer existingVersion = appVersions.get(path);
 							if (existingVersion == null || existingVersion < v) {
-								appVersions.put(identity, v);
-								appPaths.put(identity, versionPath);
+								appVersions.put(path, v);
+								appPaths.put(path, versionPath);
 							}
 						} catch (NumberFormatException e) {
 							// ignore
@@ -64,20 +65,26 @@ public class AppDirs extends AbstractDirs implements Dirs {
 		} catch (IOException e) {
 			throw unchecked(e);
 		}
-		Map<IdentityAndVersion, Path> result = new HashMap<>();
-		appPaths.forEach((identity, path) -> {
-			result.put(IdentityAndVersion.create(identity, appVersions.get(identity)), path);
+		Map<PathAndVersion, Path> result = new HashMap<>();
+		appPaths.forEach((path, filepath) -> {
+			result.put(PathAndVersion.create(path, appVersions.get(path)), filepath);
 		});
 		return result;
 	}
 	 
-	protected AppDirs(Path app, Path data, Path tmp, BaseDirs basedirs) {
+	protected AppDirs(reka.api.Path appPath, Path app, Path data, Path tmp, BaseDirs basedirs) {
 		super(app, data, tmp);
+		this.appPath = appPath;
 		this.basedirs = basedirs;
 	}
 
+	private final reka.api.Path appPath;
 	private final BaseDirs basedirs;
 		
+	public reka.api.Path appPath() {
+		return appPath;
+	}
+	
 	public BaseDirs basedirs() {
 		return basedirs;
 	}

@@ -17,22 +17,31 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import reka.Identity;
 import reka.PortRequirement;
 import reka.api.IdentityKey;
 import reka.api.IdentityStore;
 import reka.api.Path;
+import reka.api.data.MutableData;
 import reka.api.flow.Flow;
 import reka.api.flow.FlowSegment;
 import reka.api.run.Operation;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.core.app.IdentityAndVersion;
+import reka.core.app.LifecycleComponent;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
+import reka.core.data.memory.MutableMemoryData;
 import reka.core.module.ModuleInfo;
 import reka.core.setup.ModuleConfigurer.ModuleCollector;
 
 public class ModuleSetup {
+	
+	private final Logger log = LoggerFactory.getLogger(getClass());
 	
 	private final IdentityAndVersion idv;
 	private final ModuleInfo info;
@@ -55,6 +64,14 @@ public class ModuleSetup {
 		return includeDefaultStatus;
 	}
 	
+	public Identity identity() {
+		return idv.identity();
+	}
+	
+	public ModuleSetupContext ctx() {
+		return ctx;
+	}
+	
 	public Path path() {
 		return path;
 	}
@@ -73,12 +90,17 @@ public class ModuleSetup {
 		return this;
 	}
 	
+	public void onUndeploy(String name, Runnable runnable) {
+		log.info("adding runnable into collector undeploys [{}] #{}", name, System.identityHashCode(collector.onUndeploy));
+		collector.onUndeploy.add(runnable);
+	}
+	
 	public void onShutdown(String name, Consumer<ModuleSetupContext> handler) {
-		collector.shutdownHandlers.add(() -> handler.accept(ctx));
+		collector.onUndeploy.add(() -> handler.accept(ctx));
 	}
 	
 	public void onShutdown(String name, BiConsumer<IdentityAndVersion, IdentityStore> handler) {
-		collector.shutdownHandlers.add(() -> handler.accept(idv, ctx));
+		collector.onUndeploy.add(() -> handler.accept(idv, ctx));
 	}
 	
 	public ModuleSetup simpleOperation(Path name, Function<Config,Operation> fn) {
@@ -117,14 +139,14 @@ public class ModuleSetup {
 	
 	public static class ApplicationCheck {
 		
-		private final String applicationIdentity;
+		private final Identity applicationIdentity;
 		private final List<String> errors = new ArrayList<>();
 		
-		public ApplicationCheck(String applicationIdentity) {
+		public ApplicationCheck(Identity applicationIdentity) {
 			this.applicationIdentity = applicationIdentity;
 		}
 		
-		public String applicationIdentity() {
+		public Identity applicationIdentity() {
 			return applicationIdentity;
 		}
 		
@@ -147,7 +169,7 @@ public class ModuleSetup {
 		return trigger(IdentityKey.named(name), body, c);
 	}
 
-	public ModuleSetup trigger(String name, Function<ConfigurerProvider, OperationConfigurer> supplier, Consumer<SingleFlowRegistration> c) {
+	public ModuleSetup addTrigger(String name, Function<ConfigurerProvider, OperationConfigurer> supplier, Consumer<SingleFlowRegistration> c) {
 		return trigger(IdentityKey.named(name), supplier, c);
 	}
 	
@@ -181,6 +203,20 @@ public class ModuleSetup {
 
 	public void requirePort(int port, Optional<String> host) {
 		collector.portRequirements.add(new PortRequirement(port, host));
+	}
+	
+	public void register(LifecycleComponent component) {
+		collector.components.add(component);
+	}
+	
+	public void network(int port, String protocol) {
+		network(port, protocol, data -> {});
+	}
+	
+	public void network(int port, String protocol, Consumer<MutableData> details) {
+		MutableData data = MutableMemoryData.create();
+		details.accept(data);
+		collector.network.add(new NetworkInfo(port, protocol, data.immutable()));
 	}
 	
 	public void requirePort(int port) {

@@ -142,9 +142,7 @@ public class SMTPServerConfigurer extends ModuleConfigurer {
 				Flow flow = registration.flow();
 				server.add(flow);
 				registration.network(port, "smtp");
-				registration.onUndeploy(v -> {
-					server.remove(flow);
-				});
+				module.onUndeploy("undeploy smtp", () -> server.remove(flow));
 			});
 			
 			module.onShutdown("stop smtp server", ctx -> ctx.get(SERVER).stop());

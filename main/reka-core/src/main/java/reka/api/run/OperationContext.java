@@ -22,5 +22,10 @@ public class OperationContext implements IdentityStoreReader {
 	public <T> Optional<T> lookup(IdentityKey<T> key) {
 		return store.lookup(key);
 	}
+
+	@Override
+	public <T> boolean has(IdentityKey<T> key) {
+		return store.has(key);
+	}
 	
 }

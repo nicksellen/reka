@@ -26,23 +26,21 @@ public class RekaValidateFromFileOperation implements RouterOperation {
 	public static final RouteKey ERROR = RouteKey.named("error");
 	
 	private final ApplicationManager manager;
-	private final Function<Data,String> filenameFn, identityFn;
+	private final Function<Data,String> filenameFn;
 	
-	public RekaValidateFromFileOperation(ApplicationManager manager, Function<Data,String> filenameFn,  Function<Data,String> identityFn) {
+	public RekaValidateFromFileOperation(ApplicationManager manager, Function<Data,String> filenameFn) {
 		this.manager = manager;
 		this.filenameFn = filenameFn;
-		this.identityFn = identityFn;
 	}
 
 	@Override
 	public void call(MutableData data, RouteCollector router) {
 		try {
 			String filename = filenameFn.apply(data);
-			String identity = identityFn.apply(data);
 			File file = new File(filename);
 			checkArgument(file.exists(), "file does not exist [%s]", filename);
 			checkArgument(!file.isDirectory(), "path is a directory [%s]", filename);
-			manager.validate(identity, FileSource.from(file));
+			manager.validate(FileSource.from(file));
 			router.routeTo(OK);
 			return;
 		} catch (Throwable t) {

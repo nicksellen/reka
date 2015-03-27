@@ -45,7 +45,7 @@ public class SocketBroadcastConfigurer implements OperationConfigurer {
 	@Override
 	public void setup(OperationSetup ops) {
 		ops.add("broadcast", ctx -> {
-			Identity identity = (Identity) ctx.get(Sockets.IDENTITY); // TODO: why is it making me cast???
+			Identity identity = ctx.get(Sockets.IDENTITY);
 			ChannelMatcher identityMatcher = new AttributeMatcher<>(ChannelAttrs.identity, identity);
 			if (matcherFn != null) {
 				matcherFn = matcherFn.andThen(m -> ChannelMatchers.compose(identityMatcher, m));

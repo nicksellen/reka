@@ -1,6 +1,5 @@
 package reka.net;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static reka.util.Util.runtime;
 import static reka.util.Util.unchecked;
 import static reka.util.Util.unsupported;
@@ -18,20 +17,21 @@ import io.netty.channel.epoll.EpollSocketChannel;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.ChannelGroupFuture;
 import io.netty.channel.group.ChannelMatcher;
+import io.netty.channel.group.ChannelMatchers;
 import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.GlobalEventExecutor;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
-import java.util.stream.Stream;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,12 +39,16 @@ import org.slf4j.LoggerFactory;
 import reka.Identity;
 import reka.PortChecker;
 import reka.api.flow.Flow;
+import reka.core.app.LifecycleComponent;
 import reka.core.runtime.NoFlow;
+import reka.net.ChannelAttrs.AttributeMatcher;
 import reka.net.NetSettings.SslSettings;
 import reka.net.NetSettings.Type;
 import reka.net.http.HostAndPort;
+import reka.net.http.server.HttpChannelSetup;
 import reka.net.http.server.HttpInitializer;
 import reka.net.http.server.HttpOrWebsocket;
+import reka.net.http.server.WebsocketChannelSetup;
 import reka.net.socket.SocketFlowHandler;
 import reka.util.AsyncShutdown;
 
@@ -57,8 +61,7 @@ public class NetServerManager {
 	private final EventLoopGroup nettyEventGroup;
 	
 	private final Map<Integer,PortHandler> handlers = new HashMap<>();
-		
-	private final Map<Identity,NetSettings> deployed = new HashMap<>();
+	private final Map<Identity,Map<NetSettings,Integer>> deployed = new HashMap<>();
 	
 	private final boolean epoll;
 	
@@ -66,7 +69,6 @@ public class NetServerManager {
 	private final Class<? extends Channel> nettyClientChannelType;
 
 	private final ChannelGroup channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
-	private final SafeChannelGroup safeChannels = new SafeChannelGroup(channels);
 	
 	public NetServerManager() {
 		epoll = Epoll.isAvailable();
@@ -79,6 +81,99 @@ public class NetServerManager {
 			nettyClientChannelType = NioSocketChannel.class;
 			nettyEventGroup = new NioEventLoopGroup();
 		}
+	}
+	
+	public LifecycleComponent deployHttp(Identity identity, HostAndPort listen, HttpFlows flows) {
+		NetSettings settings = NetSettings.http(listen.port(), listen.host());
+		PortHandler handler = ensurePortHandler(settings);
+		int version = saveSettingsAndIncrementVersion(identity, settings);
+		return new NetLifecycleComponent(identity, settings, version, handler.httpAdd(identity, settings.host().get(), flows));
+	}
+	
+	public LifecycleComponent deployHttps(Identity identity, HostAndPort listen, SslSettings ssl, HttpFlows flows) {
+		NetSettings settings = NetSettings.https(listen.port(), listen.host(), ssl);
+		PortHandler handler = ensurePortHandler(settings);
+		int version = saveSettingsAndIncrementVersion(identity, settings);
+		return new NetLifecycleComponent(identity, settings, version, handler.httpAdd(identity, settings.host().get(), flows));
+	}
+	
+	public LifecycleComponent deployWebsocket(Identity identity, HostAndPort listen, SocketFlows flows) {
+		NetSettings settings = NetSettings.ws(listen.port(), listen.host());
+		PortHandler handler = ensurePortHandler(settings);
+		int version = saveSettingsAndIncrementVersion(identity, settings);
+		return new NetLifecycleComponent(identity, settings, version, handler.websocketAdd(identity, settings.host().get(), flows));
+	}
+	
+	public LifecycleComponent deployWebsocketSsl(Identity identity, HostAndPort listen, SslSettings ssl, SocketFlows flows) {
+		NetSettings settings = NetSettings.wss(listen.port(), listen.host(), ssl);
+		PortHandler handler = ensurePortHandler(settings);
+		int version = saveSettingsAndIncrementVersion(identity, settings);
+		return new NetLifecycleComponent(identity, settings, version, handler.websocketAdd(identity, settings.host().get(), flows));
+	}
+	
+	public LifecycleComponent deploySocket(Identity identity, int port, SocketFlows flows) {
+		NetSettings settings = NetSettings.socket(port);
+		PortHandler handler = ensurePortHandler(settings);
+		int version = saveSettingsAndIncrementVersion(identity, settings);
+		return new NetLifecycleComponent(identity, settings, version, handler.socketSet(identity, flows));
+	}
+	
+	public LifecycleComponent deploySocketSsl(Identity identity, int port, SslSettings ssl, SocketFlows flows) {
+		NetSettings settings = NetSettings.socketSsl(port, ssl);
+		PortHandler handler = ensurePortHandler(settings);
+		int version = saveSettingsAndIncrementVersion(identity, settings);
+		return new NetLifecycleComponent(identity, settings, version, handler.socketSet(identity, flows));
+	}
+	
+	public class NetLifecycleComponent implements LifecycleComponent {
+
+		private final Identity identity;
+		private final NetSettings settings;
+		private final int version;
+		private final Runnable remove;
+		
+		public NetLifecycleComponent(Identity identity, NetSettings settings, int version, Runnable remove) {
+			this.identity = identity;
+			this.settings = settings;
+			this.version = version;
+			this.remove = remove;
+		}
+		
+		@Override
+		public void undeploy() {
+			PortHandler handler = handlers.get(settings.port());
+			if (handler == null) return;
+			Map<NetSettings, Integer> m = deployed.get(identity);
+			if (m == null) return;
+			if (!m.containsKey(settings)) return;
+			int currentVersion = m.get(settings);
+			if (version != currentVersion) {
+				log.info("not undeploying as the version has incremented {} -> {}", version, currentVersion);
+				return;
+			}
+			remove.run();
+			if (handler.isEmpty()) {
+				handlers.remove(settings.port());
+				handler.shutdownAndWait();
+			}
+		}
+
+		@Override
+		public Runnable pause() {
+			PortHandler handler = handlers.get(settings.port());
+			if (handler == null) return () -> {};
+			switch (settings.type()) {
+			case HTTP:
+				return handler.httpPause(settings.host().get());
+			case WEBSOCKET:
+				return handler.websocketPause(settings.host().get());
+			case SOCKET:
+				return handler.socketPause();
+			default:
+				return () -> {};
+			}
+		}
+		
 	}
 	
 	public EventLoopGroup nettyEventGroup() {
@@ -97,12 +192,14 @@ public class NetServerManager {
 
 		private final ChannelInitializer<SocketChannel> initializer;
 		
-		private final HttpOrWebsocket handler;
+		private final HttpChannelSetup http;
+		private final WebsocketChannelSetup websocket;
 		
 		HttpPortHandler(int port, SslSettings sslSettings) {
 			super(port, sslSettings);
-			handler = new HttpOrWebsocket(channels, port, sslSettings != null);
-			initializer = new HttpInitializer(handler, sslSettings);
+			http = new HttpChannelSetup(channels, port, sslSettings != null);
+			websocket = new WebsocketChannelSetup(channels, port, sslSettings != null);
+			initializer = new HttpInitializer(new HttpOrWebsocket(http, websocket), sslSettings);
 		}
 
 		@Override
@@ -111,93 +208,51 @@ public class NetServerManager {
 		}
 
 		@Override
-		public boolean isHttp() {
-			return true;
+		public boolean supports(Type type) {
+			return type == Type.HTTP || type == Type.WEBSOCKET;
 		}
 
 		@Override
-		public PortHandler httpAdd(Identity identity, String host, HttpFlows flows) {
-			handler.addHttp(identity, host, flows);
+		public Runnable httpAdd(Identity identity, String host, HttpFlows flows) {
+			Runnable undeploy = http.add(host, identity, flows);
 			start();
-			return this;
+			return undeploy;
 		}
 
 		@Override
-		public PortHandler websocketAdd(Identity identity, String host, SocketFlows flows) {
-			handler.addWebsocket(identity, host, flows);
+		public Runnable websocketAdd(Identity identity, String host, SocketFlows flows) {
+			Runnable undeploy = websocket.add(host, identity, flows);
 			start();
-			return this;
+			return undeploy;
 		}
 
 		@Override
-		public void pause(NetSettings settings) {
-			if (settings.type() != Type.HTTP) return;
-			httpHandler.pause(settings.host().get());
+		public Runnable httpPause(String host) {
+			log.warn("not doing httpPause {}", host);
+			return () -> {};
+			//return http.pause(host);
 		}
 
 		@Override
-		public void resume(NetSettings settings) {
-			if (settings.type() != Type.HTTP) return;
-			httpHandler.resume(settings.host().get());
+		public Runnable websocketPause(String host) {
+			log.warn("not doing websocketPause {}", host);
+			return () -> {};
+			//return websocket.pause(host);
 		}
-
+		
 		@Override
-		public PortHandler remove(NetSettings settings) {
-			switch (settings.type()) {
-			case HTTP:
-				httpRemove(settings.host().get());
-				break;
-			case WEBSOCKET:
-				websocketRemove(settings.host().get());
-				break;
-			default:
-				throw runtime("cannot remove %s from %s", settings.type(), getClass().getSimpleName());
-			}
-			return null;
-		}
-
-		private PortHandler httpRemove(String host) {
-			if (handler.removeHttp(host)) {
-				if (isEmpty()) shutdownAndWait();
-			}
-			return this;
-		}
-
-		private PortHandler websocketRemove(String host) {
-			if (handler.removeWebsocket(host)) {
-				if (isEmpty()) shutdownAndWait();
-			}
-			return this;
+		public Runnable socketPause() {
+			throw unsupported("this is http/websocket not socket");
 		}
 		
 		@Override
 		public boolean isEmpty() {
-			return handler.isEmpty();
+			return http.isEmpty() && websocket.isEmpty();
 		}
 
 		@Override
-		public PortHandler socketSet(Identity identity, SocketFlows flows) {
+		public Runnable socketSet(Identity identity, SocketFlows flows) {
 			throw runtime("we are doing http on this port, undeploy this first before using it for sockets. sockets don't have a host so they can't co-exist with http.");
-		}
-
-		@Override
-		public void channel(NetSettings settings, String id, Consumer<Channel> c) {
-			checkArgument(settings.type() == Type.WEBSOCKET, "cannot get channels for %s", settings.type());
-			settings.host().ifPresent(host -> {
-				websocketHandler.forHost(host, h -> {
-					h.channel(id).ifPresent(c);
-				});	
-			});
-		}
-
-		@Override
-		public void channels(NetSettings settings, Consumer<ChannelGroup> c) {
-			checkArgument(settings.type() == Type.WEBSOCKET, "cannot get channels for %s", settings.type());
-			settings.host().ifPresent(host -> {
-				websocketHandler.forHost(host, h -> {
-					c.accept(h.channels);
-				});	
-			});
 		}
 		
 	}
@@ -225,64 +280,53 @@ public class NetServerManager {
 		}
 
 		@Override
-		public PortHandler socketSet(Identity identity, SocketFlows flows) {
+		public Runnable socketSet(Identity identity, SocketFlows flows) {
 			isSet = true;
 			socketHandler.setFlows(flows);
 			start();
-			return this;
+			return () -> socketUnset(identity, flows);
+		}
+		
+		private void socketUnset(Identity identity, SocketFlows flows) {
+			if (socketHandler.unsetFlows(flows)) {
+				isSet = false;
+			}
 		}
 
 		@Override
-		public boolean isHttp() {
-			return false;
+		public boolean supports(Type type) {
+			return type == Type.SOCKET;
 		}
 
 		@Override
-		public PortHandler httpAdd(Identity identity, String host, HttpFlows flows) {
-			throw unsupported();
+		public Runnable httpAdd(Identity identity, String host, HttpFlows flows) {
+			throw unsupported("this port is being used for a socket and you cannot do http on it at the same time");
 		}
 
 		@Override
-		public PortHandler websocketAdd(Identity identity, String host, SocketFlows flows) {
-			throw unsupported();
+		public Runnable websocketAdd(Identity identity, String host, SocketFlows flows) {
+			throw unsupported("this port is being used for a socket and you cannot do websockets on it at the same time");
 		}
 
 		@Override
-		public void pause(NetSettings settings) {
-			throw unsupported();
+		public Runnable httpPause(String host) {
+			throw unsupported("this is socket not http/websocket");
 		}
 
 		@Override
-		public void resume(NetSettings settings) {
-			throw unsupported();
+		public Runnable websocketPause(String host) {
+			throw unsupported("this is socket not http/websocket");
+		}
+		
+		@Override
+		public Runnable socketPause() {
+			log.warn("socket pause is not supported yet");
+			return () -> {};
 		}
 
 		@Override
 		public boolean isEmpty() {
 			return !isSet;
-		}
-
-		@Override
-		public PortHandler remove(NetSettings settings) {
-			checkArgument(settings.type() == Type.SOCKET);
-			isSet = false;
-			channels(settings, channels -> {
-				channels.disconnect();
-			});
-			shutdownAndWait();
-			return this;
-		}
-
-		@Override
-		public void channel(NetSettings settings, String id, Consumer<Channel> c) {
-			checkArgument(settings.type() == Type.SOCKET);
-			socketHandler.channel(id).ifPresent(c);
-		}
-
-		@Override
-		public void channels(NetSettings settings, Consumer<ChannelGroup> c) {
-			checkArgument(settings.type() == Type.SOCKET);
-			c.accept(socketHandler.channels());
 		}
 		
 	}
@@ -301,17 +345,16 @@ public class NetServerManager {
 		
 		protected abstract ChannelInitializer<SocketChannel> initializer();
 		
-		public abstract boolean isHttp();
+		public abstract boolean supports(Type type);
 		public abstract boolean isEmpty();
 		
-		public abstract PortHandler httpAdd(Identity identity, String host, HttpFlows flows);
-		public abstract PortHandler websocketAdd(Identity identity, String host, SocketFlows flows);
-		public abstract PortHandler socketSet(Identity identity, SocketFlows flows);
+		public abstract Runnable httpAdd(Identity identity, String host, HttpFlows flows);
+		public abstract Runnable websocketAdd(Identity identity, String host, SocketFlows flows);
+		public abstract Runnable socketSet(Identity identity, SocketFlows flows);
 		
-		public abstract void pause(NetSettings settings);
-		public abstract void resume(NetSettings settings);
-		
-		public abstract PortHandler remove(NetSettings settings);
+		public abstract Runnable httpPause(String host);
+		public abstract Runnable websocketPause(String host);
+		public abstract Runnable socketPause();
 		
 		public SslSettings sslSettings() {
 			return sslSettings;
@@ -350,7 +393,7 @@ public class NetServerManager {
 				.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
 				.childOption(ChannelOption.SO_REUSEADDR, true)
 				.childOption(ChannelOption.MAX_MESSAGES_PER_READ, Integer.MAX_VALUE)
-				.childOption(ChannelOption.AUTO_READ, false)
+				.childOption(ChannelOption.AUTO_READ, false) // initializers need to turn this back on if they rely on it
 				.childHandler(initializer());
 			
 			if (epoll) {
@@ -368,181 +411,112 @@ public class NetServerManager {
 				throw unchecked(t, "could not bind port %d", port);
 			}
 		}
-
-		public abstract void channel(NetSettings settings, String id, Consumer<Channel> c);
-		public abstract void channels(NetSettings settings, Consumer<ChannelGroup> c);
 		
 	}
 	
-	public Map<Identity,NetSettings> deployed() {
+	public Map<Identity,Map<NetSettings,Integer>> deployed() {
 		return ImmutableMap.copyOf(deployed);
 	}
 	
-	public SafeChannelGroup channels() {
-		return safeChannels;
+	public ChannelGroupWithMatcher channels(ChannelMatcher matcher) {
+		return new ChannelGroupWithMatcher(channels, matcher);
 	}
 	
-	public boolean isAvailable(String applicationIdentity, HostAndPort listen) {
-		return deployed.values().stream().allMatch(settings -> {
-			
-			if (settings.applicationIdentity().equals(applicationIdentity)) {
-				// the same application, we can reuse whatever
-				return true;
-			}
-			
-			if (listen.port() != settings.port()) {
-				// different port, doesn't matter
-				return true;
-			}
-			
-			if (settings.host().isPresent()) {
-				// so long as they're different hosts it's ok
-				return !listen.host().equals(settings.host().get());
-			} else {
-				// we don't have a host set, i.e. it doesn't support multiple hosts
-				return false;
-			}
+	public ChannelGroupWithMatcher channels(Identity identity) {
+		return new ChannelGroupWithMatcher(channels, new AttributeMatcher<>(ChannelAttrs.identity, identity));
+	}
+	
+	public boolean isAvailable(Identity identity, HostAndPort listen) {
+		return deployed.entrySet().stream().allMatch(e -> {
+			Identity deployedIdentity = e.getKey();
+			if (deployedIdentity.equals(identity)) return true;
+			Set<NetSettings> s = e.getValue().keySet();
+			return s.stream().allMatch(settings -> {
+				
+				if (listen.port() != settings.port()) {
+					// different port, doesn't matter
+					return true;
+				}
+				
+				if (settings.host().isPresent()) {
+					// so long as they're different hosts it's ok
+					return !listen.host().equals(settings.host().get());
+				} else {
+					// we don't have a host set, i.e. it doesn't support multiple hosts
+					return false;
+				}
+			});
 			
 		});
 	}
 	
-	public boolean isAvailable(String applicationIdentity, int port) {
-		return deployed.values().stream().allMatch(settings -> {
-			return settings.applicationIdentity().equals(applicationIdentity) || port != settings.port();
-		});
-	}
-	
-	public void deployHttp(Identity id, NetSettings settings, HttpFlows flows) {
-		checkArgument(settings.type() == Type.HTTP, "settings type must be %s", Type.HTTP.toString());
-		checkArgument(settings.host().isPresent(), "must include host");
-		log.debug("deploying [{}] to {}:{}", id, settings.host(), settings.port());
-		deploy(id, settings, handler -> {
-			handler.httpAdd(settings.host().get(), flows);
+	public boolean isAvailable(Identity identity, int port) {
+		return deployed.entrySet().stream().allMatch(e -> {
+			Identity deployedIdentity = e.getKey();
+			if (deployedIdentity.equals(identity)) return true;
+			Set<NetSettings> s = e.getValue().keySet();
+			return s.stream().allMatch(settings -> settings.port() != port);
 		});
 	}
 
-	public void deployWebsocket(Identity id, NetSettings settings, SocketFlows flows) {
-		checkArgument(settings.type() == Type.WEBSOCKET, "settings type must be %s", Type.WEBSOCKET.toString());
-		checkArgument(settings.host().isPresent(), "must include host");
-		deploy(id, settings, handler -> {
-			handler.websocketAdd(settings.host().get(), flows);
-		});
-	}
-	
-	public void deploySocket(Identity id, NetSettings settings, SocketFlows flows) {
-		checkArgument(settings.type() == Type.SOCKET, "settings type must be %s", Type.SOCKET.toString());
-		deploy(id, settings, handler -> {
-			handler.socketSet(flows);
-		});
-	}
-
-	private void deploy(Identity identity, NetSettings settings, Consumer<PortHandler> consumer) {
+	public class Undeploy implements Runnable {
 		
+		private final Identity identity;
+		private final NetSettings settings;
+		private final int version;
+		private final Runnable remove;
+		
+		public Undeploy(Identity identity, NetSettings settings, int version, Runnable remove) {
+			this.identity = identity;
+			this.settings = settings;
+			this.version = version;
+			this.remove = remove;
+		}
+
+		@Override
+		public void run() {
+			PortHandler handler = handlers.get(settings.port());
+			if (handler == null) return;
+			Map<NetSettings, Integer> m = deployed.get(identity);
+			if (m == null) return;
+			if (!m.containsKey(settings)) return;
+			int currentVersion = m.get(settings);
+			if (version != currentVersion) {
+				log.info("not undeploying as the version has incremented {} -> {}", version, currentVersion);
+				return;
+			}
+			remove.run();
+			if (handler.isEmpty()) {
+				handlers.remove(settings.port());
+				handler.shutdownAndWait();
+			}
+		}
+		
+	}
+	
+	private PortHandler ensurePortHandler(NetSettings settings) {
 		PortHandler portHandler = handlers.get(settings.port());
-
 		if (portHandler != null) {
-			if (!portHandler.isHttp() && settings.type() != Type.SOCKET) {
-				// non multihost, but we need it to be
-				throw runtime("cannot deploy %s to a non-multihost handler", settings.type());
+			if (!portHandler.supports(settings.type())) {
+				throw runtime("cannot deploy %s to %s", settings.type(), portHandler.getClass());
 			}
-		}
-		
-		NetSettings previous = deployed.put(identity, settings);
-		
-		boolean removePrevious = false;
-		
-		if (previous != null) {
-			boolean hostChanged = !previous.host().equals(settings.host());
-			boolean portChanged = previous.port() != settings.port();
-			removePrevious = hostChanged || portChanged;
-		}
-		
-		if (portHandler != null) {
 			if (!Objects.equals(portHandler.sslSettings(), settings.sslSettings())) {
-				throw runtime("must have same ssl settings");
+				throw runtime("must have same ssl settings (SNI is not supported yet)");
 			}
-		} else {
-			if (settings.type() == Type.SOCKET) {
+ 		} else {
+ 			if (settings.type() == Type.SOCKET) {
 				portHandler = new SocketPortHandler(settings.port(), settings.sslSettings());
 			} else {
 				portHandler = new HttpPortHandler(settings.port(), settings.sslSettings());
 			}
-			handlers.put(settings.port(), portHandler);
-		}
-		
-		consumer.accept(portHandler);
-		
-		if (removePrevious) {
-			PortHandler h = handlers.get(previous.port());
-			if (h != null) {
-				h.remove(settings);
-				if (h.isEmpty()) handlers.remove(previous.port());
-			}
-		}
-	}
-	
-	public void undeploy(Identity identity, int undeployVersion) {
-		
-		NetSettings settings = deployed.get(identity);
-		
-		if (settings == null) {
-			log.debug("   it didn't seem to actually be deployed ({} were though)", deployed.keySet());
-			return;
-		}
-		
-		if (settings.applicationVersion() > undeployVersion) {
-			log.info("ignoring request to undeploy version {} as we're on version {}", undeployVersion, settings.applicationVersion());
-			return;
-		}
-		
-		deployed.remove(identity);
-		
-		PortHandler handler = handlers.get(settings.port());
-		if (handler != null) {
-			handler.remove(settings);
-			if (handler.isEmpty()) handlers.remove(settings.port());
-		}
-			
-	}
-	
-	public void pause(Identity identity, int version) {
-		NetSettings settings = deployed.get(identity);
-	
-		if (settings == null) {
-			return;
-		}
-		
-		if (settings.applicationVersion() > version) {
-			log.info("tried to pause version {} but we're running a new version {}", version, settings.applicationVersion());
-			return;
-		}
-		
-		PortHandler handler = handlers.get(settings.port());
-		if (handler != null) {
-			log.debug("pausing [{}]", identity);
-			handler.pause(settings);
-		}
+ 			handlers.put(settings.port(), portHandler);
+ 		}
+		return portHandler;
 	}
 
-	public void resume(Identity identity, int version) {
-			
-		NetSettings settings = deployed.get(identity);
-	
-		if (settings == null) {
-			return;
-		}
-		
-		if (settings.applicationVersion() > version) {
-			log.info("tried to resume version {} but we're running a new version {}", version, settings.applicationVersion());
-			return;
-		}
-		
-		PortHandler handler = handlers.get(settings.port());
-		if (handler != null) {
-			log.debug("resuming [{}]", identity);
-			handler.resume(settings);
-		}
-		
+	private int saveSettingsAndIncrementVersion(Identity identity, NetSettings settings) {
+		deployed.computeIfAbsent(identity, unused -> new HashMap<>());
+		return deployed.get(identity).compute(settings, (unused, v) -> v != null ? v + 1 : 1);
 	}
 
 	public void shutdown(AsyncShutdown.Result res) {
@@ -564,18 +538,15 @@ public class NetServerManager {
 	public final PortChecker portChecker = new PortChecker() {
 		
 		@Override
-		public boolean check(String applicationIdentity, int port, Optional<String> host) {
+		public boolean check(Identity identity, int port, Optional<String> host) {
 			if (host.isPresent()) {
-				return isAvailable(applicationIdentity, new HostAndPort(host.get(), port));
+				return isAvailable(identity, new HostAndPort(host.get(), port));
 			} else {
-				return isAvailable(applicationIdentity, port);
+				return isAvailable(identity, port);
 			}
 		}
 	};
 	
-
-
-
 	public static class HttpFlows {
 		
 		private final Flow onMessage;
@@ -626,32 +597,47 @@ public class NetServerManager {
 		
 	}
 	
-	public static class SafeChannelGroup {
-		
+	public static class ChannelGroupWithMatcher implements Iterable<Channel> {
+
 		private final ChannelGroup channels;
+		private final ChannelMatcher base;
 		
-		public SafeChannelGroup(ChannelGroup channels) {
+		public ChannelGroupWithMatcher(ChannelGroup channels, ChannelMatcher matcher) {
 			this.channels = channels;
+			this.base = matcher;
 		}
 		
-		public ChannelGroupFuture writeAndFlush(Object message, ChannelMatcher matcher) {
-			return channels.writeAndFlush(message, matcher);
+		public ChannelGroupFuture writeAndFlush(Object message) {
+			return channels.writeAndFlush(message, base);
 		}
 
-		public ChannelGroupFuture write(Object message, ChannelMatcher matcher) {
-			return channels.write(message, matcher);
+		public ChannelGroupFuture write(Object message) {
+			return channels.write(message, base);
 		}
 
-		public ChannelGroupFuture disconnect(ChannelMatcher matcher) {
-			return channels.disconnect(matcher);
+		public ChannelGroupFuture disconnect() {
+			return channels.disconnect(base);
 		}
 
-		public ChannelGroupFuture close(ChannelMatcher matcher) {
-			return channels.close(matcher);
+		public ChannelGroupFuture close() {
+			return channels.close(base);
 		}
 		
-		public Stream<Channel> filter(Predicate<Channel> filter) {
-			return channels.stream().filter(filter);
+		public ChannelGroupWithMatcher and(ChannelMatcher matcher) {
+			return new ChannelGroupWithMatcher(channels, ChannelMatchers.compose(base, matcher));
+		}
+		
+		public <T> ChannelGroupWithMatcher withAttr(AttributeKey<T> key, T value) {
+			return and(new AttributeMatcher<>(key, value));
+		}
+		
+		public long count() {
+			return channels.stream().filter(c -> base.matches(c)).count();
+		}
+
+		@Override
+		public Iterator<Channel> iterator() {
+			return channels.stream().filter(c -> base.matches(c)).iterator();
 		}
 		
 	}

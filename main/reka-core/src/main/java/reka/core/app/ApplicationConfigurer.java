@@ -36,10 +36,12 @@ import org.slf4j.LoggerFactory;
 
 import reka.FlowTest;
 import reka.FlowTest.FlowTestCase;
+import reka.Identity;
 import reka.Reka;
 import reka.RootModule;
 import reka.TestConfigurer;
 import reka.api.IdentityKey;
+import reka.api.IdentityStore;
 import reka.api.Path;
 import reka.api.content.Content;
 import reka.api.data.Data;
@@ -129,7 +131,7 @@ public class ApplicationConfigurer implements ErrorReporter {
     
     public Collection<FlowVisualizer> visualize(IdentityAndVersion idv) {
         FlowBuilderGroup flowsBuilder = new FlowBuilderGroup();
-    	ModuleInitializer initializer = ModuleConfigurer.buildInitializer(idv, rootModule);
+    	ModuleInitializer initializer = ModuleConfigurer.buildInitializer(idv, rootModule, IdentityStore.createConcurrentIdentityStore());
     	
     	DefaultConfigurerProvider provider = new DefaultConfigurerProvider(initializer.collector().providers);
     	Map<Path,Supplier<FlowSegment>> configuredFlows = new HashMap<>();
@@ -142,7 +144,7 @@ public class ApplicationConfigurer implements ErrorReporter {
     }
     
     public void checkValid(IdentityAndVersion idv) {
-    	ModuleInitializer initializer = ModuleConfigurer.buildInitializer(idv, rootModule);
+    	ModuleInitializer initializer = ModuleConfigurer.buildInitializer(idv, rootModule, IdentityStore.createConcurrentIdentityStore());
     	DefaultConfigurerProvider configurerProvider = new DefaultConfigurerProvider(initializer.collector().providers);
     	initializer.collector().triggers.forEach(triggers -> triggers.get().forEach(trigger -> {
     		trigger.supplier().apply(configurerProvider).bind(trigger.base(), triggers.ctx()).get();
@@ -156,7 +158,7 @@ public class ApplicationConfigurer implements ErrorReporter {
     	runChecks(idv.identity(), initializer);
     }
     
-    private void runChecks(String identity, ModuleInitializer initializer) {
+    private void runChecks(Identity identity, ModuleInitializer initializer) {
     	List<String> checkErrors = new ArrayList<>();
     	initializer.collector().checks.forEach(check -> {
     		ApplicationCheck appCheck = new ApplicationCheck(identity);
@@ -170,7 +172,7 @@ public class ApplicationConfigurer implements ErrorReporter {
     	}
     }
     
-    private void runPortCheckers(String identity, ModuleInitializer initializer) {
+    private void runPortCheckers(Identity identity, ModuleInitializer initializer) {
     	Set<String> errors = new HashSet<>();
     	modules.portCheckers().forEach(checker -> {
 			initializer.collector().portRequirements.forEach(req -> {
@@ -204,21 +206,21 @@ public class ApplicationConfigurer implements ErrorReporter {
     	return trigger.base().add(trigger.key().name());
     }
     
-    public CompletableFuture<Application> build(String identity, int applicationVersion) {
+    public CompletableFuture<Application> build(Identity identity, int applicationVersion, IdentityStore store) {
     	return safelyCompletable(future -> {
     		
     		FlowBuilderGroup initflowBuilders = new FlowBuilderGroup();
     		FlowBuilderGroup flowBuilders = new FlowBuilderGroup();
-    		
-    		
-    		
-	    	ModuleInitializer initializer = ModuleConfigurer.buildInitializer(IdentityAndVersion.create(identity, applicationVersion), rootModule);
+    		    		
+	    	ModuleInitializer initializer = ModuleConfigurer.buildInitializer(IdentityAndVersion.create(identity, applicationVersion), rootModule, store);
 	    	
 	    	runChecks(identity, initializer);
 	    	runPortCheckers(identity, initializer);
 	    	
 	    	ApplicationBuilder applicationBuilder = new ApplicationBuilder();
 	    	
+	    	applicationBuilder.store(store);
+	    	applicationBuilder.identity(identity);
 	    	applicationBuilder.name(applicationName);
 	    	applicationBuilder.meta(meta.immutable());
 	    	applicationBuilder.version(applicationVersion);
@@ -267,14 +269,16 @@ public class ApplicationConfigurer implements ErrorReporter {
 
     	private final CompletableFuture<Application> future;
     	
-    	private final String identity;
+    	private final Identity identity;
     	private final FlowBuilderGroup flowBuilders;
     	
     	public ApplicationInitializer(
-				CompletableFuture<Application> future, String identity,
+				CompletableFuture<Application> future, 
+				Identity identity,
 				FlowBuilderGroup flowBuilders,
 				ApplicationBuilder applicationBuilder,
-				ModuleInitializer initializer, Map<Path, FlowTest> tests) {
+				ModuleInitializer initializer, 
+				Map<Path, FlowTest> tests) {
 			this.future = future;
 			this.identity = identity;
 			this.flowBuilders = flowBuilders;
@@ -344,22 +348,18 @@ public class ApplicationConfigurer implements ErrorReporter {
 							MultiFlowRegistration mr = new MultiFlowRegistration(applicationBuilder.version(), identity, triggers.ctx(), m);
 							triggers.consumer().accept(mr);
 							
+							log.info("did triggers, c is #{}", System.identityHashCode(initializer.collector().onUndeploy));
+							
 							applicationBuilder.network.addAll(mr.network());
-							applicationBuilder.undeployConsumers.addAll(mr.undeployConsumers());
 							applicationBuilder.pauseConsumers.addAll(mr.pauseConsumers());
 							applicationBuilder.resumeConsumers.addAll(mr.resumeConsumers());
 							
 				    	});
 						
-						initializer.collector().shutdownHandlers.forEach(runnable -> {
-							applicationBuilder.undeployConsumers.add(version -> {
-								try {
-									runnable.run();
-								} catch (Throwable t) {
-									log.error(format("shutdown handler error for %s", identity), t);
-								}
-							});
-						});
+						
+						applicationBuilder.network.addAll(initializer.collector().network);
+						applicationBuilder.components.addAll(initializer.collector().components);
+						applicationBuilder.onUndeploy.addAll(initializer.collector().onUndeploy);
 						
 						applicationBuilder.statusProviders.addAll(initializer.collector().statuses.stream().map(Supplier::get).collect(toList()));
 						
@@ -379,7 +379,7 @@ public class ApplicationConfigurer implements ErrorReporter {
     }
 
 
-	private static CompletableFuture<Void> runTests(Flows flows, Map<Path, FlowTest> tests, String identity) {
+	private static CompletableFuture<Void> runTests(Flows flows, Map<Path, FlowTest> tests, Identity identity) {
 		
 		CompletableFuture<Void> future = new CompletableFuture<>();
 

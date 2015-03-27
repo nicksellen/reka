@@ -11,28 +11,22 @@ import reka.core.data.memory.MutableMemoryData;
 abstract class BaseRegistration {
 
 	final int applicationVersion;
-	final String identity;
 	final IdentityStore store;
 
 	final List<NetworkInfo> network;
 	
-	final List<IntConsumer> undeployConsumers;
 	final List<IntConsumer> pauseConsumers;
 	final List<IntConsumer> resumeConsumers;
 	
 	public BaseRegistration(
-			int applicationVersion, 
-			String identity,
+			int applicationVersion,
 			IdentityStore store,
 			List<NetworkInfo> network,
-			List<IntConsumer> undeployConsumers,
 			List<IntConsumer> pauseConsumers,
 			List<IntConsumer> resumeConsumers) {
 		this.applicationVersion = applicationVersion;
-		this.identity = identity;
 		this.store = store;
 		this.network = network;
-		this.undeployConsumers = undeployConsumers;
 		this.pauseConsumers = pauseConsumers;
 		this.resumeConsumers = resumeConsumers;
 	}
@@ -41,16 +35,8 @@ abstract class BaseRegistration {
 		return applicationVersion;
 	}
 	
-	public String applicationIdentity() {
-		return identity;
-	}
-	
 	public IdentityStore store() {
 		return store;
-	}
-	
-	public void onUndeploy(IntConsumer c) {
-		undeployConsumers.add(c);
 	}
 	
 	public void onPause(IntConsumer c) {
@@ -59,10 +45,6 @@ abstract class BaseRegistration {
 	
 	public void onResume(IntConsumer c) {
 		resumeConsumers.add	(c);
-	}
-	
-	public List<IntConsumer> undeployConsumers() {
-		return undeployConsumers;
 	}
 	
 	public List<IntConsumer> pauseConsumers() {

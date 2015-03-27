@@ -17,7 +17,7 @@ public class RekaDetailsConfigurer implements OperationConfigurer {
 	private final ApplicationManager manager;
 	
 	private Path out = dots("app");
-	private Function<Data,String> idFn;
+	private Function<Data,Path> appPathFn;
 	
 	@Conf.Val
 	@Conf.At("out")
@@ -28,7 +28,7 @@ public class RekaDetailsConfigurer implements OperationConfigurer {
 	
 	@Conf.At("id")
 	public void app(String val) {
-		idFn = StringWithVars.compile(val);
+		appPathFn = StringWithVars.compile(val).andThen(Path::slashes);
 	}
 	
 	public RekaDetailsConfigurer(ApplicationManager manager) {
@@ -37,7 +37,7 @@ public class RekaDetailsConfigurer implements OperationConfigurer {
 	
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("get", ctx -> new RekaDetailsOperation(manager, idFn, out));
+		ops.add("get", ctx -> new RekaDetailsOperation(manager, appPathFn, out));
 	}
 
 }

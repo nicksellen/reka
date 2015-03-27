@@ -14,7 +14,7 @@ import reka.api.run.RouteCollector;
 import reka.api.run.RouteKey;
 import reka.api.run.RouterOperation;
 
-public class BasicAuthRouter implements RouterOperation {
+public class BasicAuthOperation implements RouterOperation {
 	
 	public static final RouteKey OK = RouteKey.named("ok");
 	public static final RouteKey FAIL = RouteKey.named("fail");
@@ -24,7 +24,7 @@ public class BasicAuthRouter implements RouterOperation {
 
 	private final CredentialsChecker checker;
 	
-	public BasicAuthRouter(String realm, CredentialsChecker checker) {
+	public BasicAuthOperation(String realm, CredentialsChecker checker) {
 		this.unauthorized = format("Basic realm=\"%s\"", realm);
 		this.checker = checker;
 	}

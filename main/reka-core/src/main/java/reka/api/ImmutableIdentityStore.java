@@ -9,7 +9,7 @@ import com.google.common.collect.ImmutableMap;
 
 public class ImmutableIdentityStore implements IdentityStoreReader {
 	
-	private final Map<Integer, Object> map;
+	protected final Map<Integer, Object> map;
 	
 	public static IdentityStoreReader from(Map<Integer,Object> source) {
 		return new ImmutableIdentityStore(ImmutableMap.copyOf(source));
@@ -40,6 +40,11 @@ public class ImmutableIdentityStore implements IdentityStoreReader {
 	@Override
 	public <T> Optional<T> lookup(IdentityKey<T> key) {
 		return Optional.ofNullable((T) map.get(identityHashCode(key)));
+	}
+
+	@Override
+	public <T> boolean has(IdentityKey<T> key) {
+		return map.containsKey(key);
 	}
 	
 }

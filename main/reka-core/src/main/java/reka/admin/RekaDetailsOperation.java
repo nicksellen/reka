@@ -2,6 +2,7 @@ package reka.admin;
 
 import java.util.function.Function;
 
+import reka.Identity;
 import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
@@ -13,17 +14,17 @@ public class RekaDetailsOperation implements Operation {
 	
 	private final ApplicationManager manager;
 	private final Path out;
-	private final Function<Data,String> idFn;
+	private final Function<Data,Path> appPathFn;
 	
-	public RekaDetailsOperation(ApplicationManager manager, Function<Data,String> idFn, Path out) {
+	public RekaDetailsOperation(ApplicationManager manager, Function<Data,Path> appPathFn, Path out) {
 		this.manager = manager;
-		this.idFn = idFn;
+		this.appPathFn = appPathFn;
 		this.out = out;
 	}
 
 	@Override
 	public void call(MutableData data, OperationContext ctx) {
-		String identity = idFn.apply(data);
+		Identity identity = manager.identityFor(appPathFn.apply(data));
 		manager.get(identity).ifPresent(app -> 
 			AdminUtils.putAppDetails(data.createMapAt(out), app, manager.statusFor(identity)));
 	}

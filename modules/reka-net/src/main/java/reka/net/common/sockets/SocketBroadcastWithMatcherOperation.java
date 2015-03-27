@@ -24,7 +24,7 @@ public class SocketBroadcastWithMatcherOperation implements Operation {
 
 	@Override
 	public void call(MutableData data, OperationContext ctx) {
-		server.channels().writeAndFlush(messageFn.apply(data), matcherFn.apply(data));
+		server.channels(matcherFn.apply(data)).writeAndFlush(messageFn.apply(data));
 	}
 	
 }

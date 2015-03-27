@@ -25,8 +25,8 @@ public class ModuleSetupContext implements IdentityStore {
 	}
 
 	@Override
-	public <T> void put(IdentityKey<T> key, T value) {
-		store.put(key, value);
+	public <T> T put(IdentityKey<T> key, T value) {
+		return store.put(key, value);
 	}
 
 	@Override
@@ -37,6 +37,11 @@ public class ModuleSetupContext implements IdentityStore {
 	@Override
 	public IdentityStoreReader immutable() {
 		return store.immutable();
+	}
+
+	@Override
+	public <T> boolean has(IdentityKey<T> key) {
+		return store.has(key);
 	}
 
 }

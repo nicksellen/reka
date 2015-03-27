@@ -2,6 +2,7 @@ package reka.core.app;
 
 import static java.lang.String.format;
 import static java.util.Comparator.naturalOrder;
+import static java.util.stream.Collectors.toList;
 import static reka.util.Util.unchecked;
 
 import java.util.ArrayList;
@@ -13,6 +14,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.IntConsumer;
 
+import reka.Identity;
+import reka.api.IdentityStoreReader;
 import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
@@ -25,41 +28,50 @@ import reka.util.AsyncShutdown;
 
 public class Application implements AsyncShutdown {
 
+	private final Identity identity;
 	private final Path name;
 	private final Data meta;
 	private final String fullName;
 	private final int version;
 	private final Flows flows;
 	private final FlowVisualizer initializerVisualizer;
+	private final IdentityStoreReader store;
 
 	private final List<NetworkInfo> network = new ArrayList<>();
 	
-	private final List<IntConsumer> undeployConsumers = new ArrayList<>();
+	private final List<Runnable> onUndeploy = new ArrayList<>();
 	private final List<IntConsumer> pauseConsumers = new ArrayList<>();
 	private final List<IntConsumer> resumeConsumers = new ArrayList<>();
+	private final List<LifecycleComponent> components = new ArrayList<>();
 	private final List<StatusProvider> statusProviders = new ArrayList<>();
 	
 	public Application(
+			Identity identity,
 			Path name, 
 			Data meta,
 			int version, 
 			Flows flows,  
+			IdentityStoreReader store,
 			List<NetworkInfo> network, 
 			FlowVisualizer initializerVisualizer,
-			List<IntConsumer> undeployConsumers,
+			List<Runnable> onUndeploy,
 			List<IntConsumer> pauseConsumers,
 			List<IntConsumer> resumeConsumers,
+			List<LifecycleComponent> components,
 			List<StatusProvider> statusProviders) {
+		this.identity = identity;
 		this.name = name;
 		this.fullName = name.slashes();
 		this.meta = meta;
 		this.version = version;
 		this.flows = flows;
+		this.store = store;
 		this.initializerVisualizer = initializerVisualizer;
 		this.network.addAll(network);
-		this.undeployConsumers.addAll(undeployConsumers);
+		this.onUndeploy.addAll(onUndeploy);
 		this.pauseConsumers.addAll(pauseConsumers);
 		this.resumeConsumers.addAll(resumeConsumers);
+		this.components.addAll(components);
 		this.statusProviders.addAll(statusProviders);
 		this.statusProviders.add(new ApplicationStatusProvider());
 		this.network.sort(naturalOrder());
@@ -110,6 +122,10 @@ public class Application implements AsyncShutdown {
 		}
 
 	}
+	
+	public Identity identity() {
+		return identity;
+	}
 		
 	public Path name() {
 		return name;
@@ -129,6 +145,10 @@ public class Application implements AsyncShutdown {
 	
 	public Flows flows() {
 		return flows;
+	}
+	
+	public IdentityStoreReader store() {
+		return store;
 	}
 	
 	public List<NetworkInfo> network() {
@@ -152,7 +172,7 @@ public class Application implements AsyncShutdown {
 		return names;
 	}
 	
-	public void pause() {
+	public Runnable pause() {
 		pauseConsumers.forEach(c -> { 
 			try {
 				c.accept(version);
@@ -160,6 +180,10 @@ public class Application implements AsyncShutdown {
 				t.printStackTrace();
 			}	
 		});
+		List<Runnable> unpauses = components.stream().map(LifecycleComponent::pause).collect(toList());
+		return () -> {
+			unpauses.forEach(Runnable::run);
+		};
 	}
 	
 	public void resume() {
@@ -176,6 +200,7 @@ public class Application implements AsyncShutdown {
 	public void undeploy() {
 		FutureResult f = AsyncShutdown.resultFuture();
 		shutdown(f);
+		components.forEach(LifecycleComponent::undeploy);
 		try {
 			f.future().get(10, TimeUnit.SECONDS);
 		} catch (InterruptedException | ExecutionException | TimeoutException e) {
@@ -185,9 +210,9 @@ public class Application implements AsyncShutdown {
 
 	@Override
 	public void shutdown(Result res) {
-		undeployConsumers.forEach(c -> { 
+		onUndeploy.forEach(c -> { 
 			try {
-				c.accept(version);
+				c.run();
 			} catch (Throwable t) {
 				t.printStackTrace();
 			}	

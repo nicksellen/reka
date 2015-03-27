@@ -17,6 +17,7 @@ import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import reka.Identity;
 import reka.api.Path;
 import reka.api.Path.Response;
 import reka.api.content.Content;
@@ -42,7 +43,7 @@ public class VisualizeAppOperation implements Operation {
 	
 	private final ApplicationManager manager;
 	private final Function<Data,String> formatFn;
-	private final Function<Data,String> appIdentityFn;
+	private final Function<Data,Path> appIdentityFn;
 	private final Function<Data,String> flowNameFn;
 	private final Path out;
 	private final String stylesheet;
@@ -50,7 +51,7 @@ public class VisualizeAppOperation implements Operation {
 	private final Cache<HashCode,Entry<Content,Content>> cache;
 	
 	VisualizeAppOperation(ApplicationManager manager, 
-						  Function<Data,String> appIdentityFn,
+						  Function<Data,Path> appIdentityFn,
 						  Function<Data,String> flowNameFn, 
 						  Function<Data,String> format,
 						  Path out,
@@ -67,13 +68,15 @@ public class VisualizeAppOperation implements Operation {
 	
 	@Override
 	public void call(MutableData data, OperationContext ctx) {
+
+		Path appPath = appIdentityFn.apply(data);
+		Identity identity = manager.identityFor(appPath);
 		
-		String identity = appIdentityFn.apply(data);
 		Path flowName = slashes(flowNameFn.apply(data));
 		String format = formatFn.apply(data);
 		
 		Hasher hasher = Hashing.sha1().newHasher()
-			.putString(identity, StandardCharsets.UTF_8)
+			.putString(identity.name(), StandardCharsets.UTF_8)
 			.putInt(manager.version(identity));
 
 		flowName.hash(hasher);
@@ -82,13 +85,13 @@ public class VisualizeAppOperation implements Operation {
 		
 		HashCode hash = hasher.hash();
 		
-		log.debug("making visualization of {}:{} in {}", identity, flowName.slashes(), format);
+		log.debug("making visualization of {}:{} in {}", appPath.slashes(), flowName.slashes(), format);
 
 		try {
 			Entry<Content,Content> entry = cache.get(hash, () -> {
 				
 				FlowVisualizer vis = manager.visualize(identity, flowName).orElseThrow(() -> 
-					runtime("no visualization available for %s:%s :(", identity, flowName.slashes()));
+					runtime("no visualization available for %s:%s :(", appPath.slashes(), flowName.slashes()));
 				
 				if ("json".equals(format)) {
 					return createEntry(utf8("application/json"), 

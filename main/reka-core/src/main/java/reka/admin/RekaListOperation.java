@@ -1,5 +1,6 @@
 package reka.admin;
 
+import reka.Identity;
 import reka.api.Path;
 import reka.api.data.MutableData;
 import reka.api.run.Operation;
@@ -24,10 +25,10 @@ public class RekaListOperation implements Operation {
 	public void call(MutableData data, OperationContext ctx) {
 		data.putList(out, list -> {
 			manager.forEach(e -> {
-				String identity = e.getKey();
+				Identity identity = e.getKey();
 				Application app = e.getValue();	
 				MutableData item = MutableMemoryData.create();
-				item.putString("id", identity);
+				item.putString("id", identity.name());
 				AdminUtils.putAppDetails(item.createMapAt("app"), app, manager.statusFor(identity));
 				list.add(item);
 			});

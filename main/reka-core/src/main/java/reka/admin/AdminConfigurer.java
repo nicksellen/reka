@@ -77,9 +77,7 @@ public class AdminConfigurer extends ModuleConfigurer {
 			module.trigger("on deploy", body, registration -> {
 				Flow flow = registration.flow();
 				manager.addListener(flow, EventType.deploy);
-				registration.onUndeploy(version -> { 
-					manager.removeListener(flow);
-				});
+				module.onUndeploy("remove listener", () -> manager.removeListener(flow));
 			});
 		}		
 
@@ -87,9 +85,7 @@ public class AdminConfigurer extends ModuleConfigurer {
 			module.trigger("on undeploy", body, registration -> {
 				Flow flow = registration.flow();
 				manager.addListener(flow, EventType.undeploy);
-				registration.onUndeploy(version -> { 
-					manager.removeListener(flow);
-				});
+				module.onUndeploy("remove listener", () -> manager.removeListener(flow));
 			});
 		}	
 
@@ -97,9 +93,7 @@ public class AdminConfigurer extends ModuleConfigurer {
 			module.trigger("on status", body, registration -> {
 				Flow flow = registration.flow();
 				manager.addListener(flow, EventType.status);
-				registration.onUndeploy(version -> { 
-					manager.removeListener(flow);
-				});
+				module.onUndeploy("remove listener", () -> manager.removeListener(flow));
 			});
 		}
 		

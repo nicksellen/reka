@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import reka.admin.AdminModule;
+import reka.api.Path;
 import reka.config.ConfigBody;
 import reka.config.FileSource;
 import reka.core.app.manager.ApplicationManager;
@@ -44,9 +45,9 @@ public class Reka {
 	
 	private final BaseDirs dirs;
 	private final List<ModuleMeta> modules = new ArrayList<>();
-	private final Map<String,ConfigBody> configs = new HashMap<>();
+	private final Map<Path,ConfigBody> configs = new HashMap<>();
 	
-	public Reka(BaseDirs dirs, List<ModuleMeta> modules, Map<String,ConfigBody> configs) {
+	public Reka(BaseDirs dirs, List<ModuleMeta> modules, Map<Path,ConfigBody> configs) {
 		this.dirs = dirs;
 		this.modules.addAll(modules);
 		this.configs.putAll(configs);
@@ -94,14 +95,14 @@ public class Reka {
 		
 		log.info("starting reka in {} with apps dirs {}", System.getenv(REKA_ENV), dirs.app().toString());
 
-		for (Entry<String, ConfigBody> e : configs.entrySet()) {
+		for (Entry<Path, ConfigBody> e : configs.entrySet()) {
 			manager.deployConfig(e.getKey(), -1, e.getValue(), null, DeploySubscriber.LOG);
 		}
 		
-		AppDirs.listApps(dirs).forEach((identityAndVersion, path) -> {
+		AppDirs.listApps(dirs).forEach((pathAndVersion, path) -> {
 			File mainreka = path.resolve("main.reka").toFile();
 			if (!mainreka.exists()) return;
-			manager.deploySource(identityAndVersion.identity(), identityAndVersion.version(), FileSource.from(mainreka), DeploySubscriber.LOG);
+			manager.deploySource(pathAndVersion.path(), pathAndVersion.version(), FileSource.from(mainreka), DeploySubscriber.LOG);
 		});
 		
 	}

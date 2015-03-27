@@ -34,7 +34,7 @@ public class SocketTagRemoveConfigurer implements OperationConfigurer {
 	
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("tag/remove", ctx -> new SocketTagRemoveOperation(server, ctx.get(Sockets.SETTINGS), idFn, tagFns));
+		ops.add("tag/remove", ctx -> new SocketTagRemoveOperation(server, ctx.get(Sockets.IDENTITY), idFn, tagFns));
 	}
 	
 }

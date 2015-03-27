@@ -3,7 +3,6 @@ package reka.admin;
 import static reka.config.configurer.Configurer.configure;
 import static reka.util.Util.runtime;
 
-import java.util.UUID;
 import java.util.function.Function;
 
 import reka.api.data.Data;
@@ -23,7 +22,6 @@ public class RekaValidateConfigurer implements OperationConfigurer {
 	private final ApplicationManager manager;
 	
 	private Function<Data,String> filenameFn;
-	private Function<Data,String> identityFn = (unused) -> UUID.randomUUID().toString();
 	
 	private OperationConfigurer whenOk;
 	private OperationConfigurer whenError;
@@ -36,11 +34,6 @@ public class RekaValidateConfigurer implements OperationConfigurer {
 	@Conf.At("filename")
 	public void filename(String val) {
 		filenameFn = StringWithVars.compile(val);
-	}
-
-	@Conf.At("identity")
-	public void identity(String val) {
-		identityFn = StringWithVars.compile(val);
 	}
 
 	@Conf.Each("when")
@@ -64,7 +57,7 @@ public class RekaValidateConfigurer implements OperationConfigurer {
 	
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.router("validate", ctx -> new RekaValidateFromFileOperation(manager, filenameFn, identityFn), routes -> {
+		ops.router("validate", ctx -> new RekaValidateFromFileOperation(manager, filenameFn), routes -> {
 			if (whenOk != null) routes.add(RekaValidateFromFileOperation.OK, whenOk);
 			if (whenError != null) routes.add(RekaValidateFromFileOperation.ERROR, whenError);
 		});

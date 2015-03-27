@@ -2,6 +2,7 @@ package reka;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
+import static reka.api.Path.slashes;
 import static reka.util.Util.unchecked;
 
 import java.io.File;
@@ -33,7 +34,7 @@ public class RekaConfigurer {
 	
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
-	private final Map<String,ConfigBody> apps = new HashMap<>();
+	private final Map<reka.api.Path,ConfigBody> apps = new HashMap<>();
 	
 	private String appdir = "rekadata/apps";
 	private String datadir = "rekadata/data";
@@ -91,17 +92,17 @@ public class RekaConfigurer {
 	public void app(Config config) {
 		if (!config.hasBody()) return;
 		ConfigBody body = config.body();
-		String identity = null;
+		reka.api.Path appPath = null;
 		if (config.hasValue()) {
-			identity = config.valueAsString();
+			appPath = slashes(config.valueAsString());
 		} else {
 			Optional<Config> name = config.body().at("name");
 			if (name.isPresent() && name.get().hasValue()) {
-				identity = name.get().valueAsString();
+				appPath = slashes(name.get().valueAsString());
 			}
 		}
-		if (identity == null) identity = UUID.randomUUID().toString();
-		apps.put(identity, body);
+		if (appPath == null) appPath = slashes(UUID.randomUUID().toString());
+		apps.put(appPath, body);
 	}
 	
 	private void unpackModule(String jarpath) {

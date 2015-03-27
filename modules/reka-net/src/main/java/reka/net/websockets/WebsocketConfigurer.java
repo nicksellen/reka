@@ -1,6 +1,5 @@
 package reka.net.websockets;
 
-import static java.lang.String.format;
 import static reka.api.Path.path;
 import static reka.api.Path.slashes;
 import static reka.config.configurer.Configurer.configure;
@@ -13,6 +12,7 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import reka.Identity;
 import reka.api.IdentityKey;
 import reka.api.flow.Flow;
 import reka.config.Config;
@@ -20,9 +20,10 @@ import reka.config.configurer.annotations.Conf;
 import reka.core.builder.TriggerHelper;
 import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
+import reka.core.setup.ModuleSetupContext;
 import reka.net.NetServerManager;
-import reka.net.NetSettings;
 import reka.net.NetServerManager.SocketFlows;
+import reka.net.NetSettings;
 import reka.net.NetSettings.SslSettings;
 import reka.net.common.sockets.SocketBroadcastConfigurer;
 import reka.net.common.sockets.SocketSendConfigurer;
@@ -100,36 +101,25 @@ public class WebsocketConfigurer extends ModuleConfigurer {
 	}
 	
 	@Override
-	public void setup(ModuleSetup module) {
+	public void setup(ModuleSetup app) {
 		
 		listens.replaceAll(listen -> listen.port() == -1 ? new HostAndPort(listen.host(), ssl != null ? 443 : 80) : listen);
 		
-		module.operation(path("send"), provider -> new SocketSendConfigurer(server));
-		module.operation(path("broadcast"), provider -> new SocketBroadcastConfigurer(server));
-		module.operation(slashes("tag/add"), provider -> new SocketTagAddConfigurer(server));
-		module.operation(slashes("tag/rm"), provider -> new SocketTagRemoveConfigurer(server));
-		module.operation(slashes("tag/send"), provider -> new SocketTagSendConfigurer(server));
-		
-		listens.forEach(listen -> {
-			module.requirePort(listen.port(), Optional.of(listen.host()));	
-		});
-		
-		module.status(ctx -> new SocketStatusProvider(server, ctx.get(Sockets.SETTINGS)));
+		app.operation(path("send"), provider -> new SocketSendConfigurer(server));
+		app.operation(path("broadcast"), provider -> new SocketBroadcastConfigurer(server));
+		app.operation(slashes("tag/add"), provider -> new SocketTagAddConfigurer(server));
+		app.operation(slashes("tag/rm"), provider -> new SocketTagRemoveConfigurer(server));
+		app.operation(slashes("tag/send"), provider -> new SocketTagSendConfigurer(server));
 		
 		if (listens.isEmpty()) return;
 		
-		module.setupInitializer(init -> {
-			init.run("set http settings", ctx -> {
-				// FIXME: hackety hack, don't look back, these aren't the real HTTP settings!
-				int port = listens.get(0).port();
-				if (port == -1) {
-					port = ssl != null ? 443 : 80;
-				}
-				ctx.put(Sockets.SETTINGS, NetSettings.ws(port, listens.get(0).host(), null, -1));
-			});
+		listens.forEach(listen -> {
+			app.requirePort(listen.port(), Optional.of(listen.host()));	
 		});
 		
-		module.triggers(triggers.build(), reg -> {
+		app.status(unused -> new SocketStatusProvider(server, app.identity()));
+		
+		app.triggers(triggers.build(), reg -> {
 			for (HostAndPort listen : listens) {
 			
 				String host = listen.host();
@@ -138,26 +128,20 @@ public class WebsocketConfigurer extends ModuleConfigurer {
 				if (port == -1) {
 					port = ssl != null ? 443 : 80;
 				}
-				
-				String identity = format("%s/%s/%s/ws", reg.applicationIdentity(), host, port);
 			
-				NetSettings settings;
 				if (ssl != null) {
-					settings = NetSettings.wss(port, host, reg.applicationIdentity(), reg.applicationVersion(), ssl);
+					app.register(server.deployWebsocketSsl(app.identity(), new HostAndPort(host, port), ssl, 
+							new SocketFlows(reg.flowFor(CONNECT),reg.flowFor(MESSAGE),reg.flowFor(DISCONNECT))));
 				} else {
-					settings = NetSettings.ws(port, host, reg.applicationIdentity(), reg.applicationVersion());
+					app.register(server.deployWebsocket(app.identity(), new HostAndPort(host, port), 
+							new SocketFlows(reg.flowFor(CONNECT),reg.flowFor(MESSAGE),reg.flowFor(DISCONNECT))));
 				}
 				
-				server.deployWebsocket(identity, settings, new SocketFlows(reg.flowFor(CONNECT),
-						  												   reg.flowFor(MESSAGE),
-						  												   reg.flowFor(DISCONNECT)));
-				
-				reg.network(listen.port(), settings.protocolString(), details -> {
+				app.network(listen.port(), "ws" + ssl != null ? "s" : "", details -> {
 					details.putString("host", listen.host());
 				});
-				
-				reg.onUndeploy(version -> server.undeploy(identity, version));
 			}
+			
 		});
 		
 		

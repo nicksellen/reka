@@ -73,16 +73,16 @@ public class SocketConfigurer extends ModuleConfigurer {
 	}
 	
 	@Override
-	public void setup(ModuleSetup module) {
+	public void setup(ModuleSetup app) {
 		
-		module.operation(path("send"), provider -> new SocketSendConfigurer(server));
-		module.operation(path("broadcast"), provider -> new SocketBroadcastConfigurer(server));
-		module.operation(slashes("tag"), provider -> new SocketTagAddConfigurer(server));
-		module.operation(slashes("tag/add"), provider -> new SocketTagAddConfigurer(server));
-		module.operation(slashes("tag/rm"), provider -> new SocketTagRemoveConfigurer(server));
-		module.operation(slashes("tag/send"), provider -> new SocketTagSendConfigurer(server));
+		app.operation(path("send"), provider -> new SocketSendConfigurer(server));
+		app.operation(path("broadcast"), provider -> new SocketBroadcastConfigurer(server));
+		app.operation(slashes("tag"), provider -> new SocketTagAddConfigurer(server));
+		app.operation(slashes("tag/add"), provider -> new SocketTagAddConfigurer(server));
+		app.operation(slashes("tag/rm"), provider -> new SocketTagRemoveConfigurer(server));
+		app.operation(slashes("tag/send"), provider -> new SocketTagSendConfigurer(server));
 		
-		module.status(ctx -> new SocketStatusProvider(server, ctx.get(Sockets.IDENTITY)));
+		app.status(ctx -> new SocketStatusProvider(server, ctx.get(Sockets.IDENTITY)));
 		
 		Map<IdentityKey<Flow>,Function<ConfigurerProvider, OperationConfigurer>> triggers = new HashMap<>();
 		
@@ -102,7 +102,7 @@ public class SocketConfigurer extends ModuleConfigurer {
 		
 		Identity identity = Identity.create("websocket");
 		
-		module.setupInitializer(init -> {
+		app.setupInitializer(init -> {
 			init.run("set http settings", ctx -> {
 				// FIXME: hackety hack, don't look back, these aren't the real HTTP settings!
 				//ctx.put(Sockets.SETTINGS, NetSettings.socket(ports.get(0), null, -1));
@@ -111,22 +111,17 @@ public class SocketConfigurer extends ModuleConfigurer {
 		});
 		
 		for (int port : ports) {
-			module.requirePort(port);
+			app.requirePort(port);
 		}
 		
-		module.triggers(triggers, reg -> {
+		app.triggers(triggers, reg -> {
 			
 			for (int port : ports) {
 				
-				NetSettings settings = NetSettings.socket(port, reg.applicationIdentity(), reg.applicationVersion());
-				
-				server.deploySocket(identity, settings, new SocketFlows(reg.flowFor(connect),
-																  reg.flowFor(message),
-																  reg.flowFor(disconnect)));
-				
-				reg.onUndeploy(version -> server.undeploy(identity, version));
-				
-				reg.network(port, settings.isSsl() ? "socket-ssl" : "socket");
+				app.register(server.deploySocket(identity, port, new SocketFlows(reg.flowFor(connect),
+																						reg.flowFor(message),
+																						reg.flowFor(disconnect))));
+				reg.network(port, "socket");
 			}
 		});
 		

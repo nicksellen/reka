@@ -7,6 +7,7 @@ import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.run.Operation;
 import reka.api.run.OperationContext;
+import reka.net.ChannelAttrs;
 import reka.net.NetServerManager;
 
 public class SocketSendOperation implements Operation {
@@ -25,9 +26,7 @@ public class SocketSendOperation implements Operation {
 	
 	@Override
 	public void call(MutableData data, OperationContext ctx) {
-		server.channel(identity, toFn.apply(data), channel -> {
-			channel.writeAndFlush(messageFn.apply(data));
-		});
+		server.channels(identity).withAttr(ChannelAttrs.id, toFn.apply(data)).writeAndFlush(messageFn.apply(data));
 	}
 	
 }

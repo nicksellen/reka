@@ -18,5 +18,10 @@ public class EmptyIdentityStoreReader implements IdentityStoreReader {
 	public <T> Optional<T> lookup(IdentityKey<T> key) {
 		return Optional.empty();
 	}
+
+	@Override
+	public <T> boolean has(IdentityKey<T> key) {
+		return false;
+	}
 	
 }

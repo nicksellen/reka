@@ -12,6 +12,7 @@ import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import reka.Identity;
 import reka.api.Path;
 import reka.api.content.Content;
 import reka.api.content.types.BinaryContent;
@@ -32,26 +33,26 @@ public class RekaDeployOperation implements AsyncOperation {
 	
 	private final ApplicationManager manager;
 	private final BaseDirs basedirs;
-	private final Function<Data, Path> dataPathFn;
-	private final Function<Data,String> identityFn;
+	private final Function<Data,Path> dataPathFn;
+	private final Function<Data,Path> appPathFn;
 	
-	public RekaDeployOperation(ApplicationManager manager, BaseDirs basedirs, Function<Data, Path> dataPathFn, Function<Data,String> identityFn) {
+	public RekaDeployOperation(ApplicationManager manager, BaseDirs basedirs, Function<Data, Path> dataPathFn, Function<Data,Path> appPathFn) {
 		this.manager = manager;
 		this.basedirs = basedirs;
 		this.dataPathFn = dataPathFn;
-		this.identityFn = identityFn;
+		this.appPathFn = appPathFn;
 	}
 	
 	@Override
 	public void call(MutableData data, OperationContext ctx, OperationResult res) {
 
 		Path dataPath = dataPathFn.apply(data);
-		String identity = identityFn.apply(data);
+		Path appPath = appPathFn.apply(data);
 
-		data.putString("identity", identity);
+		data.putString("identity", appPath.slashes());
 
-		int version = manager.nextVersion(identity);
-		AppDirs dirs = basedirs.resolve(identity, version);
+		int version = manager.nextVersion(appPath);
+		AppDirs dirs = basedirs.resolve(appPath, version);
 
 		Data val = data.at(dataPath);
 
@@ -61,7 +62,7 @@ public class RekaDeployOperation implements AsyncOperation {
 		BinaryContent bc = (BinaryContent) val.content();
 		if (!"application/zip".equals(bc.contentType())) throw runtime("must be application/zip content at %s", dataPath.dots());
 
-		log.info("unpacking {} to {}", identity, dirs.app());
+		log.info("unpacking {} to {}", appPath.slashes(), dirs.app());
 
 		dirs.mkdirs();
 		deleteRecursively(dirs.app());
@@ -76,25 +77,25 @@ public class RekaDeployOperation implements AsyncOperation {
 		checkArgument(mainreka.exists(), "main.reka does not exist");
 		checkArgument(!mainreka.isDirectory(), "main.reka is a directory");
 		
-		log.info("deploying {}", identity);
+		log.info("deploying {}", appPath.slashes());
 		
-		manager.deploySource(identity, -1, FileSource.from(mainreka), new DeploySubscriber() {
+		manager.deploySource(appPath, -1, FileSource.from(mainreka), new DeploySubscriber() {
 
 			@Override
-			public void ok(String identity, int version, Application application) {
+			public void ok(Identity identity, int version, Application application) {
 				log.info("deploying {} ok", identity);
 				data.putString("message", "created application!");
 				res.done();
 				
 				// delete a few old versions...
 				for (int v = version - 3; v >= 0; v--) {
-					deleteRecursively(basedirs.resolve(identity, v).app());			
+					deleteRecursively(basedirs.resolve(identity.path(), v).app());			
 				}
 				
 			}
 
 			@Override
-			public void error(String identity, Throwable t) {
+			public void error(Identity identity, Throwable t) {
 				t = unwrap(t);
 				log.error("failed to deploy [{}] - {}", identity, t.getMessage());
 				res.error(t);

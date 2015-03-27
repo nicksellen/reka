@@ -52,9 +52,7 @@ public class TimerConfigurer extends ModuleConfigurer {
 		every.forEach(config -> {
 			module.trigger(format("every %s", config.valueAsString()), config.body(), register -> {
 				ScheduledFuture<?> f = executor.scheduleAtFixedRate(new TimerRun(register.flow()), 0, parseMs(config.valueAsString()), TimeUnit.MILLISECONDS);
-				register.onUndeploy(version -> {
-					f.cancel(false);
-				});
+				module.onUndeploy("cancel timer", () -> f.cancel(false));
 			});
 		});
 	}

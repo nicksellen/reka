@@ -25,7 +25,7 @@ public class SocketStatusProvider implements StatusDataProvider {
 
 	@Override
 	public void statusData(MutableData data) {
-		long conns = server.channels().filter(new AttributeMatcher<>(ChannelAttrs.identity, identity)).count();
+		long conns = server.channels(identity).count();
 		data.putLong("connections", conns);
 		data.putString("summary", format("conns:%d", conns));
 	}

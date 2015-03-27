@@ -34,7 +34,7 @@ public class SocketTagAddConfigurer implements OperationConfigurer {
 	
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("tag/add", ctx -> new SocketTagAddOperation(server, ctx.get(Sockets.SETTINGS), idFn, tagFns));
+		ops.add("tag/add", ctx -> new SocketTagAddOperation(server, ctx.get(Sockets.IDENTITY), idFn, tagFns));
 	}
 	
 }

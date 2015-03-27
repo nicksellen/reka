@@ -5,7 +5,7 @@ import java.util.Optional;
 public interface IdentityStore extends IdentityStoreReader {
 	
 	public static IdentityStore createConcurrentIdentityStore() {
-		return new ConcurrentIdentityStore();
+		return ConcurrentIdentityStore.create();
 	}
 	
 	public static ImmutableIdentityStore.Builder immutableBuilder() {
@@ -16,9 +16,19 @@ public interface IdentityStore extends IdentityStoreReader {
 		return EmptyIdentityStoreReader.INSTANCE;
 	}
 	
-	<T> void put(IdentityKey<T> key, T value);
+	<T> T put(IdentityKey<T> key, T value);
 	<T> Optional<T> remove(IdentityKey<T> key);
 	
 	IdentityStoreReader immutable();
+	
+	default <T> T putIfAbsent(IdentityKey<T> key, T value) {
+		T existing = get(key);
+		if (existing != null) {
+			return existing;
+		} else {
+			put(key, value);
+			return value;
+		}
+	}
 	
 }

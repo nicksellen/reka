@@ -1,6 +1,5 @@
 package reka.net.http;
 
-import static java.lang.String.format;
 import static reka.api.Path.path;
 import static reka.config.configurer.Configurer.configure;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
@@ -13,6 +12,9 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.config.ConfigurerProvider;
@@ -20,11 +22,12 @@ import reka.core.config.SequenceConfigurer;
 import reka.core.module.ModuleInfo;
 import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
+import reka.core.setup.ModuleSetupContext;
 import reka.core.setup.OperationConfigurer;
 import reka.net.NetServerManager;
 import reka.net.NetServerManager.HttpFlows;
-import reka.net.NetSettings;
 import reka.net.NetSettings.SslSettings;
+import reka.net.NetSettings.Type;
 import reka.net.http.configurers.HttpContentConfigurer;
 import reka.net.http.configurers.HttpRedirectConfigurer;
 import reka.net.http.configurers.HttpRequestConfigurer;
@@ -35,6 +38,8 @@ import reka.net.http.streaming.HttpHeadConfigurer;
 import reka.net.http.streaming.HttpWriteConfigurer;
 
 public class HttpConfigurer extends ModuleConfigurer {
+	
+	private final Logger log = LoggerFactory.getLogger(getClass());
 	
 	// listen 8080
 	// listen localhost:500
@@ -95,22 +100,24 @@ public class HttpConfigurer extends ModuleConfigurer {
 	}
 
 	@Override
-	public void setup(ModuleSetup module) {
+	public void setup(ModuleSetup app) {
+		
+		ModuleSetupContext ctx = app.ctx();
 		
 		listens.replaceAll(listen -> listen.port() == -1 ? new HostAndPort(listen.host(), ssl != null ? 443 : 80) : listen);
 		
-		module.operation(path("router"), provider -> new HttpRouterConfigurer(dirs(), provider));
-		module.operation(path("redirect"), provider -> new HttpRedirectConfigurer());
-		module.operation(path("content"), provider -> new HttpContentConfigurer(dirs()));
-		module.operation(path("request"), provider -> new HttpRequestConfigurer(server.nettyEventGroup(), server.nettyChannelType()));
-		module.operation(path("req"), provider -> new HttpRequestConfigurer(server.nettyEventGroup(), server.nettyChannelType()));
-		module.operation(path("auth"), provider -> new BasicAuthConfigurer(provider));
+		app.operation(path("router"), provider -> new HttpRouterConfigurer(dirs(), provider));
+		app.operation(path("redirect"), provider -> new HttpRedirectConfigurer());
+		app.operation(path("content"), provider -> new HttpContentConfigurer(dirs()));
+		app.operation(path("request"), provider -> new HttpRequestConfigurer(server.nettyEventGroup(), server.nettyChannelType()));
+		app.operation(path("req"), provider -> new HttpRequestConfigurer(server.nettyEventGroup(), server.nettyChannelType()));
+		app.operation(path("auth"), provider -> new BasicAuthConfigurer(provider));
 		
 		// ones that take care of writing responses
 		
-		module.operation(path("head"), provider -> new HttpHeadConfigurer());
-		module.operation(path("write"), provider -> new HttpWriteConfigurer());
-		module.operation(path("end"), provider -> new HttpEndConfigurer());
+		app.operation(path("head"), provider -> new HttpHeadConfigurer());
+		app.operation(path("write"), provider -> new HttpWriteConfigurer());
+		app.operation(path("end"), provider -> new HttpEndConfigurer());
 		
 		/*
 		 * TODO: make this, I need a nice api for provider.add(path("head"), new HttpHeadConfigurer() etc
@@ -124,25 +131,22 @@ public class HttpConfigurer extends ModuleConfigurer {
 		*/
 		
 		listens.forEach(listen -> {
-			module.requirePort(listen.port(), Optional.of(listen.host()));	
+			app.requirePort(listen.port(), Optional.of(listen.host()));	
 		});
 		
 		for (Function<ConfigurerProvider, OperationConfigurer> h : requestHandlers) {
 			
-			module.trigger("on request", h, reg -> {
+			app.addTrigger("on request", h, reg -> {
 				
 				for (HostAndPort listen : listens) {
 					
-					String id = format("%s/%s/%s/http", reg.applicationIdentity(), listen.host(), listen.port());
-					NetSettings settings = httpSettings(listen, reg.applicationIdentity(), reg.applicationVersion());
+					if (ssl != null) {
+						app.register(server.deployHttp(app.identity(), listen, new HttpFlows(reg.flow())));
+					} else {
+						app.register(server.deployHttps(app.identity(), listen, ssl, new HttpFlows(reg.flow())));
+					}
 					
-					server.deployHttp(id, settings, new HttpFlows(reg.flow()));
-					
-					reg.onUndeploy(version -> server.undeploy(id, version));
-					reg.onPause(version -> server.pause(id, version));
-					reg.onResume(version -> server.resume(id, version));
-					
-					reg.network(listen.port(), settings.protocolString(), details -> {
+					app.network(listen.port(), Type.HTTP.protocolString(ssl != null), details -> {
 						details.putString("host", listen.host());
 					});
 				
@@ -150,21 +154,6 @@ public class HttpConfigurer extends ModuleConfigurer {
 			});
 		}
 		
-	}
-	
-	private NetSettings httpSettings(HostAndPort listen, String applicationIdentity, int applicationVersion) {
-		String host = listen.host();
-		int port = listen.port();
-		
-		if (port == -1) {
-			port = ssl != null ? 443 : 80;
-		}
-	
-		if (ssl != null) {
-			return NetSettings.https(port, host, applicationIdentity, applicationVersion, ssl);
-		} else {
-			return NetSettings.http(port, host, applicationIdentity, applicationVersion);
-		}
 	}
 
 }

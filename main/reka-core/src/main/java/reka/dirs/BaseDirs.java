@@ -1,5 +1,7 @@
 package reka.dirs;
 
+import static reka.api.Path.slashes;
+
 import java.io.File;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -29,25 +31,28 @@ public class BaseDirs extends AbstractDirs implements Dirs {
 		super(app, data, tmp);
 	}
 
-	public AppDirs resolve(String identity, int version) {
-		Path tmpdir = tmp.resolve(AppDirs.dirnameFor(identity));
+	public AppDirs resolve(reka.api.Path appPath, int version) {
+		Path tmpdir = tmp.resolve(AppDirs.dirnameFor(appPath));
 		
 		tmpdirs.add(tmpdir);
 		
-		return new AppDirs(app.resolve(AppDirs.dirnameFor(identity, version)), 
-						   data.resolve(AppDirs.dirnameFor(identity)), 
+		return new AppDirs(appPath,
+						   app.resolve(AppDirs.dirnameFor(appPath, version)), 
+						   data.resolve(AppDirs.dirnameFor(appPath)), 
 						   tmpdir, this);
 	}
 
-	public void delete(String identity) {
-		new AppDirs(app.resolve(AppDirs.dirnameFor(identity)), 
-				    data.resolve(AppDirs.dirnameFor(identity)), 
-				    tmp.resolve(AppDirs.dirnameFor(identity)), this).delete();
+	public void delete(reka.api.Path appPath) {
+		new AppDirs(appPath,
+					app.resolve(AppDirs.dirnameFor(appPath)), 
+				    data.resolve(AppDirs.dirnameFor(appPath)), 
+				    tmp.resolve(AppDirs.dirnameFor(appPath)), this).delete();
 	}
 	
 	public AppDirs mktemp() {
 		String uuid = "tmp." + UUID.randomUUID().toString();
-		AppDirs dirs = new AppDirs(app.resolve(uuid), data.resolve(uuid), tmp.resolve(uuid), this);
+		reka.api.Path appPath = slashes(uuid);
+		AppDirs dirs = new AppDirs(appPath, app.resolve(uuid), data.resolve(uuid), tmp.resolve(uuid), this);
 		tmpdirs.add(dirs.app);
 		tmpdirs.add(dirs.data);
 		tmpdirs.add(dirs.tmp);

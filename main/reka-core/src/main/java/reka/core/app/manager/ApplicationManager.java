@@ -30,14 +30,18 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import reka.EventLogger;
+import reka.Identity;
 import reka.Reka;
 import reka.admin.AdminUtils;
+import reka.api.ConcurrentIdentityStore;
+import reka.api.IdentityStore;
 import reka.api.Path;
 import reka.api.data.MutableData;
 import reka.api.flow.Flow;
@@ -56,7 +60,7 @@ import reka.dirs.AppDirs;
 import reka.dirs.BaseDirs;
 import reka.util.AsyncShutdown;
 
-public class ApplicationManager implements Iterable<Entry<String,Application>>, AsyncShutdown {
+public class ApplicationManager implements Iterable<Entry<Identity,Application>>, AsyncShutdown {
 
 	public static enum EventType {
 		
@@ -81,19 +85,19 @@ public class ApplicationManager implements Iterable<Entry<String,Application>>, 
 			private final Logger log = LoggerFactory.getLogger(getClass());
 
 			@Override
-			public void ok(String identity, int version, Application application) {
+			public void ok(Identity identity, int version, Application application) {
 				log.info("deployed {}", identity);
 			}
 
 			@Override
-			public void error(String identity, Throwable t) {
+			public void error(Identity identity, Throwable t) {
 				log.error(format("failed to deploy %s", identity), t);
 			}
 			
 		};
 		
-		void ok(String identity, int version, Application application);
-		void error(String identity, Throwable t);
+		void ok(Identity identity, int version, Application application);
+		void error(Identity identity, Throwable t);
 	}
 	
 	private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
@@ -104,10 +108,11 @@ public class ApplicationManager implements Iterable<Entry<String,Application>>, 
 	private final BaseDirs basedirs;
 	private final ModuleManager moduleManager;
 	
-	private final ConcurrentMap<String,Application> applications = new ConcurrentHashMap<>();
-	private final ConcurrentMap<String,AtomicInteger> versions = new ConcurrentHashMap<>();
+	private final ConcurrentMap<Path,Identity> identities = new ConcurrentHashMap<>();
+	private final ConcurrentMap<Identity,Application> applications = new ConcurrentHashMap<>();
+	private final ConcurrentMap<Identity,AtomicInteger> versions = new ConcurrentHashMap<>();
 	
-	private final ConcurrentMap<String,List<ModuleStatusReport>> status = new ConcurrentHashMap<>();
+	private final ConcurrentMap<Identity,List<ModuleStatusReport>> status = new ConcurrentHashMap<>();
 	
 	private final List<EventListener> listeners = Collections.synchronizedList(new ArrayList<>());
 	
@@ -124,18 +129,18 @@ public class ApplicationManager implements Iterable<Entry<String,Application>>, 
 		emitSystemMessage("started");
 	}
 	
-	public void deployConfig(String identity, int version, NavigableConfig config, File constrainTo, DeploySubscriber subscriber) {
-		q.push(new DeployApplication(identity, version, config, constrainTo, subscriber));
+	public void deployConfig(Path path, int version, NavigableConfig config, File constrainTo, DeploySubscriber subscriber) {
+		q.push(new DeployApplication(path, version, config, constrainTo, subscriber));
 	}
 	
-	public void deploySource(String identity, int version, Source source, DeploySubscriber subscriber) {
+	public void deploySource(Path path, int version, Source source, DeploySubscriber subscriber) {
 		File constrainTo = new File("/");
 		if (source.isFile()) constrainTo = source.file().getParentFile();
-		deployConfig(identity, version, ConfigParser.fromSource(source), constrainTo, subscriber);
+		deployConfig(path, version, ConfigParser.fromSource(source), constrainTo, subscriber);
 	}
 	
-	public void undeploy(String identity) {
-		q.push(new UndeployApplication(identity));
+	public void undeploy(Path path) {
+		q.push(new UndeployApplication(path));
 	}
 	
 	public void addListener(Flow flow, EventType... eventTypes) {
@@ -151,7 +156,8 @@ public class ApplicationManager implements Iterable<Entry<String,Application>>, 
 		}
 	}
 
-	public void validate(String identity, Source source) {
+	public void validate(Source source) {
+		Identity identity = Identity.create("validate");
 		IdentityAndVersion idv = IdentityAndVersion.create(identity, versions.get(identity).get());
 		NavigableConfig config = moduleManager.processor().process(ConfigParser.fromSource(source));
 		configure(new ApplicationConfigurer(basedirs.mktemp(), moduleManager), config).checkValid(idv);
@@ -159,7 +165,7 @@ public class ApplicationManager implements Iterable<Entry<String,Application>>, 
 	
 	public static final Path INITIALIZER_VISUALIZER_NAME = slashes("app/initialize");
 	
-	public Optional<FlowVisualizer> visualize(String identity, Path flowName) {
+	public Optional<FlowVisualizer> visualize(Identity identity, Path flowName) {
 		Application app = applications.get(identity);
 		if (app == null) return Optional.empty();
 		
@@ -174,25 +180,34 @@ public class ApplicationManager implements Iterable<Entry<String,Application>>, 
 		return configure(new ApplicationConfigurer(basedirs.mktemp(), moduleManager), config).visualize(IdentityAndVersion.tmp());
 	}
 	
-	public Optional<Application> get(String identity) {
+	public Optional<Application> get(Identity identity) {
 		return Optional.ofNullable(applications.get(identity));
 	}
 	
-	public Optional<List<ModuleStatusReport>> statusFor(String identity) {
+	public Optional<List<ModuleStatusReport>> statusFor(Identity identity) {
 		return Optional.ofNullable(status.get(identity));
 	}
 	
-	public int version(String identity) {
+	public int version(Identity identity) {
 		AtomicInteger v = versions.get(identity);
 		return v != null ? v.get() : 0;
 	}
+
+	public Identity identityFor(Path path) {
+		return identities.get(path);
+	}
 	
-	public int nextVersion(String identity) {
+	public int nextVersion(Path appPath) {
+		Identity identity = identityFor(appPath);
+		return identity != null ? version(identity) + 1 : 1;
+	}
+	
+	public int nextVersion(Identity identity) {
 		return version(identity) + 1;
 	}
 
 	@Override
-	public Iterator<Entry<String,Application>> iterator() {
+	public Iterator<Entry<Identity,Application>> iterator() {
 		return applications.entrySet().iterator();
 	}
 	
@@ -200,7 +215,7 @@ public class ApplicationManager implements Iterable<Entry<String,Application>>, 
 
 		@Override
 		public void run() {
-			Map<String, List<ModuleStatusReport>> changed = new HashMap<>();
+			Map<Identity, List<ModuleStatusReport>> changed = new HashMap<>();
 			applications.forEach((identity, app) -> {
 				List<ModuleStatusReport> appStatus = reportsFor(app);
 				List<ModuleStatusReport> previousAppStatus = status.put(identity, appStatus);
@@ -217,14 +232,19 @@ public class ApplicationManager implements Iterable<Entry<String,Application>>, 
 	
 	private class UndeployApplication implements AsyncApplicationTask {
 		
-		private final String identity;
+		private final Path path;
 		
-		public UndeployApplication(String identity) {
-			this.identity = identity;
+		public UndeployApplication(Path path) {
+			this.path = path;
 		}
 
 		@Override
 		public void run(TaskResult res) {
+			Identity identity = identityFor(path);
+			if (identity == null) {
+				res.complete();
+				return;
+			}
 			Application app = applications.get(identity);
 			if (app == null) {
 				res.complete();
@@ -255,14 +275,14 @@ public class ApplicationManager implements Iterable<Entry<String,Application>>, 
 	
 	private class DeployApplication implements AsyncApplicationTask {
 
-		private final String identity;
+		private final Path appPath;
 		private final int incomingVersion;
 		private final NavigableConfig originalConfig;
 		private final File constrainTo;
 		private final DeploySubscriber subscriber;
 		
-		public DeployApplication(String identity, int version, NavigableConfig originalConfig, File constrainTo, DeploySubscriber subscriber) {
-			this.identity = identity;
+		public DeployApplication(Path appPath, int version, NavigableConfig originalConfig, File constrainTo, DeploySubscriber subscriber) {
+			this.appPath = appPath;
 			this.incomingVersion = version;
 			this.originalConfig = originalConfig;
 			this.constrainTo = constrainTo != null ? constrainTo : new File("/");
@@ -271,14 +291,23 @@ public class ApplicationManager implements Iterable<Entry<String,Application>>, 
 
 		@Override
 		public void run(TaskResult res) {
+						
+			Identity identity = identities.computeIfAbsent(appPath, unused -> Identity.create(appPath.slashes()));
+			
 			int version = incomingVersion > 0 ? incomingVersion : nextVersion(identity);
 
 			Optional<Application> previous = Optional.ofNullable(applications.get(identity));
+			
+			AtomicReference<Runnable> unpause = new AtomicReference<>();
 			
 			Consumer<Throwable> onError = t -> {
 				log.error("exception whilst deploying!");
 				subscriber.error(identity, t);
 				previous.ifPresent(Application::resume);
+				Runnable r = unpause.get();
+				if (r != null) {
+					r.run();
+				}
 				res.completeExceptionally(t);
 			};
 			
@@ -291,7 +320,7 @@ public class ApplicationManager implements Iterable<Entry<String,Application>>, 
 				
 				NavigableConfig config = moduleManager.processor().process(originalConfig);
 				
-				AppDirs dirs = basedirs.resolve(identity, version);
+				AppDirs dirs = basedirs.resolve(appPath, version);
 				
 				dirs.mkdirs();
 				
@@ -299,9 +328,13 @@ public class ApplicationManager implements Iterable<Entry<String,Application>>, 
 				
 				configurer.checkValid(idv);
 				
-				previous.ifPresent(Application::pause);
+				previous.ifPresent(p -> {
+					unpause.set(p.pause());
+				});
 				
-				configurer.build(identity, version).whenComplete((app, t) -> {
+				IdentityStore store = previous.isPresent() ? ConcurrentIdentityStore.createFrom(previous.get().store()) : ConcurrentIdentityStore.create();
+				
+				configurer.build(identity, version, store).whenComplete((app, t) -> {
 					try {
 						if (app != null) {
 							applications.put(identity, app);
@@ -343,22 +376,22 @@ public class ApplicationManager implements Iterable<Entry<String,Application>>, 
 		}
 	}
 
-	private void notifyDeployListeners(String identity, Application app, List<ModuleStatusReport> reports) {
+	private void notifyDeployListeners(Identity identity, Application app, List<ModuleStatusReport> reports) {
 		emit(EventType.deploy, AdminUtils.putAppDetails(MutableMemoryData.create(), app, Optional.of(reports))
-				.putString("id", identity));
+				.putString("id", identity.name()));
 	}
 	
-	private void notifyUndeployListeners(String identity, Application app) {
+	private void notifyUndeployListeners(Identity identity, Application app) {
 		emit(EventType.undeploy, MutableMemoryData.create()
-				.putString("id", identity)
+				.putString("id", identity.name())
 				.putInt("version", app.version())
 				.putString("name", app.fullName()));
 	}
 	
-	private void notifyStatusListeners(Map<String, List<ModuleStatusReport>> changed) {
+	private void notifyStatusListeners(Map<Identity, List<ModuleStatusReport>> changed) {
 		changed.forEach((identity, reports) -> {			
 			emit(EventType.status, MutableMemoryData.create()
-				.putString("id", identity)
+				.putString("id", identity.name())
 				.putList("status", list -> {
 					reports.forEach(report -> {
 						list.add(report.data());
