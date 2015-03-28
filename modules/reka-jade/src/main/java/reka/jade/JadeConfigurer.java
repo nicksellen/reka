@@ -8,7 +8,7 @@ public class JadeConfigurer extends ModuleConfigurer {
 
 	@Override
 	public void setup(ModuleSetup init) {
-		init.operation(root(), provider -> new JadeRenderConfigurer());
+		init.defineOperation(root(), provider -> new JadeRenderConfigurer());
 	}
 
 }

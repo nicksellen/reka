@@ -51,7 +51,7 @@ public class JsxConfigurer extends ModuleConfigurer {
 	@Override
 	public void setup(ModuleSetup module) {
 		
-		module.setupInitializer(init -> {
+		module.onDeploy(init -> {
 			init.run("compile jsx", ctx -> {
 				String jsx = src.toString();
 				try {
@@ -83,7 +83,7 @@ public class JsxConfigurer extends ModuleConfigurer {
 			});
 		});
 		
-		module.operation(root(), provider -> new JsxTemplateConfigurer());
+		module.defineOperation(root(), provider -> new JsxTemplateConfigurer());
 	}
 	
 	public static class JsxTemplateConfigurer implements OperationConfigurer {

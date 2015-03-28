@@ -39,9 +39,6 @@ public class Application implements AsyncShutdown {
 
 	private final List<NetworkInfo> network = new ArrayList<>();
 	
-	private final List<Runnable> onUndeploy = new ArrayList<>();
-	private final List<IntConsumer> pauseConsumers = new ArrayList<>();
-	private final List<IntConsumer> resumeConsumers = new ArrayList<>();
 	private final List<LifecycleComponent> components = new ArrayList<>();
 	private final List<StatusProvider> statusProviders = new ArrayList<>();
 	
@@ -54,9 +51,6 @@ public class Application implements AsyncShutdown {
 			IdentityStoreReader store,
 			List<NetworkInfo> network, 
 			FlowVisualizer initializerVisualizer,
-			List<Runnable> onUndeploy,
-			List<IntConsumer> pauseConsumers,
-			List<IntConsumer> resumeConsumers,
 			List<LifecycleComponent> components,
 			List<StatusProvider> statusProviders) {
 		this.identity = identity;
@@ -68,9 +62,6 @@ public class Application implements AsyncShutdown {
 		this.store = store;
 		this.initializerVisualizer = initializerVisualizer;
 		this.network.addAll(network);
-		this.onUndeploy.addAll(onUndeploy);
-		this.pauseConsumers.addAll(pauseConsumers);
-		this.resumeConsumers.addAll(resumeConsumers);
 		this.components.addAll(components);
 		this.statusProviders.addAll(statusProviders);
 		this.statusProviders.add(new ApplicationStatusProvider());
@@ -173,34 +164,15 @@ public class Application implements AsyncShutdown {
 	}
 	
 	public Runnable pause() {
-		pauseConsumers.forEach(c -> { 
-			try {
-				c.accept(version);
-			} catch (Throwable t) {
-				t.printStackTrace();
-			}	
-		});
 		List<Runnable> unpauses = components.stream().map(LifecycleComponent::pause).collect(toList());
 		return () -> {
 			unpauses.forEach(Runnable::run);
 		};
 	}
-	
-	public void resume() {
-		resumeConsumers.forEach(c -> { 
-			try {
-				c.accept(version);
-			} catch (Throwable t) {
-				t.printStackTrace();
-			}	
-		});
-	}
-	
 
 	public void undeploy() {
 		FutureResult f = AsyncShutdown.resultFuture();
 		shutdown(f);
-		components.forEach(LifecycleComponent::undeploy);
 		try {
 			f.future().get(10, TimeUnit.SECONDS);
 		} catch (InterruptedException | ExecutionException | TimeoutException e) {
@@ -210,9 +182,9 @@ public class Application implements AsyncShutdown {
 
 	@Override
 	public void shutdown(Result res) {
-		onUndeploy.forEach(c -> { 
+		components.forEach(component -> { 
 			try {
-				c.run();
+				component.undeploy();
 			} catch (Throwable t) {
 				t.printStackTrace();
 			}	

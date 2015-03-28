@@ -46,7 +46,7 @@ public class GithubConfigurer extends ModuleConfigurer {
 	@Override
 	public void setup(ModuleSetup module) {
 		for (Function<ConfigurerProvider, OperationConfigurer> h : requestHandlers) {
-			module.addTrigger("on webhook", h, reg -> {
+			module.buildFlow("on webhook", h, reg -> {
 				
 				
 			});

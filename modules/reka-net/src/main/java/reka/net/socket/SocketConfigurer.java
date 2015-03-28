@@ -75,14 +75,14 @@ public class SocketConfigurer extends ModuleConfigurer {
 	@Override
 	public void setup(ModuleSetup app) {
 		
-		app.operation(path("send"), provider -> new SocketSendConfigurer(server));
-		app.operation(path("broadcast"), provider -> new SocketBroadcastConfigurer(server));
-		app.operation(slashes("tag"), provider -> new SocketTagAddConfigurer(server));
-		app.operation(slashes("tag/add"), provider -> new SocketTagAddConfigurer(server));
-		app.operation(slashes("tag/rm"), provider -> new SocketTagRemoveConfigurer(server));
-		app.operation(slashes("tag/send"), provider -> new SocketTagSendConfigurer(server));
+		app.defineOperation(path("send"), provider -> new SocketSendConfigurer(server));
+		app.defineOperation(path("broadcast"), provider -> new SocketBroadcastConfigurer(server));
+		app.defineOperation(slashes("tag"), provider -> new SocketTagAddConfigurer(server));
+		app.defineOperation(slashes("tag/add"), provider -> new SocketTagAddConfigurer(server));
+		app.defineOperation(slashes("tag/rm"), provider -> new SocketTagRemoveConfigurer(server));
+		app.defineOperation(slashes("tag/send"), provider -> new SocketTagSendConfigurer(server));
 		
-		app.status(ctx -> new SocketStatusProvider(server, ctx.get(Sockets.IDENTITY)));
+		app.registerStatusProvider(ctx -> new SocketStatusProvider(server, ctx.get(Sockets.IDENTITY)));
 		
 		Map<IdentityKey<Flow>,Function<ConfigurerProvider, OperationConfigurer>> triggers = new HashMap<>();
 		
@@ -102,7 +102,7 @@ public class SocketConfigurer extends ModuleConfigurer {
 		
 		Identity identity = Identity.create("websocket");
 		
-		app.setupInitializer(init -> {
+		app.onDeploy(init -> {
 			init.run("set http settings", ctx -> {
 				// FIXME: hackety hack, don't look back, these aren't the real HTTP settings!
 				//ctx.put(Sockets.SETTINGS, NetSettings.socket(ports.get(0), null, -1));
@@ -114,14 +114,14 @@ public class SocketConfigurer extends ModuleConfigurer {
 			app.requirePort(port);
 		}
 		
-		app.triggers(triggers, reg -> {
+		app.buildFlows(triggers, reg -> {
 			
 			for (int port : ports) {
 				
-				app.register(server.deploySocket(identity, port, new SocketFlows(reg.flowFor(connect),
+				app.registerComponent(server.deploySocket(identity, port, new SocketFlows(reg.flowFor(connect),
 																						reg.flowFor(message),
 																						reg.flowFor(disconnect))));
-				reg.network(port, "socket");
+				app.registerNetwork(port, "socket");
 			}
 		});
 		

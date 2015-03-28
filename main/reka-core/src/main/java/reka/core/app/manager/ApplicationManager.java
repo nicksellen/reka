@@ -303,7 +303,6 @@ public class ApplicationManager implements Iterable<Entry<Identity,Application>>
 			Consumer<Throwable> onError = t -> {
 				log.error("exception whilst deploying!");
 				subscriber.error(identity, t);
-				previous.ifPresent(Application::resume);
 				res.completeExceptionally(t);
 			};
 			

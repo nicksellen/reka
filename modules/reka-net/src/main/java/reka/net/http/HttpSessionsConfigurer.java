@@ -14,15 +14,15 @@ public class HttpSessionsConfigurer extends ModuleConfigurer {
 	@Override
 	public void setup(ModuleSetup module) {
 		
-		module.setupInitializer(init -> {
+		module.onDeploy(init -> {
 			init.run("create session storage", ctx -> {
 				ctx.put(SESSION_STORE, new SessionStore());
 			});
 		});
 		
-		module.operation(path("put"), provider -> new SessionPutConfigurer());
-		module.operation(path("get"), provider -> new SessionGetConfigurer());
-		module.operation(path("remove"), provider -> new SessionRemoveConfigurer());
+		module.defineOperation(path("put"), provider -> new SessionPutConfigurer());
+		module.defineOperation(path("get"), provider -> new SessionGetConfigurer());
+		module.defineOperation(path("remove"), provider -> new SessionRemoveConfigurer());
 		
 	}
 

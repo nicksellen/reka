@@ -86,14 +86,12 @@ public class ProcessConfigurer extends ModuleConfigurer {
 	}
 
 	@Override
-	public void setup(ModuleSetup module) {
+	public void setup(ModuleSetup app) {
 		
 		if (onLine != null) {
-			module.trigger("on line", onLine, registration -> {
+			app.buildFlow("on line", onLine, flow -> {
 				
-				Flow flow = registration.flow();
-				
-				ProcessManager manager = registration.store().get(PROCESS_MANAGER);
+				ProcessManager manager = app.ctx().get(PROCESS_MANAGER);
 				
 				manager.addListener(line -> {
 					flow.prepare().mutableData(MutableMemoryData.create().putString("out", line)).run();
@@ -102,7 +100,7 @@ public class ProcessConfigurer extends ModuleConfigurer {
 			});
 		}
 		
-		module.setupInitializer(init -> {
+		app.onDeploy(init -> {
 			init.run("start process", ctx -> {
 				try {
 					ProcessBuilder builder = new ProcessBuilder();
@@ -123,13 +121,13 @@ public class ProcessConfigurer extends ModuleConfigurer {
 			});
 		});
 		
-		module.status(ctx -> ctx.get(PROCESS_MANAGER));
+		app.registerStatusProvider(ctx -> ctx.get(PROCESS_MANAGER));
 		
-		module.onShutdown("kill process", ctx -> {
+		app.onUndeploy("kill process", ctx -> {
 			ctx.lookup(PROCESS_MANAGER).ifPresent(ProcessManager::shutdown);
 		});
 		
-		module.operation(root(), provider -> new ProcessCallConfigurer(noreply));
+		app.defineOperation(root(), provider -> new ProcessCallConfigurer(noreply));
 	}
 
 }

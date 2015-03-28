@@ -34,13 +34,13 @@ public class UseNetPlayConfigurer extends ModuleConfigurer  {
 	@Override
 	public void setup(ModuleSetup app) {
 		
-		app.trigger("on addy req", body, reg -> {
+		app.buildFlow("on addy req", body, flow -> {
 			
 			int port = 9090;
 			
-			app.register(server.deployHttp(app.identity(), new HostAndPort(addy, port), new HttpFlows(reg.flow())));
+			app.registerComponent(server.deployHttp(app.identity(), new HostAndPort(addy, port), new HttpFlows(flow)));
 			
-			app.network(port, "http", details -> {
+			app.registerNetwork(port, "http", details -> {
 				details.putString("host", addy);
 			});
 			

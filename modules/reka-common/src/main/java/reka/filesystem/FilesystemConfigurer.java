@@ -27,18 +27,18 @@ public class FilesystemConfigurer extends ModuleConfigurer {
 	public void setup(ModuleSetup module) {
 		Path datadir = dirs().data().resolve(dir);
 		Path tmpdir = dirs().tmp().resolve(dir);
-		module.operation(path("write"), provider -> new FilesystemWriteConfigurer(datadir));
-		module.operation(path("list"), provider -> new FilesystemListConfigurer(datadir));
-		module.operation(path("read"), provider -> new FilesystemReadConfigurer(datadir));
-		module.operation(path("ls"), provider -> new FilesystemListConfigurer(datadir));
-		module.operation(path("mktmpdir"), provider -> new FilesystemMktmpDirConfigurer(tmpdir));
-		module.operation(path("delete"), provider -> new FilesystemDeleteConfigurer(datadir));
-		module.operation(path("rm"), provider -> new FilesystemDeleteConfigurer(datadir));
-		module.operation(path("resolve"), provider -> new FilesystemResolveConfigurer(datadir));
-		module.operation(path("full-path"), provider -> new FilesystemResolveConfigurer(datadir));
-		module.operation(path("expand"), provider -> new FilesystemResolveConfigurer(datadir));
-		module.operation(path("type"), provider -> new FilesystemTypeConfigurer(provider, datadir));
-		module.operation(path("switch"), provider -> new FilesystemTypeConfigurer(provider, datadir));
+		module.defineOperation(path("write"), provider -> new FilesystemWriteConfigurer(datadir));
+		module.defineOperation(path("list"), provider -> new FilesystemListConfigurer(datadir));
+		module.defineOperation(path("read"), provider -> new FilesystemReadConfigurer(datadir));
+		module.defineOperation(path("ls"), provider -> new FilesystemListConfigurer(datadir));
+		module.defineOperation(path("mktmpdir"), provider -> new FilesystemMktmpDirConfigurer(tmpdir));
+		module.defineOperation(path("delete"), provider -> new FilesystemDeleteConfigurer(datadir));
+		module.defineOperation(path("rm"), provider -> new FilesystemDeleteConfigurer(datadir));
+		module.defineOperation(path("resolve"), provider -> new FilesystemResolveConfigurer(datadir));
+		module.defineOperation(path("full-path"), provider -> new FilesystemResolveConfigurer(datadir));
+		module.defineOperation(path("expand"), provider -> new FilesystemResolveConfigurer(datadir));
+		module.defineOperation(path("type"), provider -> new FilesystemTypeConfigurer(provider, datadir));
+		module.defineOperation(path("switch"), provider -> new FilesystemTypeConfigurer(provider, datadir));
 	}
 	
 }

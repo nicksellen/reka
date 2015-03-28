@@ -61,10 +61,10 @@ import reka.core.config.DefaultConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.core.data.memory.MutableMemoryData;
 import reka.core.module.ModuleManager;
+import reka.core.setup.ApplicationSetup;
 import reka.core.setup.ModuleConfigurer;
-import reka.core.setup.ModuleConfigurer.ModuleInitializer;
 import reka.core.setup.ModuleSetup.ApplicationCheck;
-import reka.core.setup.MultiFlowRegistration;
+import reka.core.setup.TriggerFlows;
 import reka.core.setup.Trigger;
 import reka.core.setup.TriggerCollection;
 import reka.dirs.AppDirs;
@@ -131,9 +131,9 @@ public class ApplicationConfigurer implements ErrorReporter {
     
     public Collection<FlowVisualizer> visualize(IdentityAndVersion idv) {
         FlowBuilderGroup flowsBuilder = new FlowBuilderGroup();
-    	ModuleInitializer initializer = ModuleConfigurer.buildInitializer(idv, rootModule, IdentityStore.createConcurrentIdentityStore());
+    	ApplicationSetup initializer = ModuleConfigurer.setup(idv, rootModule, IdentityStore.createConcurrentIdentityStore());
     	
-    	DefaultConfigurerProvider provider = new DefaultConfigurerProvider(initializer.collector().providers);
+    	DefaultConfigurerProvider provider = new DefaultConfigurerProvider(initializer.providers);
     	Map<Path,Supplier<FlowSegment>> configuredFlows = new HashMap<>();
     	defs.forEach((config) -> 
 			configuredFlows.put(path(config.valueAsString()), 
@@ -144,9 +144,9 @@ public class ApplicationConfigurer implements ErrorReporter {
     }
     
     public void checkValid(IdentityAndVersion idv) {
-    	ModuleInitializer initializer = ModuleConfigurer.buildInitializer(idv, rootModule, IdentityStore.createConcurrentIdentityStore());
-    	DefaultConfigurerProvider configurerProvider = new DefaultConfigurerProvider(initializer.collector().providers);
-    	initializer.collector().triggers.forEach(triggers -> triggers.get().forEach(trigger -> {
+    	ApplicationSetup setup = ModuleConfigurer.setup(idv, rootModule, IdentityStore.createConcurrentIdentityStore());
+    	DefaultConfigurerProvider configurerProvider = new DefaultConfigurerProvider(setup.providers);
+    	setup.triggers.forEach(triggers -> triggers.get().forEach(trigger -> {
     		trigger.supplier().apply(configurerProvider).bind(trigger.base(), triggers.ctx()).get();
     	}));
     	defs.forEach(config -> {
@@ -155,12 +155,12 @@ public class ApplicationConfigurer implements ErrorReporter {
     	testConfigs.forEach(config -> {
     		configure(new TestConfigurer(configurerProvider), config).build();
     	});
-    	runChecks(idv.identity(), initializer);
+    	runChecks(idv.identity(), setup);
     }
     
-    private void runChecks(Identity identity, ModuleInitializer initializer) {
+    private void runChecks(Identity identity, ApplicationSetup setup) {
     	List<String> checkErrors = new ArrayList<>();
-    	initializer.collector().checks.forEach(check -> {
+    	setup.checks.forEach(check -> {
     		ApplicationCheck appCheck = new ApplicationCheck(identity);
     		check.accept(appCheck);
     		appCheck.errors().forEach(error -> {
@@ -172,10 +172,10 @@ public class ApplicationConfigurer implements ErrorReporter {
     	}
     }
     
-    private void runPortCheckers(Identity identity, ModuleInitializer initializer) {
+    private void runPortCheckers(Identity identity, ApplicationSetup setup) {
     	Set<String> errors = new HashSet<>();
     	modules.portCheckers().forEach(checker -> {
-			initializer.collector().portRequirements.forEach(req -> {
+			setup.networkRequirements.forEach(req -> {
 				if (!checker.check(identity, req.port(), req.host())) {
 					if (req.host().isPresent()) {
 						errors.add(format("%s:%d is not available", req.host().get(), req.port()));
@@ -212,30 +212,29 @@ public class ApplicationConfigurer implements ErrorReporter {
     		FlowBuilderGroup initflowBuilders = new FlowBuilderGroup();
     		FlowBuilderGroup flowBuilders = new FlowBuilderGroup();
     		    		
-	    	ModuleInitializer initializer = ModuleConfigurer.buildInitializer(IdentityAndVersion.create(identity, applicationVersion), rootModule, store);
+	    	ApplicationSetup setup = ModuleConfigurer.setup(IdentityAndVersion.create(identity, applicationVersion), rootModule, store);
 	    	
-	    	runChecks(identity, initializer);
-	    	runPortCheckers(identity, initializer);
+	    	runChecks(identity, setup);
+	    	runPortCheckers(identity, setup);
 	    	
-	    	ApplicationBuilder applicationBuilder = new ApplicationBuilder();
+	    	//ApplicationBuilder applicationBuilder = new ApplicationBuilder();
 	    	
-	    	applicationBuilder.store(store);
-	    	applicationBuilder.identity(identity);
-	    	applicationBuilder.name(applicationName);
-	    	applicationBuilder.meta(meta.immutable());
-	    	applicationBuilder.version(applicationVersion);
-	    	applicationBuilder.initializerVisualizer(initializer.visualizer());
+	    	setup.store(store);
+	    	setup.identity(identity);
+	    	setup.name(applicationName);
+	    	setup.meta(meta.immutable());
+	    	setup.version(applicationVersion);
 	    	
 	    	Map<Path,FlowTest> tests = new HashMap<>();
 	    	
-	    	DefaultConfigurerProvider configurerProvider = new DefaultConfigurerProvider(initializer.collector().providers);
+	    	DefaultConfigurerProvider configurerProvider = new DefaultConfigurerProvider(setup.providers);
 	    	
-	    	initializer.collector().initflows.forEach(initflow -> {
+	    	setup.initflows.forEach(initflow -> {
 	    		initflowBuilders.add(initflow.name, 
     					initflow.supplier.apply(configurerProvider).bind(initflow.name, initflow.ctx).get());
 	    	});
 	    	
-	    	initializer.collector().triggers.forEach(triggers -> {
+	    	setup.triggers.forEach(triggers -> {
 	    		triggers.get().forEach(trigger -> {
 	    			flowBuilders.add(triggerPath(trigger), 
 	    					trigger.supplier().apply(configurerProvider).bind(trigger.base(), triggers.ctx()).get());
@@ -256,11 +255,11 @@ public class ApplicationConfigurer implements ErrorReporter {
 	    	
 	    	// ok, initialize this thing!
 	    	
-	    	ApplicationInitializer appi = new ApplicationInitializer(future, identity, flowBuilders, applicationBuilder, initializer, tests);
+	    	ApplicationInitializer appi = new ApplicationInitializer(future, identity, flowBuilders, setup, tests);
 	    	
 	    	log.debug("initializing app");
 	    	
-	    	initializer.flow().prepare().operationExecutor(executor).mutableData(MutableMemoryData.create()).run(appi);
+	    	setup.initializationFlow.prepare().operationExecutor(executor).mutableData(MutableMemoryData.create()).run(appi);
     	
     	});
     }
@@ -272,24 +271,21 @@ public class ApplicationConfigurer implements ErrorReporter {
     	private final Identity identity;
     	private final FlowBuilderGroup flowBuilders;
     	
+    	private final ApplicationSetup setup;
+    	private final Map<Path,FlowTest> tests;
+    	
     	public ApplicationInitializer(
 				CompletableFuture<Application> future, 
 				Identity identity,
 				FlowBuilderGroup flowBuilders,
-				ApplicationBuilder applicationBuilder,
-				ModuleInitializer initializer, 
+				ApplicationSetup setup, 
 				Map<Path, FlowTest> tests) {
 			this.future = future;
 			this.identity = identity;
 			this.flowBuilders = flowBuilders;
-			this.applicationBuilder = applicationBuilder;
-			this.initializer = initializer;
+			this.setup = setup;
 			this.tests = tests;
 		}
-
-		private final ApplicationBuilder applicationBuilder;
-    	private final ModuleInitializer initializer;
-    	private final Map<Path,FlowTest> tests;
     	
     	private final Logger log = LoggerFactory.getLogger(getClass());
     	
@@ -326,7 +322,7 @@ public class ApplicationConfigurer implements ErrorReporter {
 	    		
 				Flows flows = flowBuilders.build();
 				
-				applicationBuilder.flows(flows);
+				setup.flows(flows);
 				
 				runTests(flows, tests, identity).whenComplete((ignored, ex) -> {
 					
@@ -337,33 +333,15 @@ public class ApplicationConfigurer implements ErrorReporter {
 					
 					try {
 					
-						initializer.collector().triggers.forEach(triggers -> {
-							
+						setup.triggers.forEach(triggers -> {
 							Map<IdentityKey<Flow>,Flow> m = new HashMap<>();
-							
 							triggers.get().forEach(trigger -> {
 								m.put(trigger.key(), flows.flow(triggerPath(trigger)));
 							});
-							
-							MultiFlowRegistration mr = new MultiFlowRegistration(applicationBuilder.version(), identity, triggers.ctx(), m);
-							triggers.consumer().accept(mr);
-							
-							log.info("did triggers, c is #{}", System.identityHashCode(initializer.collector().onUndeploy));
-							
-							applicationBuilder.network.addAll(mr.network());
-							applicationBuilder.pauseConsumers.addAll(mr.pauseConsumers());
-							applicationBuilder.resumeConsumers.addAll(mr.resumeConsumers());
-							
+							triggers.consumer().accept(new TriggerFlows(identity, m));
 				    	});
 						
-						
-						applicationBuilder.network.addAll(initializer.collector().network);
-						applicationBuilder.components.addAll(initializer.collector().components);
-						applicationBuilder.onUndeploy.addAll(initializer.collector().onUndeploy);
-						
-						applicationBuilder.statusProviders.addAll(initializer.collector().statuses.stream().map(Supplier::get).collect(toList()));
-						
-						Application app = applicationBuilder.build();
+						Application app = setup.buildApplication();
 						
 				    	future.complete(app);
 			    	

@@ -114,11 +114,11 @@ public abstract class JdbcBaseModule extends ModuleConfigurer {
 		if (username == null) username = "sa";
 		if (password == null) password = "sa";
 		
-		module.operation(root(), provider -> new JdbcQueryConfigurer(config, false));
-		module.operation(path("first"), provider -> new JdbcQueryConfigurer(config, true));
-		module.operation(path("insert"), provider -> new JdbcInsertConfigurer());
+		module.defineOperation(root(), provider -> new JdbcQueryConfigurer(config, false));
+		module.defineOperation(path("first"), provider -> new JdbcQueryConfigurer(config, true));
+		module.defineOperation(path("insert"), provider -> new JdbcInsertConfigurer());
 		
-		module.setupInitializer(init -> {
+		module.onDeploy(init -> {
 			
 			init.run("create connection pool", ctx -> {
 				ctx.put(POOL, connectionProvider(username, password));
@@ -229,9 +229,9 @@ public abstract class JdbcBaseModule extends ModuleConfigurer {
 		
 		});
 		
-		module.status(ctx -> new JdbcStatusProvider(url, ctx.get(POOL)));
+		module.registerStatusProvider(ctx -> new JdbcStatusProvider(url, ctx.get(POOL)));
 		
-		module.onShutdown("close connection pool", ctx -> {
+		module.onUndeploy("close connection pool", ctx -> {
 			ctx.lookup(POOL).ifPresent(jdbc -> { 
 				try {
 					jdbc.close();

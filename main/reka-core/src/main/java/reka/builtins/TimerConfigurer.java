@@ -50,8 +50,8 @@ public class TimerConfigurer extends ModuleConfigurer {
 	@Override
 	public void setup(ModuleSetup module) {
 		every.forEach(config -> {
-			module.trigger(format("every %s", config.valueAsString()), config.body(), register -> {
-				ScheduledFuture<?> f = executor.scheduleAtFixedRate(new TimerRun(register.flow()), 0, parseMs(config.valueAsString()), TimeUnit.MILLISECONDS);
+			module.buildFlow(format("every %s", config.valueAsString()), config.body(), flow -> {
+				ScheduledFuture<?> f = executor.scheduleAtFixedRate(new TimerRun(flow), 0, parseMs(config.valueAsString()), TimeUnit.MILLISECONDS);
 				module.onUndeploy("cancel timer", () -> f.cancel(false));
 			});
 		});

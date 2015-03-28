@@ -15,7 +15,7 @@ public class NetConfigurer extends ModuleConfigurer {
 
 	@Override
 	public void setup(ModuleSetup module) {
-		module.operation(path("proxy"), provider -> new NetProxyConfigurer(server.nettyEventGroup()));
+		module.defineOperation(path("proxy"), provider -> new NetProxyConfigurer(server.nettyEventGroup()));
 	}	
 	
 }

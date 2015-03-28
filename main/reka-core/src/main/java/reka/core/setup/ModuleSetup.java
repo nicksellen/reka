@@ -37,7 +37,6 @@ import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.core.data.memory.MutableMemoryData;
 import reka.core.module.ModuleInfo;
-import reka.core.setup.ModuleConfigurer.ModuleCollector;
 
 public class ModuleSetup {
 	
@@ -75,15 +74,30 @@ public class ModuleSetup {
 	public Path path() {
 		return path;
 	}
-	
-	public static interface DoneCallback extends Runnable {
-		void done();
-		default void run() {
-			done();
-		}
+
+	public void requireNetwork(int port, String host) {
+		collector.networkRequirements.add(new PortRequirement(port, Optional.of(host)));
 	}
 	
-	public ModuleSetup setupInitializer(Consumer<ModuleOperationSetup> init) {
+	public void requirePort(int port) {
+		collector.networkRequirements.add(new PortRequirement(port, Optional.empty()));
+	}
+	
+	public void registerComponent(LifecycleComponent component) {
+		collector.components.add(component);
+	}
+	
+	public void registerNetwork(int port, String protocol) {
+		registerNetwork(port, protocol, data -> {});
+	}
+	
+	public void registerNetwork(int port, String protocol, Consumer<MutableData> details) {
+		MutableData data = MutableMemoryData.create();
+		details.accept(data);
+		collector.network.add(new NetworkInfo(port, protocol, data.immutable()));
+	}
+	
+	public ModuleSetup onDeploy(Consumer<ModuleOperationSetup> init) {
 		OperationSetup e = new SequentialCollector(path, ctx);
 		init.accept(new ModuleOperationSetup(idv, e));
 		segments.add(e);
@@ -95,7 +109,7 @@ public class ModuleSetup {
 		collector.onUndeploy.add(runnable);
 	}
 	
-	public void onShutdown(String name, Consumer<ModuleSetupContext> handler) {
+	public void onUndeploy(String name, Consumer<ModuleSetupContext> handler) {
 		collector.onUndeploy.add(() -> handler.accept(ctx));
 	}
 	
@@ -107,7 +121,7 @@ public class ModuleSetup {
 		return this;
 	}
 	
-	public ModuleSetup operation(Path name, Function<ConfigurerProvider,OperationConfigurer> c) {
+	public ModuleSetup defineOperation(Path name, Function<ConfigurerProvider,OperationConfigurer> c) {
 		
 		FlowSegmentBiFunction f = (provider, config) -> {
 			return configure(c.apply(provider), config).bind(path, ctx);
@@ -124,7 +138,7 @@ public class ModuleSetup {
 		return this;
 	}
 	
-	public void status(Function<IdentityStore, StatusDataProvider> c) {
+	public void registerStatusProvider(Function<IdentityStore, StatusDataProvider> c) {
 		includeDefaultStatus = false;
 		collector.statuses.add(() -> StatusProvider.create(info.name().slashes(), path.slashes(), info.version(), c.apply(ctx)));
 	}
@@ -139,15 +153,15 @@ public class ModuleSetup {
 	
 	public static class ApplicationCheck {
 		
-		private final Identity applicationIdentity;
+		private final Identity identity;
 		private final List<String> errors = new ArrayList<>();
 		
-		public ApplicationCheck(Identity applicationIdentity) {
-			this.applicationIdentity = applicationIdentity;
+		public ApplicationCheck(Identity identity) {
+			this.identity = identity;
 		}
 		
-		public Identity applicationIdentity() {
-			return applicationIdentity;
+		public Identity identity() {
+			return identity;
 		}
 		
 		public void error(String msg, Object... objs) {
@@ -164,35 +178,28 @@ public class ModuleSetup {
 		collector.checks.add(check);
 		return this;
 	}
+
 	
-	public ModuleSetup trigger(String name, ConfigBody body, Consumer<SingleFlowRegistration> c) {
-		return trigger(IdentityKey.named(name), body, c);
+	public void buildFlow(String name, ConfigBody body, Consumer<Flow> c) {
+		buildFlow(IdentityKey.named(name), body, c);
+	}
+	
+	private void buildFlow(IdentityKey<Flow> key, ConfigBody body, Consumer<Flow> c) {
+		buildFlow(key, provider -> configure(new SequenceConfigurer(provider), body), c);
+	}
+	 
+	public void buildFlow(String name, Function<ConfigurerProvider, OperationConfigurer> supplier, Consumer<Flow> c) {
+		buildFlow(IdentityKey.named(name), supplier, c);
 	}
 
-	public ModuleSetup addTrigger(String name, Function<ConfigurerProvider, OperationConfigurer> supplier, Consumer<SingleFlowRegistration> c) {
-		return trigger(IdentityKey.named(name), supplier, c);
-	}
-	
-	public ModuleSetup triggersWithBodies(Map<IdentityKey<Flow>,ConfigBody> bodies, Consumer<MultiFlowRegistration> cs) {
-		collector.triggers.add(new TriggerCollection(bodies.entrySet().stream().map(e -> {
-			return new Trigger(path, e.getKey(), provider -> configure(new SequenceConfigurer(provider), e.getValue()));
-		}).collect(toList()), cs, ctx));
-		return this;
-	}
-	
-	public ModuleSetup triggers(Map<IdentityKey<Flow>,Function<ConfigurerProvider, OperationConfigurer>> suppliers, Consumer<MultiFlowRegistration> cs) {
+	public void buildFlows(Map<IdentityKey<Flow>,Function<ConfigurerProvider, OperationConfigurer>> suppliers, Consumer<TriggerFlows> cs) {
 		collector.triggers.add(new TriggerCollection(suppliers.entrySet().stream().map(e -> new Trigger(path, e.getKey(), e.getValue())).collect(toList()), cs, ctx));
-		return this;
 	}
 
-	private ModuleSetup trigger(IdentityKey<Flow> key, ConfigBody body, Consumer<SingleFlowRegistration> c) {
-		return trigger(key, provider -> configure(new SequenceConfigurer(provider), body), c);
-	}
-	
-	private ModuleSetup trigger(IdentityKey<Flow> key, Function<ConfigurerProvider, OperationConfigurer> supplier, Consumer<SingleFlowRegistration> c) {
+	private void buildFlow(IdentityKey<Flow> key, Function<ConfigurerProvider, OperationConfigurer> supplier, Consumer<Flow> c) {
 		Map<IdentityKey<Flow>,Function<ConfigurerProvider, OperationConfigurer>> suppliers = new HashMap<>();
 		suppliers.put(key, supplier);
-		return triggers(suppliers, m -> c.accept(m.singleFor(key)));
+		buildFlows(suppliers, m -> c.accept(m.flowFor(key).get()));
 	}
 	
 	protected Optional<FlowSegment> buildFlowSegment() {
@@ -201,26 +208,12 @@ public class ModuleSetup {
 		return Optional.of(createLabelSegment(path.slashes(), seq(built)));
 	}
 
-	public void requirePort(int port, Optional<String> host) {
-		collector.portRequirements.add(new PortRequirement(port, host));
+	public static interface DoneCallback extends Runnable {
+		void done();
+		default void run() {
+			done();
+		}
 	}
-	
-	public void register(LifecycleComponent component) {
-		collector.components.add(component);
-	}
-	
-	public void network(int port, String protocol) {
-		network(port, protocol, data -> {});
-	}
-	
-	public void network(int port, String protocol, Consumer<MutableData> details) {
-		MutableData data = MutableMemoryData.create();
-		details.accept(data);
-		collector.network.add(new NetworkInfo(port, protocol, data.immutable()));
-	}
-	
-	public void requirePort(int port) {
-		requirePort(port, Optional.empty());
-	}
+
 	
 }

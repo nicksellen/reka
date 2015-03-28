@@ -90,12 +90,12 @@ public class PostgresConfigurer extends JdbcBaseModule {
 	}
 
 	@Override
-	public void setup(ModuleSetup module) {
-		super.setup(module);
+	public void setup(ModuleSetup app) {
+		super.setup(app);
 		
 		if (!triggers.isEmpty()) {
 			
-			module.setupInitializer(init -> {
+			app.onDeploy(init -> {
 				init.run("setup notify connection pool", ctx -> {
 					PGDataSource ds = new PGDataSource();
 					try {
@@ -112,12 +112,12 @@ public class PostgresConfigurer extends JdbcBaseModule {
 				});
 			});
 			
-			module.triggers(triggers.build(), reg -> {
+			app.buildFlows(triggers.build(), reg -> {
 				try {
 					
-					PGDataSource ds = reg.store().get(NOTIFY_DS);
+					PGDataSource ds = app.ctx().get(NOTIFY_DS);
 					PGConnection connection = (PGConnection) ds.getConnection();
-					reg.store().put(NOTIFY_CONNECTION, connection);
+					app.ctx().put(NOTIFY_CONNECTION, connection);
 					
 					Statement statement = connection.createStatement();
 					
@@ -140,7 +140,7 @@ public class PostgresConfigurer extends JdbcBaseModule {
 				}
 			});
 			
-			module.onShutdown("close connection", ctx -> {
+			app.onUndeploy("close connection", ctx -> {
 				ctx.remove(NOTIFY_CONNECTION).ifPresent(connection -> {
 					try {
 						connection.close();

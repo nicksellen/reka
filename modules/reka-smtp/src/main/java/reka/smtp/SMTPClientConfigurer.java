@@ -32,7 +32,7 @@ public class SMTPClientConfigurer extends ModuleConfigurer {
 
 	@Override
 	public void setup(ModuleSetup init) {
-		init.operation(path("send"), provider -> new SMTPSendConfigurer(host, port, username, password));
+		init.defineOperation(path("send"), provider -> new SMTPSendConfigurer(host, port, username, password));
 	}
 	
 }

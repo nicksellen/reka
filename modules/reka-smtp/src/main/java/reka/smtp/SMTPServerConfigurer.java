@@ -125,11 +125,11 @@ public class SMTPServerConfigurer extends ModuleConfigurer {
 	}
 	
 	@Override
-	public void setup(ModuleSetup module) {
+	public void setup(ModuleSetup app) {
 		
 		if (emailHandler != null) {
 			
-			module.setupInitializer(init -> {
+			app.onDeploy(init -> {
 				init.run("start smtp server", ctx -> {
 					RekaSmtpServer server = servers.computeIfAbsent(port, p -> new RekaSmtpServer(port));
 					server.start();
@@ -137,15 +137,14 @@ public class SMTPServerConfigurer extends ModuleConfigurer {
 				});
 			});
 			
-			module.trigger("on email", emailHandler, registration -> {
-				RekaSmtpServer server = registration.store().get(SERVER);
-				Flow flow = registration.flow();
+			app.buildFlow("on email", emailHandler, flow -> {
+				RekaSmtpServer server = app.ctx().get(SERVER);
 				server.add(flow);
-				registration.network(port, "smtp");
-				module.onUndeploy("undeploy smtp", () -> server.remove(flow));
+				app.registerNetwork(port, "smtp");
+				app.onUndeploy("undeploy smtp", () -> server.remove(flow));
 			});
 			
-			module.onShutdown("stop smtp server", ctx -> ctx.get(SERVER).stop());
+			app.onUndeploy("stop smtp server", ctx -> ctx.get(SERVER).stop());
 			
 		}
 	}

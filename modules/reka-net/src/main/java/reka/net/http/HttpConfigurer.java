@@ -39,8 +39,6 @@ import reka.net.http.streaming.HttpWriteConfigurer;
 
 public class HttpConfigurer extends ModuleConfigurer {
 	
-	private final Logger log = LoggerFactory.getLogger(getClass());
-	
 	// listen 8080
 	// listen localhost:500
 	// listen boo.com
@@ -106,18 +104,18 @@ public class HttpConfigurer extends ModuleConfigurer {
 		
 		listens.replaceAll(listen -> listen.port() == -1 ? new HostAndPort(listen.host(), ssl != null ? 443 : 80) : listen);
 		
-		app.operation(path("router"), provider -> new HttpRouterConfigurer(dirs(), provider));
-		app.operation(path("redirect"), provider -> new HttpRedirectConfigurer());
-		app.operation(path("content"), provider -> new HttpContentConfigurer(dirs()));
-		app.operation(path("request"), provider -> new HttpRequestConfigurer(server.nettyEventGroup(), server.nettyChannelType()));
-		app.operation(path("req"), provider -> new HttpRequestConfigurer(server.nettyEventGroup(), server.nettyChannelType()));
-		app.operation(path("auth"), provider -> new BasicAuthConfigurer(provider));
+		app.defineOperation(path("router"), provider -> new HttpRouterConfigurer(dirs(), provider));
+		app.defineOperation(path("redirect"), provider -> new HttpRedirectConfigurer());
+		app.defineOperation(path("content"), provider -> new HttpContentConfigurer(dirs()));
+		app.defineOperation(path("request"), provider -> new HttpRequestConfigurer(server.nettyEventGroup(), server.nettyChannelType()));
+		app.defineOperation(path("req"), provider -> new HttpRequestConfigurer(server.nettyEventGroup(), server.nettyChannelType()));
+		app.defineOperation(path("auth"), provider -> new BasicAuthConfigurer(provider));
 		
 		// ones that take care of writing responses
 		
-		app.operation(path("head"), provider -> new HttpHeadConfigurer());
-		app.operation(path("write"), provider -> new HttpWriteConfigurer());
-		app.operation(path("end"), provider -> new HttpEndConfigurer());
+		app.defineOperation(path("head"), provider -> new HttpHeadConfigurer());
+		app.defineOperation(path("write"), provider -> new HttpWriteConfigurer());
+		app.defineOperation(path("end"), provider -> new HttpEndConfigurer());
 		
 		/*
 		 * TODO: make this, I need a nice api for provider.add(path("head"), new HttpHeadConfigurer() etc
@@ -131,22 +129,22 @@ public class HttpConfigurer extends ModuleConfigurer {
 		*/
 		
 		listens.forEach(listen -> {
-			app.requirePort(listen.port(), Optional.of(listen.host()));	
+			app.requireNetwork(listen.port(), listen.host());	
 		});
 		
 		for (Function<ConfigurerProvider, OperationConfigurer> h : requestHandlers) {
 			
-			app.addTrigger("on request", h, reg -> {
+			app.buildFlow("on request", h, flow -> {
 				
 				for (HostAndPort listen : listens) {
 					
 					if (ssl != null) {
-						app.register(server.deployHttp(app.identity(), listen, new HttpFlows(reg.flow())));
+						app.registerComponent(server.deployHttp(app.identity(), listen, new HttpFlows(flow)));
 					} else {
-						app.register(server.deployHttps(app.identity(), listen, ssl, new HttpFlows(reg.flow())));
+						app.registerComponent(server.deployHttps(app.identity(), listen, ssl, new HttpFlows(flow)));
 					}
 					
-					app.network(listen.port(), Type.HTTP.protocolString(ssl != null), details -> {
+					app.registerNetwork(listen.port(), Type.HTTP.protocolString(ssl != null), details -> {
 						details.putString("host", listen.host());
 					});
 				

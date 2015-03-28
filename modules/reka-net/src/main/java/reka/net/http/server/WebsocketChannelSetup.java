@@ -4,8 +4,8 @@ import static reka.util.Util.createEntry;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.group.ChannelGroup;
-import io.netty.handler.codec.MessageToMessageDecoder;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaders;
 
@@ -25,7 +25,7 @@ import reka.net.websockets.WebsocketFlowHandler;
 import com.google.common.base.Splitter;
 
 @Sharable
-public class WebsocketChannelSetup extends MessageToMessageDecoder<FullHttpRequest> implements ChannelSetup<SocketFlows> {
+public class WebsocketChannelSetup extends ChannelInboundHandlerAdapter implements ChannelSetup<SocketFlows> {
 
 	private static final WebSocketServerProtocolHandshakeHandler handshaker = new WebSocketServerProtocolHandshakeHandler();
 	private static final Splitter hostSplitter = Splitter.on(":").limit(2);
@@ -43,7 +43,9 @@ public class WebsocketChannelSetup extends MessageToMessageDecoder<FullHttpReque
 	}
 	
 	@Override
-	protected void decode(ChannelHandlerContext ctx, FullHttpRequest req, List<Object> out) throws Exception {
+	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+		if (!(msg instanceof FullHttpRequest)) return;
+		FullHttpRequest req = (FullHttpRequest) msg;
 		
 		String host = hostSplitter.split(HttpHeaders.getHost(req, "localhost")).iterator().next();
 		
@@ -67,7 +69,7 @@ public class WebsocketChannelSetup extends MessageToMessageDecoder<FullHttpReque
 		if (flow == null) {
 			// it's gone!
 			req.release();
-			ctx.disconnect();
+			ctx.close();
 			return;
 		}
 		

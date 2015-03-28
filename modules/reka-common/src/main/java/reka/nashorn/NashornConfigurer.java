@@ -115,9 +115,9 @@ public class NashornConfigurer extends ModuleConfigurer {
 	@Override
 	public void setup(ModuleSetup module) {
 		
-		module.operation(root(), provider -> new NashornRunConfigurer(root()));
+		module.defineOperation(root(), provider -> new NashornRunConfigurer(root()));
 		
-		module.setupInitializer(init -> {
+		module.onDeploy(init -> {
 		
 			init.run("initialize runtime", ctx -> {
 				ctx.put(RUNNER, new ThreadLocalNashornRunner(scripts));
@@ -156,7 +156,7 @@ public class NashornConfigurer extends ModuleConfigurer {
 				});
 				
 				// the operation that will insert this data
-				module.operation(path(opname), provider -> new PutJSDataConfigurer(dataKey));
+				module.defineOperation(path(opname), provider -> new PutJSDataConfigurer(dataKey));
 			}
 		
 		});
@@ -174,7 +174,7 @@ public class NashornConfigurer extends ModuleConfigurer {
 				}).run();
 			});
 			
-			module.operation(slashes(name), provider -> new BooConfigurer(key));
+			module.defineOperation(slashes(name), provider -> new BooConfigurer(key));
 		});
 		
 	}

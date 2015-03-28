@@ -14,14 +14,14 @@ public class AdderConfigurer extends ModuleConfigurer {
 
 	@Override
 	public void setup(ModuleSetup module) {
-		module.setupInitializer(init -> {
+		module.onDeploy(init -> {
 			init.run("create counter", ctx -> {
 				ctx.put(ADDER, new LongAdder());
 			});
 		});
-		module.operation(path("inc"), provider -> new IncrementConfigurer());
-		module.operation(path("dec"), provider -> new DecrementConfigurer());
-		module.operation(path("sum"), provider -> new SumConfigurer());
+		module.defineOperation(path("inc"), provider -> new IncrementConfigurer());
+		module.defineOperation(path("dec"), provider -> new DecrementConfigurer());
+		module.defineOperation(path("sum"), provider -> new SumConfigurer());
 	}
 
 }

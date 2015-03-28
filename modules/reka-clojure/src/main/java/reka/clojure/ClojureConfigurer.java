@@ -85,9 +85,9 @@ public class ClojureConfigurer extends ModuleConfigurer {
 	private final Map<Identity,Integer> versions = new HashMap<>();
 	
 	@Override
-	public void setup(ModuleSetup module) {
+	public void setup(ModuleSetup app) {
 		
-		module.setupInitializer(init -> {
+		app.onDeploy(init -> {
 		
 			init.run("initialize environment", (idv, store) -> {
 
@@ -130,7 +130,7 @@ public class ClojureConfigurer extends ModuleConfigurer {
 			});
 		});
 		
-		module.onShutdown("shutdown env", (idv, store) -> {
+		app.onShutdown("shutdown env", (idv, store) -> {
 			/* work in progress...
 			if (false) {
 
@@ -152,14 +152,14 @@ public class ClojureConfigurer extends ModuleConfigurer {
 		});
 		
 		triggerFns.forEach((name, body) -> {
-			module.trigger(format("on %s", name), body, reg -> {
-				reg.store().get(CLOJURE_ENV).run("reka/define-callback", name, (Runnable) () -> {
-					reg.flow().run();
+			app.buildFlow(format("on %s", name), body, flow -> {
+				app.ctx().get(CLOJURE_ENV).run("reka/define-callback", name, (Runnable) () -> {
+					flow.run();
 				});
 			});
 		});
 		
-		module.operation(root(), provider -> new ClojureRunConfigurer());
+		app.defineOperation(root(), provider -> new ClojureRunConfigurer());
 	}
 	
 }

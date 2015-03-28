@@ -66,32 +66,29 @@ public class AdminConfigurer extends ModuleConfigurer {
 	@Override
 	public void setup(ModuleSetup module) {
 		
-		module.operation(path("list"), provider -> new RekaListConfigurer(manager));
-		module.operation(path("get"), provider -> new RekaDetailsConfigurer(manager));
-		module.operation(path("validate"), provider -> new RekaValidateConfigurer(provider, manager));
-		module.operation(path("deploy"), provider -> new RekaDeployConfigurer(manager, dirs()));
-		module.operation(path("undeploy"), provider -> new RekaUndeployConfigurer(manager, dirs()));
-		module.operation(path("visualize"), provider -> new RekaVisualizeConfigurer(manager));
+		module.defineOperation(path("list"), provider -> new RekaListConfigurer(manager));
+		module.defineOperation(path("get"), provider -> new RekaDetailsConfigurer(manager));
+		module.defineOperation(path("validate"), provider -> new RekaValidateConfigurer(provider, manager));
+		module.defineOperation(path("deploy"), provider -> new RekaDeployConfigurer(manager, dirs()));
+		module.defineOperation(path("undeploy"), provider -> new RekaUndeployConfigurer(manager, dirs()));
+		module.defineOperation(path("visualize"), provider -> new RekaVisualizeConfigurer(manager));
 		
 		for (ConfigBody body : deployHandlers) {			
-			module.trigger("on deploy", body, registration -> {
-				Flow flow = registration.flow();
+			module.buildFlow("on deploy", body, flow -> {
 				manager.addListener(flow, EventType.deploy);
 				module.onUndeploy("remove listener", () -> manager.removeListener(flow));
 			});
 		}		
 
 		for (ConfigBody body : undeployHandlers) {			
-			module.trigger("on undeploy", body, registration -> {
-				Flow flow = registration.flow();
+			module.buildFlow("on undeploy", body, flow -> {
 				manager.addListener(flow, EventType.undeploy);
 				module.onUndeploy("remove listener", () -> manager.removeListener(flow));
 			});
 		}	
 
 		for (ConfigBody body : statusHandlers) {			
-			module.trigger("on status", body, registration -> {
-				Flow flow = registration.flow();
+			module.buildFlow("on status", body, flow -> {
 				manager.addListener(flow, EventType.status);
 				module.onUndeploy("remove listener", () -> manager.removeListener(flow));
 			});

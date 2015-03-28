@@ -67,7 +67,7 @@ public class TwilioModule implements Module {
 
 		@Override
 		public void setup(ModuleSetup module) {
-			module.operation(path("send"), provider -> new TwilioSendConfigurer(sid, token, defaultFrom));
+			module.defineOperation(path("send"), provider -> new TwilioSendConfigurer(sid, token, defaultFrom));
 		}
 		
 	}

@@ -25,6 +25,7 @@ import reka.net.NetServerManager;
 import reka.net.NetServerManager.SocketFlows;
 import reka.net.NetSettings;
 import reka.net.NetSettings.SslSettings;
+import reka.net.NetSettings.Type;
 import reka.net.common.sockets.SocketBroadcastConfigurer;
 import reka.net.common.sockets.SocketSendConfigurer;
 import reka.net.common.sockets.SocketStatusProvider;
@@ -105,21 +106,21 @@ public class WebsocketConfigurer extends ModuleConfigurer {
 		
 		listens.replaceAll(listen -> listen.port() == -1 ? new HostAndPort(listen.host(), ssl != null ? 443 : 80) : listen);
 		
-		app.operation(path("send"), provider -> new SocketSendConfigurer(server));
-		app.operation(path("broadcast"), provider -> new SocketBroadcastConfigurer(server));
-		app.operation(slashes("tag/add"), provider -> new SocketTagAddConfigurer(server));
-		app.operation(slashes("tag/rm"), provider -> new SocketTagRemoveConfigurer(server));
-		app.operation(slashes("tag/send"), provider -> new SocketTagSendConfigurer(server));
+		app.defineOperation(path("send"), provider -> new SocketSendConfigurer(server));
+		app.defineOperation(path("broadcast"), provider -> new SocketBroadcastConfigurer(server));
+		app.defineOperation(slashes("tag/add"), provider -> new SocketTagAddConfigurer(server));
+		app.defineOperation(slashes("tag/rm"), provider -> new SocketTagRemoveConfigurer(server));
+		app.defineOperation(slashes("tag/send"), provider -> new SocketTagSendConfigurer(server));
 		
 		if (listens.isEmpty()) return;
 		
 		listens.forEach(listen -> {
-			app.requirePort(listen.port(), Optional.of(listen.host()));	
+			app.requireNetwork(listen.port(), listen.host());	
 		});
 		
-		app.status(unused -> new SocketStatusProvider(server, app.identity()));
+		app.registerStatusProvider(unused -> new SocketStatusProvider(server, app.identity()));
 		
-		app.triggers(triggers.build(), reg -> {
+		app.buildFlows(triggers.build(), reg -> {
 			for (HostAndPort listen : listens) {
 			
 				String host = listen.host();
@@ -130,14 +131,14 @@ public class WebsocketConfigurer extends ModuleConfigurer {
 				}
 			
 				if (ssl != null) {
-					app.register(server.deployWebsocketSsl(app.identity(), new HostAndPort(host, port), ssl, 
+					app.registerComponent(server.deployWebsocketSsl(app.identity(), new HostAndPort(host, port), ssl, 
 							new SocketFlows(reg.flowFor(CONNECT),reg.flowFor(MESSAGE),reg.flowFor(DISCONNECT))));
 				} else {
-					app.register(server.deployWebsocket(app.identity(), new HostAndPort(host, port), 
+					app.registerComponent(server.deployWebsocket(app.identity(), new HostAndPort(host, port), 
 							new SocketFlows(reg.flowFor(CONNECT),reg.flowFor(MESSAGE),reg.flowFor(DISCONNECT))));
 				}
 				
-				app.network(listen.port(), "ws" + ssl != null ? "s" : "", details -> {
+				app.registerNetwork(listen.port(), Type.WEBSOCKET.protocolString(ssl != null), details -> {
 					details.putString("host", listen.host());
 				});
 			}

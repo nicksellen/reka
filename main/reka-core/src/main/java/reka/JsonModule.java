@@ -45,8 +45,8 @@ public class JsonModule implements Module {
 
 		@Override
 		public void setup(ModuleSetup module) {
-			module.operation(path("parse"), provider -> new JsonParseConfigurer());
-			module.operation(path("stringify"), provider -> new JsonStringifyConfigurer());
+			module.defineOperation(path("parse"), provider -> new JsonParseConfigurer());
+			module.defineOperation(path("stringify"), provider -> new JsonStringifyConfigurer());
 		}
 		
 	}

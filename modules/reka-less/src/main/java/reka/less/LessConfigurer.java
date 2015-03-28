@@ -53,7 +53,7 @@ public class LessConfigurer extends ModuleConfigurer {
 
 	@Override
 	public void setup(ModuleSetup module) {
-		module.operation(root(), provider -> new LessContentConfigurer(compiler, dirs()));
+		module.defineOperation(root(), provider -> new LessContentConfigurer(compiler, dirs()));
 	}
 	
 	public static class ConfigResource implements Resource {

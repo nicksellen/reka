@@ -65,33 +65,33 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 	@Override
 	public void setup(ModuleSetup module) {
 		
-		module.operation(path("put"), provider -> new PutConfigurer());
-		module.operation(path("putv"), provider -> new PutWithVarsConfigurer());
-		module.operation(path("copy"), provider -> new CopyConfigurer());
-    	module.operation(path("run"), provider -> new RunConfigurer(provider));
-    	module.operation(path("runp"), provider -> new RunParallelConfigurer(provider));
-    	module.operation(path("context"), provider -> new NewContextConfigurer(provider));
-    	module.operation(path("then"), provider -> new RunConfigurer(provider));
-    	module.operation(path("log"), provider -> new LogConfigurer());
-    	module.operation(path("sleep"), provider -> new SleepConfigurer());
-    	module.operation(path("halt!"), provider -> new HaltConfigurer());
-    	module.operation(slashes("uuid/generate"), provider -> new GenerateUUIDConfigurer());
-    	module.operation(path("println"), provider -> new PrintlnConfigurer());
-    	module.operation(path("uppercase"), provider -> new UppercaseConfigurer());
-    	module.operation(path("lowercase"), provider -> new LowercaseConfigurer());
+		module.defineOperation(path("put"), provider -> new PutConfigurer());
+		module.defineOperation(path("putv"), provider -> new PutWithVarsConfigurer());
+		module.defineOperation(path("copy"), provider -> new CopyConfigurer());
+    	module.defineOperation(path("run"), provider -> new RunConfigurer(provider));
+    	module.defineOperation(path("runp"), provider -> new RunParallelConfigurer(provider));
+    	module.defineOperation(path("context"), provider -> new NewContextConfigurer(provider));
+    	module.defineOperation(path("then"), provider -> new RunConfigurer(provider));
+    	module.defineOperation(path("log"), provider -> new LogConfigurer());
+    	module.defineOperation(path("sleep"), provider -> new SleepConfigurer());
+    	module.defineOperation(path("halt!"), provider -> new HaltConfigurer());
+    	module.defineOperation(slashes("uuid/generate"), provider -> new GenerateUUIDConfigurer());
+    	module.defineOperation(path("println"), provider -> new PrintlnConfigurer());
+    	module.defineOperation(path("uppercase"), provider -> new UppercaseConfigurer());
+    	module.defineOperation(path("lowercase"), provider -> new LowercaseConfigurer());
     	
-    	module.operation(path("throw"), provider -> new ThrowConfigurer());
-    	module.operation(path("inspect"), provider -> new InspectConfigurer());
-    	module.operation(slashes("random/string"), provider -> new RandomStringConfigurer());
-    	module.operation(path("coerce"), provider -> new Coercion.CoerceConfigurer());
-    	module.operation(slashes("coerce/int64"), provider -> new Coercion.CoerceLongConfigurer());
-    	module.operation(slashes("coerce/bool"), provider -> new Coercion.CoerceBooleanConfigurer());
-    	module.operation(path("unzip"), provider -> new UnzipConfigurer());
-    	module.operation(path("split"), provider -> new SplitConfigurer());
+    	module.defineOperation(path("throw"), provider -> new ThrowConfigurer());
+    	module.defineOperation(path("inspect"), provider -> new InspectConfigurer());
+    	module.defineOperation(slashes("random/string"), provider -> new RandomStringConfigurer());
+    	module.defineOperation(path("coerce"), provider -> new Coercion.CoerceConfigurer());
+    	module.defineOperation(slashes("coerce/int64"), provider -> new Coercion.CoerceLongConfigurer());
+    	module.defineOperation(slashes("coerce/bool"), provider -> new Coercion.CoerceBooleanConfigurer());
+    	module.defineOperation(path("unzip"), provider -> new UnzipConfigurer());
+    	module.defineOperation(path("split"), provider -> new SplitConfigurer());
     	
-    	module.operation(path("match"), provider -> new MatchConfigurer(provider));
+    	module.defineOperation(path("match"), provider -> new MatchConfigurer(provider));
     	
-    	module.operation(path("simple-uppercase"), simpleOperation(config -> {
+    	module.defineOperation(path("simple-uppercase"), simpleOperation(config -> {
     		Path path = dots(config.valueAsString());
     		return (data, ctx) -> {
     			data.getContent(path).ifPresent(content -> {

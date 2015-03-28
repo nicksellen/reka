@@ -8,8 +8,8 @@ public class BCryptModule extends ModuleConfigurer {
 
 	@Override
 	public void setup(ModuleSetup module) {
-    	module.operation(path("hashpw"), provider -> new BCryptHashpwConfigurer());
-    	module.operation(path("checkpw"), provider -> new BCryptCheckpwConfigurer(provider));
+    	module.defineOperation(path("hashpw"), provider -> new BCryptHashpwConfigurer());
+    	module.defineOperation(path("checkpw"), provider -> new BCryptCheckpwConfigurer(provider));
 	}
 
 }

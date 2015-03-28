@@ -61,22 +61,22 @@ public class IrcConfigurer extends ModuleConfigurer {
 	}
 
 	@Override
-	public void setup(ModuleSetup module) {
+	public void setup(ModuleSetup app) {
 
-		module.operation(path("send"), provider -> new IrcSendConfigurer());
+		app.defineOperation(path("send"), provider -> new IrcSendConfigurer());
 		
-		module.setupInitializer(init -> {
+		app.onDeploy(init -> {
 			init.run("create bot", ctx -> {
 				ctx.put(BOT, new RekaBot(name, hostname, channel, key));
 			});
 		});
 
-		module.onShutdown("disconnect", ctx -> {
+		app.onUndeploy("disconnect", ctx -> {
 			ctx.remove(BOT).ifPresent(RekaBot::shutdown);
 		});
 
-		module.triggers(triggers.build(), reg -> {
-			RekaBot bot = reg.store().get(BOT);
+		app.buildFlows(triggers.build(), reg -> {
+			RekaBot bot = app.ctx().get(BOT);
 			reg.flowFor(MESSAGE).ifPresent(flow -> {
 				bot.addListener(new IrcMessageFlowListener(flow));
 			});	

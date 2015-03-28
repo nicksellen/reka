@@ -19,10 +19,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 
-import reka.PortRequirement;
 import reka.api.IdentityStore;
 import reka.api.Path;
 import reka.api.flow.Flow;
@@ -30,186 +27,62 @@ import reka.api.flow.FlowSegment;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.app.IdentityAndVersion;
-import reka.core.app.LifecycleComponent;
 import reka.core.builder.FlowVisualizer;
 import reka.core.builder.SingleFlow;
 import reka.core.module.ModuleInfo;
 import reka.core.runtime.NoFlow;
 import reka.core.runtime.NoFlowVisualizer;
-import reka.core.setup.ModuleSetup.ApplicationCheck;
 import reka.dirs.AppDirs;
 
 public abstract class ModuleConfigurer {
 
-	public static class ModuleInitializer {
-
-		private final Flow flow;
-		private final FlowVisualizer visualizer;
-		private final ModuleCollector collector;
-
-		ModuleInitializer(Flow initialize, FlowVisualizer visualizer, ModuleCollector collector) {
-			this.flow = initialize;
-			this.visualizer = visualizer;
-			this.collector = collector;
-		}
-
-		public Flow flow() {
-			return flow;
-		}
-
-		public FlowVisualizer visualizer() {
-			return visualizer;
-		}
-
-		public ModuleCollector collector() {
-			return collector;
-		}
-
-	}
-
-	public static ModuleInitializer buildInitializer(IdentityAndVersion idv, ModuleConfigurer root, IdentityStore store) {
-		return Utils.process(idv, root, store);
-	}
-
-	public static class ModuleCollector {
-
-		public final Map<Path, FlowSegmentBiFunction> providers;
-		public final List<InitFlow> initflows;
-		public final List<TriggerCollection> triggers;
-		public final List<Runnable> onUndeploy;
-		public final List<NetworkInfo> network;
-		public final List<LifecycleComponent> components;
-		public final List<Supplier<StatusProvider>> statuses;
-		public final List<Consumer<ApplicationCheck>> checks;
-		public final List<PortRequirement> portRequirements;
+	public static ApplicationSetup setup(IdentityAndVersion idv, ModuleConfigurer root, IdentityStore store) {
 		
-		public ModuleCollector() {
-			providers = new HashMap<>();
-			initflows = new ArrayList<>();
-			triggers = new ArrayList<>();
-			onUndeploy = new ArrayList<>();
-			network = new ArrayList<>();
-			components = new ArrayList<>();
-			statuses = new ArrayList<>();
-			checks = new ArrayList<>();
-			portRequirements = new ArrayList<>();
+		ModuleCollector collector = new ModuleCollector();
+
+		Set<ModuleConfigurer> all = collect(root, new HashSet<>());
+		Set<ModuleConfigurer> toplevel = findTopLevel(all);
+		Map<String, ModuleConfigurer> rootsMap = map(root.uses);
+
+		resolveNamedDependencies(all, rootsMap);
+		Map<ModuleConfigurer, FlowSegment> initializeSegments = new HashMap<>();
+
+		for (ModuleConfigurer module : all) {
+			if (module.isRoot()) continue;
+			
+			ModuleSetupContext ctx = new ModuleSetupContext(store);
+
+			ModuleSetup setup = new ModuleSetup(idv, module.info(), module.fullAliasOrName(), ctx, collector);
+			
+			module.setup(setup);
+			
+			if (setup.includeDefaultStatus() && module.info() != null) {
+				collector.statuses.add(() -> StatusProvider.create(module.info().name().slashes(), 
+						                                           module.fullAliasOrName().slashes(), 
+						                                           module.info().version()));
+			}
+
+			setup.buildFlowSegment().ifPresent(segment -> {
+				initializeSegments.put(module, segment);
+			});
+
 		}
 
-	}
+		Optional<FlowSegment> initializeSegment = buildSegment(toplevel, initializeSegments);
 
-	private static class Utils {
-		
-		public static ModuleInitializer process(IdentityAndVersion idv, ModuleConfigurer root, IdentityStore store) {
+		Flow flow;
+		FlowVisualizer visualizer;
 
-			ModuleCollector collector = new ModuleCollector();
-
-			Set<ModuleConfigurer> all = collect(root, new HashSet<>());
-			Set<ModuleConfigurer> toplevel = findTopLevel(all);
-			Map<String, ModuleConfigurer> rootsMap = map(root.uses);
-
-			resolveNamedDependencies(all, rootsMap);
-			Map<ModuleConfigurer, FlowSegment> segments = new HashMap<>();
-
-			for (ModuleConfigurer module : all) {
-				if (module.isRoot()) continue;
-				
-				ModuleSetupContext ctx = new ModuleSetupContext(store);
-
-				ModuleSetup init = new ModuleSetup(idv, module.info(), module.fullAliasOrName(), ctx, collector);
-				module.setup(init);
-				
-				if (init.includeDefaultStatus() && module.info() != null) {
-					collector.statuses.add(() -> StatusProvider.create(module.info().name().slashes(), 
-							                                           module.fullAliasOrName().slashes(), 
-							                                           module.info().version()));
-				}
-
-				init.buildFlowSegment().ifPresent(segment -> {
-					segments.put(module, segment);
-				});
-
-			}
-
-			Optional<FlowSegment> segment = buildSegment(toplevel, segments);
-
-			Flow flow;
-			FlowVisualizer visualizer;
-
-			if (segment.isPresent()) {
-				Entry<Flow, FlowVisualizer> entry = SingleFlow.create(Path.path("initialize"), segment.get());
-				flow = entry.getKey();
-				visualizer = entry.getValue();
-			} else {
-				flow = NoFlow.INSTANCE;
-				visualizer = NoFlowVisualizer.INSTANCE;
-			}
-
-			return new ModuleInitializer(flow, visualizer, collector);
+		if (initializeSegment.isPresent()) {
+			Entry<Flow, FlowVisualizer> entry = SingleFlow.create(Path.path("initialize"), initializeSegment.get());
+			flow = entry.getKey();
+			visualizer = entry.getValue();
+		} else {
+			flow = NoFlow.INSTANCE;
+			visualizer = NoFlowVisualizer.INSTANCE;
 		}
 
-		private static Optional<FlowSegment> buildSegment(Set<ModuleConfigurer> modules, Map<ModuleConfigurer, FlowSegment> built) {
-			List<FlowSegment> segments = new ArrayList<>();
-			for (ModuleConfigurer module : modules) {
-				buildSegment(module, built).ifPresent(segment -> segments.add(segment));
-			}
-			return segments.isEmpty() ? Optional.empty() : Optional.of(createParallelSegment(segments));
-		}
-
-		private static Optional<FlowSegment> buildSegment(ModuleConfigurer module, Map<ModuleConfigurer, FlowSegment> built) {
-			if (module.isRoot())
-				return Optional.empty();
-
-			List<FlowSegment> sequence = new ArrayList<>();
-
-			if (built.containsKey(module)) {
-				sequence.add(built.get(module));
-			}
-
-			Optional<FlowSegment> c = buildSegment(module.usedBy, built);
-			if (c.isPresent()) {
-				sequence.add(c.get());
-			}
-
-			return sequence.isEmpty() ? Optional.empty() : Optional.of(seq(sequence));
-		}
-
-		private static void resolveNamedDependencies(Set<ModuleConfigurer> all, Map<String, ModuleConfigurer> allMap) {
-			for (ModuleConfigurer use : all) {
-				for (String depname : use.modulesNames) {
-					ModuleConfigurer dep = allMap.get(depname);
-					checkNotNull(dep, "missing dependency: [%s] uses [%s]", use.aliasOrName(), depname);
-					dep.usedBy.add(use);
-					use.uses.add(dep);
-				}
-			}
-		}
-
-		private static Set<ModuleConfigurer> findTopLevel(Collection<ModuleConfigurer> uses) {
-			Set<ModuleConfigurer> roots = new HashSet<>();
-			for (ModuleConfigurer use : uses) {
-				if (use.uses.isEmpty()) {
-					roots.add(use);
-				}
-			}
-			return roots;
-		}
-
-		private static Set<ModuleConfigurer> collect(ModuleConfigurer use, Set<ModuleConfigurer> collector) {
-			collector.add(use);
-			for (ModuleConfigurer child : use.uses) {
-				collect(child, collector);
-			}
-			return collector;
-		}
-
-		public static Map<String, ModuleConfigurer> map(Collection<ModuleConfigurer> uses) {
-			Map<String, ModuleConfigurer> map = new HashMap<>();
-			for (ModuleConfigurer use : uses) {
-				map.put(use.aliasOrName(), use);
-			}
-			return map;
-		}
-
+		return new ApplicationSetup(flow, visualizer, collector);
 	}
 
 	private List<ModuleInfo> modules = new ArrayList<>();
@@ -364,6 +237,70 @@ public abstract class ModuleConfigurer {
 	@Override
 	public String toString() {
 		return format("%s(\n    name %s\n    params %s)", name, aliasOrName(), modulesNames);
+	}
+
+
+	private static Optional<FlowSegment> buildSegment(Set<ModuleConfigurer> modules, Map<ModuleConfigurer, FlowSegment> built) {
+		List<FlowSegment> segments = new ArrayList<>();
+		for (ModuleConfigurer module : modules) {
+			buildSegment(module, built).ifPresent(segment -> segments.add(segment));
+		}
+		return segments.isEmpty() ? Optional.empty() : Optional.of(createParallelSegment(segments));
+	}
+
+	private static Optional<FlowSegment> buildSegment(ModuleConfigurer module, Map<ModuleConfigurer, FlowSegment> built) {
+		if (module.isRoot())
+			return Optional.empty();
+
+		List<FlowSegment> sequence = new ArrayList<>();
+
+		if (built.containsKey(module)) {
+			sequence.add(built.get(module));
+		}
+
+		Optional<FlowSegment> c = buildSegment(module.usedBy, built);
+		if (c.isPresent()) {
+			sequence.add(c.get());
+		}
+
+		return sequence.isEmpty() ? Optional.empty() : Optional.of(seq(sequence));
+	}
+
+	private static void resolveNamedDependencies(Set<ModuleConfigurer> all, Map<String, ModuleConfigurer> allMap) {
+		for (ModuleConfigurer use : all) {
+			for (String depname : use.modulesNames) {
+				ModuleConfigurer dep = allMap.get(depname);
+				checkNotNull(dep, "missing dependency: [%s] uses [%s]", use.aliasOrName(), depname);
+				dep.usedBy.add(use);
+				use.uses.add(dep);
+			}
+		}
+	}
+
+	private static Set<ModuleConfigurer> findTopLevel(Collection<ModuleConfigurer> uses) {
+		Set<ModuleConfigurer> roots = new HashSet<>();
+		for (ModuleConfigurer use : uses) {
+			if (use.uses.isEmpty()) {
+				roots.add(use);
+			}
+		}
+		return roots;
+	}
+
+	private static Set<ModuleConfigurer> collect(ModuleConfigurer use, Set<ModuleConfigurer> collector) {
+		collector.add(use);
+		for (ModuleConfigurer child : use.uses) {
+			collect(child, collector);
+		}
+		return collector;
+	}
+
+	private static Map<String, ModuleConfigurer> map(Collection<ModuleConfigurer> uses) {
+		Map<String, ModuleConfigurer> map = new HashMap<>();
+		for (ModuleConfigurer use : uses) {
+			map.put(use.aliasOrName(), use);
+		}
+		return map;
 	}
 
 }

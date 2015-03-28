@@ -111,9 +111,9 @@ public class ExecConfigurer extends ModuleConfigurer {
 	@Override
 	public void setup(ModuleSetup module) {
 		if (ssh != null) {
-			module.operation(root(), provider -> new ExecSshCommandConfigurer(command, ssh));
+			module.defineOperation(root(), provider -> new ExecSshCommandConfigurer(command, ssh));
 		} else {
-			module.operation(root(), provider -> new ExecCommandConfigurer(command));
+			module.defineOperation(root(), provider -> new ExecCommandConfigurer(command));
 		}
 	}
 

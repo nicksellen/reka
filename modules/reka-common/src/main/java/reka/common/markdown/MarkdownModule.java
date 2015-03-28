@@ -14,7 +14,7 @@ public class MarkdownModule extends ModuleConfigurer {
 
 	@Override
 	public void setup(ModuleSetup module) {
-		module.operation(root(), provider -> new MarkdownConfigurer());
+		module.defineOperation(root(), provider -> new MarkdownConfigurer());
 	}
 
 }

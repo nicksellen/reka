@@ -54,7 +54,7 @@ public class RhinoConfigurer extends ModuleConfigurer {
 	@Override
 	public void setup(ModuleSetup module) {
 		
-		module.setupInitializer(init -> {
+		module.onDeploy(init -> {
 		
 			init.run("create js scope", ctx -> {
 				Context context = Context.enter();
@@ -76,7 +76,7 @@ public class RhinoConfigurer extends ModuleConfigurer {
 			}
 		});
 		
-		module.operation(root(), provider -> new RhinoRunConfigurer());
+		module.defineOperation(root(), provider -> new RhinoRunConfigurer());
 		
 	}
 
