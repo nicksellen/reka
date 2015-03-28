@@ -198,7 +198,7 @@ public class NetServerManager {
 		HttpPortHandler(int port, SslSettings sslSettings) {
 			super(port, sslSettings);
 			http = new HttpChannelSetup(channels, port, sslSettings != null);
-			websocket = new WebsocketChannelSetup(channels, port, sslSettings != null);
+			websocket = new WebsocketChannelSetup(channels, port);
 			initializer = new HttpInitializer(new HttpOrWebsocket(http, websocket), sslSettings);
 		}
 
@@ -235,20 +235,6 @@ public class NetServerManager {
 		public Runnable websocketPause(String host) {
 			return websocket.pause(host);
 		}
-
-		/*
-		@Override
-		public Runnable httpPause(String host) {
-			log.warn("not doing httpPause {}", host);
-			return () -> {};
-		}
-
-		@Override
-		public Runnable websocketPause(String host) {
-			log.warn("not doing websocketPause {}", host);
-			return () -> {};
-		}
-		*/
 		
 		@Override
 		public Runnable socketPause() {
@@ -394,16 +380,21 @@ public class NetServerManager {
 				.localAddress(port)
 				.group(nettyEventGroup)
 				.channel(nettyServerChannelType)
+				
 				.option(ChannelOption.SO_BACKLOG, 1024)
 		    	.option(ChannelOption.SO_REUSEADDR, true)
 				.option(ChannelOption.TCP_NODELAY, true)
 				.option(ChannelOption.MAX_MESSAGES_PER_READ, Integer.MAX_VALUE)
 				.option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+				
 				.childOption(ChannelOption.TCP_NODELAY, true)
 				.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
 				.childOption(ChannelOption.SO_REUSEADDR, true)
 				.childOption(ChannelOption.MAX_MESSAGES_PER_READ, Integer.MAX_VALUE)
-				.childOption(ChannelOption.AUTO_READ, false) // initializers need to turn this back on if they rely on it
+				
+				 // channel initializers need to turn this back on if they rely on it
+				.childOption(ChannelOption.AUTO_READ, false)
+				
 				.childHandler(initializer());
 			
 			if (epoll) {

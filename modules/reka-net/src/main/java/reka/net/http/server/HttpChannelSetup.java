@@ -5,8 +5,8 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.group.ChannelGroup;
-import io.netty.handler.codec.MessageToMessageDecoder;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaders;
 
@@ -24,7 +24,7 @@ import reka.net.NetSettings.Type;
 import com.google.common.base.Splitter;
 
 @Sharable
-public class HttpChannelSetup extends MessageToMessageDecoder<FullHttpRequest> implements ChannelSetup<HttpFlows> {
+public class HttpChannelSetup extends ChannelInboundHandlerAdapter implements ChannelSetup<HttpFlows> {
 	
 	private static final ChannelHandler DATASET_DECODER = new FullHttpToDatasetDecoder();
 	private static final Splitter hostSplitter = Splitter.on(":").limit(2);
@@ -41,10 +41,12 @@ public class HttpChannelSetup extends MessageToMessageDecoder<FullHttpRequest> i
 		this.channels = channels;
 		this.port = port;
 		this.ssl = ssl;
-	}
-	
+	}	
+
 	@Override
-	protected void decode(ChannelHandlerContext ctx, FullHttpRequest req, List<Object> out) throws Exception {
+	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+		if (!(msg instanceof FullHttpRequest)) return;
+		FullHttpRequest req = (FullHttpRequest) msg;
 		
 		String host = hostSplitter.split(HttpHeaders.getHost(req, "localhost")).iterator().next();
 		
@@ -66,9 +68,8 @@ public class HttpChannelSetup extends MessageToMessageDecoder<FullHttpRequest> i
 		HttpFlows flow = flows.get(host);
 		
 		if (flow == null) {
-			// it's gone!
 			req.release();
-			ctx.disconnect();
+			ctx.close();
 			return;
 		}
 		

@@ -52,6 +52,9 @@ dist: build
 run: dist
 	@dist/reka/bin/reka-server
 
+run-leak-detection: dist
+	@JAVA_OPTS="-Dlog4j.configurationFile=main/reka-main/log4j2-errors-only.xml -Dio.netty.leakDetectionLevel=advanced" dist/reka/bin/reka-server
+
 run-nolog: dist
 	@JAVA_OPTS=-Dlog4j.configurationFile=main/reka-main/log4j2-errors-only.xml dist/reka/bin/reka-server
 

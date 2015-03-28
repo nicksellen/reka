@@ -36,12 +36,10 @@ public class WebsocketChannelSetup extends MessageToMessageDecoder<FullHttpReque
 
 	private final ChannelGroup channels;
 	private final int port;
-	private final boolean ssl;
 	
-	public WebsocketChannelSetup(ChannelGroup channels, int port, boolean ssl) {
+	public WebsocketChannelSetup(ChannelGroup channels, int port) {
 		this.channels = channels;
 		this.port = port;
-		this.ssl = ssl;
 	}
 	
 	@Override
