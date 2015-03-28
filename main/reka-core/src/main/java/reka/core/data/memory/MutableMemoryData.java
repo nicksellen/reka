@@ -49,7 +49,7 @@ import reka.core.data.ObjBuilder;
 
 public class MutableMemoryData implements MutableDataProvider<Object> {
 	
-	private final Logger log = LoggerFactory.getLogger(getClass());
+	private static final Logger log = LoggerFactory.getLogger(MutableMemoryData.class);
 
 	public static MutableData readJson(JsonParser json) {
 		throw unsupported("I didn't make this yet!");

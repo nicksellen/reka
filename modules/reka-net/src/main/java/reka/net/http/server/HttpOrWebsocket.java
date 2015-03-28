@@ -24,9 +24,9 @@ public class HttpOrWebsocket extends MessageToMessageDecoder<FullHttpRequest> {
 	@Override
 	protected void decode(ChannelHandlerContext ctx, FullHttpRequest req, List<Object> out) throws Exception {
 		if (WS_HEADER_VALUE.equals(req.headers().get(WS_HEADER))) {
-			ctx.pipeline().addLast(websocket);
+			ctx.pipeline().addLast("websocket setup", websocket).remove(this);
 		} else {
-			ctx.pipeline().addLast(http);
+			ctx.pipeline().addLast("http setup", http).remove(this);
 		}
 		out.add(req.retain());
 	}

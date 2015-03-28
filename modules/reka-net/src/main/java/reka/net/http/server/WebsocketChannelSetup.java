@@ -76,9 +76,9 @@ public class WebsocketChannelSetup extends MessageToMessageDecoder<FullHttpReque
 		Channel channel = ctx.channel();
 		
 		ctx.pipeline()
-			.addLast(handshaker)
-			.addLast(StringWebsocketEncoder.INSTANCE)
-			.addLast(new WebsocketFlowHandler(flows.get(host)))
+			.addLast("handshaker", handshaker)
+			.addLast("ws", StringWebsocketEncoder.INSTANCE)
+			.addLast("flow", new WebsocketFlowHandler(flows.get(host)))
 			.remove(this);
 		
 		channel.attr(ChannelAttrs.identity).set(identities.get(host));

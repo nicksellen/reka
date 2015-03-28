@@ -21,7 +21,7 @@ import reka.net.NetServerManager.SocketFlows;
 
 public class SocketFlowHandler extends SimpleChannelInboundHandler<String> {
 	
-	private final Logger log = LoggerFactory.getLogger(getClass());
+	private static final Logger log = LoggerFactory.getLogger(SocketFlowHandler.class);
 	
 	private volatile SocketFlows flows = SocketFlows.NO_FLOWS;
 	

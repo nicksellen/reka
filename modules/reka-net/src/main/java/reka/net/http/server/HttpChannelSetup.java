@@ -75,9 +75,9 @@ public class HttpChannelSetup extends MessageToMessageDecoder<FullHttpRequest> i
 		Channel channel = ctx.channel();
 		
 		ctx.pipeline()
-			.addLast(DATASET_DECODER)
-			.addLast(ssl ? DataToHttpEncoder.SSL : DataToHttpEncoder.NORMAL)
-			.addLast(new HttpFlowHandler(flow, ctx.channel()))
+			.addLast("ds", DATASET_DECODER)
+			.addLast("ssl", ssl ? DataToHttpEncoder.SSL : DataToHttpEncoder.NORMAL)
+			.addLast("flow", new HttpFlowHandler(flow, ctx.channel()))
 			.remove(this);
 		
 		channel.attr(ChannelAttrs.identity).set(identities.get(host));

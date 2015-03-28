@@ -4,7 +4,6 @@ import io.netty.channel.Channel;
 import io.netty.channel.group.ChannelMatcher;
 import io.netty.util.AttributeKey;
 
-import java.util.Collection;
 import java.util.Set;
 import java.util.function.Predicate;
 

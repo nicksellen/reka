@@ -41,13 +41,12 @@ public class HttpInitializer extends ChannelInitializer<SocketChannel> {
 		if (ssl != null) {
 			pipeline.addLast(ssl.newHandler(ch.alloc()));
 		}
-		pipeline.addLast(
-				new HttpRequestDecoder(),
-				new HttpObjectAggregator(1024 * 1024 * 500), // 500mb
+		pipeline.addLast("decoder", new HttpRequestDecoder());
+		pipeline.addLast("aggregator", new HttpObjectAggregator(1024 * 1024 * 500)); // 500mb
 				//new HttpContentCompressor(),
-				new HttpResponseEncoder(),
-				new ChunkedWriteHandler(), 
-				handler);	
+		pipeline.addLast("encoder", new HttpResponseEncoder());
+		pipeline.addLast("chunking", new ChunkedWriteHandler()); 
+		pipeline.addLast("handler", handler);	
 	}
 	
 }

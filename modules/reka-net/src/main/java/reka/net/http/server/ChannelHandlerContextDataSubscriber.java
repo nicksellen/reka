@@ -23,10 +23,10 @@ import reka.api.data.MutableData;
 import reka.api.run.Subscriber;
 import reka.core.data.memory.MutableMemoryData;
 
-class ChannelHandlerContextDataSubscriber implements Subscriber {
+public class ChannelHandlerContextDataSubscriber implements Subscriber {
 
 	public static final Path CLOSE_CHANNEL = dots("options.close");
-	private final Logger log = LoggerFactory.getLogger(getClass());
+	private static final Logger log = LoggerFactory.getLogger(ChannelHandlerContextDataSubscriber.class);
 
 	private final long started = System.nanoTime();
 	private final ChannelHandlerContext context;

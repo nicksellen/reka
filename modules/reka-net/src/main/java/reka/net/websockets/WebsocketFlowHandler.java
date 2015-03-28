@@ -20,7 +20,7 @@ import reka.net.NetServerManager.SocketFlows;
 
 public class WebsocketFlowHandler extends SimpleChannelInboundHandler<TextWebSocketFrame> {
 
-	private final Logger log = LoggerFactory.getLogger(getClass());
+	private static final Logger log = LoggerFactory.getLogger(WebsocketFlowHandler.class);
 	
 	private final SocketFlows flows;
 	
