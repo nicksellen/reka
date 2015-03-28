@@ -7,7 +7,7 @@ public class HttpHeadConfigurer implements OperationConfigurer {
 
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("head", ctx -> new HttpHeadOperation());
+		ops.add("head", () -> new HttpHeadOperation());
 	}
 
 }

@@ -7,9 +7,9 @@ import reka.net.http.configurers.NetProxyConfigurer;
 
 public class NetConfigurer extends ModuleConfigurer {
 
-	private final NetServerManager server;
+	private final NetManager server;
 	
-	public NetConfigurer(NetServerManager server) {
+	public NetConfigurer(NetManager server) {
 		this.server = server;
 	}
 

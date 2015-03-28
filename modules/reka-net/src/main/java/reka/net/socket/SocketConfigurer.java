@@ -1,6 +1,5 @@
 package reka.net.socket;
 
-import static java.lang.String.format;
 import static reka.api.Path.path;
 import static reka.api.Path.slashes;
 import static reka.config.configurer.Configurer.configure;
@@ -13,27 +12,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-import reka.Identity;
 import reka.api.IdentityKey;
 import reka.api.flow.Flow;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
+import reka.core.app.Application;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
+import reka.core.setup.ModuleSetupContext;
 import reka.core.setup.OperationConfigurer;
-import reka.net.NetServerManager;
-import reka.net.NetServerManager.SocketFlows;
-import reka.net.NetSettings;
+import reka.net.NetManager;
+import reka.net.NetManager.SocketFlows;
 import reka.net.common.sockets.SocketBroadcastConfigurer;
 import reka.net.common.sockets.SocketSendConfigurer;
 import reka.net.common.sockets.SocketStatusProvider;
 import reka.net.common.sockets.SocketTagAddConfigurer;
 import reka.net.common.sockets.SocketTagRemoveConfigurer;
 import reka.net.common.sockets.SocketTagSendConfigurer;
-import reka.net.common.sockets.Sockets;
 
 public class SocketConfigurer extends ModuleConfigurer {
 	
@@ -43,10 +41,10 @@ public class SocketConfigurer extends ModuleConfigurer {
 	
 	private final List<Integer> ports = new ArrayList<>();
 	
-	private final NetServerManager server;
+	private final NetManager net;
 	
-	public SocketConfigurer(NetServerManager server) {
-		this.server = server;
+	public SocketConfigurer(NetManager net) {
+		this.net = net;
 	}
 
 	@Conf.Each("listen")
@@ -75,14 +73,16 @@ public class SocketConfigurer extends ModuleConfigurer {
 	@Override
 	public void setup(ModuleSetup app) {
 		
-		app.defineOperation(path("send"), provider -> new SocketSendConfigurer(server));
-		app.defineOperation(path("broadcast"), provider -> new SocketBroadcastConfigurer(server));
-		app.defineOperation(slashes("tag"), provider -> new SocketTagAddConfigurer(server));
-		app.defineOperation(slashes("tag/add"), provider -> new SocketTagAddConfigurer(server));
-		app.defineOperation(slashes("tag/rm"), provider -> new SocketTagRemoveConfigurer(server));
-		app.defineOperation(slashes("tag/send"), provider -> new SocketTagSendConfigurer(server));
+		ModuleSetupContext ctx = app.ctx();
 		
-		app.registerStatusProvider(ctx -> new SocketStatusProvider(server, ctx.get(Sockets.IDENTITY)));
+		app.defineOperation(path("send"), provider -> new SocketSendConfigurer(net));
+		app.defineOperation(path("broadcast"), provider -> new SocketBroadcastConfigurer(net));
+		app.defineOperation(slashes("tag"), provider -> new SocketTagAddConfigurer(net));
+		app.defineOperation(slashes("tag/add"), provider -> new SocketTagAddConfigurer(net));
+		app.defineOperation(slashes("tag/rm"), provider -> new SocketTagRemoveConfigurer(net));
+		app.defineOperation(slashes("tag/send"), provider -> new SocketTagSendConfigurer(net));
+		
+		app.registerStatusProvider(() -> new SocketStatusProvider(net, ctx.get(Application.IDENTITY)));
 		
 		Map<IdentityKey<Flow>,Function<ConfigurerProvider, OperationConfigurer>> triggers = new HashMap<>();
 		
@@ -98,29 +98,17 @@ public class SocketConfigurer extends ModuleConfigurer {
 		}
 		if (!onMessage.isEmpty()) {
 			triggers.put(message, combine(onMessage));
-		}	
-		
-		Identity identity = Identity.create("websocket");
-		
-		app.onDeploy(init -> {
-			init.run("set http settings", ctx -> {
-				// FIXME: hackety hack, don't look back, these aren't the real HTTP settings!
-				//ctx.put(Sockets.SETTINGS, NetSettings.socket(ports.get(0), null, -1));
-				ctx.put(Sockets.IDENTITY, identity);
-			});
-		});
+		}
 		
 		for (int port : ports) {
 			app.requirePort(port);
 		}
 		
 		app.buildFlows(triggers, reg -> {
-			
 			for (int port : ports) {
-				
-				app.registerComponent(server.deploySocket(identity, port, new SocketFlows(reg.flowFor(connect),
-																						reg.flowFor(message),
-																						reg.flowFor(disconnect))));
+				app.registerComponent(net.deploySocket(app.identity(), port, new SocketFlows(reg.flowFor(connect),
+																							 reg.flowFor(message),
+																							 reg.flowFor(disconnect))));
 				app.registerNetwork(port, "socket");
 			}
 		});

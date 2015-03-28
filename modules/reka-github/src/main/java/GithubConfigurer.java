@@ -13,16 +13,16 @@ import reka.core.config.SequenceConfigurer;
 import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
 import reka.core.setup.OperationConfigurer;
-import reka.net.NetServerManager;
+import reka.net.NetManager;
 
 public class GithubConfigurer extends ModuleConfigurer {
 	
-	private final NetServerManager server;
+	private final NetManager server;
 
 	private String secret;
 	private final List<Function<ConfigurerProvider,OperationConfigurer>> requestHandlers = new ArrayList<>();
 	
-	public GithubConfigurer(NetServerManager server) {
+	public GithubConfigurer(NetManager server) {
 		this.server = server;
 	}
 	

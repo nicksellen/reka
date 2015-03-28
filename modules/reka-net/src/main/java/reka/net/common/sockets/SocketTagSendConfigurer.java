@@ -1,7 +1,5 @@
 package reka.net.common.sockets;
 
-import io.netty.channel.group.ChannelMatcher;
-
 import java.util.function.Function;
 
 import reka.api.data.Data;
@@ -11,16 +9,16 @@ import reka.core.setup.OperationSetup;
 import reka.core.util.StringWithVars;
 import reka.net.ChannelAttrs;
 import reka.net.ChannelAttrs.AttributeContainsMatcher;
-import reka.net.NetServerManager;
+import reka.net.NetManager;
 
 public class SocketTagSendConfigurer implements OperationConfigurer {
 	
-	private final NetServerManager server;
+	private final NetManager server;
 	
 	private Function<Data,String> tagFn;	
 	private Function<Data,String> messageFn;
 	
-	public SocketTagSendConfigurer(NetServerManager server) {
+	public SocketTagSendConfigurer(NetManager server) {
 		this.server = server;
 	}
 	
@@ -37,7 +35,7 @@ public class SocketTagSendConfigurer implements OperationConfigurer {
 	@Override
 	public void setup(OperationSetup ops) {
 		
-		ops.add("tag/send", ctx -> {
+		ops.add("tag/send", () -> {
 			return new SocketBroadcastWithMatcherOperation(server, messageFn, data -> new AttributeContainsMatcher<>(ChannelAttrs.tags, tagFn.apply(data)));
 		});
 	}

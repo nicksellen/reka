@@ -8,15 +8,15 @@ import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.run.Operation;
 import reka.api.run.OperationContext;
-import reka.net.NetServerManager;
+import reka.net.NetManager;
 
 public class SocketBroadcastWithMatcherOperation implements Operation {
 
-	private final NetServerManager server;
+	private final NetManager server;
 	private final Function<Data,String> messageFn;
 	private final Function<Data,ChannelMatcher> matcherFn;
 	
-	public SocketBroadcastWithMatcherOperation(NetServerManager server, Function<Data,String> messageFn, Function<Data,ChannelMatcher> matcherFn) {
+	public SocketBroadcastWithMatcherOperation(NetManager server, Function<Data,String> messageFn, Function<Data,ChannelMatcher> matcherFn) {
 		this.server = server;
 		this.messageFn = messageFn;
 		this.matcherFn = matcherFn;

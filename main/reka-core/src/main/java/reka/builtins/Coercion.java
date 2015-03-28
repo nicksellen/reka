@@ -42,7 +42,7 @@ public class Coercion {
 		
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add("coerce", ctx -> new Coerce(coercions));
+			ops.add("coerce", () -> new Coerce(coercions));
 		}
 
 	}
@@ -58,7 +58,7 @@ public class Coercion {
 		
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add("coerce/long", ctx -> new CoerceLong(path));
+			ops.add("coerce/long", () -> new CoerceLong(path));
 		}
 
 	}
@@ -74,7 +74,7 @@ public class Coercion {
 		
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add("coerce/boolean", ctx -> new CoerceBoolean(path));
+			ops.add("coerce/boolean", () -> new CoerceBoolean(path));
 		}
 
 	}

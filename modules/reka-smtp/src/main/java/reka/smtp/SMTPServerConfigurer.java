@@ -24,6 +24,7 @@ import reka.config.configurer.annotations.Conf;
 import reka.core.data.memory.MutableMemoryData;
 import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
+import reka.core.setup.ModuleSetupContext;
 
 public class SMTPServerConfigurer extends ModuleConfigurer {
 
@@ -127,10 +128,12 @@ public class SMTPServerConfigurer extends ModuleConfigurer {
 	@Override
 	public void setup(ModuleSetup app) {
 		
+		ModuleSetupContext ctx = app.ctx();
+		
 		if (emailHandler != null) {
 			
 			app.onDeploy(init -> {
-				init.run("start smtp server", ctx -> {
+				init.run("start smtp server", () -> {
 					RekaSmtpServer server = servers.computeIfAbsent(port, p -> new RekaSmtpServer(port));
 					server.start();
 					ctx.put(SERVER, server);
@@ -144,7 +147,7 @@ public class SMTPServerConfigurer extends ModuleConfigurer {
 				app.onUndeploy("undeploy smtp", () -> server.remove(flow));
 			});
 			
-			app.onUndeploy("stop smtp server", ctx -> ctx.get(SERVER).stop());
+			app.onUndeploy("stop smtp server", () -> ctx.get(SERVER).stop());
 			
 		}
 	}

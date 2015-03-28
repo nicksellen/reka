@@ -34,7 +34,7 @@ public class JRubyRunConfigurer implements OperationConfigurer {
 
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("run", ctx -> new JRubyRunOperation(ctx.get(RUBY_ENV), script, out));
+		ops.add("run", () -> new JRubyRunOperation(ops.ctx().get(RUBY_ENV), script, out));
 	}
 	
 }

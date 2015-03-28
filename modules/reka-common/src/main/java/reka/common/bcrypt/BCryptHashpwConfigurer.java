@@ -25,7 +25,7 @@ public class BCryptHashpwConfigurer implements OperationConfigurer {
 	
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("bcrypt/hashpw", ctx -> new BCryptHashpwOperation(in, out));
+		ops.add("bcrypt/hashpw", () -> new BCryptHashpwOperation(in, out));
 	}
 	
 }

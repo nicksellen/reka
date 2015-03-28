@@ -7,7 +7,7 @@ public class HttpEndConfigurer implements OperationConfigurer {
 
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("end", ctx -> new HttpEndOperation());
+		ops.add("end", () -> new HttpEndOperation());
 	}
 
 }

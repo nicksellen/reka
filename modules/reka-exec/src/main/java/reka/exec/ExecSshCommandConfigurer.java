@@ -27,7 +27,7 @@ public class ExecSshCommandConfigurer implements OperationConfigurer {
 
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("ssh run", ctx -> new ExecSshCommandOperation(command, config, into));
+		ops.add("ssh run", () -> new ExecSshCommandOperation(command, config, into));
 	}
 
 }

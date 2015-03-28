@@ -328,6 +328,7 @@ public class ApplicationManager implements Iterable<Entry<Identity,Application>>
 				});
 				
 				IdentityStore store = previous.isPresent() ? ConcurrentIdentityStore.createFrom(previous.get().store()) : ConcurrentIdentityStore.create();
+				store.put(Application.IDENTITY, identity);
 				
 				configurer.build(identity, version, store).whenComplete((app, t) -> {
 					try {

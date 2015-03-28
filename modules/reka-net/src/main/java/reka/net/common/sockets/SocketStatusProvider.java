@@ -4,16 +4,14 @@ import static java.lang.String.format;
 import reka.Identity;
 import reka.api.data.MutableData;
 import reka.core.setup.StatusDataProvider;
-import reka.net.ChannelAttrs;
-import reka.net.ChannelAttrs.AttributeMatcher;
-import reka.net.NetServerManager;
+import reka.net.NetManager;
 
 public class SocketStatusProvider implements StatusDataProvider {
 
-	private final NetServerManager server;
+	private final NetManager server;
 	private final Identity identity;
 	
-	public SocketStatusProvider(NetServerManager server, Identity identity) {
+	public SocketStatusProvider(NetManager server, Identity identity) {
 		this.server = server;
 		this.identity = identity;
 	}

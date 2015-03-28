@@ -3,7 +3,6 @@ package reka.core.setup;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import reka.api.IdentityStore;
 import reka.api.data.MutableData;
 import reka.api.run.AsyncOperation;
 import reka.api.run.Operation;
@@ -22,13 +21,13 @@ public class ModuleOperationSetup {
 		this.ops = ops;
 	}
 	
-	public ModuleOperationSetup run(String name, Consumer<ModuleSetupContext> c) {
-		ops.add(name, ctx -> {
+	public ModuleOperationSetup run(String name, Runnable runnable) {
+		ops.add(name, () -> {
 			return new Operation() {
 				
 				@Override
 				public void call(MutableData data, OperationContext rctx) {
-					c.accept(ctx);
+					runnable.run();
 				}
 				
 			};
@@ -36,13 +35,13 @@ public class ModuleOperationSetup {
 		return this;
 	}
 
-	public ModuleOperationSetup run(String name, BiConsumer<IdentityAndVersion, IdentityStore> c) {
-		ops.add(name, ctx -> {
+	public ModuleOperationSetup run(String name, Consumer<IdentityAndVersion> c) {
+		ops.add(name, () -> {
 			return new Operation() {
 				
 				@Override
 				public void call(MutableData data, OperationContext rctx) {
-					c.accept(idv, ctx);
+					c.accept(idv);
 				}
 				
 			};
@@ -50,9 +49,9 @@ public class ModuleOperationSetup {
 		return this;
 	}
 	
-	public ModuleOperationSetup runAsync(String name, BiConsumer<IdentityStore, DoneCallback> c) {
-		ops.add(name, ctx -> {
-			return AsyncOperation.create((data, rctx, res) -> c.accept(ctx, () -> res.done()));
+	public ModuleOperationSetup runAsync(String name, Consumer<DoneCallback> c) {
+		ops.add(name, () -> {
+			return AsyncOperation.create((data, rctx, res) -> c.accept(() -> res.done()));
 		});
 		return this;
 	}

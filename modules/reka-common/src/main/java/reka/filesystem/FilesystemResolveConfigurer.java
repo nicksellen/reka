@@ -33,7 +33,7 @@ public class FilesystemResolveConfigurer implements OperationConfigurer {
 
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("resolve", ctx -> new FilesystemResolveOperation(basedir, inFn, outFn));
+		ops.add("resolve", () -> new FilesystemResolveOperation(basedir, inFn, outFn));
 	}
 
 }

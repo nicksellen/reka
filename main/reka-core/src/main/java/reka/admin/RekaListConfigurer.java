@@ -24,7 +24,7 @@ public class RekaListConfigurer implements OperationConfigurer {
 	
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("list", ctx -> new RekaListOperation(manager, out));
+		ops.add("list", () -> new RekaListOperation(manager, out));
 	}
 
 }

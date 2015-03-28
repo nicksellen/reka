@@ -6,19 +6,20 @@ import java.util.function.Function;
 
 import reka.api.data.Data;
 import reka.config.configurer.annotations.Conf;
+import reka.core.app.Application;
 import reka.core.setup.OperationConfigurer;
 import reka.core.setup.OperationSetup;
 import reka.core.util.StringWithVars;
-import reka.net.NetServerManager;
+import reka.net.NetManager;
 
 public class SocketTagAddConfigurer implements OperationConfigurer {
 
-	private final NetServerManager server;
+	private final NetManager server;
 	
 	private Function<Data,String> idFn = StringWithVars.compile(":id");
 	private List<Function<Data,String>> tagFns = new ArrayList<>();
 	
-	public SocketTagAddConfigurer(NetServerManager server) {
+	public SocketTagAddConfigurer(NetManager server) {
 		this.server = server;
 	}
 	
@@ -34,7 +35,7 @@ public class SocketTagAddConfigurer implements OperationConfigurer {
 	
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("tag/add", ctx -> new SocketTagAddOperation(server, ctx.get(Sockets.IDENTITY), idFn, tagFns));
+		ops.add("tag/add", () -> new SocketTagAddOperation(server, ops.ctx().get(Application.IDENTITY), idFn, tagFns));
 	}
 	
 }

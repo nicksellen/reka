@@ -108,10 +108,6 @@ public class ModuleSetup {
 		collector.onUndeploy.add(runnable);
 	}
 	
-	public void onUndeploy(String name, Consumer<ModuleSetupContext> handler) {
-		collector.onUndeploy.add(() -> handler.accept(ctx));
-	}
-	
 	public void onUndeploy(String name, BiConsumer<IdentityAndVersion, IdentityStore> handler) {
 		collector.onUndeploy.add(() -> handler.accept(idv, ctx));
 	}
@@ -135,9 +131,9 @@ public class ModuleSetup {
 		}
 	}
 	
-	public void registerStatusProvider(Function<IdentityStore, StatusDataProvider> c) {
+	public void registerStatusProvider(Supplier<StatusDataProvider> c) {
 		includeDefaultStatus = false;
-		collector.statuses.add(() -> StatusProvider.create(info.name().slashes(), path.slashes(), info.version(), c.apply(ctx)));
+		collector.statuses.add(() -> StatusProvider.create(info.name().slashes(), path.slashes(), info.version(), c.get()));
 	}
 	
 	public void buildInitializationFlow(String name, ConfigBody body, Consumer<Flow> init) {

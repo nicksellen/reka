@@ -35,7 +35,7 @@ public class NetProxyConfigurer implements OperationConfigurer {
 
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("proxy", ctx -> new NetProxyOperation(group, host, port));
+		ops.add("proxy", () -> new NetProxyOperation(group, host, port));
 	}
 
 }

@@ -12,9 +12,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.IntConsumer;
 
 import reka.Identity;
+import reka.api.IdentityKey;
 import reka.api.IdentityStoreReader;
 import reka.api.Path;
 import reka.api.data.Data;
@@ -28,6 +28,8 @@ import reka.util.AsyncShutdown;
 
 public class Application implements AsyncShutdown {
 
+	public static final IdentityKey<Identity> IDENTITY = IdentityKey.named("application identity");
+	
 	private final Identity identity;
 	private final Path name;
 	private final Data meta;

@@ -25,6 +25,7 @@ import reka.config.configurer.annotations.Conf;
 import reka.core.data.memory.MutableMemoryData;
 import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
+import reka.core.setup.ModuleSetupContext;
 
 import com.google.common.io.Resources;
 
@@ -87,9 +88,11 @@ public class ClojureConfigurer extends ModuleConfigurer {
 	@Override
 	public void setup(ModuleSetup app) {
 		
+		ModuleSetupContext ctx = app.ctx();
+		
 		app.onDeploy(init -> {
 		
-			init.run("initialize environment", (idv, store) -> {
+			init.run("initialize environment", idv -> {
 
 				versions.put(idv.identity(), idv.version());
 				
@@ -114,8 +117,8 @@ public class ClojureConfigurer extends ModuleConfigurer {
 					shutdownCallbacks.add(f);
 				});
 				
-				store.put(CLOJURE_ENV, env);
-				store.put(SHUTDOWN_CALLBACKS, shutdownCallbacks);
+				ctx.put(CLOJURE_ENV, env);
+				ctx.put(SHUTDOWN_CALLBACKS, shutdownCallbacks);
 	
 				// forward declare all the callbacks so the initialization can refer to them (they'll be overwritten later..._
 				triggerFns.forEach((name, body) -> {

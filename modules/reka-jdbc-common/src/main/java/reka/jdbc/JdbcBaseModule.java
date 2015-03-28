@@ -37,6 +37,7 @@ import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
+import reka.core.setup.ModuleSetupContext;
 import reka.core.util.StringWithVars;
 import reka.core.util.StringWithVars.Variable;
 
@@ -107,6 +108,8 @@ public abstract class JdbcBaseModule extends ModuleConfigurer {
 	@Override
 	public void setup(ModuleSetup module) {
 		
+		ModuleSetupContext ctx = module.ctx();
+		
 		JdbcConfiguration config = new JdbcConfiguration(returnGeneratedKeys);
 		
 		String url = jdbcUrl();
@@ -120,12 +123,12 @@ public abstract class JdbcBaseModule extends ModuleConfigurer {
 		
 		module.onDeploy(init -> {
 			
-			init.run("create connection pool", ctx -> {
+			init.run("create connection pool", () -> {
 				ctx.put(POOL, connectionProvider(username, password));
 			});
 
 			if (!migrations.isEmpty()) {
-				init.run("run migrations", ctx -> {
+				init.run("run migrations", () -> {
 					Path tmpdir = null;
 					try {
 						tmpdir = Files.createTempDirectory("jdbc");
@@ -165,7 +168,7 @@ public abstract class JdbcBaseModule extends ModuleConfigurer {
 				});
 			}
 			
-			init.run("run sql", ctx -> {
+			init.run("run sql", () -> {
 				try (Connection connection = ctx.get(POOL).getConnection()){
 		            Statement stmt = connection.createStatement();
 		            for (String sql : sqls) {
@@ -176,7 +179,7 @@ public abstract class JdbcBaseModule extends ModuleConfigurer {
 		        }
 			});
 			
-			init.run("seed data", ctx -> {
+			init.run("seed data", () -> {
 				
 				try (Connection conn = ctx.get(POOL).getConnection()) {
 					for (Entry<String, List<Data>> e : seeds.entrySet()) {
@@ -229,9 +232,9 @@ public abstract class JdbcBaseModule extends ModuleConfigurer {
 		
 		});
 		
-		module.registerStatusProvider(ctx -> new JdbcStatusProvider(url, ctx.get(POOL)));
+		module.registerStatusProvider(() -> new JdbcStatusProvider(url, ctx.get(POOL)));
 		
-		module.onUndeploy("close connection pool", ctx -> {
+		module.onUndeploy("close connection pool", () -> {
 			ctx.lookup(POOL).ifPresent(jdbc -> { 
 				try {
 					jdbc.close();

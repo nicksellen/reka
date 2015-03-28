@@ -5,7 +5,6 @@ import static java.util.Arrays.asList;
 import static reka.api.Path.dots;
 import static reka.api.Path.path;
 import static reka.api.Path.root;
-import static reka.api.Path.slashes;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import static reka.util.Util.runtime;
 
@@ -23,8 +22,6 @@ import reka.api.IdentityKey;
 import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.data.MutableData;
-import reka.api.run.Operation;
-import reka.api.run.OperationContext;
 import reka.builtins.BuiltinsConfigurer.PutDataOperation;
 import reka.config.Config;
 import reka.config.ConfigBody;
@@ -32,6 +29,7 @@ import reka.config.configurer.annotations.Conf;
 import reka.core.data.memory.MutableMemoryData;
 import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
+import reka.core.setup.ModuleSetupContext;
 import reka.core.setup.OperationConfigurer;
 import reka.core.setup.OperationSetup;
 
@@ -113,13 +111,15 @@ public class NashornConfigurer extends ModuleConfigurer {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public void setup(ModuleSetup module) {
+	public void setup(ModuleSetup app) {
 		
-		module.defineOperation(root(), provider -> new NashornRunConfigurer(root()));
+		ModuleSetupContext ctx = app.ctx();
 		
-		module.onDeploy(init -> {
+		app.defineOperation(root(), provider -> new NashornRunConfigurer(root()));
 		
-			init.run("initialize runtime", ctx -> {
+		app.onDeploy(init -> {
+		
+			init.run("initialize runtime", () -> {
 				ctx.put(RUNNER, new ThreadLocalNashornRunner(scripts));
 			});
 
@@ -132,7 +132,7 @@ public class NashornConfigurer extends ModuleConfigurer {
 				
 				// run the js to calculate the data we need
 				
-				init.run(format("calculate data for %s", opname), ctx -> {
+				init.run(format("calculate data for %s", opname), () -> {
 	
 					NashornRunner js = ctx.get(RUNNER);
 					
@@ -156,7 +156,7 @@ public class NashornConfigurer extends ModuleConfigurer {
 				});
 				
 				// the operation that will insert this data
-				module.defineOperation(path(opname), provider -> new PutJSDataConfigurer(dataKey));
+				app.defineOperation(path(opname), provider -> new PutJSDataConfigurer(dataKey));
 			}
 		
 		});
@@ -165,58 +165,16 @@ public class NashornConfigurer extends ModuleConfigurer {
 		
 			IdentityKey<Data> key = IdentityKey.named(format("%s init op", name));
 			
-			module.buildInitializationFlow(name, body, flow -> {
+			app.buildInitializationFlow(name, body, flow -> {
 				log.debug("running init flow for {}", name);
 				flow.prepare().complete(data -> {
 					log.debug("finished running init flow for {}", name);
-					module.ctx().put(key, data);
+					app.ctx().put(key, data);
 					log.debug("put boo data");
 				}).run();
 			});
 			
-			module.defineOperation(slashes(name), provider -> new BooConfigurer(key));
 		});
-		
-	}
-	
-	public static class BooConfigurer implements OperationConfigurer {
-		
-		private final IdentityKey<Data> key;
-		private Path out = root();
-		
-		public BooConfigurer(IdentityKey<Data> key) {
-			this.key = key;
-		}
-		
-		@Conf.Val
-		public void path(String val) {
-			out = dots(val);
-		}
-
-		@Override
-		public void setup(OperationSetup ops) {
-			ops.add("yay", ctx -> new BooOperation(ctx.get(key), out));
-		}
-		
-	}
-	
-	public static class BooOperation implements Operation {
-		
-		private final Data datavalue;
-		private final Path out;
-		
-		public BooOperation(Data datavalue, Path out) {
-			log.info("initting boo op");
-			this.datavalue = datavalue;
-			this.out = out;
-		}
-
-		@Override
-		public void call(MutableData data, OperationContext ctx) {
-			datavalue.forEachContent((path, content) -> {
-				data.put(out.add(path), content);
-			});
-		}
 		
 	}
 	
@@ -237,7 +195,7 @@ public class NashornConfigurer extends ModuleConfigurer {
 
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add("data", ctx -> new PutDataOperation(ctx.get(key), out));
+			ops.add("data", () -> new PutDataOperation(ops.ctx().get(key), out));
 		}
 		
 	}

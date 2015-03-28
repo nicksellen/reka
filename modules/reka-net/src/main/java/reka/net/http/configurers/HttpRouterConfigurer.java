@@ -180,7 +180,7 @@ public class HttpRouterConfigurer extends HttpRouteGroupConfigurer implements Op
 	public void setup(OperationSetup ops) {
 		HttpRouter router = new HttpRouter(buildGroupRoutes(), missing != null);
 		
-		ops.router("router", ctx -> router, routes -> {
+		ops.router("router", () -> router, routes -> {
 			routes.parallel(par -> buildGroupSegment(par));
 			if (missing != null) {
 				routes.add(HttpRouter.OTHERWISE, missing);

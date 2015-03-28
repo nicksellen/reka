@@ -29,7 +29,7 @@ public class SessionPutConfigurer implements OperationConfigurer {
 
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("put", ctx -> new SessionPutOperation(ctx.get(SESSION_STORE), keyFn, valFn));
+		ops.add("put", () -> new SessionPutOperation(ops.ctx().get(SESSION_STORE), keyFn, valFn));
 	}
 
 }

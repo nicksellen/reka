@@ -8,11 +8,9 @@ import static reka.util.Util.runtime;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import reka.Identity;
 import reka.api.IdentityKey;
 import reka.api.flow.Flow;
 import reka.config.Config;
@@ -21,9 +19,8 @@ import reka.core.builder.TriggerHelper;
 import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
 import reka.core.setup.ModuleSetupContext;
-import reka.net.NetServerManager;
-import reka.net.NetServerManager.SocketFlows;
-import reka.net.NetSettings;
+import reka.net.NetManager;
+import reka.net.NetManager.SocketFlows;
 import reka.net.NetSettings.SslSettings;
 import reka.net.NetSettings.Type;
 import reka.net.common.sockets.SocketBroadcastConfigurer;
@@ -32,7 +29,6 @@ import reka.net.common.sockets.SocketStatusProvider;
 import reka.net.common.sockets.SocketTagAddConfigurer;
 import reka.net.common.sockets.SocketTagRemoveConfigurer;
 import reka.net.common.sockets.SocketTagSendConfigurer;
-import reka.net.common.sockets.Sockets;
 import reka.net.http.HostAndPort;
 import reka.net.http.SslConfigurer;
 
@@ -49,10 +45,10 @@ public class WebsocketConfigurer extends ModuleConfigurer {
 	
 	private SslSettings ssl;
 	
-	private final NetServerManager server;
+	private final NetManager net;
 	
-	public WebsocketConfigurer(NetServerManager server) {
-		this.server = server;
+	public WebsocketConfigurer(NetManager net) {
+		this.net = net;
 	}
 	
 	private final TriggerHelper triggers = new TriggerHelper();
@@ -104,13 +100,15 @@ public class WebsocketConfigurer extends ModuleConfigurer {
 	@Override
 	public void setup(ModuleSetup app) {
 		
+		ModuleSetupContext ctx = app.ctx();
+		
 		listens.replaceAll(listen -> listen.port() == -1 ? new HostAndPort(listen.host(), ssl != null ? 443 : 80) : listen);
 		
-		app.defineOperation(path("send"), provider -> new SocketSendConfigurer(server));
-		app.defineOperation(path("broadcast"), provider -> new SocketBroadcastConfigurer(server));
-		app.defineOperation(slashes("tag/add"), provider -> new SocketTagAddConfigurer(server));
-		app.defineOperation(slashes("tag/rm"), provider -> new SocketTagRemoveConfigurer(server));
-		app.defineOperation(slashes("tag/send"), provider -> new SocketTagSendConfigurer(server));
+		app.defineOperation(path("send"), provider -> new SocketSendConfigurer(net));
+		app.defineOperation(path("broadcast"), provider -> new SocketBroadcastConfigurer(net));
+		app.defineOperation(slashes("tag/add"), provider -> new SocketTagAddConfigurer(net));
+		app.defineOperation(slashes("tag/rm"), provider -> new SocketTagRemoveConfigurer(net));
+		app.defineOperation(slashes("tag/send"), provider -> new SocketTagSendConfigurer(net));
 		
 		if (listens.isEmpty()) return;
 		
@@ -118,7 +116,7 @@ public class WebsocketConfigurer extends ModuleConfigurer {
 			app.requireNetwork(listen.port(), listen.host());	
 		});
 		
-		app.registerStatusProvider(unused -> new SocketStatusProvider(server, app.identity()));
+		app.registerStatusProvider(() -> new SocketStatusProvider(net, app.identity()));
 		
 		app.buildFlows(triggers.build(), reg -> {
 			for (HostAndPort listen : listens) {
@@ -131,10 +129,10 @@ public class WebsocketConfigurer extends ModuleConfigurer {
 				}
 			
 				if (ssl != null) {
-					app.registerComponent(server.deployWebsocketSsl(app.identity(), new HostAndPort(host, port), ssl, 
+					app.registerComponent(net.deployWebsocketSsl(app.identity(), new HostAndPort(host, port), ssl, 
 							new SocketFlows(reg.flowFor(CONNECT),reg.flowFor(MESSAGE),reg.flowFor(DISCONNECT))));
 				} else {
-					app.registerComponent(server.deployWebsocket(app.identity(), new HostAndPort(host, port), 
+					app.registerComponent(net.deployWebsocket(app.identity(), new HostAndPort(host, port), 
 							new SocketFlows(reg.flowFor(CONNECT),reg.flowFor(MESSAGE),reg.flowFor(DISCONNECT))));
 				}
 				

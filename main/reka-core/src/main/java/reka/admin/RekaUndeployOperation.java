@@ -1,7 +1,6 @@
 package reka.admin;
 
 import static reka.api.Path.dots;
-import static reka.api.Path.path;
 
 import java.util.function.Function;
 

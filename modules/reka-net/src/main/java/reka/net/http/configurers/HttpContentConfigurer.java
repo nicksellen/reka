@@ -63,7 +63,7 @@ public class HttpContentConfigurer implements OperationConfigurer {
 				contentType = ct;
 			}
 		}
-		ops.add("content", ctx -> HttpContentUtils.httpContent(dirs.tmp(), content, contentType, true));
+		ops.add("content", () -> HttpContentUtils.httpContent(dirs.tmp(), content, contentType, true));
 	}
 
 }

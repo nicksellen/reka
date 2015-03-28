@@ -108,7 +108,7 @@ public class TwilioModule implements Module {
 
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add("send", ctx -> new TwilioSendOperation(sid, token, defaultFrom, msgFn, toFn, out));
+			ops.add("send", () -> new TwilioSendOperation(sid, token, defaultFrom, msgFn, toFn, out));
 		}
 		
 	}

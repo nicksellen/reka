@@ -67,7 +67,7 @@ app {
   	}
   }
   
-  test basic things {
+  //test basic things {
   	run {
   	  run boo2
   	}

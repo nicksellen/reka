@@ -16,8 +16,8 @@ import reka.api.data.Data;
 import reka.api.flow.Flow;
 import reka.core.data.memory.MutableMemoryData;
 import reka.net.ChannelAttrs;
+import reka.net.NetManager.SocketFlows;
 import reka.net.NetModule;
-import reka.net.NetServerManager.SocketFlows;
 
 public class SocketFlowHandler extends SimpleChannelInboundHandler<String> {
 	

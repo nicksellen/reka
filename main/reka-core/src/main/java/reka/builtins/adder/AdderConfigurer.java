@@ -13,15 +13,15 @@ public class AdderConfigurer extends ModuleConfigurer {
 	public static final IdentityKey<LongAdder> ADDER = IdentityKey.named("adder");
 
 	@Override
-	public void setup(ModuleSetup module) {
-		module.onDeploy(init -> {
-			init.run("create counter", ctx -> {
-				ctx.put(ADDER, new LongAdder());
+	public void setup(ModuleSetup app) {
+		app.onDeploy(init -> {
+			init.run("create counter", () -> {
+				app.ctx().put(ADDER, new LongAdder());
 			});
 		});
-		module.defineOperation(path("inc"), provider -> new IncrementConfigurer());
-		module.defineOperation(path("dec"), provider -> new DecrementConfigurer());
-		module.defineOperation(path("sum"), provider -> new SumConfigurer());
+		app.defineOperation(path("inc"), provider -> new IncrementConfigurer());
+		app.defineOperation(path("dec"), provider -> new DecrementConfigurer());
+		app.defineOperation(path("sum"), provider -> new SumConfigurer());
 	}
 
 }

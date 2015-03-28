@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import reka.Identity;
 import reka.net.ChannelAttrs;
-import reka.net.NetServerManager.SocketFlows;
+import reka.net.NetManager.SocketFlows;
 import reka.net.NetSettings.Type;
 import reka.net.websockets.WebSocketServerProtocolHandshakeHandler;
 import reka.net.websockets.WebsocketFlowHandler;

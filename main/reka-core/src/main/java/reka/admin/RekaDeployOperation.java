@@ -97,7 +97,7 @@ public class RekaDeployOperation implements AsyncOperation {
 			@Override
 			public void error(Identity identity, Throwable t) {
 				t = unwrap(t);
-				log.error("failed to deploy [{}] - {}", identity, t.getMessage());
+				log.error("failed to deploy [{}] - {}", identity.name(), t.getMessage());
 				res.error(t);
 				deleteRecursively(dirs.app());
 			}

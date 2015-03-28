@@ -29,6 +29,7 @@ import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
+import reka.core.setup.ModuleSetupContext;
 import reka.core.setup.OperationConfigurer;
 import reka.core.setup.OperationSetup;
 
@@ -49,10 +50,12 @@ public class JsxConfigurer extends ModuleConfigurer {
 	}
 	
 	@Override
-	public void setup(ModuleSetup module) {
+	public void setup(ModuleSetup app) {
 		
-		module.onDeploy(init -> {
-			init.run("compile jsx", ctx -> {
+		ModuleSetupContext ctx = app.ctx();
+		
+		app.onDeploy(init -> {
+			init.run("compile jsx", () -> {
 				String jsx = src.toString();
 				try {
 					MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
@@ -83,7 +86,7 @@ public class JsxConfigurer extends ModuleConfigurer {
 			});
 		});
 		
-		module.defineOperation(root(), provider -> new JsxTemplateConfigurer());
+		app.defineOperation(root(), provider -> new JsxTemplateConfigurer());
 	}
 	
 	public static class JsxTemplateConfigurer implements OperationConfigurer {
@@ -92,7 +95,7 @@ public class JsxConfigurer extends ModuleConfigurer {
 
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add("template", ctx -> new JsxTemplateOperation(ctx.get(COMPILED), outFn));
+			ops.add("template", () -> new JsxTemplateOperation(ops.ctx().get(COMPILED), outFn));
 		}
 		
 	}

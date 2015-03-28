@@ -30,7 +30,7 @@ public class RekaUndeployConfigurer implements OperationConfigurer {
 	
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("undeploy", ctx -> new RekaUndeployOperation(manager, dirs, appPathFn));
+		ops.add("undeploy", () -> new RekaUndeployOperation(manager, dirs, appPathFn));
 	}
 	
 }

@@ -46,7 +46,7 @@ public class BCryptCheckpwConfigurer implements OperationConfigurer {
 	
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.router("bcrypt/checkpw", ctx -> new BCryptCheckpwOperation(readPwFrom, readHashFrom), router -> {
+		ops.router("bcrypt/checkpw", () -> new BCryptCheckpwOperation(readPwFrom, readHashFrom), router -> {
 			router.add(BCryptCheckpwOperation.OK, ok);
 			router.add(BCryptCheckpwOperation.FAIL, fail);
 		});

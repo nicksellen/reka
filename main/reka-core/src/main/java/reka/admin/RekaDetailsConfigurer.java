@@ -37,7 +37,7 @@ public class RekaDetailsConfigurer implements OperationConfigurer {
 	
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("get", ctx -> new RekaDetailsOperation(manager, appPathFn, out));
+		ops.add("get", () -> new RekaDetailsOperation(manager, appPathFn, out));
 	}
 
 }

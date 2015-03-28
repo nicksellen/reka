@@ -7,8 +7,8 @@ import reka.api.IdentityStore;
 import reka.api.IdentityStoreReader;
 import reka.api.data.MutableData;
 import reka.api.flow.Flow;
+import reka.net.NetManager.HttpFlows;
 import reka.net.NetModule;
-import reka.net.NetServerManager.HttpFlows;
 
 public class HttpFlowHandler extends SimpleChannelInboundHandler<MutableData> {
 	

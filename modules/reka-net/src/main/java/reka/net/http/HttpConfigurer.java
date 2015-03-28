@@ -7,13 +7,9 @@ import static reka.util.Util.runtime;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
@@ -24,8 +20,8 @@ import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
 import reka.core.setup.ModuleSetupContext;
 import reka.core.setup.OperationConfigurer;
-import reka.net.NetServerManager;
-import reka.net.NetServerManager.HttpFlows;
+import reka.net.NetManager;
+import reka.net.NetManager.HttpFlows;
 import reka.net.NetSettings.SslSettings;
 import reka.net.NetSettings.Type;
 import reka.net.http.configurers.HttpContentConfigurer;
@@ -48,13 +44,13 @@ public class HttpConfigurer extends ModuleConfigurer {
 	
 	private SslSettings ssl;
 	
-	private final NetServerManager server;
+	private final NetManager net;
 	
 	private final List<HostAndPort> listens = new ArrayList<>();
 	private final List<Function<ConfigurerProvider,OperationConfigurer>> requestHandlers = new ArrayList<>();
 	
-	public HttpConfigurer(NetServerManager server) {
-		this.server = server;
+	public HttpConfigurer(NetManager net) {
+		this.net = net;
 	}
 	
 	@Conf.Each("listen")
@@ -107,8 +103,8 @@ public class HttpConfigurer extends ModuleConfigurer {
 		app.defineOperation(path("router"), provider -> new HttpRouterConfigurer(dirs(), provider));
 		app.defineOperation(path("redirect"), provider -> new HttpRedirectConfigurer());
 		app.defineOperation(path("content"), provider -> new HttpContentConfigurer(dirs()));
-		app.defineOperation(path("request"), provider -> new HttpRequestConfigurer(server.nettyEventGroup(), server.nettyChannelType()));
-		app.defineOperation(path("req"), provider -> new HttpRequestConfigurer(server.nettyEventGroup(), server.nettyChannelType()));
+		app.defineOperation(path("request"), provider -> new HttpRequestConfigurer(net.nettyEventGroup(), net.nettyChannelType()));
+		app.defineOperation(path("req"), provider -> new HttpRequestConfigurer(net.nettyEventGroup(), net.nettyChannelType()));
 		app.defineOperation(path("auth"), provider -> new BasicAuthConfigurer(provider));
 		
 		// ones that take care of writing responses
@@ -139,9 +135,9 @@ public class HttpConfigurer extends ModuleConfigurer {
 				for (HostAndPort listen : listens) {
 					
 					if (ssl != null) {
-						app.registerComponent(server.deployHttp(app.identity(), listen, new HttpFlows(flow)));
+						app.registerComponent(net.deployHttp(app.identity(), listen, new HttpFlows(flow)));
 					} else {
-						app.registerComponent(server.deployHttps(app.identity(), listen, ssl, new HttpFlows(flow)));
+						app.registerComponent(net.deployHttps(app.identity(), listen, ssl, new HttpFlows(flow)));
 					}
 					
 					app.registerNetwork(listen.port(), Type.HTTP.protocolString(ssl != null), details -> {

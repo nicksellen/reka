@@ -7,15 +7,15 @@ import reka.api.data.Data;
 import reka.api.data.MutableData;
 import reka.api.run.Operation;
 import reka.api.run.OperationContext;
-import reka.net.NetServerManager;
+import reka.net.NetManager;
 
 public class SocketBroadcastOperation implements Operation {
 
-	private final NetServerManager server;
+	private final NetManager server;
 	private final Function<Data,String> messageFn;
 	private final Identity identity;
 	
-	public SocketBroadcastOperation(NetServerManager server, Identity identity, Function<Data,String> messageFn) {
+	public SocketBroadcastOperation(NetManager server, Identity identity, Function<Data,String> messageFn) {
 		this.server = server;
 		this.messageFn = messageFn;
 		this.identity = identity;

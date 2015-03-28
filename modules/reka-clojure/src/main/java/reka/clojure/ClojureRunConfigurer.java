@@ -16,7 +16,7 @@ public class ClojureRunConfigurer implements OperationConfigurer {
 	
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("run", store -> new ClojureRunOperation(store.get(CLOJURE_ENV), fn));
+		ops.add("run", () -> new ClojureRunOperation(ops.ctx().get(CLOJURE_ENV), fn));
 	}
 	
 }

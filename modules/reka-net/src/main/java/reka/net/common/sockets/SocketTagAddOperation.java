@@ -9,16 +9,16 @@ import reka.api.data.MutableData;
 import reka.api.run.Operation;
 import reka.api.run.OperationContext;
 import reka.net.ChannelAttrs;
-import reka.net.NetServerManager;
+import reka.net.NetManager;
 
 public class SocketTagAddOperation implements Operation {
 
-	private final NetServerManager server;
+	private final NetManager server;
 	private final Function<Data,String> idFn;
 	private final List<Function<Data,String>> tagFns;
 	private final Identity identity;
 	
-	public SocketTagAddOperation(NetServerManager server, Identity identity, Function<Data,String> idFn, List<Function<Data,String>> tagFns) {
+	public SocketTagAddOperation(NetManager server, Identity identity, Function<Data,String> idFn, List<Function<Data,String>> tagFns) {
 		this.server = server;
 		this.idFn = idFn;
 		this.tagFns = tagFns;

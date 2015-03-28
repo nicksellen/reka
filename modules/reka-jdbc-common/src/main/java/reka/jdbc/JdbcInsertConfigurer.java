@@ -36,7 +36,7 @@ public class JdbcInsertConfigurer implements OperationConfigurer {
 	@Override
 	public void setup(OperationSetup ops) {
 		log.debug("building jdbc insert with values [{}]", values);
-		ops.add("insert", ctx -> new JdbcInsert(ctx.get(POOL), table, values));
+		ops.add("insert", () -> new JdbcInsert(ops.ctx().get(POOL), table, values));
 	}
 
 }

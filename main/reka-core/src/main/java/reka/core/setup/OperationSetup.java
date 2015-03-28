@@ -2,7 +2,6 @@ package reka.core.setup;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 import reka.api.Path;
@@ -26,13 +25,15 @@ public interface OperationSetup extends Supplier<FlowSegment> {
 	
 	MutableData meta();
 	
+	ModuleSetupContext ctx();
+	
 	OperationSetup label(String label);
 	OperationSetup useNewContext();
 	
-	OperationSetup add(String name, Function<ModuleSetupContext,? extends SimpleFlowOperation> store);
+	OperationSetup add(String name, Supplier<? extends SimpleFlowOperation> store);
 	OperationSetup add(Supplier<FlowSegment> supplier);
 	
-	OperationSetup router(String name, Function<ModuleSetupContext,? extends RouterOperation> store, Consumer<RouterSetup> routes);
+	OperationSetup router(String name, Supplier<? extends RouterOperation> store, Consumer<RouterSetup> routes);
 	
 	OperationSetup add(OperationConfigurer configurer);
 	

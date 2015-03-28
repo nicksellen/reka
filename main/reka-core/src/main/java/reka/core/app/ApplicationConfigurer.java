@@ -2,7 +2,6 @@ package reka.core.app;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toList;
 import static reka.api.Path.path;
 import static reka.api.Path.slashes;
 import static reka.config.configurer.Configurer.configure;
@@ -64,9 +63,9 @@ import reka.core.module.ModuleManager;
 import reka.core.setup.ApplicationSetup;
 import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup.ApplicationCheck;
-import reka.core.setup.TriggerFlows;
 import reka.core.setup.Trigger;
 import reka.core.setup.TriggerCollection;
+import reka.core.setup.TriggerFlows;
 import reka.dirs.AppDirs;
 
 public class ApplicationConfigurer implements ErrorReporter {
@@ -216,8 +215,6 @@ public class ApplicationConfigurer implements ErrorReporter {
 	    	
 	    	runChecks(identity, setup);
 	    	runPortCheckers(identity, setup);
-	    	
-	    	//ApplicationBuilder applicationBuilder = new ApplicationBuilder();
 	    	
 	    	setup.store(store);
 	    	setup.identity(identity);
@@ -373,7 +370,7 @@ public class ApplicationConfigurer implements ErrorReporter {
 		List<String> testErrors = Collections.synchronizedList(new ArrayList<>());
 
 		ScheduledFuture<?> timeout = Reka.SharedExecutors.scheduled.schedule(() -> {
-			future.completeExceptionally(runtime("failed to deploy [%s] because tests timed out", identity));
+			future.completeExceptionally(runtime("failed to deploy [%s] because tests timed out", identity.name()));
 		}, 10, TimeUnit.SECONDS);
 		
 		Runnable testsFinished = () -> {
@@ -382,7 +379,7 @@ public class ApplicationConfigurer implements ErrorReporter {
 			if (testErrors.isEmpty()) {
 				future.complete(null);
 			} else {
-				String msg = format("failed to deploy [%s] because tests failed:\n%s", identity, 
+				String msg = format("failed to deploy [%s] because tests failed:\n%s", identity.name(), 
 						testErrors.stream().map(s -> format("- %s", s)) .collect(joining("\n")));
 				log.error(msg);
 				future.completeExceptionally(runtime(msg));
@@ -440,16 +437,24 @@ public class ApplicationConfigurer implements ErrorReporter {
 					try {
 						data.diffContentFrom(testCase.expect(), (path, type, expected, actual) -> {
 							if (type == DiffContentType.ADDED) return; // don't mind extra data for now...
-							Optional<Content> initvalue = testCase.initial().getContent(path);
-							if (!initvalue.isPresent() || !initvalue.get().equals(actual)) {
-								if (actual != null && expected != null &&
-									actual.toString().equals(expected.toString())) {
-									// let this go by...
-									// TODO: how to handle equals of numeric types?
-								} else {
-									testErrors.add(format("%s : %s\ncontent at %s %s - expected [%s] got [%s]", name.join(" / "), testCase.name(), path.dots(), type, expected, actual));
-								}
+							
+							/* something about the initvalue was put in for a reason but I don't know why anymore
+							 * something about if the value was not touched then that is ok? *shrug* I'll leave it in for now
+							 * Optional<Content> initvalue = testCase.initial().getContent(path);
+							if (initvalue.isPresent() && initvalue.get().equals(actual)) {
+								// data just stayed as what we put in
+								return;
 							}
+							*/
+							
+							if (actual != null && expected != null &&
+								actual.toString().equals(expected.toString())) {
+								// let this go by...
+								// TODO: how to handle equals of numeric types?
+							} else {
+								testErrors.add(format("%s : %s\ncontent at %s %s - expected [%s] got [%s]", name.join(" / "), testCase.name(), path.dots(), type, expected, actual));
+							}
+							
 						});
 					} catch (Throwable t) {
 						t.printStackTrace();
@@ -461,13 +466,17 @@ public class ApplicationConfigurer implements ErrorReporter {
 				
 				@Override
 				public void halted() {
+					log.info("   halt");
 					log.error("test halted");
+					testErrors.add(format("%s : %s\nhalted during test", name.join(" / "), testCase.name()));
 					runNext();
 				}
 				
 				@Override
 				public void error(Data data, Throwable t) {
+					log.info("   error");
 					log.error("test failed to run", t);
+					testErrors.add(format("%s : %s\nexception during test - %s", name.join(" / "), testCase.name(), allExceptionMessages(t, ", ")));
 					runNext();
 				}
 				

@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import reka.api.Path;
 import reka.api.content.Content;
 import reka.api.data.Data;
-import reka.api.flow.Flow;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.NavigableConfig;

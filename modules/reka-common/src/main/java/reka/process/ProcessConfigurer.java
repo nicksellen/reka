@@ -16,13 +16,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import reka.api.IdentityKey;
-import reka.api.flow.Flow;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
 import reka.core.data.memory.MutableMemoryData;
 import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
+import reka.core.setup.ModuleSetupContext;
 
 import com.google.common.base.Splitter;
 
@@ -88,10 +88,12 @@ public class ProcessConfigurer extends ModuleConfigurer {
 	@Override
 	public void setup(ModuleSetup app) {
 		
+		ModuleSetupContext ctx = app.ctx();
+		
 		if (onLine != null) {
 			app.buildFlow("on line", onLine, flow -> {
 				
-				ProcessManager manager = app.ctx().get(PROCESS_MANAGER);
+				ProcessManager manager = ctx.get(PROCESS_MANAGER);
 				
 				manager.addListener(line -> {
 					flow.prepare().mutableData(MutableMemoryData.create().putString("out", line)).run();
@@ -101,7 +103,7 @@ public class ProcessConfigurer extends ModuleConfigurer {
 		}
 		
 		app.onDeploy(init -> {
-			init.run("start process", ctx -> {
+			init.run("start process", () -> {
 				try {
 					ProcessBuilder builder = new ProcessBuilder();
 					builder.command(command);
@@ -121,9 +123,9 @@ public class ProcessConfigurer extends ModuleConfigurer {
 			});
 		});
 		
-		app.registerStatusProvider(ctx -> ctx.get(PROCESS_MANAGER));
+		app.registerStatusProvider(() -> ctx.get(PROCESS_MANAGER));
 		
-		app.onUndeploy("kill process", ctx -> {
+		app.onUndeploy("kill process", () -> {
 			ctx.lookup(PROCESS_MANAGER).ifPresent(ProcessManager::shutdown);
 		});
 		

@@ -8,20 +8,21 @@ import java.util.function.Function;
 import reka.Identity;
 import reka.api.data.Data;
 import reka.config.configurer.annotations.Conf;
+import reka.core.app.Application;
 import reka.core.setup.OperationConfigurer;
 import reka.core.setup.OperationSetup;
 import reka.core.util.StringWithVars;
 import reka.net.ChannelAttrs;
 import reka.net.ChannelAttrs.AttributeMatcher;
-import reka.net.NetServerManager;
+import reka.net.NetManager;
 
 public class SocketBroadcastConfigurer implements OperationConfigurer {
 	
-	private final NetServerManager server;
+	private final NetManager server;
 	private Function<Data,String> messageFn;
 	private Function<Data,ChannelMatcher> matcherFn;
 	
-	public SocketBroadcastConfigurer(NetServerManager server) {
+	public SocketBroadcastConfigurer(NetManager server) {
 		this.server = server;			
 	}
 	
@@ -44,8 +45,8 @@ public class SocketBroadcastConfigurer implements OperationConfigurer {
 	
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("broadcast", ctx -> {
-			Identity identity = ctx.get(Sockets.IDENTITY);
+		ops.add("broadcast", () -> {
+			Identity identity = ops.ctx().get(Application.IDENTITY);
 			ChannelMatcher identityMatcher = new AttributeMatcher<>(ChannelAttrs.identity, identity);
 			if (matcherFn != null) {
 				matcherFn = matcherFn.andThen(m -> ChannelMatchers.compose(identityMatcher, m));

@@ -8,16 +8,16 @@ import reka.api.data.MutableData;
 import reka.api.run.Operation;
 import reka.api.run.OperationContext;
 import reka.net.ChannelAttrs;
-import reka.net.NetServerManager;
+import reka.net.NetManager;
 
 public class SocketSendOperation implements Operation {
 
-	private final NetServerManager server;
+	private final NetManager server;
 	private final Function<Data,String> toFn;
 	private final Function<Data,String> messageFn;
 	private final Identity identity;
 	
-	public SocketSendOperation(NetServerManager server, Identity identity, Function<Data,String> toFn, Function<Data,String> messageFn) {
+	public SocketSendOperation(NetManager server, Identity identity, Function<Data,String> toFn, Function<Data,String> messageFn) {
 		this.server = server;
 		this.toFn = toFn;
 		this.messageFn = messageFn;

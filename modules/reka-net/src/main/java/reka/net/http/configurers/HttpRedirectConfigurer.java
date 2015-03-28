@@ -22,7 +22,7 @@ public class HttpRedirectConfigurer implements OperationConfigurer {
 	
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("redirect", ctx -> new HttpRedirectOperation(urlFn, temporary));
+		ops.add("redirect", () -> new HttpRedirectOperation(urlFn, temporary));
 	}
 
 }

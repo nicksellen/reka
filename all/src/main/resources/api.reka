@@ -21,14 +21,16 @@ net/http {
 }
 
 test home page {
-  data {
-    request {
-      path /
-    }
-  }
   run main
-  expect {
-    response.content.message nowt much to see here try /apps
+  case home {
+    input {
+      request {
+        path /
+      }
+    }
+    expect {
+      response.content.message nowt much to see here try /apps
+    }
   }
 }
 

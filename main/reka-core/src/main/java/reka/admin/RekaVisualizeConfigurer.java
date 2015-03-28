@@ -1,7 +1,6 @@
 package reka.admin;
 
 import static reka.api.Path.dots;
-import static reka.api.Path.slashes;
 
 import java.util.function.Function;
 
@@ -57,7 +56,7 @@ public class RekaVisualizeConfigurer implements OperationConfigurer {
 	@Override
 	public void setup(OperationSetup ops) {
 		if (appPathFn != null) {
-			ops.add("visualize", ctx -> new VisualizeAppOperation(manager, appPathFn, flowNameFn, formatFn, out, stylesheet));
+			ops.add("visualize", () -> new VisualizeAppOperation(manager, appPathFn, flowNameFn, formatFn, out, stylesheet));
 		} else {
 			throw new RuntimeException("put the errors in the proper place nick!");
 		}

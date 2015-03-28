@@ -7,7 +7,7 @@ public class HttpWriteConfigurer implements OperationConfigurer {
 
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("write", ctx -> new HttpWriteOperation());
+		ops.add("write", () -> new HttpWriteOperation());
 	}
 
 }

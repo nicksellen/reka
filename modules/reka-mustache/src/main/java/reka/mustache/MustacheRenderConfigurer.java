@@ -36,7 +36,7 @@ public class MustacheRenderConfigurer implements OperationConfigurer {
 	public void setup(OperationSetup ops) {
 		if (in == null) in = Path.empty();
 		if (out == null) out = Response.CONTENT;
-		ops.add("render", ctx -> new MustacheRenderOperation(template, in, out));
+		ops.add("render", () -> new MustacheRenderOperation(template, in, out));
 	}
 
 }

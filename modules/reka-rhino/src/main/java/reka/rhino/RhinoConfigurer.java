@@ -19,6 +19,7 @@ import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
+import reka.core.setup.ModuleSetupContext;
 
 public class RhinoConfigurer extends ModuleConfigurer {
 	
@@ -52,11 +53,13 @@ public class RhinoConfigurer extends ModuleConfigurer {
 	}
 
 	@Override
-	public void setup(ModuleSetup module) {
+	public void setup(ModuleSetup app) {
 		
-		module.onDeploy(init -> {
+		ModuleSetupContext ctx = app.ctx();
 		
-			init.run("create js scope", ctx -> {
+		app.onDeploy(init -> {
+		
+			init.run("create js scope", () -> {
 				Context context = Context.enter();
 				if (optimization != null) context.setOptimizationLevel(optimization);
 				try {
@@ -69,14 +72,14 @@ public class RhinoConfigurer extends ModuleConfigurer {
 			log.info("setting up {} script(s)", scripts.size());
 			
 			for (Script script : scripts) {
-				init.run("run initial javascript", ctx -> {
+				init.run("run initial javascript", () -> {
 					log.debug("running initial js");
 					runJavascriptInScope(ctx.get(SCOPE), script, optimization);
 				});
 			}
 		});
 		
-		module.defineOperation(root(), provider -> new RhinoRunConfigurer());
+		app.defineOperation(root(), provider -> new RhinoRunConfigurer());
 		
 	}
 

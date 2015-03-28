@@ -1,6 +1,7 @@
 package reka;
 
 import static reka.config.configurer.Configurer.configure;
+import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import static reka.core.config.ConfigUtils.configToData;
 import static reka.util.Util.unchecked;
 
@@ -114,6 +115,7 @@ public class TestConfigurer {
 		if (!expect.equals(Data.NONE)) {
 			testCases.add(new FlowTestCase("main", initial, expect));
 		}
+		checkConfig(!testCases.isEmpty(), "a test block was used but no test cases were defined");
 		return new FlowTest(run, testCases);
 	}
 	

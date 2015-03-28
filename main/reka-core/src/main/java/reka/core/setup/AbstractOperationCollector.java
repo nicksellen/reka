@@ -12,7 +12,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 import reka.api.Path;
@@ -40,6 +39,11 @@ abstract class AbstractOperationCollector implements OperationSetup {
 	}
 	
 	@Override
+	public ModuleSetupContext ctx() {
+		return ctx;
+	}
+	
+	@Override
 	public final OperationSetup label(String label) {
 		this.label = label;
 		return this;
@@ -57,17 +61,17 @@ abstract class AbstractOperationCollector implements OperationSetup {
 	}
 
 	@Override
-	public final OperationSetup add(String name, Function<ModuleSetupContext,? extends SimpleFlowOperation> c) {
+	public final OperationSetup add(String name, Supplier<? extends SimpleFlowOperation> c) {
 		addNode(name, c);
 		return this;
 	}
 
 	@Override
 	public final OperationSetup router(String name, 
-			                           Function<ModuleSetupContext,? extends RouterOperation> router, 
+			                           Supplier<? extends RouterOperation> router, 
 			                           Consumer<RouterSetup> routes) {
 		
-		suppliers.add(() -> routerNode(basename.add(name).slashes(), () -> router.apply(ctx)));
+		suppliers.add(() -> routerNode(basename.add(name).slashes(), () -> router.get()));
 		
 		parallel(par -> {
 			routes.accept(new RouterSetup(){
@@ -182,8 +186,8 @@ abstract class AbstractOperationCollector implements OperationSetup {
 		return segment;
 	}
 
-	private void addNode(String name, Function<ModuleSetupContext,? extends SimpleFlowOperation> c) {
-		add(() -> node(basename.add(name).slashes(), () -> c.apply(ctx)));
+	private void addNode(String name, Supplier<? extends SimpleFlowOperation> c) {
+		add(() -> node(basename.add(name).slashes(), () -> c.get()));
 	}
 	
 	abstract FlowSegment build(Collection<FlowSegment> segments);

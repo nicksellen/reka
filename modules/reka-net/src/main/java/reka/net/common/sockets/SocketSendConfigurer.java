@@ -4,19 +4,20 @@ import java.util.function.Function;
 
 import reka.api.data.Data;
 import reka.config.configurer.annotations.Conf;
+import reka.core.app.Application;
 import reka.core.setup.OperationConfigurer;
 import reka.core.setup.OperationSetup;
 import reka.core.util.StringWithVars;
-import reka.net.NetServerManager;
+import reka.net.NetManager;
 
 public class SocketSendConfigurer implements OperationConfigurer {
 
-	private final NetServerManager server;
+	private final NetManager server;
 	
 	private Function<Data,String> to;
 	private Function<Data,String> messageFn;
 	
-	public SocketSendConfigurer(NetServerManager server) {
+	public SocketSendConfigurer(NetManager server) {
 		this.server = server;
 	}
 	
@@ -32,7 +33,7 @@ public class SocketSendConfigurer implements OperationConfigurer {
 	
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("msg", ctx -> new SocketSendOperation(server, ctx.get(Sockets.IDENTITY), to, messageFn));
+		ops.add("msg", () -> new SocketSendOperation(server, ops.ctx().get(Application.IDENTITY), to, messageFn));
 	}
 	
 }

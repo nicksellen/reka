@@ -16,7 +16,7 @@ import reka.api.data.Data;
 import reka.api.flow.Flow;
 import reka.core.data.memory.MutableMemoryData;
 import reka.net.ChannelAttrs;
-import reka.net.NetServerManager.SocketFlows;
+import reka.net.NetManager.SocketFlows;
 
 public class WebsocketFlowHandler extends SimpleChannelInboundHandler<TextWebSocketFrame> {
 

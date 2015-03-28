@@ -39,7 +39,7 @@ public class RhinoRunConfigurer implements OperationConfigurer {
 	
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("run", ctx -> new RhinoRunOperation(ctx.get(SCOPE), script, out));
+		ops.add("run", () -> new RhinoRunOperation(ops.ctx().get(SCOPE), script, out));
 	}
 
 }

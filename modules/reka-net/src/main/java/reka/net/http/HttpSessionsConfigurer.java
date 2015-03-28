@@ -12,17 +12,17 @@ public class HttpSessionsConfigurer extends ModuleConfigurer {
 	public final static String COOKIENAME = "REKASESSID";
 
 	@Override
-	public void setup(ModuleSetup module) {
+	public void setup(ModuleSetup app) {
 		
-		module.onDeploy(init -> {
-			init.run("create session storage", ctx -> {
-				ctx.put(SESSION_STORE, new SessionStore());
+		app.onDeploy(init -> {
+			init.run("create session storage", () -> {
+				app.ctx().calculateIfAbsent(SESSION_STORE, () -> new SessionStore());
 			});
 		});
 		
-		module.defineOperation(path("put"), provider -> new SessionPutConfigurer());
-		module.defineOperation(path("get"), provider -> new SessionGetConfigurer());
-		module.defineOperation(path("remove"), provider -> new SessionRemoveConfigurer());
+		app.defineOperation(path("put"), provider -> new SessionPutConfigurer());
+		app.defineOperation(path("get"), provider -> new SessionGetConfigurer());
+		app.defineOperation(path("remove"), provider -> new SessionRemoveConfigurer());
 		
 	}
 

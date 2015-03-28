@@ -1,23 +1,22 @@
 package io.reka.usenetplay;
 
-import reka.Identity;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
 import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
-import reka.net.NetServerManager;
-import reka.net.NetServerManager.HttpFlows;
+import reka.net.NetManager;
+import reka.net.NetManager.HttpFlows;
 import reka.net.http.HostAndPort;
 
 public class UseNetPlayConfigurer extends ModuleConfigurer  {
 	
-	private final NetServerManager server;
+	private final NetManager server;
 	
 	private String addy;
 	private ConfigBody body;
 
-	public UseNetPlayConfigurer(NetServerManager server) {
+	public UseNetPlayConfigurer(NetManager server) {
 		this.server = server;
 	}
 

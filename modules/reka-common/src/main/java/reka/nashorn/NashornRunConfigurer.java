@@ -38,7 +38,7 @@ public class NashornRunConfigurer implements OperationConfigurer {
 
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("run", ctx -> new NashornRunOperation(ctx.get(RUNNER), script, out));
+		ops.add("run", () -> new NashornRunOperation(ops.ctx().get(RUNNER), script, out));
 	}
 
 }

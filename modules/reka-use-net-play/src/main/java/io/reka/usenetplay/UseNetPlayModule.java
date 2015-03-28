@@ -8,11 +8,11 @@ import reka.api.Path;
 import reka.core.module.Module;
 import reka.core.module.ModuleDefinition;
 import reka.net.NetModule;
-import reka.net.NetServerManager;
+import reka.net.NetManager;
 
 public class UseNetPlayModule implements Module {
 
-	private final NetServerManager server;
+	private final NetManager server;
 	
 	@Inject
 	public UseNetPlayModule(NetModule net) {

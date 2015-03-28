@@ -22,7 +22,7 @@ public class NetModule implements Module {
 		static final IdentityKey<Channel> channel = IdentityKey.named("netty channel");
 	}
 
-	private final NetServerManager server = new NetServerManager();
+	private final NetManager server = new NetManager();
 
 	@Override
 	public Path base() {
@@ -44,7 +44,7 @@ public class NetModule implements Module {
 		
 	}
 
-	public NetServerManager server() {
+	public NetManager server() {
 		return server;
 	}
 	

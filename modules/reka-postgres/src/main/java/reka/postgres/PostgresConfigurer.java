@@ -19,6 +19,7 @@ import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.builder.TriggerHelper;
 import reka.core.setup.ModuleSetup;
+import reka.core.setup.ModuleSetupContext;
 import reka.jdbc.DBCP2ConnectionProvider;
 import reka.jdbc.JdbcBaseModule;
 import reka.jdbc.JdbcConnectionProvider;
@@ -93,10 +94,12 @@ public class PostgresConfigurer extends JdbcBaseModule {
 	public void setup(ModuleSetup app) {
 		super.setup(app);
 		
+		ModuleSetupContext ctx = app.ctx();
+		
 		if (!triggers.isEmpty()) {
 			
 			app.onDeploy(init -> {
-				init.run("setup notify connection pool", ctx -> {
+				init.run("setup notify connection pool", () -> {
 					PGDataSource ds = new PGDataSource();
 					try {
 						URI url = new URI(asyncJdbcUrl());
@@ -140,7 +143,7 @@ public class PostgresConfigurer extends JdbcBaseModule {
 				}
 			});
 			
-			app.onUndeploy("close connection", ctx -> {
+			app.onUndeploy("close connection", () -> {
 				ctx.remove(NOTIFY_CONNECTION).ifPresent(connection -> {
 					try {
 						connection.close();

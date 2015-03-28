@@ -54,9 +54,9 @@ import reka.util.AsyncShutdown;
 
 import com.google.common.collect.ImmutableMap;
 
-public class NetServerManager {
+public class NetManager {
 	
-	private static final Logger log = LoggerFactory.getLogger(NetServerManager.class);
+	private static final Logger log = LoggerFactory.getLogger(NetManager.class);
 
 	private final EventLoopGroup nettyEventGroup;
 	
@@ -70,7 +70,7 @@ public class NetServerManager {
 
 	private final ChannelGroup channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
 	
-	public NetServerManager() {
+	public NetManager() {
 		epoll = Epoll.isAvailable();
 		if (epoll) {
 			nettyServerChannelType = EpollServerSocketChannel.class;

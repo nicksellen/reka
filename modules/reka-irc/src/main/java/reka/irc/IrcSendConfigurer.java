@@ -19,7 +19,7 @@ public class IrcSendConfigurer implements OperationConfigurer {
 	
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("send", ctx -> new IrcSendOperation(ctx.get(IrcConfigurer.BOT), msgFn));
+		ops.add("send", () -> new IrcSendOperation(ops.ctx().get(IrcConfigurer.BOT), msgFn));
 	}
 
 }

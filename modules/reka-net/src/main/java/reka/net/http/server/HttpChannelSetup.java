@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import reka.Identity;
 import reka.net.ChannelAttrs;
-import reka.net.NetServerManager.HttpFlows;
+import reka.net.NetManager.HttpFlows;
 import reka.net.NetSettings.Type;
 
 import com.google.common.base.Splitter;
