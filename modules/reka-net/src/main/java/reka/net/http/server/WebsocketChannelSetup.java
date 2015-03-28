@@ -110,8 +110,7 @@ public class WebsocketChannelSetup extends MessageToMessageDecoder<FullHttpReque
 		return () -> resume(host);
 	}
 
-	@Override
-	public void resume(String host) {
+	private void resume(String host) {
 		List<Entry<ChannelHandlerContext, FullHttpRequest>> ctxs = paused.get(host);
 		if (ctxs == null) return;
 		ctxs.forEach(e -> {

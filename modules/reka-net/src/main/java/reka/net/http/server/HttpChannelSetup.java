@@ -104,14 +104,11 @@ public class HttpChannelSetup extends MessageToMessageDecoder<FullHttpRequest> i
 	@Override
 	public Runnable pause(String host) {
 		paused.computeIfAbsent(host, unused -> new ArrayList<>());
-		return () -> {
-			resume(host);
-		};
+		return () -> resume(host);
 	}
 
-	@Override
-	public void resume(String host) {
-		List<Entry<ChannelHandlerContext, FullHttpRequest>> ctxs = paused.get(host);
+	private void resume(String host) {
+		List<Entry<ChannelHandlerContext, FullHttpRequest>> ctxs = paused.remove(host);
 		if (ctxs == null) return;
 		ctxs.forEach(e -> {
 			ChannelHandlerContext ctx = e.getKey();

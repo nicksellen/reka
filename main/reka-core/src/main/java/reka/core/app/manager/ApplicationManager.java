@@ -304,10 +304,6 @@ public class ApplicationManager implements Iterable<Entry<Identity,Application>>
 				log.error("exception whilst deploying!");
 				subscriber.error(identity, t);
 				previous.ifPresent(Application::resume);
-				Runnable r = unpause.get();
-				if (r != null) {
-					r.run();
-				}
 				res.completeExceptionally(t);
 			};
 			
@@ -350,6 +346,10 @@ public class ApplicationManager implements Iterable<Entry<Identity,Application>>
 							onError.accept(t);
 						}
 					} finally {
+						Runnable r = unpause.get();
+						if (r != null) {
+							r.run();
+						}
 						res.complete();
 					}
 				});

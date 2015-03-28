@@ -225,20 +225,30 @@ public class NetServerManager {
 			start();
 			return undeploy;
 		}
+		
+		@Override
+		public Runnable httpPause(String host) {
+			return http.pause(host);
+		}
 
+		@Override
+		public Runnable websocketPause(String host) {
+			return websocket.pause(host);
+		}
+
+		/*
 		@Override
 		public Runnable httpPause(String host) {
 			log.warn("not doing httpPause {}", host);
 			return () -> {};
-			//return http.pause(host);
 		}
 
 		@Override
 		public Runnable websocketPause(String host) {
 			log.warn("not doing websocketPause {}", host);
 			return () -> {};
-			//return websocket.pause(host);
 		}
+		*/
 		
 		@Override
 		public Runnable socketPause() {
@@ -624,6 +634,7 @@ public class NetServerManager {
 		}
 		
 		public ChannelGroupWithMatcher and(ChannelMatcher matcher) {
+			if (base == matcher) return this;
 			return new ChannelGroupWithMatcher(channels, ChannelMatchers.compose(base, matcher));
 		}
 		

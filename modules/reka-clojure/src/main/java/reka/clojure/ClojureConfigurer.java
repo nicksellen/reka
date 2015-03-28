@@ -16,6 +16,7 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import reka.Identity;
 import reka.api.IdentityKey;
 import reka.api.data.MutableData;
 import reka.config.Config;
@@ -80,8 +81,8 @@ public class ClojureConfigurer extends ModuleConfigurer {
 		triggerFns.put(config.valueAsString(), config.body());
 	}
 	
-	private final Map<String,ClojureEnv> envs = new HashMap<>();
-	private final Map<String,Integer> versions = new HashMap<>();
+	private final Map<Identity,ClojureEnv> envs = new HashMap<>();
+	private final Map<Identity,Integer> versions = new HashMap<>();
 	
 	@Override
 	public void setup(ModuleSetup module) {
