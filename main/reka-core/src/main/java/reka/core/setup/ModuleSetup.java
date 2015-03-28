@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.toList;
 import static reka.config.configurer.Configurer.configure;
 import static reka.core.builder.FlowSegments.createLabelSegment;
 import static reka.core.builder.FlowSegments.seq;
+import static reka.util.Util.unsupported;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -97,15 +98,13 @@ public class ModuleSetup {
 		collector.network.add(new NetworkInfo(port, protocol, data.immutable()));
 	}
 	
-	public ModuleSetup onDeploy(Consumer<ModuleOperationSetup> init) {
+	public void onDeploy(Consumer<ModuleOperationSetup> init) {
 		OperationSetup e = new SequentialCollector(path, ctx);
 		init.accept(new ModuleOperationSetup(idv, e));
 		segments.add(e);
-		return this;
 	}
 	
 	public void onUndeploy(String name, Runnable runnable) {
-		log.info("adding runnable into collector undeploys [{}] #{}", name, System.identityHashCode(collector.onUndeploy));
 		collector.onUndeploy.add(runnable);
 	}
 	
@@ -113,15 +112,15 @@ public class ModuleSetup {
 		collector.onUndeploy.add(() -> handler.accept(ctx));
 	}
 	
-	public void onShutdown(String name, BiConsumer<IdentityAndVersion, IdentityStore> handler) {
+	public void onUndeploy(String name, BiConsumer<IdentityAndVersion, IdentityStore> handler) {
 		collector.onUndeploy.add(() -> handler.accept(idv, ctx));
 	}
 	
-	public ModuleSetup simpleOperation(Path name, Function<Config,Operation> fn) {
-		return this;
+	public void simpleOperation(Path name, Function<Config,Operation> fn) {
+		throw unsupported("I haven't implemented this yet, it wouldn't be very tricky though, just gotta mush some things about");
 	}
 	
-	public ModuleSetup defineOperation(Path name, Function<ConfigurerProvider,OperationConfigurer> c) {
+	public void defineOperation(Path name, Function<ConfigurerProvider,OperationConfigurer> c) {
 		
 		FlowSegmentBiFunction f = (provider, config) -> {
 			return configure(c.apply(provider), config).bind(path, ctx);
@@ -134,8 +133,6 @@ public class ModuleSetup {
 			// and the short name (e.g. http/router):
 			collector.providers.put(Path.path(path.last()).add(name), f);
 		}
-		
-		return this;
 	}
 	
 	public void registerStatusProvider(Function<IdentityStore, StatusDataProvider> c) {
@@ -143,12 +140,11 @@ public class ModuleSetup {
 		collector.statuses.add(() -> StatusProvider.create(info.name().slashes(), path.slashes(), info.version(), c.apply(ctx)));
 	}
 	
-	public ModuleSetup initflow(String name, ConfigBody body, Consumer<InitFlowSetup> init) {
+	public void buildInitializationFlow(String name, ConfigBody body, Consumer<Flow> init) {
 		Function<ConfigurerProvider, OperationConfigurer> supplier = provider -> configure(new SequenceConfigurer(provider), body);
 		collector.initflows.add(new InitFlow(path.add(name), supplier, ctx, flow -> {
-			init.accept(new InitFlowSetup(flow, ctx));
+			init.accept(flow);
 		}));
-		return this;
 	}
 	
 	public static class ApplicationCheck {
@@ -178,7 +174,6 @@ public class ModuleSetup {
 		collector.checks.add(check);
 		return this;
 	}
-
 	
 	public void buildFlow(String name, ConfigBody body, Consumer<Flow> c) {
 		buildFlow(IdentityKey.named(name), body, c);

@@ -165,11 +165,11 @@ public class NashornConfigurer extends ModuleConfigurer {
 		
 			IdentityKey<Data> key = IdentityKey.named(format("%s init op", name));
 			
-			module.initflow(name, body, init -> {
+			module.buildInitializationFlow(name, body, flow -> {
 				log.debug("running init flow for {}", name);
-				init.flow().prepare().complete(data -> {
+				flow.prepare().complete(data -> {
 					log.debug("finished running init flow for {}", name);
-					init.store().put(key, data);
+					module.ctx().put(key, data);
 					log.debug("put boo data");
 				}).run();
 			});

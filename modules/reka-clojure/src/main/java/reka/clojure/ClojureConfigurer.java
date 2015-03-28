@@ -130,7 +130,7 @@ public class ClojureConfigurer extends ModuleConfigurer {
 			});
 		});
 		
-		app.onShutdown("shutdown env", (idv, store) -> {
+		app.onUndeploy("shutdown env", (idv, store) -> {
 			/* work in progress...
 			if (false) {
 
