@@ -18,7 +18,7 @@ import reka.api.flow.Flow;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.builder.TriggerHelper;
-import reka.core.setup.ModuleSetup;
+import reka.core.setup.AppSetup;
 import reka.core.setup.ModuleSetupContext;
 import reka.jdbc.DBCP2ConnectionProvider;
 import reka.jdbc.JdbcBaseModule;
@@ -91,7 +91,7 @@ public class PostgresConfigurer extends JdbcBaseModule {
 	}
 
 	@Override
-	public void setup(ModuleSetup app) {
+	public void setup(AppSetup app) {
 		super.setup(app);
 		
 		ModuleSetupContext ctx = app.ctx();

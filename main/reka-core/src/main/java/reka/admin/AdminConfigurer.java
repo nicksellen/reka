@@ -28,7 +28,7 @@ import reka.config.processor.Processor;
 import reka.core.app.manager.ApplicationManager;
 import reka.core.app.manager.ApplicationManager.EventType;
 import reka.core.setup.ModuleConfigurer;
-import reka.core.setup.ModuleSetup;
+import reka.core.setup.AppSetup;
 
 public class AdminConfigurer extends ModuleConfigurer {
 	
@@ -63,11 +63,10 @@ public class AdminConfigurer extends ModuleConfigurer {
 	}
 	
 	@Override
-	public void setup(ModuleSetup module) {
+	public void setup(AppSetup module) {
 		
 		module.defineOperation(path("list"), provider -> new RekaListConfigurer(manager));
 		module.defineOperation(path("get"), provider -> new RekaDetailsConfigurer(manager));
-		module.defineOperation(path("validate"), provider -> new RekaValidateConfigurer(provider, manager));
 		module.defineOperation(path("deploy"), provider -> new RekaDeployConfigurer(manager, dirs()));
 		module.defineOperation(path("undeploy"), provider -> new RekaUndeployConfigurer(manager, dirs()));
 		module.defineOperation(path("visualize"), provider -> new RekaVisualizeConfigurer(manager));

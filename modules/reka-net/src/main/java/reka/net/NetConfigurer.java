@@ -2,7 +2,7 @@ package reka.net;
 
 import static reka.api.Path.path;
 import reka.core.setup.ModuleConfigurer;
-import reka.core.setup.ModuleSetup;
+import reka.core.setup.AppSetup;
 import reka.net.http.configurers.NetProxyConfigurer;
 
 public class NetConfigurer extends ModuleConfigurer {
@@ -14,7 +14,7 @@ public class NetConfigurer extends ModuleConfigurer {
 	}
 
 	@Override
-	public void setup(ModuleSetup module) {
+	public void setup(AppSetup module) {
 		module.defineOperation(path("proxy"), provider -> new NetProxyConfigurer(server.nettyEventGroup()));
 	}	
 	

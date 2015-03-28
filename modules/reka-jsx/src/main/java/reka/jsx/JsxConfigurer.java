@@ -28,7 +28,7 @@ import reka.api.run.OperationContext;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.setup.ModuleConfigurer;
-import reka.core.setup.ModuleSetup;
+import reka.core.setup.AppSetup;
 import reka.core.setup.ModuleSetupContext;
 import reka.core.setup.OperationConfigurer;
 import reka.core.setup.OperationSetup;
@@ -50,7 +50,7 @@ public class JsxConfigurer extends ModuleConfigurer {
 	}
 	
 	@Override
-	public void setup(ModuleSetup app) {
+	public void setup(AppSetup app) {
 		
 		ModuleSetupContext ctx = app.ctx();
 		

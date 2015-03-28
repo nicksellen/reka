@@ -9,7 +9,7 @@ import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.builder.TriggerHelper;
 import reka.core.setup.ModuleConfigurer;
-import reka.core.setup.ModuleSetup;
+import reka.core.setup.AppSetup;
 
 public class IrcConfigurer extends ModuleConfigurer {
 	
@@ -61,7 +61,7 @@ public class IrcConfigurer extends ModuleConfigurer {
 	}
 
 	@Override
-	public void setup(ModuleSetup app) {
+	public void setup(AppSetup app) {
 
 		app.defineOperation(path("send"), provider -> new IrcSendConfigurer());
 		

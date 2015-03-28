@@ -3,7 +3,7 @@ package reka.net.http;
 import static reka.api.Path.path;
 import reka.api.IdentityKey;
 import reka.core.setup.ModuleConfigurer;
-import reka.core.setup.ModuleSetup;
+import reka.core.setup.AppSetup;
 
 public class HttpSessionsConfigurer extends ModuleConfigurer {
 	
@@ -12,7 +12,7 @@ public class HttpSessionsConfigurer extends ModuleConfigurer {
 	public final static String COOKIENAME = "REKASESSID";
 
 	@Override
-	public void setup(ModuleSetup app) {
+	public void setup(AppSetup app) {
 		
 		app.onDeploy(init -> {
 			init.run("create session storage", () -> {

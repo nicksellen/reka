@@ -20,14 +20,14 @@ import reka.config.configurer.annotations.Conf;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.core.setup.ModuleConfigurer;
-import reka.core.setup.ModuleSetup;
+import reka.core.setup.AppSetup;
 import reka.core.setup.OperationConfigurer;
 import reka.net.NetManager;
 import reka.net.NetManager.SocketFlows;
 import reka.net.NetSettings;
 import reka.net.common.sockets.SocketBroadcastConfigurer;
 import reka.net.common.sockets.SocketSendConfigurer;
-import reka.net.common.sockets.SocketStatusProvider;
+import reka.net.common.sockets.NetStatusProvider;
 import reka.net.common.sockets.SocketTagAddConfigurer;
 import reka.net.common.sockets.SocketTagRemoveConfigurer;
 import reka.net.common.sockets.SocketTagSendConfigurer;
@@ -70,7 +70,7 @@ public class SocketConfigurer extends ModuleConfigurer {
 	}
 	
 	@Override
-	public void setup(ModuleSetup app) {
+	public void setup(AppSetup app) {
 		
 		app.defineOperation(path("send"), provider -> new SocketSendConfigurer(net));
 		app.defineOperation(path("broadcast"), provider -> new SocketBroadcastConfigurer(net));
@@ -79,7 +79,7 @@ public class SocketConfigurer extends ModuleConfigurer {
 		app.defineOperation(slashes("tag/rm"), provider -> new SocketTagRemoveConfigurer(net));
 		app.defineOperation(slashes("tag/send"), provider -> new SocketTagSendConfigurer(net));
 		
-		app.registerStatusProvider(() -> new SocketStatusProvider(net, app.identity(), NetSettings.Type.SOCKET));
+		app.registerStatusProvider(() -> new NetStatusProvider(net, app.identity(), NetSettings.Type.SOCKET));
 		
 		Map<IdentityKey<Flow>,Function<ConfigurerProvider, OperationConfigurer>> triggers = new HashMap<>();
 		
@@ -98,7 +98,7 @@ public class SocketConfigurer extends ModuleConfigurer {
 		}
 		
 		for (int port : ports) {
-			app.requirePort(port);
+			app.requireNetwork(port);
 		}
 		
 		app.buildFlows(triggers, flows -> {

@@ -1,6 +1,6 @@
 package reka.core.app;
 
-public interface LifecycleComponent {
+public interface ApplicationComponent {
 	void undeploy();
 	Runnable pause();
 }

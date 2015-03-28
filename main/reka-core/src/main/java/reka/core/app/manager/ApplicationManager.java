@@ -156,11 +156,11 @@ public class ApplicationManager implements Iterable<Entry<Identity,Application>>
 		}
 	}
 
-	public void validate(Source source) {
+	public void validate(Source source, IdentityStore store) {
 		Identity identity = Identity.create("validate");
 		IdentityAndVersion idv = IdentityAndVersion.create(identity, versions.get(identity).get());
 		NavigableConfig config = moduleManager.processor().process(ConfigParser.fromSource(source));
-		configure(new ApplicationConfigurer(basedirs.mktemp(), moduleManager), config).checkValid(idv);
+		configure(new ApplicationConfigurer(basedirs.mktemp(), moduleManager), config).checkValid(idv, store);
 	}
 	
 	public static final Path INITIALIZER_VISUALIZER_NAME = slashes("app/initialize");
@@ -320,15 +320,15 @@ public class ApplicationManager implements Iterable<Entry<Identity,Application>>
 				dirs.mkdirs();
 				
 				ApplicationConfigurer configurer = configure(new ApplicationConfigurer(dirs, moduleManager), config);
+
+				IdentityStore store = previous.isPresent() ? ConcurrentIdentityStore.createFrom(previous.get().store()) : ConcurrentIdentityStore.create();
+				store.put(Application.IDENTITY, identity);
 				
-				configurer.checkValid(idv);
+				configurer.checkValid(idv, store);
 				
 				previous.ifPresent(p -> {
 					unpause.set(p.pause());
 				});
-				
-				IdentityStore store = previous.isPresent() ? ConcurrentIdentityStore.createFrom(previous.get().store()) : ConcurrentIdentityStore.create();
-				store.put(Application.IDENTITY, identity);
 				
 				configurer.build(identity, version, store).whenComplete((app, t) -> {
 					try {

@@ -4,7 +4,7 @@ import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
 import reka.core.setup.ModuleConfigurer;
-import reka.core.setup.ModuleSetup;
+import reka.core.setup.AppSetup;
 import reka.net.NetManager;
 import reka.net.NetManager.HttpFlows;
 import reka.net.http.HostAndPort;
@@ -31,7 +31,7 @@ public class UseNetPlayConfigurer extends ModuleConfigurer  {
 	}
 	
 	@Override
-	public void setup(ModuleSetup app) {
+	public void setup(AppSetup app) {
 		
 		app.buildFlow("on addy req", body, flow -> {
 			

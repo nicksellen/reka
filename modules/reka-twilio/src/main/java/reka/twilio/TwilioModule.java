@@ -21,7 +21,7 @@ import reka.config.configurer.annotations.Conf;
 import reka.core.module.Module;
 import reka.core.module.ModuleDefinition;
 import reka.core.setup.ModuleConfigurer;
-import reka.core.setup.ModuleSetup;
+import reka.core.setup.AppSetup;
 import reka.core.setup.OperationConfigurer;
 import reka.core.setup.OperationSetup;
 import reka.core.util.StringWithVars;
@@ -66,7 +66,7 @@ public class TwilioModule implements Module {
 		}
 
 		@Override
-		public void setup(ModuleSetup module) {
+		public void setup(AppSetup module) {
 			module.defineOperation(path("send"), provider -> new TwilioSendConfigurer(sid, token, defaultFrom));
 		}
 		

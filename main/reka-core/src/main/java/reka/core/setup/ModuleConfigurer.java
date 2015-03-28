@@ -52,7 +52,7 @@ public abstract class ModuleConfigurer {
 			
 			ModuleSetupContext ctx = new ModuleSetupContext(store);
 
-			ModuleSetup setup = new ModuleSetup(idv, module.info(), module.fullAliasOrName(), ctx, collector);
+			AppSetup setup = new AppSetup(idv, module.info(), module.fullAliasOrName(), ctx, collector);
 			
 			module.setup(setup);
 			
@@ -127,7 +127,7 @@ public abstract class ModuleConfigurer {
 		}
 	}
 
-	public abstract void setup(ModuleSetup module);
+	public abstract void setup(AppSetup module);
 
 	public boolean isRoot() {
 		return isRoot;

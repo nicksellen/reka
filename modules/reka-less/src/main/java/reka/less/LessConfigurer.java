@@ -38,7 +38,7 @@ import reka.api.run.OperationContext;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.setup.ModuleConfigurer;
-import reka.core.setup.ModuleSetup;
+import reka.core.setup.AppSetup;
 import reka.core.setup.OperationConfigurer;
 import reka.core.setup.OperationSetup;
 import reka.dirs.AppDirs;
@@ -52,7 +52,7 @@ public class LessConfigurer extends ModuleConfigurer {
 	}
 
 	@Override
-	public void setup(ModuleSetup module) {
+	public void setup(AppSetup module) {
 		module.defineOperation(root(), provider -> new LessContentConfigurer(compiler, dirs()));
 	}
 	

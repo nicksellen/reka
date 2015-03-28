@@ -1,8 +1,14 @@
 package reka.exec;
 
-import java.util.List;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
-public class SshConfig {
+import reka.api.Hashable;
+
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
+
+public class SshConfig implements Hashable {
 
 	private final String hostname;
 	private final int port;
@@ -10,16 +16,16 @@ public class SshConfig {
 	private final char[] privateKey;
 	private final char[] publicKey;
 	private final char[] passphrase;
-	private final List<String> hostkeys;
+	private final String hostkey;
 	
-	public SshConfig(String hostname, int port, String user, char[] privateKey, char[] publicKey, char[] passphase, List<String> hostkeys) {
+	public SshConfig(String hostname, int port, String user, char[] privateKey, char[] publicKey, char[] passphase, String hostkey) {
 		this.hostname = hostname;
 		this.port = port;
 		this.user = user;
 		this.privateKey = privateKey;
 		this.publicKey = publicKey;
 		this.passphrase = passphase;
-		this.hostkeys = hostkeys;
+		this.hostkey = hostkey;
 	}
 
 	public String hostname() {
@@ -54,8 +60,34 @@ public class SshConfig {
 		return passphrase;
 	}
 	
-	public List<String> hostkeys() {
-		return hostkeys;
+	public String hostkey() {
+		return hostkey;
+	}
+	
+	public byte[] sha1() {
+		return hash(Hashing.sha1().newHasher()).hash().asBytes();
+	}
+
+	@Override
+	public Hasher hash(Hasher hasher) {
+		
+		hasher.putString(hostname, StandardCharsets.UTF_8)
+			  .putInt(port)
+			  .putString(user, StandardCharsets.UTF_8);
+		
+		putChars(hasher, privateKey);
+		putChars(hasher, publicKey);
+		putChars(hasher, passphrase);
+		
+		hasher.putString(hostkey, StandardCharsets.UTF_8);
+		
+		return hasher;
+	}
+	
+	private static void putChars(Hasher hasher, char[] chars) {
+		for (int i = 0; i < chars.length; i++) {
+			hasher.putChar(chars[i]);
+		}
 	}
 	
 }

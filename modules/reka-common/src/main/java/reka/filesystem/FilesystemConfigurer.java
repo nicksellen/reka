@@ -6,7 +6,7 @@ import java.nio.file.Path;
 
 import reka.config.configurer.annotations.Conf;
 import reka.core.setup.ModuleConfigurer;
-import reka.core.setup.ModuleSetup;
+import reka.core.setup.AppSetup;
 import reka.filesystem.FilesystemModule.FilesystemDeleteConfigurer;
 import reka.filesystem.FilesystemModule.FilesystemListConfigurer;
 import reka.filesystem.FilesystemModule.FilesystemMktmpDirConfigurer;
@@ -24,7 +24,7 @@ public class FilesystemConfigurer extends ModuleConfigurer {
 	}
 
 	@Override
-	public void setup(ModuleSetup module) {
+	public void setup(AppSetup module) {
 		Path datadir = dirs().data().resolve(dir);
 		Path tmpdir = dirs().tmp().resolve(dir);
 		module.defineOperation(path("write"), provider -> new FilesystemWriteConfigurer(datadir));

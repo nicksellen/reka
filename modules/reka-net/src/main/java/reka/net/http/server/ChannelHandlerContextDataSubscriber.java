@@ -3,11 +3,14 @@ package reka.net.http.server;
 import static org.apache.commons.lang3.StringEscapeUtils.escapeHtml4;
 import static reka.api.Path.dots;
 import static reka.api.content.Contents.integer;
+import static reka.api.content.Contents.utf8;
 import static reka.util.Util.rootExceptionMessage;
 import static reka.util.Util.unwrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.GenericFutureListener;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -38,14 +41,7 @@ public class ChannelHandlerContextDataSubscriber implements Subscriber {
 	@Override
 	public void ok(MutableData data) {
 		ChannelFuture writeFuture = context.writeAndFlush(data);
-		long took = (System.nanoTime() - started) / 1000;
-		String status = data.getString(Response.STATUS).orElse("-");
-		log.info("{} - \"{} {}\" {}us", 
-				data.getString(Request.HOST).orElse(""), 
-				data.getString(Request.METHOD).orElse(""), 
-				data.getString(Request.PATH).orElse(""), 
-				status,
-				took);
+		writeFuture.addListener(new LogHttp(data));
 		if (data.existsAt(CLOSE_CHANNEL)) {
 			writeFuture.addListener(ChannelFutureListener.CLOSE);
 		}
@@ -53,23 +49,22 @@ public class ChannelHandlerContextDataSubscriber implements Subscriber {
 
 	@Override
 	public void halted() {
-		context.writeAndFlush(MutableMemoryData.create()
-				.put(Response.STATUS, integer(404)))
-			.addListener(ChannelFutureListener.CLOSE);
+		Data data = MutableMemoryData.create().put(Response.STATUS, integer(404));
+		context.writeAndFlush(data).addListener(new LogHttp(data)).addListener(ChannelFutureListener.CLOSE);
 	}
 
 	@Override
-	public void error(Data data, Throwable error) {
-		Data msg;
+	public void error(Data incomingData, Throwable error) {
+		MutableData data = MutableMemoryData.from(incomingData);
 		String acceptHeader = data.getString(Request.Headers.ACCEPT).orElse("");
 		if (acceptsHtml(acceptHeader)) {
-			msg = htmlErrorMessage(data, error);
+			htmlErrorMessage(data, error);
 		} else if (acceptsJson(acceptHeader)) {
-			msg = jsonErrorMessage(data, error);
+			jsonErrorMessage(data, error);
 		} else {
-			msg = textErrorMessage(data, error);
+			textErrorMessage(data, error);
 		}
-		context.writeAndFlush(msg).addListener(ChannelFutureListener.CLOSE);
+		context.writeAndFlush(data).addListener(new LogHttp(data)).addListener(ChannelFutureListener.CLOSE);
 	}
 	
 	private static boolean acceptsHtml(String acceptHeader) {
@@ -86,26 +81,23 @@ public class ChannelHandlerContextDataSubscriber implements Subscriber {
 		return writer.toString();
 	}
 	
-	private static Data textErrorMessage(Data data, Throwable t) {
-		return MutableMemoryData.create()
-				.putString(Response.CONTENT, rootExceptionMessage(unwrap(t)))
-				.putString(Response.Headers.CONTENT_TYPE, "text/plain")
-				.putInt(Response.STATUS, 500);
+	private static void textErrorMessage(MutableData data, Throwable t) {
+		data.putString(Response.CONTENT, rootExceptionMessage(unwrap(t)))
+			.putString(Response.Headers.CONTENT_TYPE, "text/plain")
+			.putInt(Response.STATUS, 500);
 	}
 	
-	private static Data jsonErrorMessage(Data data, Throwable t) {
+	private static void jsonErrorMessage(MutableData data, Throwable t) {
 		t = unwrap(t);
-		return MutableMemoryData.create()
-					.put(Response.CONTENT.add("data"), data)
-					.putString(Response.CONTENT.add("message"), rootExceptionMessage(t))
-				.putString(Response.Headers.CONTENT_TYPE, "application/json")
-				.putInt(Response.STATUS, 500);
+		data.put(Response.CONTENT, utf8(data.toJson()))
+			.putString(Response.CONTENT.add("message"), rootExceptionMessage(t))
+			.putString(Response.Headers.CONTENT_TYPE, "application/json")
+			.putInt(Response.STATUS, 500);
 	}
 	
-	private static Data htmlErrorMessage(Data data, Throwable t) {
+	private static void htmlErrorMessage(MutableData data, Throwable t) {
 		t = unwrap(t);
-		return MutableMemoryData.create()
-				.putString(Response.CONTENT, 
+		data.putString(Response.CONTENT, 
                         "<html><body>" +
                                 "<h1>Oh noes!</h1>" +
                                 "<h2>" +
@@ -120,9 +112,33 @@ public class ChannelHandlerContextDataSubscriber implements Subscriber {
                                 escapeHtml4(data.toPrettyJson()) +
                                 "</pre>" +
                                 "</body></html>")
-				.putString(Response.Headers.CONTENT_TYPE, "text/html")
-				.putInt(Response.STATUS, 500);
+			.putString(Response.Headers.CONTENT_TYPE, "text/html")
+			.putInt(Response.STATUS, 500);
 
+	}
+	
+	public class LogHttp implements GenericFutureListener<Future<Void>> {
+
+		private final Data data;
+		
+		public LogHttp(Data data) {
+			this.data = data;
+		}
+		
+		@Override
+		public void operationComplete(Future<Void> future) throws Exception {
+			long took = (System.nanoTime() - started) / 1000;
+			String status = data.getString(Response.STATUS).orElse("-");
+			log.info("{} - \"{} {}\" {} {}us", 
+					data.getString(Request.HOST).orElse(""), 
+					data.getString(Request.METHOD).orElse(""), 
+					data.getString(Request.PATH).orElse(""), 
+					status,
+					took);
+		}
+		
+		
+		
 	}
 	
 }

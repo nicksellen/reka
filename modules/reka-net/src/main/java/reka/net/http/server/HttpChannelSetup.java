@@ -26,7 +26,7 @@ import com.google.common.base.Splitter;
 @Sharable
 public class HttpChannelSetup extends ChannelInboundHandlerAdapter implements ChannelSetup<HttpFlows> {
 	
-	private static final ChannelHandler DATASET_DECODER = new FullHttpToDatasetDecoder();
+	private static final ChannelHandler DATASET_DECODER = new FullHttpToDataDecoder();
 	private static final Splitter hostSplitter = Splitter.on(":").limit(2);
 	
 	private final ConcurrentMap<String,HttpFlows> flows = new ConcurrentHashMap<>();

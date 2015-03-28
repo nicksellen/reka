@@ -6,17 +6,16 @@ import reka.api.Path;
 import reka.config.configurer.annotations.Conf;
 import reka.core.setup.OperationConfigurer;
 import reka.core.setup.OperationSetup;
+import reka.exec.ExecConfigurer.ExecScripts;
 
 public class ExecSshCommandConfigurer implements OperationConfigurer {
 	
-	private final String[] command;
-	private final SshConfig config;
+	private final ExecScripts scripts;
 	
 	private Path into = path("result");
 	
-	public ExecSshCommandConfigurer(String[] command, SshConfig config) {
-		this.command = command;
-		this.config = config;
+	public ExecSshCommandConfigurer(ExecScripts scripts) {
+		this.scripts = scripts;
 	}
 	
 	@Conf.Val
@@ -24,10 +23,9 @@ public class ExecSshCommandConfigurer implements OperationConfigurer {
 		into = dots(val);
 	}
 	
-
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("ssh run", () -> new ExecSshCommandOperation(command, config, into));
+		ops.add("ssh run", () -> new ExecSshCommandOperation(scripts, ops.ctx().require(ExecConfigurer.CLIENT), into));
 	}
 
 }

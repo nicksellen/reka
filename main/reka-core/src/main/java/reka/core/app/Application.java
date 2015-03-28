@@ -41,7 +41,7 @@ public class Application implements AsyncShutdown {
 
 	private final List<NetworkInfo> network = new ArrayList<>();
 	
-	private final List<LifecycleComponent> components = new ArrayList<>();
+	private final List<ApplicationComponent> components = new ArrayList<>();
 	private final List<StatusProvider> statusProviders = new ArrayList<>();
 	
 	public Application(
@@ -53,7 +53,7 @@ public class Application implements AsyncShutdown {
 			IdentityStoreReader store,
 			List<NetworkInfo> network, 
 			FlowVisualizer initializerVisualizer,
-			List<LifecycleComponent> components,
+			List<ApplicationComponent> components,
 			List<StatusProvider> statusProviders) {
 		this.identity = identity;
 		this.name = name;
@@ -166,7 +166,7 @@ public class Application implements AsyncShutdown {
 	}
 	
 	public Runnable pause() {
-		List<Runnable> unpauses = components.stream().map(LifecycleComponent::pause).collect(toList());
+		List<Runnable> unpauses = components.stream().map(ApplicationComponent::pause).collect(toList());
 		return () -> {
 			unpauses.forEach(Runnable::run);
 		};

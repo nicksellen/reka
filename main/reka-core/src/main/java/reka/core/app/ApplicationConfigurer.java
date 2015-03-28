@@ -60,7 +60,7 @@ import reka.core.data.memory.MutableMemoryData;
 import reka.core.module.ModuleManager;
 import reka.core.setup.ApplicationSetup;
 import reka.core.setup.ModuleConfigurer;
-import reka.core.setup.ModuleSetup.ApplicationCheck;
+import reka.core.setup.AppSetup.ApplicationCheck;
 import reka.core.setup.Trigger;
 import reka.core.setup.TriggerCollection;
 import reka.core.setup.TriggerFlows;
@@ -140,8 +140,8 @@ public class ApplicationConfigurer implements ErrorReporter {
     	return flowsBuilder.buildVisualizers();
     }
     
-    public void checkValid(IdentityAndVersion idv) {
-    	ApplicationSetup setup = ModuleConfigurer.setup(idv, rootModule, IdentityStore.createConcurrentIdentityStore());
+    public void checkValid(IdentityAndVersion idv, IdentityStore store) {
+    	ApplicationSetup setup = ModuleConfigurer.setup(idv, rootModule, store);
     	DefaultConfigurerProvider configurerProvider = new DefaultConfigurerProvider(setup.providers);
     	setup.triggers.forEach(triggers -> triggers.get().forEach(trigger -> {
     		trigger.supplier().apply(configurerProvider).bind(trigger.base(), triggers.ctx()).get();

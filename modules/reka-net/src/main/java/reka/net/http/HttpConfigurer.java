@@ -17,13 +17,15 @@ import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.core.module.ModuleInfo;
 import reka.core.setup.ModuleConfigurer;
-import reka.core.setup.ModuleSetup;
+import reka.core.setup.AppSetup;
 import reka.core.setup.ModuleSetupContext;
 import reka.core.setup.OperationConfigurer;
 import reka.net.NetManager;
+import reka.net.NetSettings;
 import reka.net.NetManager.HttpFlows;
 import reka.net.NetSettings.SslSettings;
 import reka.net.NetSettings.Type;
+import reka.net.common.sockets.NetStatusProvider;
 import reka.net.http.configurers.HttpContentConfigurer;
 import reka.net.http.configurers.HttpRedirectConfigurer;
 import reka.net.http.configurers.HttpRequestConfigurer;
@@ -94,7 +96,7 @@ public class HttpConfigurer extends ModuleConfigurer {
 	}
 
 	@Override
-	public void setup(ModuleSetup app) {
+	public void setup(AppSetup app) {
 		
 		ModuleSetupContext ctx = app.ctx();
 		
@@ -123,6 +125,8 @@ public class HttpConfigurer extends ModuleConfigurer {
 			return new SequenceConfigurer(provider);
 		});
 		*/
+		
+		app.registerStatusProvider(() -> new NetStatusProvider(net, app.identity(), NetSettings.Type.HTTP));
 		
 		listens.forEach(listen -> {
 			app.requireNetwork(listen.port(), listen.host());	

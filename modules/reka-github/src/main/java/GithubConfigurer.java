@@ -11,7 +11,7 @@ import reka.config.configurer.annotations.Conf;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.core.setup.ModuleConfigurer;
-import reka.core.setup.ModuleSetup;
+import reka.core.setup.AppSetup;
 import reka.core.setup.OperationConfigurer;
 import reka.net.NetManager;
 
@@ -44,7 +44,7 @@ public class GithubConfigurer extends ModuleConfigurer {
 	}
 
 	@Override
-	public void setup(ModuleSetup module) {
+	public void setup(AppSetup module) {
 		for (Function<ConfigurerProvider, OperationConfigurer> h : requestHandlers) {
 			module.buildFlow("on webhook", h, reg -> {
 				

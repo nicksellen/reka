@@ -33,15 +33,13 @@ import reka.api.run.Operation;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.core.app.IdentityAndVersion;
-import reka.core.app.LifecycleComponent;
+import reka.core.app.ApplicationComponent;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.core.data.memory.MutableMemoryData;
 import reka.core.module.ModuleInfo;
 
-public class ModuleSetup {
-	
-	private final Logger log = LoggerFactory.getLogger(getClass());
+public class AppSetup {
 	
 	private final IdentityAndVersion idv;
 	private final ModuleInfo info;
@@ -52,7 +50,7 @@ public class ModuleSetup {
 	
 	private boolean includeDefaultStatus = true;
 	
-	public ModuleSetup(IdentityAndVersion idv, ModuleInfo info, Path path, ModuleSetupContext ctx, ModuleCollector collector) {
+	public AppSetup(IdentityAndVersion idv, ModuleInfo info, Path path, ModuleSetupContext ctx, ModuleCollector collector) {
 		this.idv = idv;
 		this.info = info;
 		this.path = path;
@@ -68,6 +66,10 @@ public class ModuleSetup {
 		return idv.identity();
 	}
 	
+	public int version() {
+		return idv.version();
+	}
+	
 	public ModuleSetupContext ctx() {
 		return ctx;
 	}
@@ -80,11 +82,11 @@ public class ModuleSetup {
 		collector.networkRequirements.add(new PortRequirement(port, Optional.of(host)));
 	}
 	
-	public void requirePort(int port) {
+	public void requireNetwork(int port) {
 		collector.networkRequirements.add(new PortRequirement(port, Optional.empty()));
 	}
 	
-	public void registerComponent(LifecycleComponent component) {
+	public void registerComponent(ApplicationComponent component) {
 		collector.components.add(component);
 	}
 	
@@ -105,11 +107,23 @@ public class ModuleSetup {
 	}
 	
 	public void onUndeploy(String name, Runnable runnable) {
-		collector.onUndeploy.add(runnable);
+		collector.components.add(new ApplicationComponent(){
+
+			@Override
+			public void undeploy() {
+				runnable.run();
+			}
+
+			@Override
+			public Runnable pause() {
+				return () -> {};
+			}
+			
+		});
 	}
 	
 	public void onUndeploy(String name, BiConsumer<IdentityAndVersion, IdentityStore> handler) {
-		collector.onUndeploy.add(() -> handler.accept(idv, ctx));
+		onUndeploy(name, () -> handler.accept(idv, ctx));
 	}
 	
 	public void simpleOperation(Path name, Function<Config,Operation> fn) {
@@ -166,7 +180,7 @@ public class ModuleSetup {
 		
 	}
 
-	public ModuleSetup check(Consumer<ApplicationCheck> check) {
+	public AppSetup check(Consumer<ApplicationCheck> check) {
 		collector.checks.add(check);
 		return this;
 	}

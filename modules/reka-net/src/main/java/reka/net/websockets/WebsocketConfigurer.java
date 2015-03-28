@@ -17,7 +17,7 @@ import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.builder.TriggerHelper;
 import reka.core.setup.ModuleConfigurer;
-import reka.core.setup.ModuleSetup;
+import reka.core.setup.AppSetup;
 import reka.core.setup.ModuleSetupContext;
 import reka.net.NetManager;
 import reka.net.NetSettings;
@@ -26,7 +26,7 @@ import reka.net.NetSettings.SslSettings;
 import reka.net.NetSettings.Type;
 import reka.net.common.sockets.SocketBroadcastConfigurer;
 import reka.net.common.sockets.SocketSendConfigurer;
-import reka.net.common.sockets.SocketStatusProvider;
+import reka.net.common.sockets.NetStatusProvider;
 import reka.net.common.sockets.SocketTagAddConfigurer;
 import reka.net.common.sockets.SocketTagRemoveConfigurer;
 import reka.net.common.sockets.SocketTagSendConfigurer;
@@ -99,7 +99,7 @@ public class WebsocketConfigurer extends ModuleConfigurer {
 	}
 	
 	@Override
-	public void setup(ModuleSetup app) {
+	public void setup(AppSetup app) {
 		
 		ModuleSetupContext ctx = app.ctx();
 		
@@ -117,7 +117,7 @@ public class WebsocketConfigurer extends ModuleConfigurer {
 			app.requireNetwork(listen.port(), listen.host());	
 		});
 		
-		app.registerStatusProvider(() -> new SocketStatusProvider(net, app.identity(), NetSettings.Type.WEBSOCKET));
+		app.registerStatusProvider(() -> new NetStatusProvider(net, app.identity(), NetSettings.Type.WEBSOCKET));
 		
 		app.buildFlows(triggers.build(), reg -> {
 			for (HostAndPort listen : listens) {

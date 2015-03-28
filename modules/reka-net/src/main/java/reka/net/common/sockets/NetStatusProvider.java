@@ -8,13 +8,13 @@ import reka.net.ChannelAttrs;
 import reka.net.NetManager;
 import reka.net.NetSettings.Type;
 
-public class SocketStatusProvider implements StatusDataProvider {
+public class NetStatusProvider implements StatusDataProvider {
 
 	private final NetManager server;
 	private final Identity identity;
 	private final Type type;
 	
-	public SocketStatusProvider(NetManager server, Identity identity, Type type) {
+	public NetStatusProvider(NetManager server, Identity identity, Type type) {
 		this.server = server;
 		this.identity = identity;
 		this.type = type;

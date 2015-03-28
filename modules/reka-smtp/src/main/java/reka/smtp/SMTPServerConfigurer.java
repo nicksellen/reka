@@ -23,7 +23,7 @@ import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
 import reka.core.data.memory.MutableMemoryData;
 import reka.core.setup.ModuleConfigurer;
-import reka.core.setup.ModuleSetup;
+import reka.core.setup.AppSetup;
 import reka.core.setup.ModuleSetupContext;
 
 public class SMTPServerConfigurer extends ModuleConfigurer {
@@ -126,7 +126,7 @@ public class SMTPServerConfigurer extends ModuleConfigurer {
 	}
 	
 	@Override
-	public void setup(ModuleSetup app) {
+	public void setup(AppSetup app) {
 		
 		ModuleSetupContext ctx = app.ctx();
 		

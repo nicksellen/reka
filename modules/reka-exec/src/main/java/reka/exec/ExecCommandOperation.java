@@ -1,11 +1,17 @@
 package reka.exec;
 
+import static reka.util.Util.unchecked;
+
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -17,12 +23,9 @@ import reka.api.Path;
 import reka.api.data.MutableData;
 import reka.api.run.AsyncOperation;
 import reka.api.run.OperationContext;
-
+import reka.exec.ExecConfigurer.ExecScripts;
 
 public class ExecCommandOperation implements AsyncOperation {
-	
-	// TODO: move this into central one...
-	private static final ExecutorService executor = Executors.newCachedThreadPool();
 	
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -30,8 +33,10 @@ public class ExecCommandOperation implements AsyncOperation {
 	private final Path outInto, errInto, statusInto;
 	private final int timeoutSeconds = 5;
 	
-	public ExecCommandOperation(String[] command, Path into) {
-		this.command = command;
+	public ExecCommandOperation(ExecScripts scripts, java.nio.file.Path tmp, Path into) {
+
+		this.command = writeScripts(scripts, tmp);
+		
 		this.outInto = into.add("out");
 		this.errInto = into.add("err");
 		this.statusInto = into.add("status");
@@ -51,7 +56,7 @@ public class ExecCommandOperation implements AsyncOperation {
 			env.put(key, val);
 		});
 		
-		executor.execute(() -> {
+		Reka.SharedExecutors.general.execute(() -> {
 		
 			try {
 			
@@ -99,6 +104,35 @@ public class ExecCommandOperation implements AsyncOperation {
 		
 		});
 		
+	}
+	
+	private static String[] writeScripts(ExecScripts scripts, java.nio.file.Path tmp) {
+		try {
+			java.nio.file.Path dir = Files.createTempDirectory(tmp, "exec");
+			java.nio.file.Path scriptPath = dir.resolve("__main__");
+			
+			writeByteBufferTo(scriptPath, scripts.script());
+			
+			scripts.extraScripts().forEach((path, buf) -> {
+				try {
+					writeByteBufferTo(dir.resolve(path), buf);
+				} catch (Exception e) {
+					throw unchecked(e);
+				}
+			});
+			File scriptFile = scriptPath.toFile();
+			scriptFile.setExecutable(true, true);
+			return new String[] { scriptFile.getAbsolutePath() };
+		} catch (IOException e) {
+			throw unchecked(e);
+		}
+	}
+	
+	private static void writeByteBufferTo(java.nio.file.Path path, ByteBuffer buf) throws IOException {
+		// TODO: not sure if this is write
+		FileChannel channel = new FileOutputStream(path.toFile()).getChannel();
+		channel.write(buf);
+		channel.close();
 	}
 
 }

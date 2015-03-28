@@ -42,9 +42,9 @@ import reka.core.data.memory.MutableMemoryData;
 import com.google.common.base.Splitter;
 
 @Sharable
-public class FullHttpToDatasetDecoder extends MessageToMessageDecoder<FullHttpRequest> {
+public class FullHttpToDataDecoder extends MessageToMessageDecoder<FullHttpRequest> {
 	
-	private static final Logger log = LoggerFactory.getLogger(FullHttpToDatasetDecoder.class);
+	private static final Logger log = LoggerFactory.getLogger(FullHttpToDataDecoder.class);
 	
 	private static final ObjectMapper jsonMapper = new ObjectMapper();
 		

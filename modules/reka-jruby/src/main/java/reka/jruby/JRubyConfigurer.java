@@ -6,7 +6,7 @@ import reka.api.IdentityKey;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.setup.ModuleConfigurer;
-import reka.core.setup.ModuleSetup;
+import reka.core.setup.AppSetup;
 
 public class JRubyConfigurer extends ModuleConfigurer {
 	
@@ -36,7 +36,7 @@ public class JRubyConfigurer extends ModuleConfigurer {
 	}
 	
 	@Override
-	public void setup(ModuleSetup app) {
+	public void setup(AppSetup app) {
 		app.onDeploy(init -> {
 			init.run("initialize runtime", () -> {
 				RubyEnv env = RubyEnv.create(gemFile);

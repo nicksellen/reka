@@ -8,7 +8,7 @@ import reka.api.run.AsyncOperation;
 import reka.api.run.Operation;
 import reka.api.run.OperationContext;
 import reka.core.app.IdentityAndVersion;
-import reka.core.setup.ModuleSetup.DoneCallback;
+import reka.core.setup.AppSetup.DoneCallback;
 
 // wraps the full-on OperationSetup and only allows operations to be defined, which just see the store
 public class ModuleOperationSetup {

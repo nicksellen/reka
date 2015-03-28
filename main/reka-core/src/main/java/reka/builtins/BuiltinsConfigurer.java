@@ -49,7 +49,7 @@ import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.core.data.memory.MutableMemoryData;
 import reka.core.setup.ModuleConfigurer;
-import reka.core.setup.ModuleSetup;
+import reka.core.setup.AppSetup;
 import reka.core.setup.OperationConfigurer;
 import reka.core.setup.OperationSetup;
 import reka.core.util.StringWithVars;
@@ -63,7 +63,7 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 	private static final Logger log = LoggerFactory.getLogger(BuiltinsConfigurer.class);
 
 	@Override
-	public void setup(ModuleSetup module) {
+	public void setup(AppSetup module) {
 		
 		module.defineOperation(path("put"), provider -> new PutConfigurer());
 		module.defineOperation(path("putv"), provider -> new PutWithVarsConfigurer());

@@ -14,10 +14,10 @@ import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.flow.Flow;
 import reka.core.app.Application;
-import reka.core.app.LifecycleComponent;
+import reka.core.app.ApplicationComponent;
 import reka.core.builder.FlowVisualizer;
 import reka.core.builder.Flows;
-import reka.core.setup.ModuleSetup.ApplicationCheck;
+import reka.core.setup.AppSetup.ApplicationCheck;
 
 public class ApplicationSetup {
 
@@ -28,7 +28,7 @@ public class ApplicationSetup {
 	public final List<InitFlow> initflows;
 	public final List<TriggerCollection> triggers;
 	public final List<NetworkInfo> network;
-	public final List<LifecycleComponent> components;
+	public final List<ApplicationComponent> components;
 	public final List<Supplier<StatusProvider>> statuses;
 	public final List<Consumer<ApplicationCheck>> checks;
 	public final List<PortRequirement> networkRequirements;

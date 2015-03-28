@@ -36,7 +36,7 @@ import reka.api.data.Data;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.setup.ModuleConfigurer;
-import reka.core.setup.ModuleSetup;
+import reka.core.setup.AppSetup;
 import reka.core.setup.ModuleSetupContext;
 import reka.core.util.StringWithVars;
 import reka.core.util.StringWithVars.Variable;
@@ -106,7 +106,7 @@ public abstract class JdbcBaseModule extends ModuleConfigurer {
 	}
 
 	@Override
-	public void setup(ModuleSetup module) {
+	public void setup(AppSetup module) {
 		
 		ModuleSetupContext ctx = module.ctx();
 		

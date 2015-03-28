@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
 import reka.Identity;
 import reka.PortChecker;
 import reka.api.flow.Flow;
-import reka.core.app.LifecycleComponent;
+import reka.core.app.ApplicationComponent;
 import reka.core.runtime.NoFlow;
 import reka.net.ChannelAttrs.AttributeMatcher;
 import reka.net.NetSettings.SslSettings;
@@ -83,56 +83,56 @@ public class NetManager {
 		}
 	}
 	
-	public LifecycleComponent deployHttp(Identity identity, HostAndPort listen, HttpFlows flows) {
+	public ApplicationComponent deployHttp(Identity identity, HostAndPort listen, HttpFlows flows) {
 		NetSettings settings = NetSettings.http(listen.port(), listen.host());
 		PortHandler handler = ensurePortHandler(settings);
 		int version = saveSettingsAndIncrementVersion(identity, settings);
-		return new NetLifecycleComponent(identity, settings, version, handler.httpAdd(identity, settings.host().get(), flows));
+		return new NetApplicationComponent(identity, settings, version, handler.httpAdd(identity, settings.host().get(), flows));
 	}
 	
-	public LifecycleComponent deployHttps(Identity identity, HostAndPort listen, SslSettings ssl, HttpFlows flows) {
+	public ApplicationComponent deployHttps(Identity identity, HostAndPort listen, SslSettings ssl, HttpFlows flows) {
 		NetSettings settings = NetSettings.https(listen.port(), listen.host(), ssl);
 		PortHandler handler = ensurePortHandler(settings);
 		int version = saveSettingsAndIncrementVersion(identity, settings);
-		return new NetLifecycleComponent(identity, settings, version, handler.httpAdd(identity, settings.host().get(), flows));
+		return new NetApplicationComponent(identity, settings, version, handler.httpAdd(identity, settings.host().get(), flows));
 	}
 	
-	public LifecycleComponent deployWebsocket(Identity identity, HostAndPort listen, SocketFlows flows) {
+	public ApplicationComponent deployWebsocket(Identity identity, HostAndPort listen, SocketFlows flows) {
 		NetSettings settings = NetSettings.ws(listen.port(), listen.host());
 		PortHandler handler = ensurePortHandler(settings);
 		int version = saveSettingsAndIncrementVersion(identity, settings);
-		return new NetLifecycleComponent(identity, settings, version, handler.websocketAdd(identity, settings.host().get(), flows));
+		return new NetApplicationComponent(identity, settings, version, handler.websocketAdd(identity, settings.host().get(), flows));
 	}
 	
-	public LifecycleComponent deployWebsocketSsl(Identity identity, HostAndPort listen, SslSettings ssl, SocketFlows flows) {
+	public ApplicationComponent deployWebsocketSsl(Identity identity, HostAndPort listen, SslSettings ssl, SocketFlows flows) {
 		NetSettings settings = NetSettings.wss(listen.port(), listen.host(), ssl);
 		PortHandler handler = ensurePortHandler(settings);
 		int version = saveSettingsAndIncrementVersion(identity, settings);
-		return new NetLifecycleComponent(identity, settings, version, handler.websocketAdd(identity, settings.host().get(), flows));
+		return new NetApplicationComponent(identity, settings, version, handler.websocketAdd(identity, settings.host().get(), flows));
 	}
 	
-	public LifecycleComponent deploySocket(Identity identity, int port, SocketFlows flows) {
+	public ApplicationComponent deploySocket(Identity identity, int port, SocketFlows flows) {
 		NetSettings settings = NetSettings.socket(port);
 		PortHandler handler = ensurePortHandler(settings);
 		int version = saveSettingsAndIncrementVersion(identity, settings);
-		return new NetLifecycleComponent(identity, settings, version, handler.socketSet(identity, flows));
+		return new NetApplicationComponent(identity, settings, version, handler.socketSet(identity, flows));
 	}
 	
-	public LifecycleComponent deploySocketSsl(Identity identity, int port, SslSettings ssl, SocketFlows flows) {
+	public ApplicationComponent deploySocketSsl(Identity identity, int port, SslSettings ssl, SocketFlows flows) {
 		NetSettings settings = NetSettings.socketSsl(port, ssl);
 		PortHandler handler = ensurePortHandler(settings);
 		int version = saveSettingsAndIncrementVersion(identity, settings);
-		return new NetLifecycleComponent(identity, settings, version, handler.socketSet(identity, flows));
+		return new NetApplicationComponent(identity, settings, version, handler.socketSet(identity, flows));
 	}
 	
-	public class NetLifecycleComponent implements LifecycleComponent {
+	public class NetApplicationComponent implements ApplicationComponent {
 
 		private final Identity identity;
 		private final NetSettings settings;
 		private final int version;
 		private final Runnable remove;
 		
-		public NetLifecycleComponent(Identity identity, NetSettings settings, int version, Runnable remove) {
+		public NetApplicationComponent(Identity identity, NetSettings settings, int version, Runnable remove) {
 			this.identity = identity;
 			this.settings = settings;
 			this.version = version;
