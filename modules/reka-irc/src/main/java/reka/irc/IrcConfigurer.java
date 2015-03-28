@@ -77,10 +77,10 @@ public class IrcConfigurer extends ModuleConfigurer {
 
 		app.buildFlows(triggers.build(), reg -> {
 			RekaBot bot = app.ctx().get(BOT);
-			reg.flowFor(MESSAGE).ifPresent(flow -> {
+			reg.lookup(MESSAGE).ifPresent(flow -> {
 				bot.addListener(new IrcMessageFlowListener(flow));
 			});	
-			reg.flowFor(PRIVATE_MESSAGE).ifPresent(flow -> {
+			reg.lookup(PRIVATE_MESSAGE).ifPresent(flow -> {
 				bot.addListener(new IrcPrivateMessageFlowListener(flow));
 			});	
 			bot.connect();

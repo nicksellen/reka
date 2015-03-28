@@ -125,7 +125,7 @@ public class PostgresConfigurer extends JdbcBaseModule {
 					Statement statement = connection.createStatement();
 					
 					triggers.keySet().forEach(key -> {
-						reg.flowFor(key).ifPresent(flow -> {
+						reg.lookup(key).ifPresent(flow -> {
 							try {
 								connection.addNotificationListener("^" + Pattern.quote(key.name()) + "$", new NotifyFlow(flow));
 								statement.execute("LISTEN \"" + key.name() + "\"");

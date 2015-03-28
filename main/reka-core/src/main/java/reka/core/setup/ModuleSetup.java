@@ -190,7 +190,7 @@ public class ModuleSetup {
 	private void buildFlow(IdentityKey<Flow> key, Function<ConfigurerProvider, OperationConfigurer> supplier, Consumer<Flow> c) {
 		Map<IdentityKey<Flow>,Function<ConfigurerProvider, OperationConfigurer>> suppliers = new HashMap<>();
 		suppliers.put(key, supplier);
-		buildFlows(suppliers, m -> c.accept(m.flowFor(key).get()));
+		buildFlows(suppliers, m -> c.accept(m.lookup(key).get()));
 	}
 	
 	protected Optional<FlowSegment> buildFlowSegment() {

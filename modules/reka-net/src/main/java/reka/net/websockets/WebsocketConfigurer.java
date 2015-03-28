@@ -20,6 +20,7 @@ import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetup;
 import reka.core.setup.ModuleSetupContext;
 import reka.net.NetManager;
+import reka.net.NetSettings;
 import reka.net.NetManager.SocketFlows;
 import reka.net.NetSettings.SslSettings;
 import reka.net.NetSettings.Type;
@@ -116,7 +117,7 @@ public class WebsocketConfigurer extends ModuleConfigurer {
 			app.requireNetwork(listen.port(), listen.host());	
 		});
 		
-		app.registerStatusProvider(() -> new SocketStatusProvider(net, app.identity()));
+		app.registerStatusProvider(() -> new SocketStatusProvider(net, app.identity(), NetSettings.Type.WEBSOCKET));
 		
 		app.buildFlows(triggers.build(), reg -> {
 			for (HostAndPort listen : listens) {
@@ -130,10 +131,10 @@ public class WebsocketConfigurer extends ModuleConfigurer {
 			
 				if (ssl != null) {
 					app.registerComponent(net.deployWebsocketSsl(app.identity(), new HostAndPort(host, port), ssl, 
-							new SocketFlows(reg.flowFor(CONNECT),reg.flowFor(MESSAGE),reg.flowFor(DISCONNECT))));
+							new SocketFlows(reg.lookup(CONNECT),reg.lookup(MESSAGE),reg.lookup(DISCONNECT))));
 				} else {
 					app.registerComponent(net.deployWebsocket(app.identity(), new HostAndPort(host, port), 
-							new SocketFlows(reg.flowFor(CONNECT),reg.flowFor(MESSAGE),reg.flowFor(DISCONNECT))));
+							new SocketFlows(reg.lookup(CONNECT),reg.lookup(MESSAGE),reg.lookup(DISCONNECT))));
 				}
 				
 				app.registerNetwork(listen.port(), Type.WEBSOCKET.protocolString(ssl != null), details -> {

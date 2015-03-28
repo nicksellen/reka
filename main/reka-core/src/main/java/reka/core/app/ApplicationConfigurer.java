@@ -19,7 +19,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -42,7 +41,6 @@ import reka.TestConfigurer;
 import reka.api.IdentityKey;
 import reka.api.IdentityStore;
 import reka.api.Path;
-import reka.api.content.Content;
 import reka.api.data.Data;
 import reka.api.data.DiffContentConsumer.DiffContentType;
 import reka.api.data.MutableData;
@@ -466,7 +464,6 @@ public class ApplicationConfigurer implements ErrorReporter {
 				
 				@Override
 				public void halted() {
-					log.info("   halt");
 					log.error("test halted");
 					testErrors.add(format("%s : %s\nhalted during test", name.join(" / "), testCase.name()));
 					runNext();
@@ -474,7 +471,6 @@ public class ApplicationConfigurer implements ErrorReporter {
 				
 				@Override
 				public void error(Data data, Throwable t) {
-					log.info("   error");
 					log.error("test failed to run", t);
 					testErrors.add(format("%s : %s\nexception during test - %s", name.join(" / "), testCase.name(), allExceptionMessages(t, ", ")));
 					runNext();

@@ -15,7 +15,7 @@ public class TriggerFlows {
 		this.map = map;
 	}
 
-	public Optional<Flow> flowFor(IdentityKey<Flow> name) {
+	public Optional<Flow> lookup(IdentityKey<Flow> name) {
 		return map.containsKey(name) ? Optional.of(map.get(name)) : Optional.empty();
 	}
 
