@@ -2,6 +2,7 @@ package reka.core.setup;
 
 import static java.util.stream.Collectors.toList;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -10,6 +11,7 @@ import java.util.function.Supplier;
 import reka.Identity;
 import reka.PortRequirement;
 import reka.api.IdentityStore;
+import reka.api.IdentityStoreReader;
 import reka.api.Path;
 import reka.api.data.Data;
 import reka.api.flow.Flow;
@@ -18,6 +20,8 @@ import reka.core.app.ApplicationComponent;
 import reka.core.builder.FlowVisualizer;
 import reka.core.builder.Flows;
 import reka.core.setup.AppSetup.ApplicationCheck;
+
+import com.google.common.collect.ImmutableMap;
 
 public class ApplicationSetup {
 
@@ -38,7 +42,8 @@ public class ApplicationSetup {
 	private Data meta;
 	private int version = -1;
 	private Flows flows;
-	private IdentityStore store;
+	
+	private final Map<Path,IdentityStoreReader> stores = new HashMap<>();
 
 	ApplicationSetup(Flow initializationFlow, FlowVisualizer initializationFlowVisualizer, ModuleCollector collector) {
 		this.initializationFlow = initializationFlow;
@@ -81,8 +86,8 @@ public class ApplicationSetup {
 		this.flows = flows;
 	}
 	
-	public void store(IdentityStore store) {
-		this.store = store;
+	public void registerStore(Path path, IdentityStore store) {
+		stores.put(path, store);
 	}
 	
 	public Application buildApplication() {
@@ -91,7 +96,7 @@ public class ApplicationSetup {
 							   meta, 
 							   version, 
 							   flows,
-							   store != null ? store : IdentityStore.createConcurrentIdentityStore(),
+							   ImmutableMap.copyOf(stores),
 							   network, 
 							   initializationFlowVisualizer,
 							   components,

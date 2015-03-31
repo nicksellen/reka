@@ -5,24 +5,23 @@ import static reka.config.configurer.Configurer.configure;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import static reka.util.Util.unchecked;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
-import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.userauth.keyprovider.KeyProvider;
 import net.schmizz.sshj.userauth.password.PasswordUtils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.hash.Hashing;
 
 import reka.api.IdentityKey;
 import reka.config.Config;
@@ -30,12 +29,14 @@ import reka.config.configurer.annotations.Conf;
 import reka.core.setup.AppSetup;
 import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetupContext;
+import reka.exec.ssh.RekaSSHClient;
 
 public class ExecConfigurer extends ModuleConfigurer {
 	
 	private static final Logger log = LoggerFactory.getLogger(ExecConfigurer.class);
 	
 	public static final IdentityKey<RekaSSHClient> CLIENT = IdentityKey.named("ssh client");
+	public static final IdentityKey<String[]> COMMAND = IdentityKey.named("ssh command");
 	
 	private ByteBuffer script;
 	private final Map<java.nio.file.Path,ByteBuffer> extraScripts = new HashMap<>();
@@ -177,7 +178,7 @@ public class ExecConfigurer extends ModuleConfigurer {
 					
 					RekaSSHClient existingClient = ctx.get(CLIENT);
 					
-					if (existingClient != null && !Arrays.equals(existingClient.sha1, ssh.sha1())) {
+					if (existingClient != null && !Arrays.equals(existingClient.sha1(), ssh.sha1())) {
 						log.info("not using old client because config has changed");
 						ctx.remove(CLIENT);
 					}
@@ -186,9 +187,9 @@ public class ExecConfigurer extends ModuleConfigurer {
 
 						try {
 							
-							RekaSSHClient client = new RekaSSHClient(ssh.sha1());
+							RekaSSHClient client = new RekaSSHClient(ssh.sha1(), 5);
 							
-							client.version.set(app.version());
+							client.version(app.version());
 	
 							log.info("creating new SSH client");
 							
@@ -210,60 +211,70 @@ public class ExecConfigurer extends ModuleConfigurer {
 							throw unchecked(t);
 						}
 							
-					}).version.set(app.version());
+					}).version(app.version());
 					
 				});
+				
+				init.run("send scripts", () -> {
+					ctx.put(COMMAND, ctx.require(CLIENT).sendScripts(new ExecScripts(script, extraScripts)));
+				});
+				
 			});
 			
 			app.onUndeploy("disconnect ssh", () -> {
 				ctx.lookup(CLIENT).ifPresent(client -> {
-					if (client.version.get() != app.version()) {
-						log.info("not disconnecting as we're reusing the client :)");
-						return;
+					if (client.version() == app.version()) {
+						try {
+							client.disconnect();
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
 					}
-					cleanupAndDisconnect(client);
 				});
 			});
 			
-			app.defineOperation(root(), provider -> new ExecSshCommandConfigurer(new ExecScripts(script, extraScripts)));
+			app.defineOperation(root(), provider -> new ExecSshCommandConfigurer());
 			
 		} else {
-			app.defineOperation(root(), provider -> new ExecCommandConfigurer(new ExecScripts(script, extraScripts), dirs().tmp()));
+			
+			app.onDeploy(init -> {
+				init.run("write scripts", () -> {
+					ctx.put(COMMAND, writeScriptsLocally(new ExecScripts(script, extraScripts), dirs().tmp()));
+				});
+			});
+			
+			app.defineOperation(root(), provider -> new ExecCommandConfigurer());
 		}
 		
 	}
-	
-	private static void cleanupAndDisconnect(RekaSSHClient client) {
+
+	private static String[] writeScriptsLocally(ExecScripts scripts, java.nio.file.Path tmp) {
 		try {
-			log.info("disconnecting ssh client");
-			client.beforeDisconnect.forEach(runnable -> {
+			java.nio.file.Path dir = Files.createTempDirectory(tmp, "exec");
+			java.nio.file.Path scriptPath = dir.resolve("__main__");
+			
+			writeByteBufferTo(scriptPath, scripts.script());
+			
+			scripts.extraScripts().forEach((path, buf) -> {
 				try {
-					runnable.run();
-				} catch (Throwable t) {
-					t.printStackTrace();
+					writeByteBufferTo(dir.resolve(path), buf);
+				} catch (Exception e) {
+					throw unchecked(e);
 				}
 			});
-			
-			client.disconnect();
-		} catch (Exception e) {
+			File scriptFile = scriptPath.toFile();
+			scriptFile.setExecutable(true, true);
+			return new String[] { scriptFile.getAbsolutePath() };
+		} catch (IOException e) {
 			throw unchecked(e);
 		}
 	}
 	
-	public static class RekaSSHClient extends SSHClient {
-		
-		private final AtomicInteger version = new AtomicInteger(1);
-		private final byte[] sha1;
-		private final List<Runnable> beforeDisconnect = new ArrayList<>();
-		
-		public RekaSSHClient(byte[] configHash) {
-			this.sha1 = configHash;
-		}
-		
-		public void onBeforeDisconnect(Runnable runnable) {
-			beforeDisconnect.add(runnable);
-		}
-		
-	}
+	private static void writeByteBufferTo(java.nio.file.Path path, ByteBuffer buf) throws IOException {
+		// TODO: not sure if this is write
+		FileChannel channel = new FileOutputStream(path.toFile()).getChannel();
+		channel.write(buf);
+		channel.close();
+	} 
 
 }

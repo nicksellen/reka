@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -36,12 +37,15 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Sets;
+
 import reka.EventLogger;
 import reka.Identity;
 import reka.Reka;
 import reka.admin.AdminUtils;
 import reka.api.ConcurrentIdentityStore;
 import reka.api.IdentityStore;
+import reka.api.IdentityStoreReader;
 import reka.api.Path;
 import reka.api.data.MutableData;
 import reka.api.flow.Flow;
@@ -156,11 +160,11 @@ public class ApplicationManager implements Iterable<Entry<Identity,Application>>
 		}
 	}
 
-	public void validate(Source source, IdentityStore store) {
+	public void validate(Source source, Map<Path,IdentityStore> stores) {
 		Identity identity = Identity.create("validate");
 		IdentityAndVersion idv = IdentityAndVersion.create(identity, versions.get(identity).get());
 		NavigableConfig config = moduleManager.processor().process(ConfigParser.fromSource(source));
-		configure(new ApplicationConfigurer(basedirs.mktemp(), moduleManager), config).checkValid(idv, store);
+		configure(new ApplicationConfigurer(basedirs.mktemp(), moduleManager), config).checkValid(idv, stores);
 	}
 	
 	public static final Path INITIALIZER_VISUALIZER_NAME = slashes("app/initialize");
@@ -321,16 +325,39 @@ public class ApplicationManager implements Iterable<Entry<Identity,Application>>
 				
 				ApplicationConfigurer configurer = configure(new ApplicationConfigurer(dirs, moduleManager), config);
 
-				IdentityStore store = previous.isPresent() ? ConcurrentIdentityStore.createFrom(previous.get().store()) : ConcurrentIdentityStore.create();
-				store.put(Application.IDENTITY, identity);
 				
-				configurer.checkValid(idv, store);
+				Map<Path,IdentityStoreReader> previousStores = previous.isPresent() ? previous.get().stores() : new HashMap<>();
+				
+				Set<Path> modulePaths = configurer.modulePaths();
+				Set<Path> previousModulePaths = previousStores.keySet();
+				
+				Map<Path,IdentityStore> stores = new HashMap<>();
+				Sets.union(modulePaths, previousModulePaths).forEach(path -> {
+					
+					boolean inPrevious = previousModulePaths.contains(path);
+					boolean inCurrent = modulePaths.contains(path);
+					
+					if (inPrevious && !inCurrent) {
+						// removed, do nothing
+					} else if (!inPrevious && inCurrent) {
+						// added
+						stores.put(path, ConcurrentIdentityStore.create());
+					} else {
+						// changed
+						stores.put(path, ConcurrentIdentityStore.createFrom(previousStores.get(path)));
+					}
+					
+				});
+				
+				stores.values().forEach(store -> store.put(Application.IDENTITY, identity));
+				
+				configurer.checkValid(idv, stores);
 				
 				previous.ifPresent(p -> {
 					unpause.set(p.pause());
 				});
 				
-				configurer.build(identity, version, store).whenComplete((app, t) -> {
+				configurer.build(identity, version, stores).whenComplete((app, t) -> {
 					try {
 						if (app != null) {
 							applications.put(identity, app);

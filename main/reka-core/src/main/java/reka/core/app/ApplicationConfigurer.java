@@ -58,9 +58,9 @@ import reka.core.config.DefaultConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.core.data.memory.MutableMemoryData;
 import reka.core.module.ModuleManager;
+import reka.core.setup.AppSetup.ApplicationCheck;
 import reka.core.setup.ApplicationSetup;
 import reka.core.setup.ModuleConfigurer;
-import reka.core.setup.AppSetup.ApplicationCheck;
 import reka.core.setup.Trigger;
 import reka.core.setup.TriggerCollection;
 import reka.core.setup.TriggerFlows;
@@ -122,13 +122,17 @@ public class ApplicationConfigurer implements ErrorReporter {
 		if (applicationName == null) errors.add("name is required");
 	}
     
+	public Set<Path> modulePaths() {
+		return rootModule.modulePaths();
+	}
+	
     public Path name() {
         return applicationName;
     }
     
     public Collection<FlowVisualizer> visualize(IdentityAndVersion idv) {
         FlowBuilderGroup flowsBuilder = new FlowBuilderGroup();
-    	ApplicationSetup initializer = ModuleConfigurer.setup(idv, rootModule, IdentityStore.createConcurrentIdentityStore());
+    	ApplicationSetup initializer = ModuleConfigurer.setup(idv, rootModule, new HashMap<>()); // TODO: does this need stores for the modules?
     	
     	DefaultConfigurerProvider provider = new DefaultConfigurerProvider(initializer.providers);
     	Map<Path,Supplier<FlowSegment>> configuredFlows = new HashMap<>();
@@ -140,8 +144,8 @@ public class ApplicationConfigurer implements ErrorReporter {
     	return flowsBuilder.buildVisualizers();
     }
     
-    public void checkValid(IdentityAndVersion idv, IdentityStore store) {
-    	ApplicationSetup setup = ModuleConfigurer.setup(idv, rootModule, store);
+    public void checkValid(IdentityAndVersion idv, Map<Path,IdentityStore> stores) {
+    	ApplicationSetup setup = ModuleConfigurer.setup(idv, rootModule, stores);
     	DefaultConfigurerProvider configurerProvider = new DefaultConfigurerProvider(setup.providers);
     	setup.triggers.forEach(triggers -> triggers.get().forEach(trigger -> {
     		trigger.supplier().apply(configurerProvider).bind(trigger.base(), triggers.ctx()).get();
@@ -203,18 +207,21 @@ public class ApplicationConfigurer implements ErrorReporter {
     	return trigger.base().add(trigger.key().name());
     }
     
-    public CompletableFuture<Application> build(Identity identity, int applicationVersion, IdentityStore store) {
+    public CompletableFuture<Application> build(Identity identity, int applicationVersion, Map<Path,IdentityStore> stores) {
     	return safelyCompletable(future -> {
     		
     		FlowBuilderGroup initflowBuilders = new FlowBuilderGroup();
     		FlowBuilderGroup flowBuilders = new FlowBuilderGroup();
     		    		
-	    	ApplicationSetup setup = ModuleConfigurer.setup(IdentityAndVersion.create(identity, applicationVersion), rootModule, store);
+	    	ApplicationSetup setup = ModuleConfigurer.setup(IdentityAndVersion.create(identity, applicationVersion), rootModule, stores);
 	    	
 	    	runChecks(identity, setup);
 	    	runPortCheckers(identity, setup);
 	    	
-	    	setup.store(store);
+	    	stores.forEach((path, store) -> {
+	    		setup.registerStore(path, store);
+	    	});
+	    	
 	    	setup.identity(identity);
 	    	setup.name(applicationName);
 	    	setup.meta(meta.immutable());

@@ -1,7 +1,6 @@
 package reka.exec;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 
 import reka.api.Hashable;
 

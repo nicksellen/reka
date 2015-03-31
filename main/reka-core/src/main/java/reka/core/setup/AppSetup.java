@@ -18,9 +18,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import reka.Identity;
 import reka.PortRequirement;
 import reka.api.IdentityKey;
@@ -32,8 +29,8 @@ import reka.api.flow.FlowSegment;
 import reka.api.run.Operation;
 import reka.config.Config;
 import reka.config.ConfigBody;
-import reka.core.app.IdentityAndVersion;
 import reka.core.app.ApplicationComponent;
+import reka.core.app.IdentityAndVersion;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.core.data.memory.MutableMemoryData;

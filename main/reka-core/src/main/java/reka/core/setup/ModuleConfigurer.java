@@ -1,6 +1,7 @@
 package reka.core.setup;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static reka.api.Path.slashes;
@@ -36,7 +37,7 @@ import reka.dirs.AppDirs;
 
 public abstract class ModuleConfigurer {
 
-	public static ApplicationSetup setup(IdentityAndVersion idv, ModuleConfigurer root, IdentityStore store) {
+	public static ApplicationSetup setup(IdentityAndVersion idv, ModuleConfigurer root, Map<Path,IdentityStore> stores) {
 		
 		ModuleCollector collector = new ModuleCollector();
 
@@ -49,6 +50,9 @@ public abstract class ModuleConfigurer {
 
 		for (ModuleConfigurer module : all) {
 			if (module.isRoot()) continue;
+			
+			IdentityStore store = stores.get(module.fullAliasOrName());
+			checkState(store != null, "missing store for %s", module.fullAliasOrName().slashes());
 			
 			ModuleSetupContext ctx = new ModuleSetupContext(store);
 
@@ -137,11 +141,6 @@ public abstract class ModuleConfigurer {
 		isRoot = val;
 		return this;
 	}
-
-	public ModuleConfigurer modulePath(Path path) {
-		this.modulePath = path;
-		return this;
-	}
 	
 	@Conf.Key
 	public void name(String val) {
@@ -179,6 +178,13 @@ public abstract class ModuleConfigurer {
 		} else {
 			return format("%s/%s", name, aliasOrName());
 		}
+	}
+	
+	public Set<Path> modulePaths() {
+		Set<Path> result = new HashSet<>();
+		result.add(fullAliasOrName());
+		uses.forEach(m -> result.addAll(m.modulePaths()));
+		return result;
 	}
 
 	public void useThisConfig(Config config) {

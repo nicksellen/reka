@@ -8,6 +8,7 @@ import static reka.util.Util.unchecked;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -37,7 +38,9 @@ public class Application implements AsyncShutdown {
 	private final int version;
 	private final Flows flows;
 	private final FlowVisualizer initializerVisualizer;
-	private final IdentityStoreReader store;
+	//private final IdentityStoreReader store;
+	
+	private final Map<Path,IdentityStoreReader> stores; // maps module path to store
 
 	private final List<NetworkInfo> network = new ArrayList<>();
 	
@@ -50,7 +53,7 @@ public class Application implements AsyncShutdown {
 			Data meta,
 			int version, 
 			Flows flows,  
-			IdentityStoreReader store,
+			Map<Path,IdentityStoreReader> stores,
 			List<NetworkInfo> network, 
 			FlowVisualizer initializerVisualizer,
 			List<ApplicationComponent> components,
@@ -61,7 +64,7 @@ public class Application implements AsyncShutdown {
 		this.meta = meta;
 		this.version = version;
 		this.flows = flows;
-		this.store = store;
+		this.stores = stores;
 		this.initializerVisualizer = initializerVisualizer;
 		this.network.addAll(network);
 		this.components.addAll(components);
@@ -140,8 +143,8 @@ public class Application implements AsyncShutdown {
 		return flows;
 	}
 	
-	public IdentityStoreReader store() {
-		return store;
+	public Map<Path,IdentityStoreReader> stores() {
+		return stores;
 	}
 	
 	public List<NetworkInfo> network() {
