@@ -14,6 +14,7 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 import javax.activation.DataSource;
@@ -35,14 +36,20 @@ import reka.core.data.memory.MutableMemoryData;
 
 public class EmailListener implements SimpleMessageListener {
 	
-	private final Consumer<Data> consumer;
-	
 	private static final Set<String> ignoreHeaders = new HashSet<>();
 	
 	static {
 		ignoreHeaders.add("To");
 		ignoreHeaders.add("From");
 		ignoreHeaders.add("Subject");
+	}
+
+	private final Consumer<Data> consumer;
+
+	private volatile BiFunction<String,String,Boolean> acceptor = (from, to) -> true;
+	
+	public void setAcceptor(BiFunction<String,String,Boolean> acceptor) {
+		this.acceptor = acceptor;
 	}
 	
 	public EmailListener(Consumer<Data> consumer) {
@@ -51,7 +58,7 @@ public class EmailListener implements SimpleMessageListener {
 
 	@Override
 	public boolean accept(String from, String to) {
-		return true;
+		return acceptor.apply(from, to);
 	}
 
 	@Override

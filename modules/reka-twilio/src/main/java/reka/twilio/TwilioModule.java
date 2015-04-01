@@ -100,7 +100,6 @@ public class TwilioModule implements Module {
 			msgFn = StringWithVars.compile(val);
 		}
 		
-		@Conf.At("out")
 		@Conf.At("into")
 		public void out(String val) {
 			out = dots(val);

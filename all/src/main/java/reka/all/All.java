@@ -38,6 +38,7 @@ import reka.net.NetModule;
 import reka.postgres.PostgresModule;
 import reka.process.ProcessModule;
 import reka.smtp.SmtpModule;
+import reka.twilio.TwilioModule;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -74,6 +75,7 @@ public class All {
 			MustacheModule.class,
 			H2Module.class,
 			ExecModule.class,
+			TwilioModule.class,
 			PostgresModule.class,
 			JsxModule.class,
 			CommonModule.class,

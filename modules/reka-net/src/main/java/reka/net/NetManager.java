@@ -156,6 +156,10 @@ public class NetManager {
 				handlers.remove(settings.port());
 				handler.shutdownAndWait();
 			}
+			m.remove(settings);
+			if (m.isEmpty()) {
+				deployed.remove(identity);
+			}
 		}
 
 		@Override
