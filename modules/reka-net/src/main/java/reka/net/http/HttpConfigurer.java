@@ -43,7 +43,7 @@ public class HttpConfigurer extends ModuleConfigurer {
 	private final Pattern listenPortOnly = Pattern.compile("^[0-9]+$");
 	private final Pattern listenHostAndPort = Pattern.compile("^(.+):([0-9]+)$");
 	
-	private SslSettings ssl;
+	private SslSettings tls;
 	
 	private final NetManager net;
 	
@@ -73,8 +73,9 @@ public class HttpConfigurer extends ModuleConfigurer {
 	}
 	
 	@Conf.At("ssl")
-	public void ssl(Config config) {
-		ssl = configure(new SslConfigurer(), config).build();
+	@Conf.At("tls")
+	public void tls(Config config) {
+		tls = configure(new TlsConfigurer(), config).build();
 	}
 
 	@Conf.Each("on")
@@ -97,7 +98,7 @@ public class HttpConfigurer extends ModuleConfigurer {
 	@Override
 	public void setup(AppSetup app) {
 		
-		listens.replaceAll(listen -> listen.port() == -1 ? new HostAndPort(listen.host(), ssl != null ? 443 : 80) : listen);
+		listens.replaceAll(listen -> listen.port() == -1 ? new HostAndPort(listen.host(), tls != null ? 443 : 80) : listen);
 		
 		app.defineOperation(path("router"), provider -> new HttpRouterConfigurer(dirs(), provider));
 		app.defineOperation(path("redirect"), provider -> new HttpRedirectConfigurer());
@@ -135,13 +136,13 @@ public class HttpConfigurer extends ModuleConfigurer {
 				
 				for (HostAndPort listen : listens) {
 					
-					if (ssl != null) {
-						app.registerComponent(net.deployHttps(app.identity(), listen, ssl, new HttpFlows(flow)));
+					if (tls != null) {
+						app.registerComponent(net.deployHttps(app.identity(), listen, tls, new HttpFlows(flow)));
 					} else {
 						app.registerComponent(net.deployHttp(app.identity(), listen, new HttpFlows(flow)));
 					}
 					
-					app.registerNetwork(listen.port(), Type.HTTP.protocolString(ssl != null), details -> {
+					app.registerNetwork(listen.port(), Type.HTTP.protocolString(tls != null), details -> {
 						details.putString("host", listen.host());
 					});
 				

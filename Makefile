@@ -1,7 +1,7 @@
 JAVA_HOME := $(shell cat .java-home)
 export JAVA_HOME
 
-dist_modules = irc clojure exec net jade mustache smtp less jsx common postgres h2
+dist_modules = irc clojure exec net jade mustache smtp less jsx common postgres h2 twilio
 
 dist_dir = dist/reka
 
@@ -10,7 +10,7 @@ dist_dir = dist/reka
 all: clean dist
 
 build:
-	@mvn -DskipTests clean package
+	@mvn -DskipTests -T 1.5C clean package
 	@mkdir -p build/modules
 	@find modules -name 'reka-*.jar' -exec cp {} build/modules/ ';'
 	@find main/reka-main -name 'reka-*.jar' -exec cp {} build/ ';'
@@ -19,10 +19,10 @@ test:
 	@mvn test
 
 build-main:
-	@cd main && mvn -DskipTests clean package
+	@cd main && mvn -DskipTests -T 1.5C clean package
 
 install-main:
-	@cd main && mvn -DskipTests clean install
+	@cd main && mvn -DskipTests -T 1.5C clean install
 
 clean-build:
 	@rm -rf build

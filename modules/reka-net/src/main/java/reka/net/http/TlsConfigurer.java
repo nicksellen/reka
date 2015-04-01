@@ -12,7 +12,7 @@ import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.net.NetSettings.SslSettings;
 
-public class SslConfigurer {
+public class TlsConfigurer {
 	
 	byte[] crt;
 	byte[] key;

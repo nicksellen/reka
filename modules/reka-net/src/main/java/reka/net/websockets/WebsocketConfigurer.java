@@ -30,7 +30,7 @@ import reka.net.common.sockets.SocketTagAddConfigurer;
 import reka.net.common.sockets.SocketTagRemoveConfigurer;
 import reka.net.common.sockets.SocketTagSendConfigurer;
 import reka.net.http.HostAndPort;
-import reka.net.http.SslConfigurer;
+import reka.net.http.TlsConfigurer;
 
 public class WebsocketConfigurer extends ModuleConfigurer {
 
@@ -74,7 +74,7 @@ public class WebsocketConfigurer extends ModuleConfigurer {
 	
 	@Conf.At("ssl")
 	public void ssl(Config config) {
-		ssl = configure(new SslConfigurer(), config).build();
+		ssl = configure(new TlsConfigurer(), config).build();
 	}
 	
 	@Conf.Each("on")
