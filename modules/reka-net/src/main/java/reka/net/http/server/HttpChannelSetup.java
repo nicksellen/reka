@@ -77,7 +77,7 @@ public class HttpChannelSetup extends ChannelInboundHandlerAdapter implements Ch
 		
 		ctx.pipeline()
 			.addLast("ds", DATASET_DECODER)
-			.addLast("ssl", ssl ? DataToHttpEncoder.SSL : DataToHttpEncoder.NORMAL)
+			.addLast("data", ssl ? DataToHttpEncoder.SSL : DataToHttpEncoder.NORMAL)
 			.addLast("flow", new HttpFlowHandler(flow, ctx.channel()))
 			.remove(this);
 		

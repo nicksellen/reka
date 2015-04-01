@@ -16,17 +16,16 @@ import reka.api.flow.Flow;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.builder.TriggerHelper;
-import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.AppSetup;
-import reka.core.setup.ModuleSetupContext;
+import reka.core.setup.ModuleConfigurer;
 import reka.net.NetManager;
-import reka.net.NetSettings;
 import reka.net.NetManager.SocketFlows;
+import reka.net.NetSettings;
 import reka.net.NetSettings.SslSettings;
 import reka.net.NetSettings.Type;
+import reka.net.common.sockets.NetStatusProvider;
 import reka.net.common.sockets.SocketBroadcastConfigurer;
 import reka.net.common.sockets.SocketSendConfigurer;
-import reka.net.common.sockets.NetStatusProvider;
 import reka.net.common.sockets.SocketTagAddConfigurer;
 import reka.net.common.sockets.SocketTagRemoveConfigurer;
 import reka.net.common.sockets.SocketTagSendConfigurer;
@@ -100,8 +99,6 @@ public class WebsocketConfigurer extends ModuleConfigurer {
 	
 	@Override
 	public void setup(AppSetup app) {
-		
-		ModuleSetupContext ctx = app.ctx();
 		
 		listens.replaceAll(listen -> listen.port() == -1 ? new HostAndPort(listen.host(), ssl != null ? 443 : 80) : listen);
 		

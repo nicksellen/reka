@@ -1,5 +1,6 @@
 package reka.net;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static reka.util.Util.runtime;
 import static reka.util.Util.unchecked;
 import static reka.util.Util.unsupported;
@@ -91,6 +92,7 @@ public class NetManager {
 	}
 	
 	public ApplicationComponent deployHttps(Identity identity, HostAndPort listen, SslSettings ssl, HttpFlows flows) {
+		checkNotNull(ssl, "must pass in ssl settings for https");
 		NetSettings settings = NetSettings.https(listen.port(), listen.host(), ssl);
 		PortHandler handler = ensurePortHandler(settings);
 		int version = saveSettingsAndIncrementVersion(identity, settings);
@@ -506,7 +508,7 @@ public class NetManager {
 				throw runtime("cannot deploy %s to %s", settings.type(), portHandler.getClass());
 			}
 			if (!Objects.equals(portHandler.sslSettings(), settings.sslSettings())) {
-				throw runtime("must have same ssl settings (SNI is not supported yet)");
+				throw runtime("must have identical ssl settings on same port (SNI is not supported yet)");
 			}
  		} else {
  			if (settings.type() == Type.SOCKET) {

@@ -17,9 +17,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.schmizz.sshj.userauth.keyprovider.KeyProvider;
-import net.schmizz.sshj.userauth.password.PasswordUtils;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

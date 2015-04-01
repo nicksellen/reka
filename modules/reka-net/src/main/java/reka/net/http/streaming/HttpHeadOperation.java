@@ -16,6 +16,7 @@ import reka.net.http.server.DataToHttpEncoder;
 
 public class HttpHeadOperation implements Operation {
 	
+	@SuppressWarnings("unused")
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
 	@Override

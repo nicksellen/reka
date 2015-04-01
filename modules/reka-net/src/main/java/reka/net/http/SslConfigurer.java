@@ -6,9 +6,7 @@ import static reka.util.Util.unchecked;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
-import java.util.Set;
 
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
@@ -37,9 +35,9 @@ public class SslConfigurer {
 
 	private static File byteToFile(byte[] bytes) {
 		try {
-			Set<PosixFilePermission> perms = PosixFilePermissions.fromString("r--------");
-			java.nio.file.Path tmp = Files.createTempFile("reka.", "", PosixFilePermissions.asFileAttribute(perms));
+			java.nio.file.Path tmp = Files.createTempFile("reka.", "");
 			Files.write(tmp, bytes);
+			Files.setPosixFilePermissions(tmp, PosixFilePermissions.fromString("r--------"));
 			File f = tmp.toFile();
 			f.deleteOnExit();
 			return f;

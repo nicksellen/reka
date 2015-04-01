@@ -16,13 +16,12 @@ import reka.config.configurer.annotations.Conf;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.core.module.ModuleInfo;
-import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.AppSetup;
-import reka.core.setup.ModuleSetupContext;
+import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.OperationConfigurer;
 import reka.net.NetManager;
-import reka.net.NetSettings;
 import reka.net.NetManager.HttpFlows;
+import reka.net.NetSettings;
 import reka.net.NetSettings.SslSettings;
 import reka.net.NetSettings.Type;
 import reka.net.common.sockets.NetStatusProvider;
@@ -98,8 +97,6 @@ public class HttpConfigurer extends ModuleConfigurer {
 	@Override
 	public void setup(AppSetup app) {
 		
-		ModuleSetupContext ctx = app.ctx();
-		
 		listens.replaceAll(listen -> listen.port() == -1 ? new HostAndPort(listen.host(), ssl != null ? 443 : 80) : listen);
 		
 		app.defineOperation(path("router"), provider -> new HttpRouterConfigurer(dirs(), provider));
@@ -139,9 +136,9 @@ public class HttpConfigurer extends ModuleConfigurer {
 				for (HostAndPort listen : listens) {
 					
 					if (ssl != null) {
-						app.registerComponent(net.deployHttp(app.identity(), listen, new HttpFlows(flow)));
-					} else {
 						app.registerComponent(net.deployHttps(app.identity(), listen, ssl, new HttpFlows(flow)));
+					} else {
+						app.registerComponent(net.deployHttp(app.identity(), listen, new HttpFlows(flow)));
 					}
 					
 					app.registerNetwork(listen.port(), Type.HTTP.protocolString(ssl != null), details -> {
