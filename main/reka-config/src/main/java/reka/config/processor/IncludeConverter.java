@@ -3,11 +3,14 @@ package reka.config.processor;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -31,9 +34,17 @@ public final class IncludeConverter implements ConfigConverter {
 	
 	private static final Pattern KEY_INCLUDE = Pattern.compile("^@include(?:\\(([^\\s\\(\\)]*)\\))?$");
 	private static final Pattern VAL_INCLUDE = Pattern.compile("^(?:(.+)\\s+)?@include(?:\\(([^\\s\\(\\)]*)\\))?$");
-    
+
+	private final Map<String,ConfigBody> definitions = new HashMap<>();
+	private final DefineConverter define = new DefineConverter();
+	
     @Override
     public void convert(Config config, Output out) {
+
+		if (define.isDefinition(config)) {
+			define.convert(config, out);
+			return;
+		}
     	
     	if (config.hasKey()) {
     		
@@ -153,6 +164,11 @@ public final class IncludeConverter implements ConfigConverter {
 
 	private NavigableConfig loadNestedConfig(Source source, String location) {
 
+		if (definitions.containsKey(location)) {
+			log.info("using definition from @define for {} :)", location);
+			return definitions.get(location);
+		}
+		
 		Source nestedSource;
 		
 		if (source.supportsNestedFile()) {
@@ -169,7 +185,10 @@ public final class IncludeConverter implements ConfigConverter {
 	}
 	
 	private static final Pattern EXT = Pattern.compile("\\.([^\\.]+)$");
-	private static String locationToType(String location) {
+	private String locationToType(String location) {
+		if (definitions.containsKey(location)) {
+			return "config";
+		}
 		Matcher m = EXT.matcher(location);
 		if (m.find()) {
 			String ext = m.group(1);
@@ -193,6 +212,25 @@ public final class IncludeConverter implements ConfigConverter {
 		} else {
 			return "unknown";
 		}
+	}
+	
+	private final class DefineConverter implements ConfigConverter {
+		
+		public boolean isDefinition(Config config) {
+			return config.hasKey() && "@define".equals(config.key());
+		}
+		
+	    @Override
+	    public void convert(Config config, Output out) {
+	    	if (!isDefinition(config)) {
+	    		out.add(config);
+	    		return;
+	    	}
+	    	checkConfig(config.hasValue(), "@define must specify a name as the value");
+	    	checkConfig(config.hasBody(), "@define must have a body specifying what it defines");
+			definitions.put(config.valueAsString(), config.body());
+	    }
+	    
 	}
     
 }

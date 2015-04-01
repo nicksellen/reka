@@ -112,14 +112,6 @@ public class RekaSSHClient extends SSHClient {
 				
 		        try {
 		        	
-		        	/* this doesn't work. I think sshj is broken :(
-		        	 
-		        	for (Entry<String, String> e : env.entrySet()) {
-		        		log.info("setting session env {} : {}", e.getKey(), e.getValue());
-		        		session.setEnvVar(e.getKey(), e.getValue());
-		        	}
-		        	*/
-		        	
 		        	final Command cmd = session.exec(command);
 		        	commandRef.set(cmd);
 		        
@@ -132,7 +124,7 @@ public class RekaSSHClient extends SSHClient {
 					}
 					
 					in.flush();
-					writeEOFWhileSSHJIsStillBroken(in);
+					writeEOF(in);
 					in.close();
 					
 					ByteArrayOutputStream errBytes = new ByteArrayOutputStream();
@@ -325,7 +317,7 @@ public class RekaSSHClient extends SSHClient {
 	    }
 	}
 	
-	private static void writeEOFWhileSSHJIsStillBroken(OutputStream o) {
+	private static void writeEOF(OutputStream o) {
 		if (!(o instanceof ChannelOutputStream)) return;
 		ChannelOutputStream out = (ChannelOutputStream) o;
 		
