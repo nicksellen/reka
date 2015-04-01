@@ -26,9 +26,9 @@ import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.AppSetup;
 import reka.core.setup.ModuleSetupContext;
 
-public class SMTPServerConfigurer extends ModuleConfigurer {
+public class SmtpServerConfigurer extends ModuleConfigurer {
 
-	private static final Logger log = LoggerFactory.getLogger(SMTPServerConfigurer.class);
+	private static final Logger log = LoggerFactory.getLogger(SmtpServerConfigurer.class);
 	
 	public static final IdentityKey<RekaSmtpServer> SERVER = IdentityKey.named("SMTP server");
 
@@ -36,7 +36,7 @@ public class SMTPServerConfigurer extends ModuleConfigurer {
 	private ConfigBody emailHandler;
 	private int port = 25;
 	
-	public SMTPServerConfigurer(Map<Integer,RekaSmtpServer> servers) {
+	public SmtpServerConfigurer(Map<Integer,RekaSmtpServer> servers) {
 		this.servers = servers;
 	}
 

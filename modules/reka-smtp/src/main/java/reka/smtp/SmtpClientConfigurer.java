@@ -5,7 +5,7 @@ import reka.config.configurer.annotations.Conf;
 import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.AppSetup;
 
-public class SMTPClientConfigurer extends ModuleConfigurer {
+public class SmtpClientConfigurer extends ModuleConfigurer {
 	
 	private String host, username, password;
 	private int port = 25;
@@ -32,7 +32,7 @@ public class SMTPClientConfigurer extends ModuleConfigurer {
 
 	@Override
 	public void setup(AppSetup init) {
-		init.defineOperation(path("send"), provider -> new SMTPSendConfigurer(host, port, username, password));
+		init.defineOperation(path("send"), provider -> new SmtpSendConfigurer(host, port, username, password));
 	}
 	
 }

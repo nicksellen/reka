@@ -8,7 +8,7 @@ import java.util.Map;
 import reka.api.Path;
 import reka.core.module.Module;
 import reka.core.module.ModuleDefinition;
-import reka.smtp.SMTPServerConfigurer.RekaSmtpServer;
+import reka.smtp.SmtpServerConfigurer.RekaSmtpServer;
 
 public class SmtpModule implements Module {
 
@@ -20,8 +20,8 @@ public class SmtpModule implements Module {
 	private final Map<Integer,RekaSmtpServer> servers = new HashMap<>();
 
 	public void setup(ModuleDefinition module) {
-		module.main(() -> new SMTPClientConfigurer());
-		module.submodule(path("server"), () -> new SMTPServerConfigurer(servers));
+		module.main(() -> new SmtpClientConfigurer());
+		module.submodule(path("server"), () -> new SmtpServerConfigurer(servers));
 	}
 	
 }

@@ -10,14 +10,14 @@ import reka.api.run.Operation;
 import reka.api.run.OperationContext;
 import reka.core.util.StringWithVars;
 
-public class SMTPSendOperation implements Operation {
+public class SmtpSendOperation implements Operation {
 
 	private final String host, username, password;
 	private final int port;
 	
 	private final StringWithVars from, to, replyTo, subject, body;
 	
-	public SMTPSendOperation(
+	public SmtpSendOperation(
 			String host, 
 			int port, 
 			String username,

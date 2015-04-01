@@ -5,14 +5,14 @@ import reka.core.setup.OperationConfigurer;
 import reka.core.setup.OperationSetup;
 import reka.core.util.StringWithVars;
 
-public class SMTPSendConfigurer implements OperationConfigurer {
+public class SmtpSendConfigurer implements OperationConfigurer {
 
 	private String host, username, password;
 	private int port;
 	
 	private StringWithVars from, to, replyTo, subject, body;
 	
-	public SMTPSendConfigurer(String host, int port, String username, String password) {
+	public SmtpSendConfigurer(String host, int port, String username, String password) {
 		this.host = host;
 		this.port = port;
 		this.username = username;
@@ -46,7 +46,7 @@ public class SMTPSendConfigurer implements OperationConfigurer {
 	
 	@Override
 	public void setup(OperationSetup ops) {
-		ops.add("send", () -> new SMTPSendOperation(
+		ops.add("send", () -> new SmtpSendOperation(
 				host, 
 				port, 
 				username, 
