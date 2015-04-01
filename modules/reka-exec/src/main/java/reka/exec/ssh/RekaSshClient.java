@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
+import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
@@ -28,28 +29,91 @@ import java.util.concurrent.atomic.AtomicReference;
 import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.common.Message;
 import net.schmizz.sshj.common.SSHPacket;
+import net.schmizz.sshj.connection.ConnectionException;
 import net.schmizz.sshj.connection.channel.Channel;
 import net.schmizz.sshj.connection.channel.ChannelOutputStream;
 import net.schmizz.sshj.connection.channel.direct.Session;
 import net.schmizz.sshj.connection.channel.direct.Session.Command;
 import net.schmizz.sshj.transport.Transport;
+import net.schmizz.sshj.userauth.keyprovider.KeyProvider;
+import net.schmizz.sshj.userauth.password.PasswordUtils;
 import net.schmizz.sshj.xfer.InMemorySourceFile;
 import net.schmizz.sshj.xfer.scp.SCPFileTransfer;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import reka.Reka;
 import reka.exec.ExecConfigurer.ExecScripts;
+import reka.exec.SshConfig;
 
-public class RekaSSHClient extends SSHClient {
+public class RekaSshClient {
 	
+	private final Logger log = LoggerFactory.getLogger(getClass());
 	private final Object lock = new Object();
 	
-	final AtomicInteger version = new AtomicInteger(1);
-	final byte[] sha1;
+	private final AtomicInteger version = new AtomicInteger(1);
+	private final byte[] sha1;
 	private final int timeoutSeconds;
-	final List<Runnable> beforeDisconnect = new ArrayList<>();
+	private final List<Runnable> beforeDisconnect = new ArrayList<>();
 	
-	public RekaSSHClient(byte[] configHash, int timeoutSeconds) {
-		this.sha1 = configHash;
+	private final SshConfig config;
+	
+	private volatile SSHClient client;
+	
+	public RekaSshClient(SshConfig config, int timeoutSeconds) {
+		this.config = config;
+		this.sha1 = config.sha1();
 		this.timeoutSeconds = timeoutSeconds;
+	}
+	
+	public SSHClient connect() throws IOException {
+		synchronized (lock) {
+			if (client != null && client.isConnected()) {
+				return client;
+			}
+			if (client != null) {
+				try {
+					client.disconnect();
+				} catch (Throwable t) {
+					// whatever...
+					log.warn("exception while disconnecting previous client", t);
+				}
+			}
+			client = new SSHClient();
+			
+			client.addHostKeyVerifier(config.hostkey());
+			client.useCompression();
+
+			log.info("connecting to {}@{}:{}", config.user(), config.hostname(), config.port());
+			client.connect(config.hostname(), config.port());
+			
+			KeyProvider keyProvider = client.loadKeys(config.privateKeyAsString(), 
+													  config.publicKeyAsString(), 
+												      PasswordUtils.createOneOff(config.passphrase()));
+			
+			client.authPublickey(config.user(), keyProvider);
+			
+			client.getConnection().getKeepAlive().setKeepAliveInterval(30);
+			
+			return client;
+		}
+	}
+	
+	private SSHClient client() {
+		synchronized (lock) {
+			int attempts = 3;
+			Throwable t = null;
+			for (int i = 0; i < attempts; i++) {
+				try {
+					return connect();
+				} catch (Throwable e) {
+					t = e;
+				}
+			}
+			log.error("failed to connect after " + attempts + " attempts", t);
+			throw runtime("failed to connect after %s attempts: %s", attempts, t.getMessage());
+		}
 	}
 	
 	public void onBeforeDisconnect(Runnable runnable) {
@@ -82,12 +146,14 @@ public class RekaSSHClient extends SSHClient {
 
 		Reka.SharedExecutors.general.execute(() -> {
 		
+			ScheduledFuture<?> timeout = null;
+			
 			try {
 			
 				final AtomicReference<Session> sessionRef = new AtomicReference<>();
 				final AtomicReference<Command> commandRef = new AtomicReference<>();
 				
-				ScheduledFuture<?> timeout = Reka.SharedExecutors.scheduled.schedule(() -> {
+				timeout = Reka.SharedExecutors.scheduled.schedule(() -> {
 					try {
 						Command cmd = commandRef.get();
 						if (cmd != null) {
@@ -106,7 +172,7 @@ public class RekaSSHClient extends SSHClient {
 				final Session session;
 				
 				synchronized (lock) {
-					session = startSession();
+					session = client().startSession();
 					sessionRef.set(session);
 				}
 				
@@ -153,8 +219,31 @@ public class RekaSSHClient extends SSHClient {
 		        } finally {
 		            session.close();
 		        }
-	        
+		        
+			} catch (ConnectionException | SocketException e) {
+				if (timeout != null) {
+					timeout.cancel(true);
+				}
+				try {
+					// reconnect?
+					log.info("reconnecting to {}:{}", config.hostname(), config.port());
+					connect();
+					exec(command, env).whenComplete((res,t) -> {
+						if (t != null) {
+							future.completeExceptionally(t);
+						} else {
+							future.complete(res);
+						}
+					});
+					
+				} catch (Exception e1) {
+					future.completeExceptionally(e1);
+				}
+				
 			} catch (Throwable t) {
+				if (timeout != null) {
+					timeout.cancel(true);
+				}
 				future.completeExceptionally(t);
 			}
 
@@ -176,7 +265,7 @@ public class RekaSSHClient extends SSHClient {
 			
 			java.nio.file.Path wrapperPath = tmpdir.resolve("__wrapper__");
 			java.nio.file.Path scriptPath = tmpdir.resolve("__main__");
-			SCPFileTransfer scp = newSCPFileTransfer();
+			SCPFileTransfer scp = client().newSCPFileTransfer();
 			
 			CountDownLatch latch = new CountDownLatch(scripts.extraScripts().size() + 2);
 			
@@ -231,10 +320,14 @@ public class RekaSSHClient extends SSHClient {
 		
 	}
 	
-	@Override
 	public void disconnect() throws IOException {
-		cleanup();
-		super.disconnect();
+		synchronized (lock) {
+			if (client != null) {
+				cleanup(); // TODO: we probably need to reconnect just to run these...
+				client.disconnect();
+				client = null;
+			}
+		}
 	}
 
 	private void cleanup() {

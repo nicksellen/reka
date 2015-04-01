@@ -29,13 +29,13 @@ import reka.config.configurer.annotations.Conf;
 import reka.core.setup.AppSetup;
 import reka.core.setup.ModuleConfigurer;
 import reka.core.setup.ModuleSetupContext;
-import reka.exec.ssh.RekaSSHClient;
+import reka.exec.ssh.RekaSshClient;
 
 public class ExecConfigurer extends ModuleConfigurer {
 	
 	private static final Logger log = LoggerFactory.getLogger(ExecConfigurer.class);
 	
-	public static final IdentityKey<RekaSSHClient> CLIENT = IdentityKey.named("ssh client");
+	public static final IdentityKey<RekaSshClient> CLIENT = IdentityKey.named("ssh client");
 	public static final IdentityKey<String[]> COMMAND = IdentityKey.named("ssh command");
 	
 	private ByteBuffer script;
@@ -176,7 +176,7 @@ public class ExecConfigurer extends ModuleConfigurer {
 			app.onDeploy(init -> {
 				init.run("ssh connect", () -> {
 					
-					RekaSSHClient existingClient = ctx.get(CLIENT);
+					RekaSshClient existingClient = ctx.get(CLIENT);
 					
 					if (existingClient != null && !Arrays.equals(existingClient.sha1(), ssh.sha1())) {
 						log.info("not using old client because config has changed");
@@ -187,23 +187,11 @@ public class ExecConfigurer extends ModuleConfigurer {
 
 						try {
 							
-							RekaSSHClient client = new RekaSSHClient(ssh.sha1(), 5);
+							RekaSshClient client = new RekaSshClient(ssh, 5);
 							
 							client.version(app.version());
-	
-							log.info("creating new SSH client");
 							
-							client.addHostKeyVerifier(ssh.hostkey());
-							client.useCompression();
-							
-							client.connect(ssh.hostname(), ssh.port());
-							
-							KeyProvider keyProvider = client.loadKeys(ssh.privateKeyAsString(), 
-																	  ssh.publicKeyAsString(), 
-																      PasswordUtils.createOneOff(ssh.passphrase()));
-							
-							client.authPublickey(ssh.user(), keyProvider);
-							client.getConnection().getKeepAlive().setKeepAliveInterval(30);
+							client.connect();
 
 							return client;
 							

@@ -165,7 +165,6 @@ public final class IncludeConverter implements ConfigConverter {
 	private NavigableConfig loadNestedConfig(Source source, String location) {
 
 		if (definitions.containsKey(location)) {
-			log.info("using definition from @define for {} :)", location);
 			return definitions.get(location);
 		}
 		

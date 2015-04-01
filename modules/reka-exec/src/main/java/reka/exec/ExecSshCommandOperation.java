@@ -9,16 +9,16 @@ import reka.api.Path;
 import reka.api.data.MutableData;
 import reka.api.run.AsyncOperation;
 import reka.api.run.OperationContext;
-import reka.exec.ssh.RekaSSHClient;
+import reka.exec.ssh.RekaSshClient;
 
 public class ExecSshCommandOperation implements AsyncOperation {
 
 	private final String command;
 	private final Path outInto, errInto, statusInto;
 	
-	private final RekaSSHClient ssh;
+	private final RekaSshClient ssh;
 	
-	public ExecSshCommandOperation(String[] command, RekaSSHClient ssh, Path into) {
+	public ExecSshCommandOperation(String[] command, RekaSshClient ssh, Path into) {
 		checkArgument(command.length == 1, "ssh command must be of length 1, not %d", command.length);
 		this.outInto = into.add("out");
 		this.errInto = into.add("err");

@@ -1,6 +1,7 @@
 package reka.exec;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 import reka.api.Hashable;
 
@@ -56,7 +57,9 @@ public class SshConfig implements Hashable {
 	}
 	
 	public char[] passphrase() {
-		return passphrase;
+		// copying it because some uses will blank it out
+		// probably a good idea to do so but we need to reuse this for reconnections
+		return Arrays.copyOf(passphrase, passphrase.length);
 	}
 	
 	public String hostkey() {
