@@ -38,7 +38,7 @@ public class ExecSshCommandOperation implements AsyncOperation {
 			env.put(key, val);
 		});
 		
-		ssh.exec(command, env).whenComplete((result, ex) ->  {
+		ssh.exec(command, env, 3).whenComplete((result, ex) ->  {
 			if (ex != null) {
 				res.error(ex);
 				return;

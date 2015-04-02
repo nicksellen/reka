@@ -41,13 +41,17 @@ public class ClojureEnvImpl implements ClojureEnv {
 	@Override
 	public void shutdown() {
 		try {
+			try {
+				eval("(if (ns-resolve 'clojure.core.async.impl.exec.threadpool 'the-executor) (.shutdown clojure.core.async.impl.exec.threadpool/the-executor))");
+			} catch (Throwable t) { /* what-eveeeerrrr */ }
+			try {
+				run("clojure.core/shutdown-agents");
+			} catch (Throwable t) { /* what-eveeeerrrr */ }
 			ClassLoader cl = RT.class.getClassLoader();
 			if (cl instanceof URLClassLoader) {
 				((URLClassLoader) cl).close();
 			}
-		} catch (Throwable t) {
-			t.printStackTrace();
-		}
+		} catch (Throwable t) { /* what-eveeeerrrr */ }
 	}
 	
 	private void env(ThrowingRunnable r) {

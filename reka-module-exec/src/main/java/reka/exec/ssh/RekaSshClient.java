@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
-import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
@@ -29,7 +28,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.common.Message;
 import net.schmizz.sshj.common.SSHPacket;
-import net.schmizz.sshj.connection.ConnectionException;
 import net.schmizz.sshj.connection.channel.Channel;
 import net.schmizz.sshj.connection.channel.ChannelOutputStream;
 import net.schmizz.sshj.connection.channel.direct.Session;
@@ -100,19 +98,18 @@ public class RekaSshClient {
 		}
 	}
 	
-	private SSHClient client() {
+	private SSHClient client(int retries) {
 		synchronized (lock) {
-			int attempts = 3;
 			Throwable t = null;
-			for (int i = 0; i < attempts; i++) {
+			for (int i = 0; i < retries; i++) {
 				try {
 					return connect();
 				} catch (Throwable e) {
 					t = e;
 				}
 			}
-			log.error("failed to connect after " + attempts + " attempts", t);
-			throw runtime("failed to connect after %s attempts: %s", attempts, t.getMessage());
+			log.error("failed to connect after " + retries + " attempts", t);
+			throw runtime("failed to connect after %s attempts: %s", retries, t.getMessage());
 		}
 	}
 	
@@ -134,13 +131,13 @@ public class RekaSshClient {
 
 	public String run(String command) {
 		try {
-			return exec(command, Collections.emptyMap()).get().out;
+			return exec(command, Collections.emptyMap(), 3).get().out;
 		} catch (InterruptedException | ExecutionException e) {
 			throw unchecked(e);
 		}
 	}
 	
-	public CompletableFuture<ExecResult> exec(String command, Map<String,String> env) {
+	public CompletableFuture<ExecResult> exec(String command, Map<String,String> env, int connectionRetries) {
 		
 		CompletableFuture<ExecResult> future = new CompletableFuture<>();
 
@@ -172,7 +169,7 @@ public class RekaSshClient {
 				final Session session;
 				
 				synchronized (lock) {
-					session = client().startSession();
+					session = client(connectionRetries).startSession();
 					sessionRef.set(session);
 				}
 				
@@ -219,27 +216,6 @@ public class RekaSshClient {
 		        } finally {
 		            session.close();
 		        }
-		        
-			} catch (ConnectionException | SocketException e) {
-				if (timeout != null) {
-					timeout.cancel(true);
-				}
-				try {
-					// reconnect?
-					log.info("reconnecting to {}:{}", config.hostname(), config.port());
-					connect();
-					exec(command, env).whenComplete((res,t) -> {
-						if (t != null) {
-							future.completeExceptionally(t);
-						} else {
-							future.complete(res);
-						}
-					});
-					
-				} catch (Exception e1) {
-					future.completeExceptionally(e1);
-				}
-				
 			} catch (Throwable t) {
 				if (timeout != null) {
 					timeout.cancel(true);
@@ -265,7 +241,7 @@ public class RekaSshClient {
 			
 			java.nio.file.Path wrapperPath = tmpdir.resolve("__wrapper__");
 			java.nio.file.Path scriptPath = tmpdir.resolve("__main__");
-			SCPFileTransfer scp = client().newSCPFileTransfer();
+			SCPFileTransfer scp = client(3).newSCPFileTransfer();
 			
 			CountDownLatch latch = new CountDownLatch(scripts.extraScripts().size() + 2);
 			

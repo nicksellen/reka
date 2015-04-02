@@ -5,7 +5,7 @@ packaged = reka-server.tar.gz
 
 dist_modules := $(shell ls | grep reka-module | sed 's/reka-module-//g')
 
-.PHONY: clean test run upload-s3
+.PHONY: clean test run package upload-s3
 
 all: clean $(packaged)
 
@@ -23,6 +23,8 @@ $(dist_dir): .mvn-build
 		echo "module ../lib/modules/$$module" >> $(dist_dir)/etc/config.reka; \
 	done
 	@echo "app api @include(apps/api.reka)" >> $(dist_dir)/etc/config.reka
+
+package: $(packaged)
 
 $(packaged): $(dist_dir)
 	@cd dist && tar zcvf $(packaged) reka && mv $(packaged) ..

@@ -82,8 +82,7 @@ public class ClojureConfigurer extends ModuleConfigurer {
 		triggerFns.put(config.valueAsString(), config.body());
 	}
 	
-	private final Map<Identity,ClojureEnv> envs = new HashMap<>();
-	private final Map<Identity,Integer> versions = new HashMap<>();
+	//private final Map<Identity,Integer> versions = new HashMap<>();
 	
 	@Override
 	public void setup(AppSetup app) {
@@ -94,8 +93,14 @@ public class ClojureConfigurer extends ModuleConfigurer {
 		
 			init.run("initialize environment", idv -> {
 
-				versions.put(idv.identity(), idv.version());
+				ctx.lookup(CLOJURE_ENV).ifPresent(clj -> {
+					log.info("shutting down old env");
+					clj.shutdown();
+				});
 				
+				//versions.put(idv.identity(), idv.version());
+				
+				/*
 				envs.computeIfPresent(idv.identity(), (id, env) -> {
 					// this is doing a file based refresh I don't know
 					// whether it'll work for me but it's a start...
@@ -108,6 +113,9 @@ public class ClojureConfigurer extends ModuleConfigurer {
 					log.info("creating new clojure env for {}", id);
 					return ClojureEnv.create(ClojureConfigurer.class.getClassLoader());
 				});
+				*/
+				
+				ClojureEnv env = ClojureEnv.create(ClojureConfigurer.class.getClassLoader());;
 
 				env.eval(REKA_CLJ);
 				
@@ -129,11 +137,15 @@ public class ClojureConfigurer extends ModuleConfigurer {
 				
 				env.eval(script);
 				
-				envs.put(idv.identity(), env);
+				//envs.put(idv.identity(), env);
 			});
 		});
 		
 		app.onUndeploy("shutdown env", (idv, store) -> {
+			store.remove(SHUTDOWN_CALLBACKS).ifPresent(callbacks -> {
+				callbacks.forEach(Runnable::run);
+			});
+			ctx.remove(CLOJURE_ENV).ifPresent(ClojureEnv::shutdown);
 			/* work in progress...
 			if (false) {
 

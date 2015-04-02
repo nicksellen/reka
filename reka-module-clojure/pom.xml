@@ -19,12 +19,12 @@
 		</dependency>
 		<dependency>
 			<groupId>io.reka</groupId>
-			<artifactId>clojure-env-api</artifactId>
+			<artifactId>reka-lib-clojure-env-api</artifactId>
 			<version>0.0.1</version>
 		</dependency>
 		<dependency>
 			<groupId>io.reka</groupId>
-			<artifactId>clojure-env-build</artifactId>
+			<artifactId>reka-lib-clojure-env-build</artifactId>
 			<version>0.0.1</version>
 		</dependency>
 		<dependency>
