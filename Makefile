@@ -1,69 +1,51 @@
-JAVA_HOME := $(shell cat .java-home)
-export JAVA_HOME
-
-dist_modules = irc clojure exec net jade mustache smtp less jsx common postgres h2 twilio
+-include env.make
 
 dist_dir = dist/reka
+packaged = reka-server.tar.gz
 
-.PHONY: clean clean-build clean-dist upload-s3 test install-main build-main
+dist_modules := $(shell ls | grep reka-module | sed 's/reka-module-//g')
 
-all: clean dist
+.PHONY: clean test run upload-s3
 
-build:
-	@mvn -DskipTests -T 1.5C clean package
-	@mkdir -p build/modules
-	@find modules -name 'reka-*.jar' -exec cp {} build/modules/ ';'
-	@find main/reka-main -name 'reka-*.jar' -exec cp {} build/ ';'
+all: clean $(packaged)
 
-test:
-	@mvn test
-
-build-main:
-	@cd main && mvn -DskipTests -T 1.5C clean package
-
-install-main:
-	@cd main && mvn -DskipTests -T 1.5C clean install
-
-clean-build:
-	@rm -rf build
-
-clean-dist:
-	@rm -rf dist
-
-clean: clean-build clean-dist
-
-dist: build
+$(dist_dir): .mvn-build
 	@mkdir -p $(dist_dir)
 	@cp -r dist-resources/* $(dist_dir)/
 	@mkdir -p $(dist_dir)/lib/
 	@mkdir -p $(dist_dir)/lib/modules
 	@mkdir -p $(dist_dir)/etc/apps
-	@cp build/reka-main*.jar $(dist_dir)/lib/reka-server.jar
+	@cp reka-server/target/reka-server-*.jar $(dist_dir)/lib/reka-server.jar
 	@for module in $(dist_modules); do\
-		cp build/modules/reka-$$module-* $(dist_dir)/lib/modules/ ; \
+		cp reka-module-$$module/target/reka-module-$$module-* $(dist_dir)/lib/modules ; \
 	done
 	@for module in `ls $(dist_dir)/lib/modules`; do\
 		echo "module ../lib/modules/$$module" >> $(dist_dir)/etc/config.reka; \
 	done
 	@echo "app api @include(apps/api.reka)" >> $(dist_dir)/etc/config.reka
-	@cd dist && tar zcvf reka-server.tar.gz reka
-	@echo made dist/reka-server.tar.gz
 
-run: dist
-	@dist/reka/bin/reka-server
+$(packaged): $(dist_dir)
+	@cd dist && tar zcvf $(packaged) reka && mv $(packaged) ..
+	@echo made $(packaged)
 
-run-leak-detection: dist
-	@JAVA_OPTS="-Dlog4j.configurationFile=main/reka-main/log4j2-errors-only.xml -Dio.netty.leakDetectionLevel=advanced" dist/reka/bin/reka-server
+clean:
+	@rm -rf $(dist_dir)
+	@rm -rf $(packaged)
+	@rm -f .mvn-build
 
-run-nolog: dist
-	@JAVA_OPTS=-Dlog4j.configurationFile=main/reka-main/log4j2-errors-only.xml dist/reka/bin/reka-server
+.mvn-build:
+	@mvn -DskipTests -T 1.5C clean package
+	@touch .mvn-build
 
-run-debug: dist
-	@JAVA_OPTS=-Dlog4j.configurationFile=main/reka-main/log4j2-debug.xml dist/reka/bin/reka-server
+test:
+	@mvn test
 
-upload-s3: dist
+run: $(dist_dir)
+	@$(dist_dir)/bin/reka-server
+
+upload-s3: $(packaged)
 	@aws s3 \
-		cp dist/reka-server.tar.gz s3://reka/reka-server.tar.gz	\
+		cp $(packaged) s3://reka/reka-server.tar.gz	\
 		--grants \
 			read=uri=http://acs.amazonaws.com/groups/global/AllUsers
 

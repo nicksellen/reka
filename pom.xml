@@ -5,12 +5,41 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>io.reka</groupId>
-  <artifactId>everything</artifactId>
+  <artifactId>reka</artifactId>
   <version>0.1.0</version>
   <packaging>pom</packaging>
 
-  <modules>
-    <module>modules</module>
-    <module>main</module>
+ <modules>
+
+    <!-- reka-module-server/core-->
+    <module>reka-server</module>
+    <module>reka-config</module>
+    <module>reka-core</module>
+
+    <!-- reka .jar modules -->
+    <module>reka-module-nashorn</module>
+    <module>reka-module-markdown</module>
+    <module>reka-module-crypto</module>
+    <module>reka-module-irc</module>
+    <module>reka-module-clojure</module>
+    <module>reka-module-exec</module>
+    <module>reka-module-process</module>
+    <module>reka-module-net</module>
+    <module>reka-module-jade</module>
+    <module>reka-module-jruby</module>
+    <module>reka-module-mustache</module>
+    <module>reka-module-smtp</module>
+    <module>reka-module-twilio</module>
+    <module>reka-module-less</module>
+    <module>reka-module-jsx</module>
+    <module>reka-module-postgres</module>
+    <module>reka-module-h2</module>
+
+    <!-- utilities -->
+    <module>reka-lib-bouncycastle-loader</module>
+    <module>reka-lib-clojure-env</module>
+    <module>reka-lib-jdbc</module>
+
   </modules>
+
 </project>
