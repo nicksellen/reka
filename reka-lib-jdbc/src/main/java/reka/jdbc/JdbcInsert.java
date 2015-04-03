@@ -11,13 +11,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import reka.api.content.Content;
-import reka.api.data.Data;
-import reka.api.data.MutableData;
-import reka.api.run.Operation;
-import reka.api.run.OperationContext;
-import reka.core.util.StringWithVars;
-import reka.core.util.StringWithVars.Variable;
+import reka.data.Data;
+import reka.data.MutableData;
+import reka.data.content.Content;
+import reka.flow.ops.Operation;
+import reka.flow.ops.OperationContext;
+import reka.util.StringWithVars;
+import reka.util.StringWithVars.Variable;
 
 public class JdbcInsert implements Operation {
 	

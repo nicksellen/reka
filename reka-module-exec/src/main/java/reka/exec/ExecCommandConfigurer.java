@@ -4,8 +4,8 @@ import static reka.api.Path.dots;
 import static reka.api.Path.path;
 import reka.api.Path;
 import reka.config.configurer.annotations.Conf;
-import reka.core.setup.OperationConfigurer;
-import reka.core.setup.OperationSetup;
+import reka.module.setup.OperationConfigurer;
+import reka.module.setup.OperationSetup;
 
 public class ExecCommandConfigurer implements OperationConfigurer {
 	

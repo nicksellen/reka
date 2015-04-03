@@ -5,14 +5,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import reka.api.data.MutableData;
-import reka.api.flow.FlowOperation;
-import reka.api.run.AsyncOperation;
-import reka.api.run.Operation;
-import reka.api.run.OperationContext;
-import reka.api.run.RouteCollector;
-import reka.api.run.RouteKey;
-import reka.api.run.RouterOperation;
+import reka.data.MutableData;
+import reka.flow.FlowOperation;
+import reka.flow.ops.AsyncOperation;
+import reka.flow.ops.Operation;
+import reka.flow.ops.OperationContext;
+import reka.flow.ops.RouteCollector;
+import reka.flow.ops.RouteKey;
+import reka.flow.ops.RouterOperation;
 
 public class FlowTestHelpers {
 

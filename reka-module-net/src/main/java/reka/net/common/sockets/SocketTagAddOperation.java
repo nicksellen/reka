@@ -3,13 +3,13 @@ package reka.net.common.sockets;
 import java.util.List;
 import java.util.function.Function;
 
-import reka.Identity;
-import reka.api.data.Data;
-import reka.api.data.MutableData;
-import reka.api.run.Operation;
-import reka.api.run.OperationContext;
+import reka.data.Data;
+import reka.data.MutableData;
+import reka.flow.ops.Operation;
+import reka.flow.ops.OperationContext;
 import reka.net.ChannelAttrs;
 import reka.net.NetManager;
+import reka.util.Identity;
 
 public class SocketTagAddOperation implements Operation {
 

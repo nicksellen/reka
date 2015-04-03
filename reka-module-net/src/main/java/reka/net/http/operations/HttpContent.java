@@ -3,10 +3,10 @@ package reka.net.http.operations;
 import java.nio.file.Path;
 
 import reka.api.Path.Response;
-import reka.api.content.Content;
-import reka.api.data.MutableData;
-import reka.api.run.Operation;
-import reka.api.run.OperationContext;
+import reka.data.MutableData;
+import reka.data.content.Content;
+import reka.flow.ops.Operation;
+import reka.flow.ops.OperationContext;
 import reka.net.http.operations.HttpContentUtils.ContentAndType;
 
 public class HttpContent implements Operation {

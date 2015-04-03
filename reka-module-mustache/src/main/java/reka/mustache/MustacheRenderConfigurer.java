@@ -5,8 +5,8 @@ import reka.api.Path;
 import reka.api.Path.Response;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
-import reka.core.setup.OperationConfigurer;
-import reka.core.setup.OperationSetup;
+import reka.module.setup.OperationConfigurer;
+import reka.module.setup.OperationSetup;
 
 public class MustacheRenderConfigurer implements OperationConfigurer {
 

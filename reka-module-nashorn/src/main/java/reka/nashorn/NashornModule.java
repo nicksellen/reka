@@ -5,8 +5,8 @@ import static reka.api.Path.path;
 import java.util.List;
 
 import reka.api.Path;
-import reka.core.module.Module;
-import reka.core.module.ModuleDefinition;
+import reka.module.Module;
+import reka.module.ModuleDefinition;
 
 // http://docs.oracle.com/javase/8/docs/technotes/guides/scripting/nashorn/intro.html#sthref14
 

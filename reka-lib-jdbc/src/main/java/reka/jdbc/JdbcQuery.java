@@ -2,12 +2,12 @@ package reka.jdbc;
 
 import static reka.api.Path.path;
 import static reka.api.Path.root;
-import static reka.api.content.Contents.booleanValue;
-import static reka.api.content.Contents.doubleValue;
-import static reka.api.content.Contents.integer;
-import static reka.api.content.Contents.longValue;
-import static reka.api.content.Contents.nullValue;
-import static reka.api.content.Contents.utf8;
+import static reka.data.content.Contents.booleanValue;
+import static reka.data.content.Contents.doubleValue;
+import static reka.data.content.Contents.integer;
+import static reka.data.content.Contents.longValue;
+import static reka.data.content.Contents.nullValue;
+import static reka.data.content.Contents.utf8;
 import static reka.util.Util.runtime;
 import static reka.util.Util.unchecked;
 
@@ -30,15 +30,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import reka.api.Path;
-import reka.api.content.Content;
-import reka.api.data.Data;
-import reka.api.data.MapMutation;
-import reka.api.data.MutableData;
-import reka.api.run.Operation;
-import reka.api.run.OperationContext;
-import reka.core.data.memory.MutableMemoryData;
-import reka.core.util.StringWithVars;
-import reka.core.util.StringWithVars.Variable;
+import reka.data.Data;
+import reka.data.MapMutation;
+import reka.data.MutableData;
+import reka.data.content.Content;
+import reka.data.memory.MutableMemoryData;
+import reka.flow.ops.Operation;
+import reka.flow.ops.OperationContext;
+import reka.util.StringWithVars;
+import reka.util.StringWithVars.Variable;
 
 public class JdbcQuery implements Operation {
 

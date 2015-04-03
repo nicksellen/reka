@@ -10,14 +10,14 @@ import org.kohsuke.args4j.CmdLineException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.BouncyCastleLoader;
-import reka.ModuleMeta;
 import reka.Reka;
 import reka.RekaConfigurer;
-import reka.builtins.BuiltinsModule;
 import reka.config.NavigableConfig;
 import reka.config.parser.ConfigParser;
-import reka.core.module.ModuleManager;
+import reka.lib.bouncycastle.BouncyCastleLoader;
+import reka.module.ModuleManager;
+import reka.module.ModuleMeta;
+import reka.modules.builtins.BuiltinsModule;
 
 public class Server {
 
@@ -37,7 +37,7 @@ public class Server {
 			return;
 		};
 		
-		ClassLoader classLoader = BouncyCastleLoader.classLoader(Reka.class.getClassLoader());
+		ClassLoader classLoader = BouncyCastleLoader.createClassLoader(Reka.class.getClassLoader());
 		List<ModuleMeta> defaultModules = asList(new ModuleMeta(classLoader, "core", new BuiltinsModule()));
 		NavigableConfig conf = new ModuleManager(defaultModules).processor().process(ConfigParser.fromFile(file));
 		configure(new RekaConfigurer(file.getParentFile().toPath(), defaultModules, classLoader), conf).build().run();

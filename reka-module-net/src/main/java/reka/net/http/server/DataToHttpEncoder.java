@@ -1,8 +1,8 @@
 package reka.net.http.server;
 
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
-import static reka.core.data.MoreDataUtils.writeToOutputStreamAsJson;
-import static reka.core.data.MoreDataUtils.writeToOutputStreamAsPrettyJson;
+import static reka.data.MoreDataUtils.writeToOutputStreamAsJson;
+import static reka.data.MoreDataUtils.writeToOutputStreamAsPrettyJson;
 import static reka.util.Util.unchecked;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufOutputStream;
@@ -41,8 +41,8 @@ import org.slf4j.LoggerFactory;
 
 import reka.api.Path.Request;
 import reka.api.Path.Response;
-import reka.api.content.Content;
-import reka.api.data.Data;
+import reka.data.Data;
+import reka.data.content.Content;
 
 @Sharable
 public class DataToHttpEncoder extends MessageToMessageEncoder<Data> {

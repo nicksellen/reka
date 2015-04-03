@@ -27,11 +27,11 @@ import reka.api.Path;
 import reka.api.Path.PathElement;
 import reka.api.Path.Request;
 import reka.api.Path.Response;
-import reka.api.data.Data;
-import reka.api.data.MutableData;
-import reka.api.run.Operation;
-import reka.api.run.OperationContext;
-import reka.core.util.ReadObservedMap;
+import reka.data.Data;
+import reka.data.MutableData;
+import reka.flow.ops.Operation;
+import reka.flow.ops.OperationContext;
+import reka.util.ReadObservedMap;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;

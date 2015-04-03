@@ -2,8 +2,8 @@ package reka.exec;
 
 import static reka.api.Path.path;
 import reka.api.Path;
-import reka.core.module.Module;
-import reka.core.module.ModuleDefinition;
+import reka.module.Module;
+import reka.module.ModuleDefinition;
 
 public class ExecModule implements Module {
 

@@ -1,7 +1,7 @@
 package reka.net.http.operations;
 
-import static reka.api.content.Contents.integer;
-import static reka.api.content.Contents.utf8;
+import static reka.data.content.Contents.integer;
+import static reka.data.content.Contents.utf8;
 import static reka.util.Util.hex;
 
 import java.nio.charset.StandardCharsets;
@@ -9,11 +9,11 @@ import java.nio.file.Path;
 
 import reka.api.Path.Request;
 import reka.api.Path.Response;
-import reka.api.content.Content;
-import reka.api.content.Contents;
-import reka.api.data.MutableData;
-import reka.api.run.Operation;
-import reka.api.run.OperationContext;
+import reka.data.MutableData;
+import reka.data.content.Content;
+import reka.data.content.Contents;
+import reka.flow.ops.Operation;
+import reka.flow.ops.OperationContext;
 import reka.net.http.operations.HttpContentUtils.ContentAndType;
 
 import com.google.common.hash.HashFunction;

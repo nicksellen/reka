@@ -4,11 +4,11 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.api.data.Data;
 import reka.config.Config;
 import reka.config.NavigableConfig;
 import reka.config.parser.ConfigParser;
 import reka.core.config.ConfigUtils;
+import reka.data.Data;
 
 public class ConfigUtilsTest {
 	

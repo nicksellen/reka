@@ -26,9 +26,9 @@ import java.net.URISyntaxException;
 import org.apache.http.client.utils.URIBuilder;
 
 import reka.api.Path;
-import reka.api.data.MutableData;
-import reka.api.run.AsyncOperation;
-import reka.api.run.OperationContext;
+import reka.data.MutableData;
+import reka.flow.ops.AsyncOperation;
+import reka.flow.ops.OperationContext;
 import reka.net.http.server.HttpResponseToDatasetDecoder;
 
 public class HttpRequestOperation implements AsyncOperation {

@@ -23,10 +23,12 @@ import org.slf4j.LoggerFactory;
 import reka.api.IdentityKey;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
-import reka.core.setup.AppSetup;
-import reka.core.setup.ModuleConfigurer;
-import reka.core.setup.ModuleSetupContext;
+import reka.exec.ssh.ExecSshCommandConfigurer;
 import reka.exec.ssh.RekaSshClient;
+import reka.exec.ssh.SshConfig;
+import reka.module.setup.AppSetup;
+import reka.module.setup.ModuleConfigurer;
+import reka.module.setup.ModuleSetupContext;
 
 public class ExecConfigurer extends ModuleConfigurer {
 	

@@ -12,12 +12,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import reka.api.IdentityKey;
-import reka.api.flow.Flow;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
-import reka.core.builder.TriggerHelper;
-import reka.core.setup.AppSetup;
-import reka.core.setup.ModuleConfigurer;
+import reka.flow.Flow;
+import reka.flow.builder.TriggerHelper;
+import reka.module.setup.AppSetup;
+import reka.module.setup.ModuleConfigurer;
 import reka.net.NetManager;
 import reka.net.NetManager.SocketFlows;
 import reka.net.NetSettings;

@@ -1,8 +1,8 @@
 package reka.net.http.operations;
 
-import static reka.api.content.Contents.binary;
-import static reka.api.content.Contents.integer;
-import static reka.api.content.Contents.utf8;
+import static reka.data.content.Contents.binary;
+import static reka.data.content.Contents.integer;
+import static reka.data.content.Contents.utf8;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -10,10 +10,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import reka.api.Path.Response;
-import reka.api.content.Content;
-import reka.api.data.MutableData;
-import reka.api.run.Operation;
-import reka.api.run.OperationContext;
+import reka.data.MutableData;
+import reka.data.content.Content;
+import reka.flow.ops.Operation;
+import reka.flow.ops.OperationContext;
 
 import com.google.common.collect.ImmutableMap;
 

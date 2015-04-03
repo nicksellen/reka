@@ -1,6 +1,6 @@
 package reka.test.store;
 
-import static reka.api.content.Contents.binary;
+import static reka.data.content.Contents.binary;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
@@ -11,8 +11,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.api.data.MutableData;
-import reka.core.data.memory.MutableMemoryData;
+import reka.data.MutableData;
+import reka.data.memory.MutableMemoryData;
 
 public class AddJsonToDatasetTest {
 	

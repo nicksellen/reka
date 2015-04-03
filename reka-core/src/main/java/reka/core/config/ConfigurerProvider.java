@@ -4,9 +4,9 @@ import java.util.Collection;
 import java.util.function.Supplier;
 
 import reka.api.Path;
-import reka.api.flow.FlowSegment;
 import reka.config.Config;
-import reka.core.setup.FlowSegmentBiFunction;
+import reka.flow.FlowSegment;
+import reka.module.setup.FlowSegmentBiFunction;
 
 public interface ConfigurerProvider {
 	Collection<Path> types();

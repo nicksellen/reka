@@ -26,9 +26,10 @@ import org.slf4j.LoggerFactory;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
-import reka.core.module.Module;
-import reka.core.module.RekaGuiceModule;
-import reka.dirs.BaseDirs;
+import reka.module.Module;
+import reka.module.ModuleMeta;
+import reka.module.RekaGuiceModule;
+import reka.util.dirs.BaseDirs;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;

@@ -5,9 +5,9 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import static reka.api.Path.dots;
 import static reka.api.Path.path;
-import static reka.core.builder.FlowSegments.parallel;
-import static reka.core.builder.OperationFlowNode.asyncOperation;
-import static reka.core.builder.OperationFlowNode.operation;
+import static reka.flow.builder.FlowSegments.parallel;
+import static reka.flow.builder.OperationFlowNode.asyncOperation;
+import static reka.flow.builder.OperationFlowNode.operation;
 import static reka.util.Util.unchecked;
 
 import java.util.concurrent.CountDownLatch;
@@ -20,13 +20,13 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.junit.Test;
 
 import reka.api.Path;
-import reka.api.content.Content;
-import reka.api.data.Data;
-import reka.api.data.DiffContentConsumer;
-import reka.api.data.MutableData;
-import reka.api.flow.Flow;
-import reka.core.builder.FlowBuilderGroup;
-import reka.core.data.memory.MutableMemoryData;
+import reka.data.Data;
+import reka.data.DiffContentConsumer;
+import reka.data.MutableData;
+import reka.data.content.Content;
+import reka.data.memory.MutableMemoryData;
+import reka.flow.Flow;
+import reka.flow.builder.FlowBuilderGroup;
 
 public class FlowTest {
 	

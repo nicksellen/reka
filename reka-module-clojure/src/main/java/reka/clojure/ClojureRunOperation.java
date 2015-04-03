@@ -1,8 +1,9 @@
 package reka.clojure;
 
-import reka.api.data.MutableData;
-import reka.api.run.Operation;
-import reka.api.run.OperationContext;
+import reka.clojure.env.ClojureEnv;
+import reka.data.MutableData;
+import reka.flow.ops.Operation;
+import reka.flow.ops.OperationContext;
 
 public class ClojureRunOperation implements Operation {
 	

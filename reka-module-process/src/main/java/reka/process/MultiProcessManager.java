@@ -9,9 +9,9 @@ import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.function.Consumer;
 
-import reka.api.data.MutableData;
-import reka.core.data.memory.MutableMemoryData;
-import reka.core.setup.StatusDataProvider;
+import reka.data.MutableData;
+import reka.data.memory.MutableMemoryData;
+import reka.module.setup.StatusDataProvider;
 
 public final class MultiProcessManager implements ProcessManager {
 

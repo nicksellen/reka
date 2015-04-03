@@ -5,8 +5,8 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import reka.api.IdentityStore;
 import reka.api.IdentityStoreReader;
-import reka.api.data.MutableData;
-import reka.api.flow.Flow;
+import reka.data.MutableData;
+import reka.flow.Flow;
 import reka.net.NetManager.HttpFlows;
 import reka.net.NetModule;
 

@@ -5,10 +5,10 @@ import static reka.util.Util.unchecked;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.SimpleEmail;
 
-import reka.api.data.MutableData;
-import reka.api.run.Operation;
-import reka.api.run.OperationContext;
-import reka.core.util.StringWithVars;
+import reka.data.MutableData;
+import reka.flow.ops.Operation;
+import reka.flow.ops.OperationContext;
+import reka.util.StringWithVars;
 
 public class SmtpSendOperation implements Operation {
 

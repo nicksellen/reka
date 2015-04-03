@@ -10,8 +10,8 @@ import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
-import reka.core.setup.OperationConfigurer;
-import reka.core.setup.OperationSetup;
+import reka.module.setup.OperationConfigurer;
+import reka.module.setup.OperationSetup;
 
 import com.google.common.collect.ImmutableMap;
 

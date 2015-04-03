@@ -5,16 +5,16 @@ import io.netty.channel.group.ChannelMatchers;
 
 import java.util.function.Function;
 
-import reka.Identity;
-import reka.api.data.Data;
+import reka.app.Application;
 import reka.config.configurer.annotations.Conf;
-import reka.core.app.Application;
-import reka.core.setup.OperationConfigurer;
-import reka.core.setup.OperationSetup;
-import reka.core.util.StringWithVars;
+import reka.data.Data;
+import reka.module.setup.OperationConfigurer;
+import reka.module.setup.OperationSetup;
 import reka.net.ChannelAttrs;
 import reka.net.ChannelAttrs.AttributeMatcher;
 import reka.net.NetManager;
+import reka.util.Identity;
+import reka.util.StringWithVars;
 
 public class SocketBroadcastConfigurer implements OperationConfigurer {
 	

@@ -3,8 +3,8 @@ package reka.smtp;
 import static reka.api.Path.path;
 import static reka.api.Path.PathElements.name;
 import static reka.api.Path.PathElements.nextIndex;
-import static reka.api.content.Contents.binary;
-import static reka.api.content.Contents.utf8;
+import static reka.data.content.Contents.binary;
+import static reka.data.content.Contents.utf8;
 import static reka.util.Util.unchecked;
 
 import java.io.IOException;
@@ -28,9 +28,9 @@ import org.subethamail.smtp.TooMuchDataException;
 import org.subethamail.smtp.helper.SimpleMessageListener;
 
 import reka.api.Path;
-import reka.api.data.Data;
-import reka.api.data.MutableData;
-import reka.core.data.memory.MutableMemoryData;
+import reka.data.Data;
+import reka.data.MutableData;
+import reka.data.memory.MutableMemoryData;
 
 public class EmailListener implements SimpleMessageListener {
 	

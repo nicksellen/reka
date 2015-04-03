@@ -1,7 +1,7 @@
 package reka.irc;
 
-import reka.api.flow.Flow;
-import reka.core.data.memory.MutableMemoryData;
+import reka.data.memory.MutableMemoryData;
+import reka.flow.Flow;
 import reka.irc.RekaBot.IrcListener;
 
 public class IrcPrivateMessageFlowListener implements IrcListener {

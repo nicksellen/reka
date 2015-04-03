@@ -4,12 +4,12 @@ import static reka.api.Path.path;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import static reka.util.Util.runtime;
 import reka.api.IdentityKey;
-import reka.api.flow.Flow;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
-import reka.core.builder.TriggerHelper;
-import reka.core.setup.ModuleConfigurer;
-import reka.core.setup.AppSetup;
+import reka.flow.Flow;
+import reka.flow.builder.TriggerHelper;
+import reka.module.setup.AppSetup;
+import reka.module.setup.ModuleConfigurer;
 
 public class IrcConfigurer extends ModuleConfigurer {
 	

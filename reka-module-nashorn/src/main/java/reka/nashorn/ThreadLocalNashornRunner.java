@@ -25,8 +25,8 @@ import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.api.data.MutableData;
-import reka.core.data.memory.MutableMemoryData;
+import reka.data.MutableData;
+import reka.data.memory.MutableMemoryData;
 
 import com.google.common.collect.ImmutableMap;
 

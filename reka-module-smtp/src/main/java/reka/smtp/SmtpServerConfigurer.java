@@ -56,17 +56,17 @@ import org.subethamail.smtp.server.SMTPServer;
 
 import reka.api.IdentityKey;
 import reka.api.Path;
-import reka.api.data.Data;
-import reka.api.data.MutableData;
-import reka.api.flow.Flow;
-import reka.api.run.Subscriber;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
-import reka.core.data.memory.MutableMemoryData;
-import reka.core.setup.AppSetup;
-import reka.core.setup.ModuleConfigurer;
-import reka.core.setup.ModuleSetupContext;
+import reka.data.Data;
+import reka.data.MutableData;
+import reka.data.memory.MutableMemoryData;
+import reka.flow.Flow;
+import reka.flow.ops.Subscriber;
+import reka.module.setup.AppSetup;
+import reka.module.setup.ModuleConfigurer;
+import reka.module.setup.ModuleSetupContext;
 
 public class SmtpServerConfigurer extends ModuleConfigurer {
 

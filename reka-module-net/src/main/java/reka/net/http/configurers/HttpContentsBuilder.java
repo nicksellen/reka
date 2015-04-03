@@ -4,9 +4,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
-import reka.api.data.Data;
-import reka.api.flow.FlowOperationConfigurer;
 import reka.config.configurer.annotations.Conf;
+import reka.data.Data;
+import reka.flow.FlowOperationConfigurer;
 import reka.net.http.operations.HttpContents;
 
 public class HttpContentsBuilder implements FlowOperationConfigurer<HttpContents> {

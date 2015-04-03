@@ -4,8 +4,8 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import reka.api.data.MutableData;
-import reka.core.data.memory.MutableMemoryData;
+import reka.data.MutableData;
+import reka.data.memory.MutableMemoryData;
 
 public class SessionStore {
 	

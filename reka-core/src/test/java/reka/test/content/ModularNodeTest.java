@@ -5,9 +5,9 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import static reka.api.Path.dots;
-import static reka.api.content.Contents.utf8;
-import static reka.core.runtime.handlers.DSL.actionHandlers;
-import static reka.core.runtime.handlers.DSL.subscribers;
+import static reka.data.content.Contents.utf8;
+import static reka.runtime.handlers.DSL.actionHandlers;
+import static reka.runtime.handlers.DSL.subscribers;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -20,23 +20,23 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import reka.api.IdentityStore;
-import reka.api.data.Data;
-import reka.api.flow.Flow.FlowStats;
-import reka.api.run.AsyncOperation;
-import reka.api.run.Operation;
-import reka.api.run.RouteKey;
-import reka.api.run.Subscriber;
-import reka.core.data.memory.MutableMemoryData;
-import reka.core.runtime.DefaultFlowContext;
-import reka.core.runtime.Node;
-import reka.core.runtime.NodeChild;
-import reka.core.runtime.handlers.ActionHandler;
-import reka.core.runtime.handlers.AsyncOperationAction;
-import reka.core.runtime.handlers.DSL;
-import reka.core.runtime.handlers.DoNothing;
-import reka.core.runtime.handlers.ErrorHandler;
-import reka.core.runtime.handlers.OperationAction;
-import reka.core.runtime.handlers.RuntimeNode;
+import reka.data.Data;
+import reka.data.memory.MutableMemoryData;
+import reka.flow.Flow.FlowStats;
+import reka.flow.ops.AsyncOperation;
+import reka.flow.ops.Operation;
+import reka.flow.ops.RouteKey;
+import reka.flow.ops.Subscriber;
+import reka.runtime.DefaultFlowContext;
+import reka.runtime.Node;
+import reka.runtime.NodeChild;
+import reka.runtime.handlers.ActionHandler;
+import reka.runtime.handlers.AsyncOperationAction;
+import reka.runtime.handlers.DSL;
+import reka.runtime.handlers.DoNothing;
+import reka.runtime.handlers.ErrorHandler;
+import reka.runtime.handlers.OperationAction;
+import reka.runtime.handlers.RuntimeNode;
 
 
 public class ModularNodeTest {

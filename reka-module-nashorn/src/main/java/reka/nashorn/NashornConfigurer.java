@@ -20,18 +20,18 @@ import org.slf4j.LoggerFactory;
 
 import reka.api.IdentityKey;
 import reka.api.Path;
-import reka.api.data.Data;
-import reka.api.data.MutableData;
-import reka.builtins.BuiltinsConfigurer.PutDataOperation;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
-import reka.core.data.memory.MutableMemoryData;
-import reka.core.setup.ModuleConfigurer;
-import reka.core.setup.AppSetup;
-import reka.core.setup.ModuleSetupContext;
-import reka.core.setup.OperationConfigurer;
-import reka.core.setup.OperationSetup;
+import reka.data.Data;
+import reka.data.MutableData;
+import reka.data.memory.MutableMemoryData;
+import reka.module.setup.AppSetup;
+import reka.module.setup.ModuleConfigurer;
+import reka.module.setup.ModuleSetupContext;
+import reka.module.setup.OperationConfigurer;
+import reka.module.setup.OperationSetup;
+import reka.modules.builtins.BuiltinsConfigurer.PutDataOperation;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;

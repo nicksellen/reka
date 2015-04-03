@@ -13,8 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import reka.api.Path;
-import reka.core.module.Module;
-import reka.core.module.ModuleDefinition;
+import reka.module.Module;
+import reka.module.ModuleDefinition;
 import reka.nashorn.NashornRunner;
 import reka.nashorn.SingleThreadedNashornRunner;
 

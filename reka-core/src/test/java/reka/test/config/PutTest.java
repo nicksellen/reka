@@ -16,23 +16,23 @@ import org.junit.Test;
 import reka.api.IdentityStore;
 import reka.api.Path;
 import reka.api.Path.PathElement;
-import reka.api.data.Data;
-import reka.api.data.MutableData;
-import reka.api.flow.FlowNode;
-import reka.api.flow.FlowOperation;
-import reka.api.flow.FlowSegment;
-import reka.api.run.Operation;
-import reka.api.run.OperationContext;
-import reka.api.run.RouterOperation;
-import reka.builtins.BuiltinsConfigurer;
 import reka.config.Config;
 import reka.config.NavigableConfig;
 import reka.config.configurer.Configurer.InvalidConfigurationException;
-import reka.core.data.memory.MutableMemoryData;
-import reka.core.runtime.DefaultRouteCollector;
-import reka.core.setup.ModuleSetupContext;
-import reka.core.setup.OperationConfigurer;
-import reka.core.setup.OperationSetup;
+import reka.data.Data;
+import reka.data.MutableData;
+import reka.data.memory.MutableMemoryData;
+import reka.flow.FlowNode;
+import reka.flow.FlowOperation;
+import reka.flow.FlowSegment;
+import reka.flow.ops.Operation;
+import reka.flow.ops.OperationContext;
+import reka.flow.ops.RouterOperation;
+import reka.module.setup.ModuleSetupContext;
+import reka.module.setup.OperationConfigurer;
+import reka.module.setup.OperationSetup;
+import reka.modules.builtins.BuiltinsConfigurer;
+import reka.runtime.DefaultRouteCollector;
 
 public class PutTest {
 	

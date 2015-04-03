@@ -5,7 +5,7 @@ import static reka.api.Path.path;
 import java.util.function.Consumer;
 
 import reka.api.Path;
-import reka.core.setup.StatusDataProvider;
+import reka.module.setup.StatusDataProvider;
 
 public interface ProcessManager extends StatusDataProvider {
 	

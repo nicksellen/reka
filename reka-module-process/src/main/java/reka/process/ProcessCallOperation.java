@@ -2,10 +2,10 @@ package reka.process;
 
 import java.util.function.Function;
 
-import reka.api.data.Data;
-import reka.api.data.MutableData;
-import reka.api.run.AsyncOperation;
-import reka.api.run.OperationContext;
+import reka.data.Data;
+import reka.data.MutableData;
+import reka.flow.ops.AsyncOperation;
+import reka.flow.ops.OperationContext;
 
 public class ProcessCallOperation implements AsyncOperation {
 

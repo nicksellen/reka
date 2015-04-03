@@ -11,9 +11,9 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
-import reka.api.data.MutableData;
-import reka.api.run.AsyncOperation;
-import reka.api.run.OperationContext;
+import reka.data.MutableData;
+import reka.flow.ops.AsyncOperation;
+import reka.flow.ops.OperationContext;
 import reka.net.NetModule;
 
 public class NetProxyOperation implements AsyncOperation {

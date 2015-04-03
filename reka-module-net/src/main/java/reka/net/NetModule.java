@@ -8,8 +8,8 @@ import javax.inject.Singleton;
 
 import reka.api.IdentityKey;
 import reka.api.Path;
-import reka.core.module.Module;
-import reka.core.module.ModuleDefinition;
+import reka.module.Module;
+import reka.module.ModuleDefinition;
 import reka.net.http.HttpConfigurer;
 import reka.net.http.HttpSessionsConfigurer;
 import reka.net.socket.SocketConfigurer;

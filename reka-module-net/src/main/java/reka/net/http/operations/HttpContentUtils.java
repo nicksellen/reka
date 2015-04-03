@@ -1,7 +1,7 @@
 package reka.net.http.operations;
 
-import static reka.api.content.Contents.binary;
-import static reka.api.content.Contents.utf8;
+import static reka.data.content.Contents.binary;
+import static reka.data.content.Contents.utf8;
 import static reka.util.Util.sha1hex;
 import static reka.util.Util.unchecked;
 
@@ -12,8 +12,8 @@ import java.nio.file.Path;
 
 import javax.activation.MimetypesFileTypeMap;
 
-import reka.api.content.Content;
-import reka.api.run.Operation;
+import reka.data.content.Content;
+import reka.flow.ops.Operation;
 
 public abstract class HttpContentUtils {
 	

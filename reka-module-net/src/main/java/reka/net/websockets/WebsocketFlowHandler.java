@@ -12,9 +12,9 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.api.data.Data;
-import reka.api.flow.Flow;
-import reka.core.data.memory.MutableMemoryData;
+import reka.data.Data;
+import reka.data.memory.MutableMemoryData;
+import reka.flow.Flow;
 import reka.net.ChannelAttrs;
 import reka.net.NetManager.SocketFlows;
 

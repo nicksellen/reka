@@ -3,10 +3,10 @@ package reka.crypto.bcrypt;
 import org.mindrot.jbcrypt.BCrypt;
 
 import reka.api.Path;
-import reka.api.data.MutableData;
-import reka.api.run.RouteCollector;
-import reka.api.run.RouteKey;
-import reka.api.run.RouterOperation;
+import reka.data.MutableData;
+import reka.flow.ops.RouteCollector;
+import reka.flow.ops.RouteKey;
+import reka.flow.ops.RouterOperation;
 
 public class BCryptCheckpwOperation implements RouterOperation {
 

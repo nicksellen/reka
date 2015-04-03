@@ -13,14 +13,15 @@ import java.util.function.Supplier;
 
 import org.codehaus.jackson.map.ObjectMapper;
 
-import reka.FlowTest.FlowTestCase;
-import reka.api.data.Data;
-import reka.api.flow.FlowSegment;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
-import reka.core.data.memory.MutableMemoryData;
+import reka.data.Data;
+import reka.data.memory.MutableMemoryData;
+import reka.flow.FlowSegment;
+import reka.flow.FlowTest;
+import reka.flow.FlowTest.FlowTestCase;
 
 public class TestConfigurer {
 	

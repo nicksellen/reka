@@ -9,11 +9,11 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.api.data.Data;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
-import reka.core.setup.OperationConfigurer;
-import reka.core.setup.OperationSetup;
+import reka.data.Data;
+import reka.module.setup.OperationConfigurer;
+import reka.module.setup.OperationSetup;
 
 public class JdbcInsertConfigurer implements OperationConfigurer {
 	

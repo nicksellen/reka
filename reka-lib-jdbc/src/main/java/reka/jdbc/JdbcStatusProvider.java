@@ -2,8 +2,8 @@ package reka.jdbc;
 
 import java.sql.Connection;
 
-import reka.api.data.MutableData;
-import reka.core.setup.StatusDataProvider;
+import reka.data.MutableData;
+import reka.module.setup.StatusDataProvider;
 
 public class JdbcStatusProvider implements StatusDataProvider {
 

@@ -1,7 +1,7 @@
 package reka.net.http.streaming;
 
-import reka.core.setup.OperationConfigurer;
-import reka.core.setup.OperationSetup;
+import reka.module.setup.OperationConfigurer;
+import reka.module.setup.OperationSetup;
 
 public class HttpEndConfigurer implements OperationConfigurer {
 

@@ -1,17 +1,17 @@
 package reka.net.http.configurers;
 
-import static reka.api.content.Contents.binary;
-import static reka.api.content.Contents.utf8;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
-import reka.api.content.Content;
-import reka.api.content.types.BinaryContent;
-import reka.api.data.Data;
+import static reka.data.content.Contents.binary;
+import static reka.data.content.Contents.utf8;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
-import reka.core.setup.OperationConfigurer;
-import reka.core.setup.OperationSetup;
-import reka.dirs.AppDirs;
+import reka.data.Data;
+import reka.data.content.Content;
+import reka.data.content.types.BinaryContent;
+import reka.module.setup.OperationConfigurer;
+import reka.module.setup.OperationSetup;
 import reka.net.http.operations.HttpContentUtils;
+import reka.util.dirs.AppDirs;
 
 public class HttpContentConfigurer implements OperationConfigurer {
 	

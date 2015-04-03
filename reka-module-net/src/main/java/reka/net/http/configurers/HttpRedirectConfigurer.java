@@ -2,12 +2,12 @@ package reka.net.http.configurers;
 
 import java.util.function.Function;
 
-import reka.api.data.Data;
 import reka.config.configurer.annotations.Conf;
-import reka.core.setup.OperationConfigurer;
-import reka.core.setup.OperationSetup;
-import reka.core.util.StringWithVars;
+import reka.data.Data;
+import reka.module.setup.OperationConfigurer;
+import reka.module.setup.OperationSetup;
 import reka.net.http.operations.HttpRedirectOperation;
+import reka.util.StringWithVars;
 
 public class HttpRedirectConfigurer implements OperationConfigurer {
 

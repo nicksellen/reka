@@ -31,15 +31,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import reka.api.IdentityKey;
-import reka.api.content.Content;
-import reka.api.data.Data;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
-import reka.core.setup.ModuleConfigurer;
-import reka.core.setup.AppSetup;
-import reka.core.setup.ModuleSetupContext;
-import reka.core.util.StringWithVars;
-import reka.core.util.StringWithVars.Variable;
+import reka.data.Data;
+import reka.data.content.Content;
+import reka.module.setup.AppSetup;
+import reka.module.setup.ModuleConfigurer;
+import reka.module.setup.ModuleSetupContext;
+import reka.util.StringWithVars;
+import reka.util.StringWithVars.Variable;
 
 public abstract class JdbcBaseModule extends ModuleConfigurer {
 	

@@ -9,10 +9,10 @@ import java.util.Map;
 import javax.script.CompiledScript;
 
 import reka.api.Path;
-import reka.api.data.MutableData;
-import reka.api.run.Operation;
-import reka.api.run.OperationContext;
-import reka.core.data.memory.MutableMemoryData;
+import reka.data.MutableData;
+import reka.data.memory.MutableMemoryData;
+import reka.flow.ops.Operation;
+import reka.flow.ops.OperationContext;
 
 public class NashornRunOperation implements Operation {
 

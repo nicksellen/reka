@@ -5,11 +5,11 @@ import static reka.api.Path.dots;
 import java.util.function.Function;
 
 import reka.api.Path;
-import reka.api.data.Data;
 import reka.config.configurer.annotations.Conf;
-import reka.core.setup.OperationConfigurer;
-import reka.core.setup.OperationSetup;
-import reka.core.util.StringWithVars;
+import reka.data.Data;
+import reka.module.setup.OperationConfigurer;
+import reka.module.setup.OperationSetup;
+import reka.util.StringWithVars;
 
 public class MarkdownConfigurer implements OperationConfigurer {
 

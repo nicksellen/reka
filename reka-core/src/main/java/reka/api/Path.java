@@ -369,7 +369,6 @@ public class Path implements Iterable<Path.PathElement>, Comparable<Path>, Hasha
 		public static final Path PATH_BASE	= REQUEST.add("path-base");
 		public static final Path PARAMS 	= REQUEST.add("params");
 		public static final Path DATA 		= REQUEST.add("data");
-		public static final Path UPLOADS 	= REQUEST.add("uploads");
 		public static final Path CONTENT 	= REQUEST.add("content");
 		public static final Path HEADERS 	= REQUEST.add("headers");
 		public static final Path COOKIES 	= REQUEST.add("cookies");
@@ -544,12 +543,6 @@ public class Path implements Iterable<Path.PathElement>, Comparable<Path>, Hasha
 	private Path() {
 		this(new PathElement[]{});
 	}
-	
-	/*
-	private Path(PathElement... elements) {
-		this(elements);
-	}
-	*/
 	
 	public String wrapAndJoin(String wrap, String seperator) {
 		StringBuilder sb = new StringBuilder();

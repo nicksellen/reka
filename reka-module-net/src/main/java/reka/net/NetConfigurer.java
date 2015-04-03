@@ -1,8 +1,8 @@
 package reka.net;
 
 import static reka.api.Path.path;
-import reka.core.setup.ModuleConfigurer;
-import reka.core.setup.AppSetup;
+import reka.module.setup.AppSetup;
+import reka.module.setup.ModuleConfigurer;
 import reka.net.http.configurers.NetProxyConfigurer;
 
 public class NetConfigurer extends ModuleConfigurer {

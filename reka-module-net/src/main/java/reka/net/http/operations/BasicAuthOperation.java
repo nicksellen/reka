@@ -9,10 +9,10 @@ import java.util.Base64.Decoder;
 
 import reka.api.Path.Request;
 import reka.api.Path.Response;
-import reka.api.data.MutableData;
-import reka.api.run.RouteCollector;
-import reka.api.run.RouteKey;
-import reka.api.run.RouterOperation;
+import reka.data.MutableData;
+import reka.flow.ops.RouteCollector;
+import reka.flow.ops.RouteKey;
+import reka.flow.ops.RouterOperation;
 
 public class BasicAuthOperation implements RouterOperation {
 	

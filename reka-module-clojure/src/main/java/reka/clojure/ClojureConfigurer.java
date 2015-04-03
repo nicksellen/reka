@@ -16,16 +16,16 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.Identity;
 import reka.api.IdentityKey;
-import reka.api.data.MutableData;
+import reka.clojure.env.ClojureEnv;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
-import reka.core.data.memory.MutableMemoryData;
-import reka.core.setup.ModuleConfigurer;
-import reka.core.setup.AppSetup;
-import reka.core.setup.ModuleSetupContext;
+import reka.data.MutableData;
+import reka.data.memory.MutableMemoryData;
+import reka.module.setup.AppSetup;
+import reka.module.setup.ModuleConfigurer;
+import reka.module.setup.ModuleSetupContext;
 
 import com.google.common.io.Resources;
 

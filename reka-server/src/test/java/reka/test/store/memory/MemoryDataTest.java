@@ -8,8 +8,8 @@ import static reka.api.Path.path;
 import static reka.api.Path.root;
 import static reka.api.Path.PathElements.index;
 import static reka.api.Path.PathElements.name;
-import static reka.api.content.Contents.integer;
-import static reka.api.content.Contents.utf8;
+import static reka.data.content.Contents.integer;
+import static reka.data.content.Contents.utf8;
 
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -21,11 +21,11 @@ import org.slf4j.LoggerFactory;
 
 import reka.api.Path;
 import reka.api.Path.PathElement;
-import reka.api.content.Content;
-import reka.api.content.Contents;
-import reka.api.data.Data;
-import reka.api.data.MutableData;
-import reka.core.data.memory.MutableMemoryData;
+import reka.data.Data;
+import reka.data.MutableData;
+import reka.data.content.Content;
+import reka.data.content.Contents;
+import reka.data.memory.MutableMemoryData;
 
 public class MemoryDataTest {
 	

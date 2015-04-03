@@ -1,8 +1,8 @@
 package reka.mustache;
 
 import static reka.api.Path.root;
-import reka.core.setup.ModuleConfigurer;
-import reka.core.setup.AppSetup;
+import reka.module.setup.AppSetup;
+import reka.module.setup.ModuleConfigurer;
 
 public class MustacheConfigurer extends ModuleConfigurer {
 

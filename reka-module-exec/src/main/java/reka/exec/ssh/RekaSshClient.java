@@ -43,7 +43,6 @@ import org.slf4j.LoggerFactory;
 
 import reka.Reka;
 import reka.exec.ExecConfigurer.ExecScripts;
-import reka.exec.SshConfig;
 
 public class RekaSshClient {
 	

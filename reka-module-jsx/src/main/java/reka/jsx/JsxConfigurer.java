@@ -1,7 +1,7 @@
 package reka.jsx;
 import static reka.api.Path.root;
-import static reka.api.content.Contents.utf8;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
+import static reka.data.content.Contents.utf8;
 import static reka.util.Util.hex;
 import static reka.util.Util.runtime;
 import static reka.util.Util.unchecked;
@@ -20,18 +20,18 @@ import org.slf4j.LoggerFactory;
 import reka.api.IdentityKey;
 import reka.api.Path;
 import reka.api.Path.Response;
-import reka.api.content.Content;
-import reka.api.data.Data;
-import reka.api.data.MutableData;
-import reka.api.run.Operation;
-import reka.api.run.OperationContext;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
-import reka.core.setup.ModuleConfigurer;
-import reka.core.setup.AppSetup;
-import reka.core.setup.ModuleSetupContext;
-import reka.core.setup.OperationConfigurer;
-import reka.core.setup.OperationSetup;
+import reka.data.Data;
+import reka.data.MutableData;
+import reka.data.content.Content;
+import reka.flow.ops.Operation;
+import reka.flow.ops.OperationContext;
+import reka.module.setup.AppSetup;
+import reka.module.setup.ModuleConfigurer;
+import reka.module.setup.ModuleSetupContext;
+import reka.module.setup.OperationConfigurer;
+import reka.module.setup.OperationSetup;
 
 
 public class JsxConfigurer extends ModuleConfigurer {

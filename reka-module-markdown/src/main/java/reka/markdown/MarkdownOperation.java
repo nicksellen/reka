@@ -1,14 +1,14 @@
 package reka.markdown;
 
-import static reka.api.content.Contents.utf8;
+import static reka.data.content.Contents.utf8;
 
 import java.util.function.Function;
 
 import reka.api.Path;
-import reka.api.data.Data;
-import reka.api.data.MutableData;
-import reka.api.run.Operation;
-import reka.api.run.OperationContext;
+import reka.data.Data;
+import reka.data.MutableData;
+import reka.flow.ops.Operation;
+import reka.flow.ops.OperationContext;
 
 public class MarkdownOperation implements Operation {
 

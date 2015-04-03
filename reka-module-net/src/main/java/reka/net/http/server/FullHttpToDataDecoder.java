@@ -2,8 +2,8 @@ package reka.net.http.server;
 
 import static reka.api.Path.dots;
 import static reka.api.Path.path;
-import static reka.api.content.Contents.binary;
-import static reka.api.content.Contents.utf8;
+import static reka.data.content.Contents.binary;
+import static reka.data.content.Contents.utf8;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
@@ -35,9 +35,9 @@ import reka.api.Path;
 import reka.api.Path.PathElements;
 import reka.api.Path.Request;
 import reka.api.Path.Response;
-import reka.api.content.types.BooleanContent;
-import reka.api.data.MutableData;
-import reka.core.data.memory.MutableMemoryData;
+import reka.data.MutableData;
+import reka.data.content.types.BooleanContent;
+import reka.data.memory.MutableMemoryData;
 
 import com.google.common.base.Splitter;
 

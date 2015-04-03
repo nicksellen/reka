@@ -10,8 +10,8 @@ import javax.activation.MailcapCommandMap;
 import javax.mail.Multipart;
 
 import reka.api.Path;
-import reka.core.module.Module;
-import reka.core.module.ModuleDefinition;
+import reka.module.Module;
+import reka.module.ModuleDefinition;
 import reka.smtp.SmtpServerConfigurer.RekaSmtpServer;
 
 public class SmtpModule implements Module {

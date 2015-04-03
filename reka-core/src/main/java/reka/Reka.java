@@ -19,16 +19,17 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.admin.AdminModule;
 import reka.api.Path;
+import reka.app.manager.ApplicationManager;
+import reka.app.manager.ApplicationManager.DeploySubscriber;
 import reka.config.ConfigBody;
 import reka.config.FileSource;
-import reka.core.app.manager.ApplicationManager;
-import reka.core.app.manager.ApplicationManager.DeploySubscriber;
-import reka.core.module.ModuleManager;
-import reka.dirs.AppDirs;
-import reka.dirs.BaseDirs;
+import reka.module.ModuleManager;
+import reka.module.ModuleMeta;
+import reka.modules.admin.AdminModule;
 import reka.util.AsyncShutdown;
+import reka.util.dirs.AppDirs;
+import reka.util.dirs.BaseDirs;
 
 public class Reka {
 	

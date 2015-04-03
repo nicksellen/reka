@@ -13,24 +13,24 @@ import org.kohsuke.args4j.CmdLineException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.BouncyCastleLoader;
-import reka.JsonModule;
-import reka.ModuleMeta;
 import reka.Reka;
 import reka.RekaConfigurer;
-import reka.builtins.BuiltinsModule;
 import reka.config.NavigableConfig;
 import reka.config.parser.ConfigParser;
-import reka.core.module.Module;
-import reka.core.module.ModuleManager;
-import reka.core.module.RekaGuiceModule;
 import reka.exec.ExecModule;
-import reka.filesystem.FilesystemModule;
 import reka.h2.H2Module;
 import reka.irc.IrcModule;
 import reka.jade.JadeModule;
 import reka.jsx.JsxModule;
 import reka.less.LessModule;
+import reka.lib.bouncycastle.BouncyCastleLoader;
+import reka.module.Module;
+import reka.module.ModuleManager;
+import reka.module.ModuleMeta;
+import reka.module.RekaGuiceModule;
+import reka.modules.builtins.BuiltinsModule;
+import reka.modules.filesystem.FilesystemModule;
+import reka.modules.json.JsonModule;
 import reka.mustache.MustacheModule;
 import reka.nashorn.NashornModule;
 import reka.net.NetModule;
@@ -87,8 +87,9 @@ public class DevServer {
 		
 		List<ModuleMeta> defaultModules = moduleClasses.stream().map(c -> new ModuleMeta(DevServer.class.getClassLoader(), "snapshot", injector.getInstance(c))).collect(toList());
 		
+		ClassLoader classLoader = BouncyCastleLoader.createClassLoader(Reka.class.getClassLoader());
 		NavigableConfig conf = new ModuleManager(defaultModules).processor().process(ConfigParser.fromFile(file));
-		configure(new RekaConfigurer(file.getParentFile().toPath(), defaultModules, BouncyCastleLoader.classLoader(Reka.class.getClassLoader())), conf).build().run();
+		configure(new RekaConfigurer(file.getParentFile().toPath(), defaultModules, classLoader), conf).build().run();
 		
 	}
 

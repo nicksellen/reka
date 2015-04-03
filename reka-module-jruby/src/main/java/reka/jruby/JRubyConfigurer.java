@@ -5,8 +5,8 @@ import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import reka.api.IdentityKey;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
-import reka.core.setup.ModuleConfigurer;
-import reka.core.setup.AppSetup;
+import reka.module.setup.AppSetup;
+import reka.module.setup.ModuleConfigurer;
 
 public class JRubyConfigurer extends ModuleConfigurer {
 	

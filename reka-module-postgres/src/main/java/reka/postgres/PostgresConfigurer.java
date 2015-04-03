@@ -14,15 +14,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import reka.api.IdentityKey;
-import reka.api.flow.Flow;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
-import reka.core.builder.TriggerHelper;
-import reka.core.setup.AppSetup;
-import reka.core.setup.ModuleSetupContext;
+import reka.flow.Flow;
+import reka.flow.builder.TriggerHelper;
 import reka.jdbc.DBCP2ConnectionProvider;
 import reka.jdbc.JdbcBaseModule;
 import reka.jdbc.JdbcConnectionProvider;
+import reka.module.setup.AppSetup;
+import reka.module.setup.ModuleSetupContext;
 
 import com.impossibl.postgres.api.jdbc.PGConnection;
 import com.impossibl.postgres.jdbc.PGDataSource;

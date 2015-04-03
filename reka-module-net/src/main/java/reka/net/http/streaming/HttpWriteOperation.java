@@ -2,9 +2,9 @@ package reka.net.http.streaming;
 
 import java.nio.charset.StandardCharsets;
 
-import reka.api.data.MutableData;
-import reka.api.run.Operation;
-import reka.api.run.OperationContext;
+import reka.data.MutableData;
+import reka.flow.ops.Operation;
+import reka.flow.ops.OperationContext;
 import reka.net.NetModule;
 
 public class HttpWriteOperation implements Operation {

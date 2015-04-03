@@ -7,8 +7,8 @@ import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
 
-import reka.api.data.MutableData;
-import reka.core.data.memory.MutableMemoryData;
+import reka.data.MutableData;
+import reka.data.memory.MutableMemoryData;
 
 public class DataViewTest {
 	

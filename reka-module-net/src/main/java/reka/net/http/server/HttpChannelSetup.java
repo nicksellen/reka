@@ -16,10 +16,10 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import reka.Identity;
 import reka.net.ChannelAttrs;
 import reka.net.NetManager.HttpFlows;
 import reka.net.NetSettings.Type;
+import reka.util.Identity;
 
 import com.google.common.base.Splitter;
 

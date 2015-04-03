@@ -2,8 +2,8 @@ package reka.net.http;
 
 import static reka.api.Path.path;
 import reka.api.IdentityKey;
-import reka.core.setup.ModuleConfigurer;
-import reka.core.setup.AppSetup;
+import reka.module.setup.AppSetup;
+import reka.module.setup.ModuleConfigurer;
 
 public class HttpSessionsConfigurer extends ModuleConfigurer {
 	

@@ -10,19 +10,19 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Supplier;
 
-import reka.api.flow.FlowSegment;
-import reka.api.run.RouteKey;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
-import reka.core.builder.OperationFlowNode;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
-import reka.core.setup.OperationConfigurer;
-import reka.core.setup.OperationSetup;
-import reka.dirs.AppDirs;
+import reka.flow.FlowSegment;
+import reka.flow.builder.OperationFlowNode;
+import reka.flow.ops.RouteKey;
+import reka.module.setup.OperationConfigurer;
+import reka.module.setup.OperationSetup;
 import reka.net.http.configurers.HttpRouterConfigurer.RouteBuilder;
 import reka.net.http.operations.HttpRouter;
 import reka.net.http.operations.HttpRouter.Route;
+import reka.util.dirs.AppDirs;
 
 public class HttpRouteGroupConfigurer {
 

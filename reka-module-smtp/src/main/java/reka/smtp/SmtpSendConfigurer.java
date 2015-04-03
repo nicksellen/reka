@@ -1,9 +1,9 @@
 package reka.smtp;
 
 import reka.config.configurer.annotations.Conf;
-import reka.core.setup.OperationConfigurer;
-import reka.core.setup.OperationSetup;
-import reka.core.util.StringWithVars;
+import reka.module.setup.OperationConfigurer;
+import reka.module.setup.OperationSetup;
+import reka.util.StringWithVars;
 
 public class SmtpSendConfigurer implements OperationConfigurer {
 

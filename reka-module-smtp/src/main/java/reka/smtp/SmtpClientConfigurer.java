@@ -2,8 +2,8 @@ package reka.smtp;
 
 import static reka.api.Path.path;
 import reka.config.configurer.annotations.Conf;
-import reka.core.setup.ModuleConfigurer;
-import reka.core.setup.AppSetup;
+import reka.module.setup.AppSetup;
+import reka.module.setup.ModuleConfigurer;
 
 public class SmtpClientConfigurer extends ModuleConfigurer {
 	

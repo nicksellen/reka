@@ -1,7 +1,7 @@
 package reka.net.http.server;
 
-import static reka.api.content.Contents.integer;
-import static reka.api.content.Contents.utf8;
+import static reka.data.content.Contents.integer;
+import static reka.data.content.Contents.utf8;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
@@ -17,8 +17,8 @@ import org.slf4j.LoggerFactory;
 
 import reka.api.Path;
 import reka.api.Path.Response;
-import reka.api.data.MutableData;
-import reka.core.data.memory.MutableMemoryData;
+import reka.data.MutableData;
+import reka.data.memory.MutableMemoryData;
 
 @Sharable
 public class HttpResponseToDatasetDecoder extends MessageToMessageDecoder<FullHttpResponse> {

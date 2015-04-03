@@ -9,11 +9,11 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.function.Supplier;
 
-import reka.api.flow.FlowSegment;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
-import reka.core.setup.OperationConfigurer;
-import reka.core.setup.OperationSetup;
+import reka.flow.FlowSegment;
+import reka.module.setup.OperationConfigurer;
+import reka.module.setup.OperationSetup;
 
 public class SequenceConfigurer implements OperationConfigurer {
 	

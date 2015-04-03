@@ -5,7 +5,7 @@ import java.sql.SQLException;
 
 import javax.sql.DataSource;
 
-import reka.api.data.MutableData;
+import reka.data.MutableData;
 
 public interface JdbcConnectionProvider extends AutoCloseable {
 	Connection getConnection() throws SQLException;

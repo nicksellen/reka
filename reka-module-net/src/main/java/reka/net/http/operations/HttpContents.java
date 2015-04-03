@@ -2,9 +2,9 @@ package reka.net.http.operations;
 
 import static java.lang.String.format;
 import static reka.api.Path.path;
-import static reka.api.content.Contents.binary;
-import static reka.api.content.Contents.integer;
-import static reka.api.content.Contents.utf8;
+import static reka.data.content.Contents.binary;
+import static reka.data.content.Contents.integer;
+import static reka.data.content.Contents.utf8;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -15,14 +15,14 @@ import java.util.Map.Entry;
 import reka.api.Path;
 import reka.api.Path.Request;
 import reka.api.Path.Response;
-import reka.api.content.Content;
-import reka.api.data.MutableData;
-import reka.api.flow.FlowOperation;
-import reka.api.run.AsyncOperation;
-import reka.api.run.OperationContext;
-import reka.api.run.RouteCollector;
-import reka.api.run.RouteKey;
-import reka.api.run.RouterOperation;
+import reka.data.MutableData;
+import reka.data.content.Content;
+import reka.flow.FlowOperation;
+import reka.flow.ops.AsyncOperation;
+import reka.flow.ops.OperationContext;
+import reka.flow.ops.RouteCollector;
+import reka.flow.ops.RouteKey;
+import reka.flow.ops.RouterOperation;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashFunction;

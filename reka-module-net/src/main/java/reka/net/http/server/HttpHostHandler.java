@@ -3,7 +3,7 @@ package reka.net.http.server;
 import static java.util.Collections.synchronizedList;
 import static org.apache.commons.lang3.StringEscapeUtils.escapeHtml4;
 import static reka.api.Path.dots;
-import static reka.api.content.Contents.integer;
+import static reka.data.content.Contents.integer;
 import static reka.util.Util.createEntry;
 import static reka.util.Util.unwrap;
 import io.netty.channel.ChannelFuture;
@@ -31,11 +31,11 @@ import reka.api.ImmutableIdentityStore.Builder;
 import reka.api.Path;
 import reka.api.Path.Request;
 import reka.api.Path.Response;
-import reka.api.data.Data;
-import reka.api.data.MutableData;
-import reka.api.flow.Flow;
-import reka.api.run.Subscriber;
-import reka.core.data.memory.MutableMemoryData;
+import reka.data.Data;
+import reka.data.MutableData;
+import reka.data.memory.MutableMemoryData;
+import reka.flow.Flow;
+import reka.flow.ops.Subscriber;
 import reka.net.NetModule;
 
 @ChannelHandler.Sharable
