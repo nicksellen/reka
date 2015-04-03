@@ -1,4 +1,4 @@
-package reka.all;
+package reka.dev;
 
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;

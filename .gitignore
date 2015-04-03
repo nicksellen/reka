@@ -8,4 +8,4 @@
 docker/**/*.jar
 dist
 env.make
-**/rekadata
+**/reka-data

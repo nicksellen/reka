@@ -41,9 +41,9 @@ public class RekaConfigurer {
 
 	private final Map<reka.api.Path,ConfigBody> apps = new HashMap<>();
 	
-	private String appdir = "rekadata/apps";
-	private String datadir = "rekadata/data";
-	private String tmpdir = "rekadata/tmp";
+	private String appdir = "reka-data/apps";
+	private String datadir = "reka-data/data";
+	private String tmpdir = "reka-data/tmp";
 
 	private final List<ModuleMeta> defaultModules = new ArrayList<>();
 	
