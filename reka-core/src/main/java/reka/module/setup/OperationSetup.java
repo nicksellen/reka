@@ -4,12 +4,12 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import reka.api.Path;
 import reka.data.MutableData;
 import reka.flow.FlowSegment;
 import reka.flow.SimpleFlowOperation;
 import reka.flow.ops.RouteKey;
 import reka.flow.ops.RouterOperation;
+import reka.util.Path;
 
 public interface OperationSetup extends Supplier<FlowSegment> {
 	

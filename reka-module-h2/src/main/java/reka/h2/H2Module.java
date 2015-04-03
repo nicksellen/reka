@@ -1,9 +1,9 @@
 package reka.h2;
 
-import static reka.api.Path.path;
-import reka.api.Path;
+import static reka.util.Path.path;
 import reka.module.Module;
 import reka.module.ModuleDefinition;
+import reka.util.Path;
 
 
 public class H2Module implements Module {

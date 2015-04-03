@@ -1,14 +1,13 @@
 package reka.modules.filesystem;
 
 import static java.util.Arrays.asList;
-import static reka.api.Path.dots;
-import static reka.api.Path.path;
 import static reka.config.configurer.Configurer.configure;
+import static reka.util.Path.dots;
+import static reka.util.Path.path;
 
 import java.nio.file.Path;
 import java.util.function.Function;
 
-import reka.api.Path.Response;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
@@ -20,11 +19,12 @@ import reka.module.ModuleDefinition;
 import reka.module.setup.OperationConfigurer;
 import reka.module.setup.OperationSetup;
 import reka.util.StringWithVars;
+import reka.util.Path.Response;
 
 public class FilesystemModule implements Module {
 
 	@Override
-	public reka.api.Path base() {
+	public reka.util.Path base() {
 		return path("fs");
 	}
 
@@ -39,7 +39,7 @@ public class FilesystemModule implements Module {
 		
 		private boolean download = false;
 		
-		private Function<Data,reka.api.Path> dataPathFn = (unused) -> Response.CONTENT;
+		private Function<Data,reka.util.Path> dataPathFn = (unused) -> Response.CONTENT;
 		private Function<Data,String> filenameFn;
 		
 		public FilesystemReadConfigurer(Path basedir) {
@@ -96,7 +96,7 @@ public class FilesystemModule implements Module {
 
 		private final Path basedir;
 		
-		private Function<Data,reka.api.Path> dataPathFn = (unused) -> Response.CONTENT;
+		private Function<Data,reka.util.Path> dataPathFn = (unused) -> Response.CONTENT;
 		private Function<Data,String> dirFn = (unused) -> ".";
 		
 		public FilesystemListConfigurer(Path basedir) {
@@ -129,7 +129,7 @@ public class FilesystemModule implements Module {
 			this.tmpdir = tmpdir;
 		}
 		
-		private reka.api.Path dirname = path("tmpdir");
+		private reka.util.Path dirname = path("tmpdir");
 		
 		@Conf.Val
 		public void data(String val) {

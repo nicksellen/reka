@@ -4,7 +4,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.util.Arrays.asList;
-import static reka.api.Path.path;
+import static reka.util.Path.path;
 
 import java.util.ArrayList;
 import java.util.Arrays;

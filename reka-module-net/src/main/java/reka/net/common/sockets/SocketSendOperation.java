@@ -6,9 +6,9 @@ import reka.data.Data;
 import reka.data.MutableData;
 import reka.flow.ops.Operation;
 import reka.flow.ops.OperationContext;
+import reka.identity.Identity;
 import reka.net.ChannelAttrs;
 import reka.net.NetManager;
-import reka.util.Identity;
 
 public class SocketSendOperation implements Operation {
 

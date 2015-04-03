@@ -2,10 +2,10 @@ package reka.nashorn;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
-import static reka.api.Path.dots;
-import static reka.api.Path.path;
-import static reka.api.Path.root;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
+import static reka.util.Path.dots;
+import static reka.util.Path.path;
+import static reka.util.Path.root;
 import static reka.util.Util.runtime;
 
 import java.util.ArrayList;
@@ -18,20 +18,20 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.api.IdentityKey;
-import reka.api.Path;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
 import reka.data.Data;
 import reka.data.MutableData;
 import reka.data.memory.MutableMemoryData;
+import reka.identity.IdentityKey;
 import reka.module.setup.AppSetup;
 import reka.module.setup.ModuleConfigurer;
 import reka.module.setup.ModuleSetupContext;
 import reka.module.setup.OperationConfigurer;
 import reka.module.setup.OperationSetup;
 import reka.modules.builtins.BuiltinsConfigurer.PutDataOperation;
+import reka.util.Path;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;

@@ -1,15 +1,15 @@
 package reka.modules.builtins;
 
-import static reka.api.Path.dots;
+import static reka.util.Path.dots;
 
 import java.io.File;
 import java.util.function.Function;
 
-import reka.api.Path;
 import reka.config.configurer.annotations.Conf;
 import reka.data.Data;
 import reka.module.setup.OperationConfigurer;
 import reka.module.setup.OperationSetup;
+import reka.util.Path;
 import reka.util.StringWithVars;
 
 public class UnzipConfigurer implements OperationConfigurer {

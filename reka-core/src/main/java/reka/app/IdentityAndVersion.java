@@ -2,7 +2,7 @@ package reka.app;
 
 import java.util.UUID;
 
-import reka.util.Identity;
+import reka.identity.Identity;
 
 public class IdentityAndVersion {
 	

@@ -13,11 +13,11 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.api.IdentityKey;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.flow.Flow;
 import reka.flow.builder.TriggerHelper;
+import reka.identity.IdentityKey;
 import reka.jdbc.DBCP2ConnectionProvider;
 import reka.jdbc.JdbcBaseModule;
 import reka.jdbc.JdbcConnectionProvider;

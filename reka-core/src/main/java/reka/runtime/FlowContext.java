@@ -4,9 +4,9 @@ import static reka.util.Util.unwrap;
 
 import java.util.concurrent.ExecutorService;
 
-import reka.api.IdentityStoreReader;
 import reka.data.Data;
 import reka.data.MutableData;
+import reka.identity.IdentityStoreReader;
 import reka.runtime.handlers.ActionHandler;
 import reka.runtime.handlers.ErrorHandler;
 import reka.runtime.handlers.HaltedHandler;

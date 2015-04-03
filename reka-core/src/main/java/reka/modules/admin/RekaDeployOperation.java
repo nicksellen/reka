@@ -12,7 +12,6 @@ import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.api.Path;
 import reka.app.Application;
 import reka.app.manager.ApplicationManager;
 import reka.app.manager.ApplicationManager.DeploySubscriber;
@@ -23,7 +22,8 @@ import reka.data.content.Content;
 import reka.data.content.types.BinaryContent;
 import reka.flow.ops.AsyncOperation;
 import reka.flow.ops.OperationContext;
-import reka.util.Identity;
+import reka.identity.Identity;
+import reka.util.Path;
 import reka.util.dirs.AppDirs;
 import reka.util.dirs.BaseDirs;
 

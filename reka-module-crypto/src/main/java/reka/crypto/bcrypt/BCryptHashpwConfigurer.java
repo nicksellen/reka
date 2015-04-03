@@ -1,10 +1,10 @@
 package reka.crypto.bcrypt;
 
-import static reka.api.Path.dots;
-import reka.api.Path;
+import static reka.util.Path.dots;
 import reka.config.configurer.annotations.Conf;
 import reka.module.setup.OperationConfigurer;
 import reka.module.setup.OperationSetup;
+import reka.util.Path;
 
 public class BCryptHashpwConfigurer implements OperationConfigurer {
 

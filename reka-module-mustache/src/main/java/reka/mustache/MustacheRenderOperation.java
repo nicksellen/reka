@@ -5,12 +5,12 @@ import static reka.data.content.Contents.utf8;
 import java.io.StringReader;
 import java.io.StringWriter;
 
-import reka.api.Path;
-import reka.api.Path.Response;
 import reka.data.MutableData;
 import reka.data.content.Content;
 import reka.flow.ops.Operation;
 import reka.flow.ops.OperationContext;
+import reka.util.Path;
+import reka.util.Path.Response;
 
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;

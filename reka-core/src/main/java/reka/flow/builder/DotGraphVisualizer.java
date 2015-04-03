@@ -9,10 +9,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
-import reka.api.Path;
 import reka.data.Data;
 import reka.flow.builder.FlowVisualizer.GraphVisualizer;
 import reka.flow.builder.FlowVisualizer.NodeType;
+import reka.util.Path;
 
 public class DotGraphVisualizer implements GraphVisualizer<String> {
 	

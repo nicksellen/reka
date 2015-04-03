@@ -2,8 +2,8 @@ package reka.module.setup;
 
 import java.util.function.Supplier;
 
-import reka.api.Path;
 import reka.flow.FlowSegment;
+import reka.util.Path;
 
 public interface OperationConfigurer {
 	

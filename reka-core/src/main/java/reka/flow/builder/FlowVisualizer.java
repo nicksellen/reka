@@ -2,8 +2,8 @@ package reka.flow.builder;
 
 import java.util.List;
 
-import reka.api.Path;
 import reka.data.Data;
+import reka.util.Path;
 
 public interface FlowVisualizer {
 	

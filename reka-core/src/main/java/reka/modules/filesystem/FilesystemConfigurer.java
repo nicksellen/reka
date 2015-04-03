@@ -1,6 +1,6 @@
 package reka.modules.filesystem;
 
-import static reka.api.Path.path;
+import static reka.util.Path.path;
 
 import java.nio.file.Path;
 

@@ -1,4 +1,4 @@
-package reka.api;
+package reka.util;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;

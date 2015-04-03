@@ -14,8 +14,8 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import reka.api.Hashable;
 import reka.net.http.operations.HttpRouter.RouteFormatter;
+import reka.util.Hashable;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

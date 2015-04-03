@@ -1,10 +1,10 @@
 package reka.modules.admin;
 
-import static reka.api.Path.path;
-import reka.api.Path;
+import static reka.util.Path.path;
 import reka.app.manager.ApplicationManager;
 import reka.module.Module;
 import reka.module.ModuleDefinition;
+import reka.util.Path;
 
 public class AdminModule implements Module {
 

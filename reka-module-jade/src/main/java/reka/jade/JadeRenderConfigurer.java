@@ -1,7 +1,7 @@
 package reka.jade;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static reka.api.Path.dots;
+import static reka.util.Path.dots;
 import static reka.util.Util.unchecked;
 
 import java.io.IOException;
@@ -9,11 +9,11 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 
-import reka.api.Path;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.module.setup.OperationConfigurer;
 import reka.module.setup.OperationSetup;
+import reka.util.Path;
 import de.neuland.jade4j.JadeConfiguration;
 import de.neuland.jade4j.exceptions.JadeException;
 import de.neuland.jade4j.template.JadeTemplate;

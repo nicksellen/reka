@@ -17,12 +17,12 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.api.Path;
 import reka.flow.FlowConnection;
 import reka.flow.FlowNode;
 import reka.flow.FlowReference;
 import reka.flow.FlowSegment;
 import reka.flow.ops.RouteKey;
+import reka.util.Path;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;

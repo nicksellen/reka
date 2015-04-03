@@ -4,12 +4,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
-import static reka.api.Path.slashes;
 import static reka.config.configurer.Configurer.configure;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import static reka.config.configurer.Configurer.Preconditions.invalidConfig;
 import static reka.flow.builder.FlowSegments.createParallelSegment;
 import static reka.flow.builder.FlowSegments.seq;
+import static reka.util.Path.slashes;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -21,8 +21,6 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 
-import reka.api.IdentityStore;
-import reka.api.Path;
 import reka.app.IdentityAndVersion;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
@@ -30,9 +28,11 @@ import reka.flow.Flow;
 import reka.flow.FlowSegment;
 import reka.flow.builder.FlowVisualizer;
 import reka.flow.builder.SingleFlow;
+import reka.identity.IdentityStore;
 import reka.module.ModuleInfo;
 import reka.runtime.NoFlow;
 import reka.runtime.NoFlowVisualizer;
+import reka.util.Path;
 import reka.util.dirs.AppDirs;
 
 public abstract class ModuleConfigurer {

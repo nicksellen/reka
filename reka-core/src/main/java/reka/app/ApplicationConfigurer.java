@@ -2,11 +2,11 @@ package reka.app;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
-import static reka.api.Path.path;
-import static reka.api.Path.slashes;
 import static reka.config.configurer.Configurer.configure;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import static reka.core.config.ConfigUtils.configToData;
+import static reka.util.Path.path;
+import static reka.util.Path.slashes;
 import static reka.util.Util.allExceptionMessages;
 import static reka.util.Util.runtime;
 import static reka.util.Util.safelyCompletable;
@@ -34,9 +34,6 @@ import org.slf4j.LoggerFactory;
 
 import reka.Reka;
 import reka.TestConfigurer;
-import reka.api.IdentityKey;
-import reka.api.IdentityStore;
-import reka.api.Path;
 import reka.config.Config;
 import reka.config.configurer.Configurer.ErrorCollector;
 import reka.config.configurer.ErrorReporter;
@@ -55,6 +52,11 @@ import reka.flow.builder.FlowBuilderGroup;
 import reka.flow.builder.FlowVisualizer;
 import reka.flow.builder.Flows;
 import reka.flow.ops.Subscriber;
+import reka.identity.ConcurrentIdentityStore;
+import reka.identity.Identity;
+import reka.identity.IdentityKey;
+import reka.identity.IdentityStore;
+import reka.identity.IdentityStoreReader;
 import reka.module.ModuleManager;
 import reka.module.RootModule;
 import reka.module.setup.AppSetup.ApplicationCheck;
@@ -62,12 +64,15 @@ import reka.module.setup.ApplicationSetup;
 import reka.module.setup.ModuleConfigurer;
 import reka.module.setup.Trigger;
 import reka.module.setup.TriggerFlows;
-import reka.util.Identity;
+import reka.util.DaemonThreadFactory;
+import reka.util.Path;
 import reka.util.dirs.AppDirs;
+
+import com.google.common.collect.Sets;
 
 public class ApplicationConfigurer implements ErrorReporter {
 	
-	private static final ExecutorService executor = Executors.newCachedThreadPool(); // just used for app configure/deployments
+	private static final ExecutorService executor = Executors.newCachedThreadPool(new DaemonThreadFactory("appconfigurer")); // just used for app configure/deployments
 	
 	private static final Logger log = LoggerFactory.getLogger(ApplicationConfigurer.class);
     private Path applicationName;
@@ -120,10 +125,6 @@ public class ApplicationConfigurer implements ErrorReporter {
 	public void errors(ErrorCollector errors) {
 		if (applicationName == null) errors.add("name is required");
 	}
-    
-	public Set<Path> modulePaths() {
-		return rootModule.modulePaths();
-	}
 	
     public Path name() {
         return applicationName;
@@ -143,7 +144,7 @@ public class ApplicationConfigurer implements ErrorReporter {
     	return flowsBuilder.buildVisualizers();
     }
     
-    public void checkValid(IdentityAndVersion idv, Map<Path,IdentityStore> stores) {
+    private void checkValid(IdentityAndVersion idv, Map<Path,IdentityStore> stores) {
     	ApplicationSetup setup = ModuleConfigurer.setup(idv, rootModule, stores);
     	DefaultConfigurerProvider configurerProvider = new DefaultConfigurerProvider(setup.providers);
     	setup.triggers.forEach(triggers -> triggers.get().forEach(trigger -> {
@@ -192,13 +193,38 @@ public class ApplicationConfigurer implements ErrorReporter {
     	return trigger.base().add(trigger.key().name());
     }
     
-    public CompletableFuture<Application> build(Identity identity, int applicationVersion, Map<Path,IdentityStore> stores) {
+    public CompletableFuture<Application> build(Identity identity, int version, Map<Path,IdentityStoreReader> previousStores) {
     	return safelyCompletable(future -> {
+
+			Set<Path> modulePaths = rootModule.modulePaths();
+			Set<Path> previousModulePaths = previousStores.keySet();
+			
+			Map<Path,IdentityStore> stores = new HashMap<>();
+			Sets.union(modulePaths, previousModulePaths).forEach(path -> {
+				
+				boolean inPrevious = previousModulePaths.contains(path);
+				boolean inCurrent = modulePaths.contains(path);
+				
+				if (inPrevious && !inCurrent) {
+					// removed, do nothing
+				} else if (!inPrevious && inCurrent) {
+					// added
+					stores.put(path, ConcurrentIdentityStore.create());
+				} else {
+					// changed
+					stores.put(path, ConcurrentIdentityStore.createFrom(previousStores.get(path)));
+				}
+				
+			});
+			
+			stores.values().forEach(store -> store.put(Application.IDENTITY, identity));
+    		
+    		checkValid(IdentityAndVersion.create(identity, version), stores);
     		
     		FlowBuilderGroup initflowBuilders = new FlowBuilderGroup();
     		FlowBuilderGroup flowBuilders = new FlowBuilderGroup();
-    		    		
-	    	ApplicationSetup setup = ModuleConfigurer.setup(IdentityAndVersion.create(identity, applicationVersion), rootModule, stores);
+    		
+	    	ApplicationSetup setup = ModuleConfigurer.setup(IdentityAndVersion.create(identity, version), rootModule, stores);
 	    	
 	    	runChecks(identity, setup);
 	    	runPortCheckers(identity, setup);
@@ -210,7 +236,7 @@ public class ApplicationConfigurer implements ErrorReporter {
 	    	setup.identity(identity);
 	    	setup.name(applicationName);
 	    	setup.meta(meta.immutable());
-	    	setup.version(applicationVersion);
+	    	setup.version(version);
 	    	
 	    	Map<Path,FlowTest> tests = new HashMap<>();
 	    	
@@ -353,7 +379,7 @@ public class ApplicationConfigurer implements ErrorReporter {
 			return future;
 		}
 		
-		log.info("running {} tests", tests.size());
+		log.info("running {} tests", tests.values().stream().mapToInt(test -> test.cases().size()).sum());
 		
 		AtomicInteger remaining = new AtomicInteger(tests.size());
 		
@@ -388,7 +414,7 @@ public class ApplicationConfigurer implements ErrorReporter {
 		return future;
 	}
 	
-	private static class SequentialTestCasesRunner {
+	private static class SequentialTestCasesRunner implements Runnable {
 		
 		private final Path name;
 		private final Flow flow;
@@ -397,7 +423,7 @@ public class ApplicationConfigurer implements ErrorReporter {
 		private final Consumer<List<String>> completion;
 		
 		private static void run(Path name, Flow flow, List<FlowTestCase> cases, Consumer<List<String>> completion) {
-			new SequentialTestCasesRunner(name, flow, cases, completion).runNext();
+			executor.execute(new SequentialTestCasesRunner(name, flow, cases, completion));
 		}
 		
 		private SequentialTestCasesRunner(Path name, Flow flow, List<FlowTestCase> cases, Consumer<List<String>> completion) {
@@ -410,6 +436,11 @@ public class ApplicationConfigurer implements ErrorReporter {
 		private void complete() {
 			completion.accept(testErrors);
 		}
+
+		@Override
+		public void run() {
+			runNext();
+		}
 		
 		private void runNext() {
 			
@@ -420,11 +451,14 @@ public class ApplicationConfigurer implements ErrorReporter {
 			
 			FlowTestCase testCase = cases.next();
 			
+			log.info("running test: {} [{}]", name.last(), testCase.name());
+			
 			flow.prepare().operationExecutor(executor).data(testCase.initial()).run(new Subscriber(){
 				
 				@Override
 				public void ok(MutableData data) {
 					try {
+						AtomicInteger diffCount = new AtomicInteger();
 						data.diffContentFrom(testCase.expect(), (path, type, expected, actual) -> {
 							if (type == DiffContentType.ADDED) return; // don't mind extra data for now...
 							
@@ -442,10 +476,16 @@ public class ApplicationConfigurer implements ErrorReporter {
 								// let this go by...
 								// TODO: how to handle equals of numeric types?
 							} else {
-								testErrors.add(format("%s : %s\ncontent at %s %s - expected [%s] got [%s]", name.join(" / "), testCase.name(), path.dots(), type, expected, actual));
+								testErrors.add(format("%s : %s\nvalue at %s %s - expected [%s] got [%s]", name.join(" / "), testCase.name(), path.dots(), type, expected, actual));
+								diffCount.incrementAndGet();
 							}
 							
 						});
+						
+						if (diffCount.get() > 0) {
+							testErrors.add(format("%s : %s\ndata - expected [%s] got [%s]", name.join(" / "), testCase.name(), testCase.expect().toPrettyJson(), data.toPrettyJson()));
+						}
+						
 					} catch (Throwable t) {
 						t.printStackTrace();
 						testErrors.add(format("%s : %s\nexception during test - %s", name.join(" / "), testCase.name(), allExceptionMessages(t, ", ")));

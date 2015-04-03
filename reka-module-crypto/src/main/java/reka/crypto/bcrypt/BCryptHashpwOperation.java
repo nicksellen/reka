@@ -2,10 +2,10 @@ package reka.crypto.bcrypt;
 
 import org.mindrot.jbcrypt.BCrypt;
 
-import reka.api.Path;
 import reka.data.MutableData;
 import reka.flow.ops.Operation;
 import reka.flow.ops.OperationContext;
+import reka.util.Path;
 
 public class BCryptHashpwOperation implements Operation {
 

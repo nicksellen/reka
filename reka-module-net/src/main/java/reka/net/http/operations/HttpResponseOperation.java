@@ -9,11 +9,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import reka.api.Path.Response;
 import reka.data.MutableData;
 import reka.data.content.Content;
 import reka.flow.ops.Operation;
 import reka.flow.ops.OperationContext;
+import reka.util.Path.Response;
 
 import com.google.common.collect.ImmutableMap;
 

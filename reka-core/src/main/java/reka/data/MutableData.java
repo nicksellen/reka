@@ -1,6 +1,6 @@
 package reka.data;
 
-import reka.api.Path;
+import reka.util.Path;
 
 public interface MutableData extends Data, DataMutation<MutableData> {
 	

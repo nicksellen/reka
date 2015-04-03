@@ -1,7 +1,7 @@
 package reka.jsx;
 
 import static java.util.Arrays.asList;
-import static reka.api.Path.path;
+import static reka.util.Path.path;
 import static reka.util.Util.unchecked;
 
 import java.io.IOException;
@@ -12,11 +12,11 @@ import javax.script.CompiledScript;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.api.Path;
 import reka.module.Module;
 import reka.module.ModuleDefinition;
 import reka.nashorn.NashornRunner;
 import reka.nashorn.SingleThreadedNashornRunner;
+import reka.util.Path;
 
 import com.google.common.io.Resources;
 

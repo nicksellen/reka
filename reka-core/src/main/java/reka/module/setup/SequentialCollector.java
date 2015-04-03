@@ -2,9 +2,9 @@ package reka.module.setup;
 
 import java.util.Collection;
 
-import reka.api.Path;
 import reka.flow.FlowSegment;
 import reka.flow.builder.FlowSegments;
+import reka.util.Path;
 
 class SequentialCollector extends AbstractOperationCollector {
 

@@ -1,17 +1,17 @@
 package reka.flow.builder;
 
-import static reka.api.Path.path;
-import static reka.api.Path.PathElements.name;
-import static reka.api.Path.PathElements.nextIndex;
+import static reka.util.Path.path;
+import static reka.util.Path.PathElements.name;
+import static reka.util.Path.PathElements.nextIndex;
 
 import java.util.List;
 
-import reka.api.Path;
 import reka.data.Data;
 import reka.data.MutableData;
 import reka.data.memory.MutableMemoryData;
 import reka.flow.builder.FlowVisualizer.GraphVisualizer;
 import reka.flow.builder.FlowVisualizer.NodeType;
+import reka.util.Path;
 
 public class JsonGraphVisualizer implements GraphVisualizer<String> {
 	

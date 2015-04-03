@@ -1,7 +1,7 @@
 package reka.modules.admin;
 
-import static reka.api.Path.path;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
+import static reka.util.Path.path;
 import static reka.util.Util.runtime;
 
 import java.nio.charset.StandardCharsets;
@@ -12,7 +12,6 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.api.Path;
 import reka.app.manager.ApplicationManager;
 import reka.app.manager.ApplicationManager.EventType;
 import reka.config.Config;
@@ -29,6 +28,7 @@ import reka.data.Data;
 import reka.data.content.Content;
 import reka.module.setup.AppSetup;
 import reka.module.setup.ModuleConfigurer;
+import reka.util.Path;
 
 public class AdminConfigurer extends ModuleConfigurer {
 	

@@ -3,9 +3,9 @@ package reka.module.setup;
 import java.util.Map;
 import java.util.Optional;
 
-import reka.api.IdentityKey;
 import reka.flow.Flow;
-import reka.util.Identity;
+import reka.identity.Identity;
+import reka.identity.IdentityKey;
 
 public class TriggerFlows {
 

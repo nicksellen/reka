@@ -1,6 +1,6 @@
 package reka.crypto.bcrypt;
 
-import static reka.api.Path.path;
+import static reka.util.Path.path;
 import reka.module.setup.AppSetup;
 import reka.module.setup.ModuleConfigurer;
 

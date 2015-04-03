@@ -15,6 +15,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import reka.data.Data;
+import reka.util.DaemonThreadFactory;
 
 public class EventLogger {
 
@@ -23,7 +24,7 @@ public class EventLogger {
 
 	private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd-HH:mm:ss.SSSZ");
 	private static final Runnable setdate = () -> date = sdf.format(new Date()).toString().getBytes(StandardCharsets.UTF_8);
-	private static final ScheduledExecutorService e = Executors.newSingleThreadScheduledExecutor();
+	private static final ScheduledExecutorService e = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory());
 	private static volatile byte[] date;
 
 	static {

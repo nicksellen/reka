@@ -2,13 +2,13 @@ package reka.modules.admin;
 
 import java.util.function.Function;
 
-import reka.api.Path;
 import reka.app.manager.ApplicationManager;
 import reka.data.Data;
 import reka.data.MutableData;
 import reka.flow.ops.Operation;
 import reka.flow.ops.OperationContext;
-import reka.util.Identity;
+import reka.identity.Identity;
+import reka.util.Path;
 
 public class RekaDetailsOperation implements Operation {
 	

@@ -9,9 +9,17 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.epoll.Epoll;
+import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.epoll.EpollServerSocketChannel;
+import io.netty.channel.epoll.EpollSocketChannel;
+import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.DefaultHttpRequest;
 import io.netty.handler.codec.http.HttpClientCodec;
 import io.netty.handler.codec.http.HttpHeaders;
@@ -25,11 +33,11 @@ import java.net.URISyntaxException;
 
 import org.apache.http.client.utils.URIBuilder;
 
-import reka.api.Path;
 import reka.data.MutableData;
 import reka.flow.ops.AsyncOperation;
 import reka.flow.ops.OperationContext;
 import reka.net.http.server.HttpResponseToDatasetDecoder;
+import reka.util.Path;
 
 public class HttpRequestOperation implements AsyncOperation {
 
@@ -38,25 +46,28 @@ public class HttpRequestOperation implements AsyncOperation {
 	private final int port;
 	private final URI uri;
 	private final String host;
-	private final Path out;
+	private final Path into;
 
-	public HttpRequestOperation(EventLoopGroup group, Class<? extends Channel> channelType, String url, Path out) {
+	public HttpRequestOperation(EventLoopGroup group, Class<? extends Channel> channelType, String url, Path into) {
 		uri = makeURI(url);
-		this.out = out;
+		this.into = into;
 		port = uri.getPort();
 		host = uri.getHost();
 		final ChannelHandler decoder = new HttpResponseToDatasetDecoder();
+		
 		bootstrap = new Bootstrap()
 				.group(group)
 				.channel(channelType)
 				.handler(new ChannelInitializer<SocketChannel>() {
 
 					@Override
-					protected void initChannel(SocketChannel ch)
-							throws Exception {
-						ch.pipeline().addLast(new HttpClientCodec(),
-								new HttpObjectAggregator(5242880), decoder);
+					protected void initChannel(SocketChannel ch) throws Exception {
+						ChannelPipeline pipeline = ch.pipeline();
+						pipeline.addLast("http", new HttpClientCodec());
+						pipeline.addLast("aggregator", new HttpObjectAggregator(5242880));
+						pipeline.addLast("decode", decoder);
 					}
+					
 				});
 	}
 
@@ -72,7 +83,7 @@ public class HttpRequestOperation implements AsyncOperation {
 
 					@Override
 					protected void channelRead0(ChannelHandlerContext ctx, MutableData msg) throws Exception {
-						data.put(out, msg);
+						data.put(into, msg);
 						res.done();
 					}
 					

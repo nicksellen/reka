@@ -3,9 +3,9 @@ package reka.test.config;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static reka.api.Path.dots;
 import static reka.config.ConfigTestUtil.loadconfig;
 import static reka.config.configurer.Configurer.configure;
+import static reka.util.Path.dots;
 import static reka.util.Util.runtime;
 
 import java.util.ArrayList;
@@ -13,9 +13,6 @@ import java.util.Collection;
 
 import org.junit.Test;
 
-import reka.api.IdentityStore;
-import reka.api.Path;
-import reka.api.Path.PathElement;
 import reka.config.Config;
 import reka.config.NavigableConfig;
 import reka.config.configurer.Configurer.InvalidConfigurationException;
@@ -28,11 +25,14 @@ import reka.flow.FlowSegment;
 import reka.flow.ops.Operation;
 import reka.flow.ops.OperationContext;
 import reka.flow.ops.RouterOperation;
+import reka.identity.IdentityStore;
 import reka.module.setup.ModuleSetupContext;
 import reka.module.setup.OperationConfigurer;
 import reka.module.setup.OperationSetup;
 import reka.modules.builtins.BuiltinsConfigurer;
 import reka.runtime.DefaultRouteCollector;
+import reka.util.Path;
+import reka.util.Path.PathElement;
 
 public class PutTest {
 	

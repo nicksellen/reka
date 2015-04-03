@@ -11,8 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import reka.api.Path;
 import reka.flow.Flow;
+import reka.util.Path;
 
 public class Flows {
 	

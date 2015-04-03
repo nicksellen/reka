@@ -1,11 +1,11 @@
 package reka.modules.admin;
 
-import static reka.api.Path.dots;
-import reka.api.Path;
+import static reka.util.Path.dots;
 import reka.app.manager.ApplicationManager;
 import reka.config.configurer.annotations.Conf;
 import reka.module.setup.OperationConfigurer;
 import reka.module.setup.OperationSetup;
+import reka.util.Path;
 
 public class RekaListConfigurer implements OperationConfigurer {
 	

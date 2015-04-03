@@ -2,11 +2,11 @@ package reka.net.common.sockets;
 
 import static java.lang.String.format;
 import reka.data.MutableData;
+import reka.identity.Identity;
 import reka.module.setup.StatusDataProvider;
 import reka.net.ChannelAttrs;
 import reka.net.NetManager;
 import reka.net.NetSettings.Type;
-import reka.util.Identity;
 
 public class NetStatusProvider implements StatusDataProvider {
 

@@ -1,9 +1,9 @@
 package reka.jdbc;
 
-import static reka.api.Path.path;
 import static reka.data.content.Contents.booleanValue;
 import static reka.data.content.Contents.integer;
 import static reka.data.content.Contents.utf8;
+import static reka.util.Path.path;
 import static reka.util.Util.unchecked;
 
 import java.sql.Connection;

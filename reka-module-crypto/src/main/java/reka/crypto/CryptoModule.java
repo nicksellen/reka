@@ -1,10 +1,10 @@
 package reka.crypto;
 
-import static reka.api.Path.root;
-import reka.api.Path;
+import static reka.util.Path.root;
 import reka.crypto.bcrypt.BCryptModuleConfigurer;
 import reka.module.Module;
 import reka.module.ModuleDefinition;
+import reka.util.Path;
 
 public class CryptoModule implements Module {
 

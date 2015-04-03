@@ -10,11 +10,11 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.api.IdentityStore;
-import reka.api.ImmutableIdentityStore.Builder;
 import reka.data.Data;
 import reka.data.memory.MutableMemoryData;
 import reka.flow.Flow;
+import reka.identity.IdentityStore;
+import reka.identity.ImmutableIdentityStore.Builder;
 import reka.net.ChannelAttrs;
 import reka.net.NetManager.SocketFlows;
 import reka.net.NetModule;

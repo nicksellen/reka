@@ -15,12 +15,12 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import reka.identity.Identity;
 import reka.net.ChannelAttrs;
 import reka.net.NetManager.SocketFlows;
 import reka.net.NetSettings.Type;
 import reka.net.websockets.WebSocketServerProtocolHandshakeHandler;
 import reka.net.websockets.WebsocketFlowHandler;
-import reka.util.Identity;
 
 import com.google.common.base.Splitter;
 

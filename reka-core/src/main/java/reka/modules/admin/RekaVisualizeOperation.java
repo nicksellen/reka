@@ -18,8 +18,6 @@ import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.api.Path;
-import reka.api.Path.Response;
 import reka.app.manager.ApplicationManager;
 import reka.data.Data;
 import reka.data.MutableData;
@@ -29,6 +27,8 @@ import reka.flow.builder.FlowVisualizer;
 import reka.flow.ops.Operation;
 import reka.flow.ops.OperationContext;
 import reka.util.Graphviz;
+import reka.util.Path;
+import reka.util.Path.Response;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;

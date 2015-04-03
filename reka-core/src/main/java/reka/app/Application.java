@@ -14,18 +14,18 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 
-import reka.api.IdentityKey;
-import reka.api.IdentityStoreReader;
-import reka.api.Path;
 import reka.data.Data;
 import reka.data.MutableData;
 import reka.flow.Flow;
 import reka.flow.builder.FlowVisualizer;
 import reka.flow.builder.Flows;
+import reka.identity.Identity;
+import reka.identity.IdentityKey;
+import reka.identity.IdentityStoreReader;
 import reka.module.setup.NetworkInfo;
 import reka.module.setup.StatusProvider;
 import reka.util.AsyncShutdown;
-import reka.util.Identity;
+import reka.util.Path;
 
 public class Application implements AsyncShutdown {
 

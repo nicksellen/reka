@@ -7,10 +7,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
-import reka.api.IdentityKey;
 import reka.config.ConfigBody;
 import reka.core.config.ConfigurerProvider;
 import reka.flow.Flow;
+import reka.identity.IdentityKey;
 import reka.module.setup.OperationConfigurer;
 
 import com.google.common.collect.ArrayListMultimap;

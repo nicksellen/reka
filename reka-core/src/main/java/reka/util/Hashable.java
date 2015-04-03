@@ -1,4 +1,4 @@
-package reka.api;
+package reka.util;
 
 import com.google.common.hash.Hasher;
 

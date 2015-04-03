@@ -7,10 +7,10 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import reka.api.Path;
 import reka.app.ApplicationComponent;
 import reka.module.PortRequirement;
 import reka.module.setup.AppSetup.ApplicationCheck;
+import reka.util.Path;
 
 public class ModuleCollector {
 

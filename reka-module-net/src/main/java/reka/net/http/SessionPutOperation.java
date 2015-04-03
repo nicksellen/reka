@@ -4,13 +4,13 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 
-import reka.api.Path;
-import reka.api.Path.Request;
-import reka.api.Path.Response;
 import reka.data.Data;
 import reka.data.MutableData;
 import reka.flow.ops.Operation;
 import reka.flow.ops.OperationContext;
+import reka.util.Path;
+import reka.util.Path.Request;
+import reka.util.Path.Response;
 
 public class SessionPutOperation implements Operation {
 	

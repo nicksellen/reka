@@ -1,13 +1,13 @@
 package reka.modules.admin;
 
-import reka.api.Path;
 import reka.app.Application;
 import reka.app.manager.ApplicationManager;
 import reka.data.MutableData;
 import reka.data.memory.MutableMemoryData;
 import reka.flow.ops.Operation;
 import reka.flow.ops.OperationContext;
-import reka.util.Identity;
+import reka.identity.Identity;
+import reka.util.Path;
 
 
 

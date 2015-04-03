@@ -1,6 +1,6 @@
 package reka.smtp;
 
-import static reka.api.Path.path;
+import static reka.util.Path.path;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -9,10 +9,10 @@ import javax.activation.CommandMap;
 import javax.activation.MailcapCommandMap;
 import javax.mail.Multipart;
 
-import reka.api.Path;
 import reka.module.Module;
 import reka.module.ModuleDefinition;
 import reka.smtp.SmtpServerConfigurer.RekaSmtpServer;
+import reka.util.Path;
 
 public class SmtpModule implements Module {
 

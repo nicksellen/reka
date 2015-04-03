@@ -2,10 +2,10 @@ package reka.modules.builtins.adder;
 
 import java.util.concurrent.atomic.LongAdder;
 
-import reka.api.Path;
 import reka.data.MutableData;
 import reka.flow.ops.Operation;
 import reka.flow.ops.OperationContext;
+import reka.util.Path;
 
 public class SumOperation implements Operation {
 

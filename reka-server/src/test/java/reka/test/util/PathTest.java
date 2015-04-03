@@ -2,17 +2,17 @@ package reka.test.util;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
-import static reka.api.Path.dots;
-import static reka.api.Path.path;
-import static reka.api.Path.PathElements.index;
-import static reka.api.Path.PathElements.name;
+import static reka.util.Path.dots;
+import static reka.util.Path.path;
+import static reka.util.Path.PathElements.index;
+import static reka.util.Path.PathElements.name;
 
 import java.util.Iterator;
 
 import org.junit.Test;
 
-import reka.api.Path;
-import reka.api.Path.PathElement;
+import reka.util.Path;
+import reka.util.Path.PathElement;
 
 public class PathTest {
 	

@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
 
 import reka.app.ApplicationComponent;
 import reka.flow.Flow;
+import reka.identity.Identity;
 import reka.module.PortChecker;
 import reka.net.ChannelAttrs.AttributeMatcher;
 import reka.net.NetSettings.SslSettings;
@@ -51,7 +52,6 @@ import reka.net.http.server.WebsocketChannelSetup;
 import reka.net.socket.SocketFlowHandler;
 import reka.runtime.NoFlow;
 import reka.util.AsyncShutdown;
-import reka.util.Identity;
 
 import com.google.common.collect.ImmutableMap;
 

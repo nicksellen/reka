@@ -1,9 +1,9 @@
 package reka.net.http.server;
 
 import static org.apache.commons.lang3.StringEscapeUtils.escapeHtml4;
-import static reka.api.Path.dots;
 import static reka.data.content.Contents.integer;
 import static reka.data.content.Contents.utf8;
+import static reka.util.Path.dots;
 import static reka.util.Util.rootExceptionMessage;
 import static reka.util.Util.unwrap;
 import io.netty.channel.ChannelFuture;
@@ -18,13 +18,13 @@ import java.io.StringWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.api.Path;
-import reka.api.Path.Request;
-import reka.api.Path.Response;
 import reka.data.Data;
 import reka.data.MutableData;
 import reka.data.memory.MutableMemoryData;
 import reka.flow.ops.Subscriber;
+import reka.util.Path;
+import reka.util.Path.Request;
+import reka.util.Path.Response;
 
 public class ChannelHandlerContextDataSubscriber implements Subscriber {
 

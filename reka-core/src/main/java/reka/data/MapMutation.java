@@ -1,12 +1,12 @@
 package reka.data;
 
-import static reka.api.Path.path;
 import static reka.data.content.Contents.booleanValue;
 import static reka.data.content.Contents.integer;
 import static reka.data.content.Contents.longValue;
 import static reka.data.content.Contents.utf8;
-import reka.api.Path;
+import static reka.util.Path.path;
 import reka.data.content.Content;
+import reka.util.Path;
 import reka.util.ThrowingConsumer;
 
 public interface MapMutation {

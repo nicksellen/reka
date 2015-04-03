@@ -3,9 +3,9 @@ package reka.module.setup;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import reka.api.Path;
 import reka.core.config.ConfigurerProvider;
 import reka.flow.Flow;
+import reka.util.Path;
 
 public class InitFlow {
 	

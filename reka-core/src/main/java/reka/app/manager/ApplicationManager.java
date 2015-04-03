@@ -6,8 +6,8 @@ import static java.util.Arrays.asList;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
-import static reka.api.Path.slashes;
 import static reka.config.configurer.Configurer.configure;
+import static reka.util.Path.slashes;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -39,10 +38,6 @@ import org.slf4j.LoggerFactory;
 
 import reka.EventLogger;
 import reka.Reka;
-import reka.api.ConcurrentIdentityStore;
-import reka.api.IdentityStore;
-import reka.api.IdentityStoreReader;
-import reka.api.Path;
 import reka.app.Application;
 import reka.app.ApplicationConfigurer;
 import reka.app.IdentityAndVersion;
@@ -53,16 +48,17 @@ import reka.data.MutableData;
 import reka.data.memory.MutableMemoryData;
 import reka.flow.Flow;
 import reka.flow.builder.FlowVisualizer;
+import reka.identity.Identity;
+import reka.identity.IdentityStoreReader;
 import reka.module.ModuleManager;
 import reka.module.setup.ModuleStatusReport;
 import reka.module.setup.StatusProvider;
 import reka.modules.admin.AdminUtils;
 import reka.util.AsyncShutdown;
-import reka.util.Identity;
+import reka.util.DaemonThreadFactory;
+import reka.util.Path;
 import reka.util.dirs.AppDirs;
 import reka.util.dirs.BaseDirs;
-
-import com.google.common.collect.Sets;
 
 public class ApplicationManager implements Iterable<Entry<Identity,Application>>, AsyncShutdown {
 
@@ -104,7 +100,7 @@ public class ApplicationManager implements Iterable<Entry<Identity,Application>>
 		void error(Identity identity, Throwable t);
 	}
 	
-	private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+	private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory());
 	
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	private final EventLogger eventLogger = new EventLogger("/tmp/rekalog");
@@ -321,36 +317,11 @@ public class ApplicationManager implements Iterable<Entry<Identity,Application>>
 				
 				Map<Path,IdentityStoreReader> previousStores = previous.isPresent() ? previous.get().stores() : new HashMap<>();
 				
-				Set<Path> modulePaths = configurer.modulePaths();
-				Set<Path> previousModulePaths = previousStores.keySet();
-				
-				Map<Path,IdentityStore> stores = new HashMap<>();
-				Sets.union(modulePaths, previousModulePaths).forEach(path -> {
-					
-					boolean inPrevious = previousModulePaths.contains(path);
-					boolean inCurrent = modulePaths.contains(path);
-					
-					if (inPrevious && !inCurrent) {
-						// removed, do nothing
-					} else if (!inPrevious && inCurrent) {
-						// added
-						stores.put(path, ConcurrentIdentityStore.create());
-					} else {
-						// changed
-						stores.put(path, ConcurrentIdentityStore.createFrom(previousStores.get(path)));
-					}
-					
-				});
-				
-				stores.values().forEach(store -> store.put(Application.IDENTITY, identity));
-				
-				configurer.checkValid(idv, stores);
-				
 				previous.ifPresent(p -> {
 					unpause.set(p.pause());
 				});
 				
-				configurer.build(identity, version, stores).whenComplete((app, t) -> {
+				configurer.build(identity, version, previousStores).whenComplete((app, t) -> {
 					try {
 						if (app != null) {
 							applications.put(identity, app);

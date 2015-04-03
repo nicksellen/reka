@@ -1,7 +1,7 @@
 package reka.core.config;
 
-import static reka.api.Path.dots;
-import static reka.api.Path.root;
+import static reka.util.Path.dots;
+import static reka.util.Path.root;
 import static reka.util.Util.createEntry;
 
 import java.util.ArrayList;

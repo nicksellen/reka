@@ -1,21 +1,40 @@
+name builtin tests
 
 test lowercase works {
-  run {
-    put:name NICK
-    lowercase name
-  }
-  expect {
-    name nick
-  }
+	run {
+		lowercase value
+	}
+	case NICK to nick {
+		input {
+			value NICK
+		}
+		expect {
+			value nick
+		}
+	}
 }
 
-
 test uppercase works {
-  run {
-    put:name nick
-    uppercase name
-  }
-  expect {
-    name NICK
-  }
+
+	run {
+		uppercase value
+	}
+	
+	case nick to NICK {
+	  	input {
+	  		value nick
+	  	}
+		expect {
+			value NICK
+		}
+	}
+	
+	case OfCourse to OFCOURSE {
+	 	input {
+	  		value OfCourse
+	  	}
+		expect {
+			value OFCOURSE
+		}
+	}
 }

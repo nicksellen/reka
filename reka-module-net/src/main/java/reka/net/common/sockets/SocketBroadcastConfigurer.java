@@ -8,12 +8,12 @@ import java.util.function.Function;
 import reka.app.Application;
 import reka.config.configurer.annotations.Conf;
 import reka.data.Data;
+import reka.identity.Identity;
 import reka.module.setup.OperationConfigurer;
 import reka.module.setup.OperationSetup;
 import reka.net.ChannelAttrs;
 import reka.net.ChannelAttrs.AttributeMatcher;
 import reka.net.NetManager;
-import reka.util.Identity;
 import reka.util.StringWithVars;
 
 public class SocketBroadcastConfigurer implements OperationConfigurer {

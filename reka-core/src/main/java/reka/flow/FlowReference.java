@@ -1,6 +1,6 @@
 package reka.flow;
 
-import reka.api.Path;
+import reka.util.Path;
 
 public interface FlowReference {
 	Path flowName();

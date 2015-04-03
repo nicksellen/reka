@@ -2,12 +2,12 @@ package reka.net.http.operations;
 
 import java.nio.file.Path;
 
-import reka.api.Path.Response;
 import reka.data.MutableData;
 import reka.data.content.Content;
 import reka.flow.ops.Operation;
 import reka.flow.ops.OperationContext;
 import reka.net.http.operations.HttpContentUtils.ContentAndType;
+import reka.util.Path.Response;
 
 public class HttpContent implements Operation {
 	

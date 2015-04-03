@@ -1,6 +1,6 @@
 package reka.app;
 
-import reka.api.Path;
+import reka.util.Path;
 
 public class PathAndVersion {
 	

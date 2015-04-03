@@ -3,11 +3,11 @@ package reka.flow;
 
 import java.util.concurrent.ExecutorService;
 
-import reka.api.IdentityStoreReader;
 import reka.data.Data;
 import reka.data.MutableData;
 import reka.data.memory.MutableMemoryData;
 import reka.flow.ops.Subscriber;
+import reka.identity.IdentityStoreReader;
 
 public interface FlowRun {
     FlowRun complete(Subscriber subscriber);

@@ -1,0 +1,71 @@
+name json module test
+
+json
+
+test stringify operation {
+
+	run {
+		json/stringify value
+	}
+	
+	case something normal {
+		input {
+			value a string
+		}
+		expect {
+			value "a string"
+		}
+	}
+	
+	case with an object {
+		input {
+			value {
+				name Nick
+			}
+		}
+		expect {
+			value {"name":"Nick"}
+		}
+	}
+	
+	case with nested objects and arrays {
+		input {
+			value {
+				name Nick
+				interests [
+					football
+					swimming
+					riding a bicycle
+				]
+			}
+		}
+		expect {
+			value {"name":"Nick","interests":["football","swimming","riding a bicycle"]}
+		}
+	}
+
+}
+
+test parse operation {
+	
+	run {
+		json/parse value
+	} 
+	
+	case a nested object with arrays {
+		input {
+			value {"name":"Nick","interests":["football","swimming","riding a bicycle"]}
+		}
+		expect {
+			value {
+				name Nick
+				interests [
+					football
+					swimming
+					riding a bicycle
+				]
+			}
+		}
+	}
+	
+}

@@ -3,10 +3,10 @@ package reka.net.http.server;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import reka.api.IdentityStore;
-import reka.api.IdentityStoreReader;
 import reka.data.MutableData;
 import reka.flow.Flow;
+import reka.identity.IdentityStore;
+import reka.identity.IdentityStoreReader;
 import reka.net.NetManager.HttpFlows;
 import reka.net.NetModule;
 

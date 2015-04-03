@@ -1,22 +1,22 @@
 package reka.core.config;
 
-import static reka.api.Path.dots;
-import static reka.api.Path.root;
 import static reka.config.configurer.Configurer.configure;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import static reka.data.content.Contents.booleanValue;
 import static reka.data.content.Contents.utf8;
+import static reka.util.Path.dots;
+import static reka.util.Path.root;
 
 import java.util.Collection;
 import java.util.function.Function;
 
-import reka.api.Path;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.data.Data;
 import reka.data.MutableData;
 import reka.data.memory.MutableMemoryData;
 import reka.module.setup.OperationConfigurer;
+import reka.util.Path;
 
 public class ConfigUtils {
 

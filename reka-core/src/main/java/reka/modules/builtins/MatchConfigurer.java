@@ -1,8 +1,8 @@
 package reka.modules.builtins;
 
-import static reka.api.Path.path;
 import static reka.config.configurer.Configurer.configure;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
+import static reka.util.Path.path;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,7 +12,6 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
-import reka.api.Path;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
@@ -25,6 +24,7 @@ import reka.flow.ops.RouteKey;
 import reka.flow.ops.RouterOperation;
 import reka.module.setup.OperationConfigurer;
 import reka.module.setup.OperationSetup;
+import reka.util.Path;
 import reka.util.StringWithVars;
 
 public class MatchConfigurer implements OperationConfigurer {

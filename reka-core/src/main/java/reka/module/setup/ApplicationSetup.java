@@ -8,18 +8,18 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import reka.api.IdentityStore;
-import reka.api.IdentityStoreReader;
-import reka.api.Path;
 import reka.app.Application;
 import reka.app.ApplicationComponent;
 import reka.data.Data;
 import reka.flow.Flow;
 import reka.flow.builder.FlowVisualizer;
 import reka.flow.builder.Flows;
+import reka.identity.Identity;
+import reka.identity.IdentityStore;
+import reka.identity.IdentityStoreReader;
 import reka.module.PortRequirement;
 import reka.module.setup.AppSetup.ApplicationCheck;
-import reka.util.Identity;
+import reka.util.Path;
 
 import com.google.common.collect.ImmutableMap;
 

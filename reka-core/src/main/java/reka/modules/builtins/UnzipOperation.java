@@ -12,11 +12,11 @@ import java.util.function.Function;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import reka.api.Path;
 import reka.data.Data;
 import reka.data.MutableData;
 import reka.flow.ops.Operation;
 import reka.flow.ops.OperationContext;
+import reka.util.Path;
 
 public class UnzipOperation implements Operation {
 	

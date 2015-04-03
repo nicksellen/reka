@@ -1,15 +1,15 @@
 package reka.net.http;
 
-import static reka.api.Path.dots;
 import static reka.net.http.HttpSessionsConfigurer.SESSION_STORE;
+import static reka.util.Path.dots;
 
 import java.util.function.Function;
 
-import reka.api.Path;
 import reka.config.configurer.annotations.Conf;
 import reka.data.Data;
 import reka.module.setup.OperationConfigurer;
 import reka.module.setup.OperationSetup;
+import reka.util.Path;
 import reka.util.StringWithVars;
 
 public class SessionPutConfigurer implements OperationConfigurer {

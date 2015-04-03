@@ -2,9 +2,9 @@ package reka.flow.builder;
 
 import java.util.Map.Entry;
 
-import reka.api.Path;
 import reka.flow.Flow;
 import reka.flow.FlowSegment;
+import reka.util.Path;
 
 public class SingleFlow {
 	

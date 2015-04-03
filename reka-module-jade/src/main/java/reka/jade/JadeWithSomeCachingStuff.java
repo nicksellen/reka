@@ -21,17 +21,17 @@ import org.codehaus.jackson.JsonGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.api.Hashable;
-import reka.api.JsonProvider;
-import reka.api.Path;
-import reka.api.Path.PathElement;
-import reka.api.Path.Request;
-import reka.api.Path.Response;
 import reka.data.Data;
 import reka.data.MutableData;
 import reka.flow.ops.Operation;
 import reka.flow.ops.OperationContext;
+import reka.util.Hashable;
+import reka.util.JsonProvider;
+import reka.util.Path;
 import reka.util.ReadObservedMap;
+import reka.util.Path.PathElement;
+import reka.util.Path.Request;
+import reka.util.Path.Response;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;

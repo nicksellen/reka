@@ -1,8 +1,8 @@
 package reka.clojure;
 
 import static java.lang.String.format;
-import static reka.api.Path.root;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
+import static reka.util.Path.root;
 import static reka.util.Util.runtime;
 
 import java.io.IOException;
@@ -16,13 +16,13 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.api.IdentityKey;
 import reka.clojure.env.ClojureEnv;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
 import reka.data.MutableData;
 import reka.data.memory.MutableMemoryData;
+import reka.identity.IdentityKey;
 import reka.module.setup.AppSetup;
 import reka.module.setup.ModuleConfigurer;
 import reka.module.setup.ModuleSetupContext;

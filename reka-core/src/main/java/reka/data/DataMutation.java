@@ -1,18 +1,18 @@
 package reka.data;
 
-import static reka.api.Path.path;
-import static reka.api.Path.PathElements.name;
 import static reka.data.content.Contents.booleanValue;
 import static reka.data.content.Contents.doubleValue;
 import static reka.data.content.Contents.integer;
 import static reka.data.content.Contents.longValue;
 import static reka.data.content.Contents.nullValue;
 import static reka.data.content.Contents.utf8;
-import reka.api.Path;
-import reka.api.Path.PathElement;
-import reka.api.Path.PathElements;
+import static reka.util.Path.path;
+import static reka.util.Path.PathElements.name;
 import reka.data.content.Content;
+import reka.util.Path;
 import reka.util.ThrowingConsumer;
+import reka.util.Path.PathElement;
+import reka.util.Path.PathElements;
 
 public interface DataMutation<T> {
 

@@ -5,14 +5,14 @@ def reka
 end
 
 def dots(str)
-  reka.api.Path.dots(str)
+  reka.util.Path.dots(str)
 end
 
 class DataWrapper
   
   include Enumerable
   
-  def initialize(data, base = reka.api.Path.root)
+  def initialize(data, base = reka.util.Path.root)
     @data = data
     @base = base
   end

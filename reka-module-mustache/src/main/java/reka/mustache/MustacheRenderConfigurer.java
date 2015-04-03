@@ -1,12 +1,12 @@
 package reka.mustache;
 
-import static reka.api.Path.dots;
-import reka.api.Path;
-import reka.api.Path.Response;
+import static reka.util.Path.dots;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.module.setup.OperationConfigurer;
 import reka.module.setup.OperationSetup;
+import reka.util.Path;
+import reka.util.Path.Response;
 
 public class MustacheRenderConfigurer implements OperationConfigurer {
 

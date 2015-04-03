@@ -2,8 +2,8 @@ package reka.smtp;
 
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
-import static reka.api.Path.path;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
+import static reka.util.Path.path;
 import static reka.util.Util.runtime;
 import static reka.util.Util.unchecked;
 import io.netty.buffer.ByteBuf;
@@ -54,8 +54,6 @@ import org.subethamail.smtp.MessageHandlerFactory;
 import org.subethamail.smtp.helper.SimpleMessageListenerAdapter;
 import org.subethamail.smtp.server.SMTPServer;
 
-import reka.api.IdentityKey;
-import reka.api.Path;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
@@ -64,9 +62,11 @@ import reka.data.MutableData;
 import reka.data.memory.MutableMemoryData;
 import reka.flow.Flow;
 import reka.flow.ops.Subscriber;
+import reka.identity.IdentityKey;
 import reka.module.setup.AppSetup;
 import reka.module.setup.ModuleConfigurer;
 import reka.module.setup.ModuleSetupContext;
+import reka.util.Path;
 
 public class SmtpServerConfigurer extends ModuleConfigurer {
 

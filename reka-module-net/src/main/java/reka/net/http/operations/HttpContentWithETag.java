@@ -7,14 +7,14 @@ import static reka.util.Util.hex;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 
-import reka.api.Path.Request;
-import reka.api.Path.Response;
 import reka.data.MutableData;
 import reka.data.content.Content;
 import reka.data.content.Contents;
 import reka.flow.ops.Operation;
 import reka.flow.ops.OperationContext;
 import reka.net.http.operations.HttpContentUtils.ContentAndType;
+import reka.util.Path.Request;
+import reka.util.Path.Response;
 
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;

@@ -1,19 +1,19 @@
 package reka.modules.filesystem;
 
-import static reka.api.Path.path;
-import static reka.api.Path.PathElements.index;
 import static reka.modules.filesystem.FilesystemUtils.resolveAndCheck;
+import static reka.util.Path.path;
+import static reka.util.Path.PathElements.index;
 
 import java.io.File;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.api.Path;
 import reka.data.MutableData;
 import reka.flow.ops.RouteCollector;
 import reka.flow.ops.RouteKey;
 import reka.flow.ops.RouterOperation;
+import reka.util.Path;
 
 public class FilesystemListAndRoute implements RouterOperation {
 	

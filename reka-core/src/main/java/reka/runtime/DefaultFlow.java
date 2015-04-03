@@ -4,22 +4,23 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 
-import reka.api.IdentityStore;
-import reka.api.IdentityStoreReader;
-import reka.api.Path;
 import reka.data.MutableData;
 import reka.data.memory.MutableMemoryData;
 import reka.flow.Flow;
 import reka.flow.FlowRun;
 import reka.flow.ops.Subscriber;
+import reka.identity.IdentityStore;
+import reka.identity.IdentityStoreReader;
+import reka.util.DaemonThreadFactory;
+import reka.util.Path;
 
 public class DefaultFlow implements Flow {
 
 	private final FlowStats stats = new FlowStats();
 	private final static AtomicLong ids = new AtomicLong();
 
-	private static final ExecutorService DEFAULT_OPERATION_EXECUTOR = Executors.newCachedThreadPool();
-	private static final ExecutorService DEFAULT_COORDINATOR_EXECUTOR = Executors.newSingleThreadExecutor();
+	private static final ExecutorService DEFAULT_OPERATION_EXECUTOR = Executors.newCachedThreadPool(new DaemonThreadFactory("flow-ops"));
+	private static final ExecutorService DEFAULT_COORDINATOR_EXECUTOR = Executors.newSingleThreadExecutor(new DaemonThreadFactory("flow-coord"));
 	
 	private final long id;
 	private final Path name;

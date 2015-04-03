@@ -39,10 +39,11 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.api.Path.Request;
-import reka.api.Path.Response;
 import reka.data.Data;
 import reka.data.content.Content;
+import reka.util.DaemonThreadFactory;
+import reka.util.Path.Request;
+import reka.util.Path.Response;
 
 @Sharable
 public class DataToHttpEncoder extends MessageToMessageEncoder<Data> {
@@ -63,7 +64,7 @@ public class DataToHttpEncoder extends MessageToMessageEncoder<Data> {
 	private static volatile CharSequence date;
 	private static final SimpleDateFormat sdf = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss z");
 	private static final Runnable setdate = () -> date = HttpHeaders.newEntity(sdf.format(new Date()));
-	private static final ScheduledExecutorService e = Executors.newSingleThreadScheduledExecutor();
+	private static final ScheduledExecutorService e = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory());
 
 	static {
 		setdate.run();

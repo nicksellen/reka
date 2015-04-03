@@ -1,6 +1,6 @@
 package reka.markdown;
 
-import static reka.api.Path.root;
+import static reka.util.Path.root;
 
 import org.pegdown.Extensions;
 import org.pegdown.PegDownProcessor;

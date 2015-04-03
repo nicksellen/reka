@@ -1,9 +1,9 @@
 package reka.markdown;
 
-import static reka.api.Path.root;
-import reka.api.Path;
+import static reka.util.Path.root;
 import reka.module.Module;
 import reka.module.ModuleDefinition;
+import reka.util.Path;
 
 public class MarkdownModule implements Module {
 

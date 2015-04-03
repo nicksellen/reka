@@ -6,11 +6,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import reka.api.Path;
 import reka.config.processor.ConfigConverter;
 import reka.config.processor.MultiConverter;
 import reka.config.processor.Processor;
 import reka.util.AsyncShutdown;
+import reka.util.Path;
 
 
 public class ModuleManager implements AsyncShutdown {

@@ -1,6 +1,6 @@
 package reka.flow;
 
-import static reka.api.Path.path;
+import static reka.util.Path.path;
 import reka.config.configurer.annotations.Conf;
 import reka.flow.builder.FlowReferenceNode;
 import reka.module.setup.OperationConfigurer;

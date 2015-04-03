@@ -3,15 +3,15 @@ package reka.data.memory;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.range;
-import static reka.api.Path.dots;
-import static reka.api.Path.root;
-import static reka.api.Path.PathElements.nextIndex;
 import static reka.data.content.Contents.booleanValue;
 import static reka.data.content.Contents.doubleValue;
 import static reka.data.content.Contents.integer;
 import static reka.data.content.Contents.longValue;
 import static reka.data.content.Contents.nullValue;
 import static reka.data.content.Contents.utf8;
+import static reka.util.Path.dots;
+import static reka.util.Path.root;
+import static reka.util.Path.PathElements.nextIndex;
 import static reka.util.Util.createEntry;
 import static reka.util.Util.runtime;
 import static reka.util.Util.unchecked;
@@ -38,14 +38,14 @@ import org.codehaus.jackson.JsonParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.api.Path;
-import reka.api.Path.PathElement;
-import reka.api.Path.PathElements;
 import reka.data.Data;
 import reka.data.MutableData;
 import reka.data.ObjBuilder;
 import reka.data.content.Content;
 import reka.data.content.types.NullContent;
+import reka.util.Path;
+import reka.util.Path.PathElement;
+import reka.util.Path.PathElements;
 
 public class MutableMemoryData implements MutableDataProvider<Object> {
 	

@@ -1,6 +1,6 @@
 package reka.modules.filesystem;
 
-import static reka.api.Path.dots;
+import static reka.util.Path.dots;
 
 import java.util.function.Function;
 
@@ -14,7 +14,7 @@ public class FilesystemWriteConfigurer implements OperationConfigurer {
 
 	private final java.nio.file.Path basedir;
 	
-	private Function<Data,reka.api.Path> dataPathFn;
+	private Function<Data,reka.util.Path> dataPathFn;
 	private Function<Data,String> filenameFn;
 	
 	public FilesystemWriteConfigurer(java.nio.file.Path basedir) {

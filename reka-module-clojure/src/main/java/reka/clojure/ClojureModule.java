@@ -1,9 +1,9 @@
 package reka.clojure;
 
-import static reka.api.Path.path;
-import reka.api.Path;
+import static reka.util.Path.path;
 import reka.module.Module;
 import reka.module.ModuleDefinition;
+import reka.util.Path;
 
 public class ClojureModule implements Module {
 

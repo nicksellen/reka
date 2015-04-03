@@ -2,8 +2,8 @@ package reka.net.http.server;
 
 import static java.util.Collections.synchronizedList;
 import static org.apache.commons.lang3.StringEscapeUtils.escapeHtml4;
-import static reka.api.Path.dots;
 import static reka.data.content.Contents.integer;
+import static reka.util.Path.dots;
 import static reka.util.Util.createEntry;
 import static reka.util.Util.unwrap;
 import io.netty.channel.ChannelFuture;
@@ -26,17 +26,17 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.api.IdentityStore;
-import reka.api.ImmutableIdentityStore.Builder;
-import reka.api.Path;
-import reka.api.Path.Request;
-import reka.api.Path.Response;
 import reka.data.Data;
 import reka.data.MutableData;
 import reka.data.memory.MutableMemoryData;
 import reka.flow.Flow;
 import reka.flow.ops.Subscriber;
+import reka.identity.IdentityStore;
+import reka.identity.ImmutableIdentityStore.Builder;
 import reka.net.NetModule;
+import reka.util.Path;
+import reka.util.Path.Request;
+import reka.util.Path.Response;
 
 @ChannelHandler.Sharable
 public class HttpHostHandler extends SimpleChannelInboundHandler<MutableData> {

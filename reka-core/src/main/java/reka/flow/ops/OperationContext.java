@@ -2,8 +2,8 @@ package reka.flow.ops;
 
 import java.util.Optional;
 
-import reka.api.IdentityKey;
-import reka.api.IdentityStoreReader;
+import reka.identity.IdentityKey;
+import reka.identity.IdentityStoreReader;
 
 public class OperationContext implements IdentityStoreReader {
 

@@ -3,7 +3,6 @@ package reka.util;
 import java.util.List;
 import java.util.function.Function;
 
-import reka.api.Path;
 import reka.data.Data;
 
 public interface StringWithVars extends Function<Data,String> {

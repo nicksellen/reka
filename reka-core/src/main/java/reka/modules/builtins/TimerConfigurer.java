@@ -14,15 +14,15 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import reka.Reka;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.flow.Flow;
 import reka.module.setup.AppSetup;
 import reka.module.setup.ModuleConfigurer;
+import reka.util.DaemonThreadFactory;
 
 public class TimerConfigurer extends ModuleConfigurer {
-	
-	private final static ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
 	
 	private final List<Config> every = new ArrayList<>();
 	
@@ -51,7 +51,7 @@ public class TimerConfigurer extends ModuleConfigurer {
 	public void setup(AppSetup module) {
 		every.forEach(config -> {
 			module.buildFlow(format("every %s", config.valueAsString()), config.body(), flow -> {
-				ScheduledFuture<?> f = executor.scheduleAtFixedRate(new TimerRun(flow), 0, parseMs(config.valueAsString()), TimeUnit.MILLISECONDS);
+				ScheduledFuture<?> f = Reka.SharedExecutors.scheduled.scheduleAtFixedRate(new TimerRun(flow), 0, parseMs(config.valueAsString()), TimeUnit.MILLISECONDS);
 				module.onUndeploy("cancel timer", () -> f.cancel(false));
 			});
 		});

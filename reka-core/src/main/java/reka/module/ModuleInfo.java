@@ -2,8 +2,8 @@ package reka.module;
 
 import java.util.function.Supplier;
 
-import reka.api.Path;
 import reka.module.setup.ModuleConfigurer;
+import reka.util.Path;
 
 public class ModuleInfo implements Supplier<ModuleConfigurer> {
 	

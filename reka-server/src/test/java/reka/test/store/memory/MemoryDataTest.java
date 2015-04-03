@@ -3,13 +3,13 @@ package reka.test.store.memory;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
-import static reka.api.Path.dots;
-import static reka.api.Path.path;
-import static reka.api.Path.root;
-import static reka.api.Path.PathElements.index;
-import static reka.api.Path.PathElements.name;
 import static reka.data.content.Contents.integer;
 import static reka.data.content.Contents.utf8;
+import static reka.util.Path.dots;
+import static reka.util.Path.path;
+import static reka.util.Path.root;
+import static reka.util.Path.PathElements.index;
+import static reka.util.Path.PathElements.name;
 
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -19,13 +19,13 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.api.Path;
-import reka.api.Path.PathElement;
 import reka.data.Data;
 import reka.data.MutableData;
 import reka.data.content.Content;
 import reka.data.content.Contents;
 import reka.data.memory.MutableMemoryData;
+import reka.util.Path;
+import reka.util.Path.PathElement;
 
 public class MemoryDataTest {
 	

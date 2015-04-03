@@ -1,16 +1,15 @@
 package reka.modules.builtins;
 
-import static reka.api.Path.dots;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import static reka.data.content.Contents.booleanValue;
 import static reka.data.content.Contents.longValue;
+import static reka.util.Path.dots;
 import static reka.util.Util.createEntry;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 
-import reka.api.Path;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.data.Data;
@@ -20,6 +19,7 @@ import reka.flow.ops.Operation;
 import reka.flow.ops.OperationContext;
 import reka.module.setup.OperationConfigurer;
 import reka.module.setup.OperationSetup;
+import reka.util.Path;
 
 import com.google.common.collect.ImmutableList;
 

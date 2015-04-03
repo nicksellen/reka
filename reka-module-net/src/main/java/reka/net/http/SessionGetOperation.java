@@ -2,12 +2,12 @@ package reka.net.http;
 
 import java.util.function.Function;
 
-import reka.api.Path;
-import reka.api.Path.Request;
 import reka.data.Data;
 import reka.data.MutableData;
 import reka.flow.ops.Operation;
 import reka.flow.ops.OperationContext;
+import reka.util.Path;
+import reka.util.Path.Request;
 
 public class SessionGetOperation implements Operation {
 	

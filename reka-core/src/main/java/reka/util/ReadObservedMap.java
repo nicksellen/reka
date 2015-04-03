@@ -8,8 +8,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import reka.api.Path;
-
 public class ReadObservedMap<K,V> implements Map<K,V> {
 	
 	public static <K,V> ReadObservedMap<K,V> wrap(Map<K,V> inner) {

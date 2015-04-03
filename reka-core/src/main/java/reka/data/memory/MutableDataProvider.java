@@ -3,8 +3,8 @@ package reka.data.memory;
 import java.util.List;
 import java.util.Map;
 
-import reka.api.Path;
 import reka.data.content.Content;
+import reka.util.Path;
 
 public interface MutableDataProvider<T> extends DataProvider<T> {
 	

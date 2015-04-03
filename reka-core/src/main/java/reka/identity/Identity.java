@@ -1,8 +1,8 @@
-package reka.util;
+package reka.identity;
 
 import static java.lang.String.format;
-import static reka.api.Path.slashes;
-import reka.api.Path;
+import static reka.util.Path.slashes;
+import reka.util.Path;
 
 public class Identity {
 

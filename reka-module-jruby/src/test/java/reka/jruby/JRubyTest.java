@@ -2,19 +2,19 @@ package reka.jruby;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
-import static reka.api.Path.dots;
-import static reka.api.Path.path;
+import static reka.util.Path.dots;
+import static reka.util.Path.path;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import org.junit.Test;
 
-import reka.api.IdentityStore;
 import reka.data.MutableData;
 import reka.data.memory.MutableMemoryData;
 import reka.flow.ops.Operation;
 import reka.flow.ops.OperationContext;
+import reka.identity.IdentityStore;
 
 import com.google.common.io.Resources;
 

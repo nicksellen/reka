@@ -1,7 +1,7 @@
 package reka.net.http;
 
-import static reka.api.Path.path;
-import reka.api.IdentityKey;
+import static reka.util.Path.path;
+import reka.identity.IdentityKey;
 import reka.module.setup.AppSetup;
 import reka.module.setup.ModuleConfigurer;
 

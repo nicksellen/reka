@@ -2,11 +2,11 @@ package reka.jade;
 
 import java.io.StringWriter;
 
-import reka.api.Path;
-import reka.api.Path.Response;
 import reka.data.MutableData;
 import reka.flow.ops.Operation;
 import reka.flow.ops.OperationContext;
+import reka.util.Path;
+import reka.util.Path.Response;
 import de.neuland.jade4j.model.JadeModel;
 import de.neuland.jade4j.template.JadeTemplate;
 

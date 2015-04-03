@@ -2,8 +2,8 @@ package reka.data.memory;
 
 import static com.google.common.base.Preconditions.checkState;
 import static java.util.stream.Collectors.toList;
-import static reka.api.Path.path;
-import static reka.api.Path.root;
+import static reka.util.Path.path;
+import static reka.util.Path.root;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -16,13 +16,13 @@ import java.util.function.BiConsumer;
 
 import org.codehaus.jackson.JsonGenerator;
 
-import reka.api.Path;
-import reka.api.Path.PathElement;
-import reka.api.Path.PathElements;
 import reka.data.Data;
 import reka.data.DefaultObjBuilder;
 import reka.data.ObjBuilder;
 import reka.data.content.Content;
+import reka.util.Path;
+import reka.util.Path.PathElement;
+import reka.util.Path.PathElements;
 
 public class DataWrapper<T> implements Data {
 

@@ -2,10 +2,10 @@ package reka.jdbc;
 
 import static java.lang.String.format;
 import static java.lang.String.join;
-import static reka.api.Path.path;
-import static reka.api.Path.root;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import static reka.core.config.ConfigUtils.configToData;
+import static reka.util.Path.path;
+import static reka.util.Path.root;
 import static reka.util.Util.unchecked;
 
 import java.io.IOException;
@@ -30,11 +30,11 @@ import org.flywaydb.core.Flyway;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.api.IdentityKey;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.data.Data;
 import reka.data.content.Content;
+import reka.identity.IdentityKey;
 import reka.module.setup.AppSetup;
 import reka.module.setup.ModuleConfigurer;
 import reka.module.setup.ModuleSetupContext;

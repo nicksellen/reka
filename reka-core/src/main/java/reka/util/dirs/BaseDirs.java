@@ -1,6 +1,6 @@
 package reka.util.dirs;
 
-import static reka.api.Path.slashes;
+import static reka.util.Path.slashes;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -27,11 +27,11 @@ public class BaseDirs extends AbstractDirs implements Dirs {
 		this(asPath(app), asPath(data), asPath(tmp));
 	}
 	
-	private BaseDirs(Path app, Path data, Path tmp) {
+	public BaseDirs(Path app, Path data, Path tmp) {
 		super(app, data, tmp);
 	}
 
-	public AppDirs resolve(reka.api.Path appPath, int version) {
+	public AppDirs resolve(reka.util.Path appPath, int version) {
 		Path tmpdir = tmp.resolve(AppDirs.dirnameFor(appPath));
 		
 		tmpdirs.add(tmpdir);
@@ -42,7 +42,7 @@ public class BaseDirs extends AbstractDirs implements Dirs {
 						   tmpdir, this);
 	}
 
-	public void delete(reka.api.Path appPath) {
+	public void delete(reka.util.Path appPath) {
 		new AppDirs(appPath,
 					app.resolve(AppDirs.dirnameFor(appPath)), 
 				    data.resolve(AppDirs.dirnameFor(appPath)), 
@@ -51,7 +51,7 @@ public class BaseDirs extends AbstractDirs implements Dirs {
 	
 	public AppDirs mktemp() {
 		String uuid = "tmp." + UUID.randomUUID().toString();
-		reka.api.Path appPath = slashes(uuid);
+		reka.util.Path appPath = slashes(uuid);
 		AppDirs dirs = new AppDirs(appPath, app.resolve(uuid), data.resolve(uuid), tmp.resolve(uuid), this);
 		tmpdirs.add(dirs.app);
 		tmpdirs.add(dirs.data);

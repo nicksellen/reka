@@ -1,10 +1,6 @@
 package reka.modules.builtins;
 
 import static java.lang.String.format;
-import static reka.api.Path.dots;
-import static reka.api.Path.path;
-import static reka.api.Path.root;
-import static reka.api.Path.slashes;
 import static reka.config.configurer.Configurer.configure;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import static reka.config.configurer.Configurer.Preconditions.invalidConfig;
@@ -12,6 +8,10 @@ import static reka.core.config.ConfigUtils.configToData;
 import static reka.data.content.Contents.binary;
 import static reka.data.content.Contents.utf8;
 import static reka.flow.builder.FlowSegments.createHalt;
+import static reka.util.Path.dots;
+import static reka.util.Path.path;
+import static reka.util.Path.root;
+import static reka.util.Path.slashes;
 import static reka.util.Util.createEntry;
 
 import java.util.ArrayList;
@@ -31,8 +31,7 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.api.Path;
-import reka.api.Path.Response;
+import reka.Reka;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.Configurer.ErrorCollector;
@@ -52,7 +51,10 @@ import reka.module.setup.AppSetup;
 import reka.module.setup.ModuleConfigurer;
 import reka.module.setup.OperationConfigurer;
 import reka.module.setup.OperationSetup;
+import reka.util.DaemonThreadFactory;
+import reka.util.Path;
 import reka.util.StringWithVars;
+import reka.util.Path.Response;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -483,9 +485,6 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 	}
 	
 	public static class SleepOperation implements AsyncOperation {
-
-		// shared for all sleep operations
-		private static final ScheduledExecutorService e = Executors.newScheduledThreadPool(1);
 		
 		private final long ms;
 		
@@ -495,7 +494,7 @@ public class BuiltinsConfigurer extends ModuleConfigurer {
 
 		@Override
 		public void call(MutableData data, OperationContext ctx, OperationResult res) {
-			e.schedule(() -> res.done(), ms, TimeUnit.MILLISECONDS);
+			Reka.SharedExecutors.scheduled.schedule(() -> res.done(), ms, TimeUnit.MILLISECONDS);
 		}
 		
 	}

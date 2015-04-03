@@ -1,6 +1,6 @@
 package reka.module;
 
-import static reka.api.Path.root;
+import static reka.util.Path.root;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -9,10 +9,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import reka.api.Path;
 import reka.config.processor.ConfigConverter;
 import reka.module.setup.ModuleConfigurer;
 import reka.util.AsyncShutdown;
+import reka.util.Path;
 
 public class ModuleDefinition {
 	

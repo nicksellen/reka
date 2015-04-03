@@ -1,4 +1,4 @@
-package reka.api;
+package reka.identity;
 
 import static java.lang.System.identityHashCode;
 

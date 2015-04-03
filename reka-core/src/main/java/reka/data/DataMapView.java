@@ -6,7 +6,7 @@ import static reka.util.Util.createEntry;
 import java.util.AbstractMap;
 import java.util.Set;
 
-import reka.api.Path.PathElement;
+import reka.util.Path.PathElement;
 
 import com.google.common.collect.ImmutableSet;
 

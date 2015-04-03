@@ -18,9 +18,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import reka.api.IdentityKey;
-import reka.api.IdentityStore;
-import reka.api.Path;
 import reka.app.ApplicationComponent;
 import reka.app.IdentityAndVersion;
 import reka.config.Config;
@@ -32,9 +29,12 @@ import reka.data.memory.MutableMemoryData;
 import reka.flow.Flow;
 import reka.flow.FlowSegment;
 import reka.flow.ops.Operation;
+import reka.identity.Identity;
+import reka.identity.IdentityKey;
+import reka.identity.IdentityStore;
 import reka.module.ModuleInfo;
 import reka.module.PortRequirement;
-import reka.util.Identity;
+import reka.util.Path;
 
 public class AppSetup {
 	

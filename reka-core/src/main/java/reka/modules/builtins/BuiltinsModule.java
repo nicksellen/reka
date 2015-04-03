@@ -1,8 +1,7 @@
 package reka.modules.builtins;
 
-import static reka.api.Path.path;
-import static reka.api.Path.root;
-import reka.api.Path;
+import static reka.util.Path.path;
+import static reka.util.Path.root;
 import reka.config.processor.CommentConverter;
 import reka.config.processor.DocumentationConverter;
 import reka.config.processor.IncludeConverter;
@@ -11,6 +10,7 @@ import reka.module.ModuleDefinition;
 import reka.modules.builtins.adder.AdderConfigurer;
 import reka.modules.filesystem.FilesystemConfigurer;
 import reka.modules.json.JsonModule.JsonConfigurer;
+import reka.util.Path;
 
 public class BuiltinsModule implements Module {
 

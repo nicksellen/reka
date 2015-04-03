@@ -8,9 +8,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import reka.api.Path;
 import reka.flow.Flow;
 import reka.runtime.Node;
+import reka.util.Path;
 
 public class NodeFactory {
     

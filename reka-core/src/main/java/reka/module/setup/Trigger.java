@@ -2,10 +2,10 @@ package reka.module.setup;
 
 import java.util.function.Function;
 
-import reka.api.IdentityKey;
-import reka.api.Path;
 import reka.core.config.ConfigurerProvider;
 import reka.flow.Flow;
+import reka.identity.IdentityKey;
+import reka.util.Path;
 
 public class Trigger {
 

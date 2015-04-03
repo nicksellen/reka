@@ -1,16 +1,14 @@
 package reka.modules.json;
 
-import static reka.api.Path.dots;
-import static reka.api.Path.path;
+import static reka.util.Path.dots;
+import static reka.util.Path.path;
 import static reka.util.Util.unchecked;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.function.Function;
 
 import org.codehaus.jackson.map.ObjectMapper;
 
-import reka.api.Path;
 import reka.config.configurer.Configurer.ErrorCollector;
 import reka.config.configurer.ErrorReporter;
 import reka.config.configurer.annotations.Conf;
@@ -25,7 +23,7 @@ import reka.module.setup.AppSetup;
 import reka.module.setup.ModuleConfigurer;
 import reka.module.setup.OperationConfigurer;
 import reka.module.setup.OperationSetup;
-import reka.util.StringWithVars;
+import reka.util.Path;
 
 public class JsonModule implements Module {
 
@@ -53,83 +51,79 @@ public class JsonModule implements Module {
 
 	public static class JsonParseConfigurer implements OperationConfigurer, ErrorReporter {
 		
-		private Function<Data,Path> inFn, outFn;
+		private Path from, into;
 		
 		@Conf.Val
-		@Conf.At("in")
 		@Conf.At("from")
 		public void in(String val) {
-			inFn = StringWithVars.compile(val).andThen(s -> dots(s));
-			if (outFn == null) outFn = inFn;
+			from = dots(val);
+			if (into == null) into = from;
 		}
 
-		@Conf.At("out")
 		@Conf.At("into")
 		public void out(String val) {
-			outFn = StringWithVars.compile(val).andThen(s -> dots(s));
+			into = dots(val);
 		}
 
 		@Override
 		public void errors(ErrorCollector errors) {
-			errors.checkConfigPresent(inFn, "in is required");
-			errors.checkConfigPresent(outFn, "out is required");
+			errors.checkConfigPresent(from, "from is required");
+			errors.checkConfigPresent(into, "into is required");
 		}
 
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add("parse", () -> new JsonParseOperation(inFn, outFn));
+			ops.add("parse", () -> new JsonParseOperation(from, into));
 		}
 		
 	}
 	
 	public static class JsonStringifyConfigurer implements OperationConfigurer, ErrorReporter {
 		
-		private Function<Data,Path> inFn, outFn;
+		private Path from, into;
 		
 		@Conf.Val
-		@Conf.At("in")
 		@Conf.At("from")
 		public void in(String val) {
-			inFn = StringWithVars.compile(val).andThen(s -> dots(s));
-			if (outFn == null) outFn = inFn;
+			from = dots(val);
+			if (into == null) into = from;
 		}
 
-		@Conf.At("out")
 		@Conf.At("into")
 		public void out(String val) {
-			outFn = StringWithVars.compile(val).andThen(s -> dots(s));
+			into = dots(val);
 		}
 
 		@Override
 		public void errors(ErrorCollector errors) {
-			errors.checkConfigPresent(inFn, "in is required");
-			errors.checkConfigPresent(outFn, "out is required");
+			errors.checkConfigPresent(from, "from is required");
+			errors.checkConfigPresent(into, "into is required");
 		}
 
 		@Override
 		public void setup(OperationSetup ops) {
-			ops.add("stringify", () -> new JsonStringifyOperation(inFn, outFn));
+			ops.add("stringify", () -> new JsonStringifyOperation(from, into));
 		}
 		
 	}
 	
 	public static class JsonParseOperation implements Operation {
 		
-		private final Function<Data,Path> inFn, outFn;
+		private final Path from, into;
 		
-		public JsonParseOperation(Function<Data,Path> inFn, Function<Data,Path> outFn) {
-			this.inFn = inFn;
-			this.outFn = outFn;
+		public JsonParseOperation(Path from, Path into) {
+			this.from = from;
+			this.into = into;
 		}
 
 		@Override
 		public void call(MutableData data, OperationContext ctx) {
-			Data val = data.at(inFn.apply(data));
+			Data val = data.at(from);
 			if (val.isContent()) {
 				try {
 					@SuppressWarnings("unchecked")
-					Map<String,Object> map = jsonMapper.readValue(val.content().asUTF8(), Map.class);
-					data.put(outFn.apply(data), MutableMemoryData.createFromMap(map));
+					Map<String,Object> map = jsonMapper.readValue(val.content().toString(), Map.class);
+					data.put(into, MutableMemoryData.createFromMap(map));
 				} catch (IOException e) {
 					throw unchecked(e);
 				}
@@ -140,16 +134,16 @@ public class JsonModule implements Module {
 	
 	public static class JsonStringifyOperation implements Operation {
 		
-		private final Function<Data,Path> inFn, outFn;
+		private final Path from, into;
 		
-		public JsonStringifyOperation(Function<Data,Path> inFn, Function<Data,Path> outFn) {
-			this.inFn = inFn;
-			this.outFn = outFn;
+		public JsonStringifyOperation(Path from, Path into) {
+			this.from = from;
+			this.into = into;
 		}
 
 		@Override
 		public void call(MutableData data, OperationContext ctx) {
-			data.putString(outFn.apply(data), data.at(inFn.apply(data)).toJson());
+			data.putString(into, data.at(from).toJson());
 		}
 		
 	}

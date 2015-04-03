@@ -3,11 +3,11 @@ package reka.test.flow;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
-import static reka.api.Path.dots;
-import static reka.api.Path.path;
 import static reka.flow.builder.FlowSegments.parallel;
 import static reka.flow.builder.OperationFlowNode.asyncOperation;
 import static reka.flow.builder.OperationFlowNode.operation;
+import static reka.util.Path.dots;
+import static reka.util.Path.path;
 import static reka.util.Util.unchecked;
 
 import java.util.concurrent.CountDownLatch;
@@ -19,7 +19,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.junit.Test;
 
-import reka.api.Path;
 import reka.data.Data;
 import reka.data.DiffContentConsumer;
 import reka.data.MutableData;
@@ -27,6 +26,7 @@ import reka.data.content.Content;
 import reka.data.memory.MutableMemoryData;
 import reka.flow.Flow;
 import reka.flow.builder.FlowBuilderGroup;
+import reka.util.Path;
 
 public class FlowTest {
 	

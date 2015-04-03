@@ -2,7 +2,7 @@ package reka.core.config;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.stream.Collectors.joining;
-import static reka.api.Path.slashes;
+import static reka.util.Path.slashes;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -10,10 +10,10 @@ import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
-import reka.api.Path;
 import reka.config.Config;
 import reka.flow.FlowSegment;
 import reka.module.setup.FlowSegmentBiFunction;
+import reka.util.Path;
 
 public class DefaultConfigurerProvider implements ConfigurerProvider {
 

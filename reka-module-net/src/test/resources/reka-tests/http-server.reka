@@ -1,0 +1,14 @@
+name http server to use for testing
+
+net/http {
+	listen localhost:8073
+	on request {
+		http/router {
+			GET / {
+				put response {
+					content looks good
+				}		
+			}
+		}
+	}
+}

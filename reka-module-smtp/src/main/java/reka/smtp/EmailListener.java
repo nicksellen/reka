@@ -1,10 +1,10 @@
 package reka.smtp;
 
-import static reka.api.Path.path;
-import static reka.api.Path.PathElements.name;
-import static reka.api.Path.PathElements.nextIndex;
 import static reka.data.content.Contents.binary;
 import static reka.data.content.Contents.utf8;
+import static reka.util.Path.path;
+import static reka.util.Path.PathElements.name;
+import static reka.util.Path.PathElements.nextIndex;
 import static reka.util.Util.unchecked;
 
 import java.io.IOException;
@@ -27,10 +27,10 @@ import org.apache.commons.mail.util.MimeMessageParser;
 import org.subethamail.smtp.TooMuchDataException;
 import org.subethamail.smtp.helper.SimpleMessageListener;
 
-import reka.api.Path;
 import reka.data.Data;
 import reka.data.MutableData;
 import reka.data.memory.MutableMemoryData;
+import reka.util.Path;
 
 public class EmailListener implements SimpleMessageListener {
 	

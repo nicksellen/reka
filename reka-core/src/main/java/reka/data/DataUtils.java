@@ -3,7 +3,7 @@ package reka.data;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Sets.difference;
 import static com.google.common.collect.Sets.intersection;
-import static reka.api.Path.root;
+import static reka.util.Path.root;
 import static reka.util.Util.unchecked;
 
 import java.io.IOException;
@@ -17,11 +17,11 @@ import java.util.function.BiConsumer;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
 
-import reka.api.Path;
-import reka.api.Path.PathElement;
 import reka.data.DiffContentConsumer.DiffContentType;
 import reka.data.DiffPathConsumer.DiffPathType;
 import reka.data.content.Content;
+import reka.util.Path;
+import reka.util.Path.PathElement;
 
 final class DataUtils {
 	

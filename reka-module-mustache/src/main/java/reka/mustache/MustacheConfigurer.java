@@ -1,6 +1,6 @@
 package reka.mustache;
 
-import static reka.api.Path.root;
+import static reka.util.Path.root;
 import reka.module.setup.AppSetup;
 import reka.module.setup.ModuleConfigurer;
 

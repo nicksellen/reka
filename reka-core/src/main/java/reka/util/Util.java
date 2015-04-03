@@ -33,7 +33,6 @@ import java.util.zip.ZipInputStream;
 
 import org.codehaus.jackson.JsonGenerator;
 
-import reka.api.JsonProvider;
 import reka.config.Source;
 import reka.config.SourceLinenumbers;
 import reka.config.configurer.Configurer.InvalidConfigurationException;
@@ -104,7 +103,10 @@ public class Util {
 	}
 	
 	public static RuntimeException runtime(String msg, Object... args) {
-		return new RuntimeException(format(msg, args));
+		if (args.length > 0) {
+			msg = format(msg, args);
+		}
+		return new RuntimeException(msg);
 	}
 	
 	public static int[] removedValues(int[] from, int[] to) {

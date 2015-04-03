@@ -95,7 +95,7 @@
 							<transformers>
 								<transformer
 									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<mainClass>reka.server.Server</mainClass>
+									<mainClass>reka.server.RekaServer</mainClass>
 								</transformer>
 							</transformers>
 						</configuration>
@@ -104,6 +104,5 @@
 			</plugin>
 		</plugins>
 	</build>
-
-
+	
 </project>

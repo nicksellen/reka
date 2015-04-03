@@ -12,9 +12,9 @@ import java.util.function.BiConsumer;
 
 import org.codehaus.jackson.JsonGenerator;
 
-import reka.api.Path;
-import reka.api.Path.PathElement;
 import reka.data.content.Content;
+import reka.util.Path;
+import reka.util.Path.PathElement;
 
 final class NoData implements Data {
 

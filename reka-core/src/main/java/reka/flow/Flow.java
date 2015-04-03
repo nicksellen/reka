@@ -3,10 +3,10 @@ package reka.flow;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.LongAdder;
 
-import reka.api.IdentityStoreReader;
-import reka.api.Path;
 import reka.data.MutableData;
 import reka.flow.ops.Subscriber;
+import reka.identity.IdentityStoreReader;
+import reka.util.Path;
 
 public interface Flow extends Comparable<Flow> {
 	

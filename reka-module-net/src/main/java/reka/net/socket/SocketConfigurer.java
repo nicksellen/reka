@@ -1,9 +1,9 @@
 package reka.net.socket;
 
-import static reka.api.Path.path;
-import static reka.api.Path.slashes;
 import static reka.config.configurer.Configurer.configure;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
+import static reka.util.Path.path;
+import static reka.util.Path.slashes;
 import static reka.util.Util.runtime;
 
 import java.util.ArrayList;
@@ -12,13 +12,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-import reka.api.IdentityKey;
 import reka.config.Config;
 import reka.config.ConfigBody;
 import reka.config.configurer.annotations.Conf;
 import reka.core.config.ConfigurerProvider;
 import reka.core.config.SequenceConfigurer;
 import reka.flow.Flow;
+import reka.identity.IdentityKey;
 import reka.module.setup.AppSetup;
 import reka.module.setup.ModuleConfigurer;
 import reka.module.setup.OperationConfigurer;

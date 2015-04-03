@@ -1,8 +1,8 @@
 package reka.data.memory;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static reka.api.Path.path;
-import static reka.api.Path.PathElements.nextIndex;
+import static reka.util.Path.path;
+import static reka.util.Path.PathElements.nextIndex;
 import static reka.util.Util.runtime;
 import static reka.util.Util.unchecked;
 
@@ -10,15 +10,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import reka.api.Path;
-import reka.api.Path.PathElement;
-import reka.api.Path.PathElements;
 import reka.data.Data;
 import reka.data.ListMutation;
 import reka.data.MapMutation;
 import reka.data.MutableData;
 import reka.data.content.Content;
+import reka.util.Path;
 import reka.util.ThrowingConsumer;
+import reka.util.Path.PathElement;
+import reka.util.Path.PathElements;
 
 public class MutableDataWrapper<T> extends DataWrapper<T> implements Data, MutableData {
 

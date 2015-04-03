@@ -19,9 +19,9 @@ import reka.module.ModuleManager;
 import reka.module.ModuleMeta;
 import reka.modules.builtins.BuiltinsModule;
 
-public class Server {
+public class RekaServer {
 
-	private static final Logger log = LoggerFactory.getLogger(Server.class);
+	private static final Logger log = LoggerFactory.getLogger(RekaServer.class);
 	
 	public static void main(String[] args) throws CmdLineException {
 		
@@ -41,7 +41,24 @@ public class Server {
 		List<ModuleMeta> defaultModules = asList(new ModuleMeta(classLoader, "core", new BuiltinsModule()));
 		NavigableConfig conf = new ModuleManager(defaultModules).processor().process(ConfigParser.fromFile(file));
 		configure(new RekaConfigurer(file.getParentFile().toPath(), defaultModules, classLoader), conf).build().run();
+
+		// keeps the app alive
 		
+		Thread t = new Thread() {
+			@Override
+			public void run() {
+				for (;;) {
+					try {
+						Thread.sleep(Long.MAX_VALUE);
+					} catch (InterruptedException e) {
+						break;
+					}
+				}
+			}
+		};
+		t.setDaemon(false);
+		t.setName("reka application");
+		t.start();
 	}
 
 }

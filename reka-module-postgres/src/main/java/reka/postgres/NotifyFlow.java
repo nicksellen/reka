@@ -1,9 +1,9 @@
 package reka.postgres;
 
-import static reka.api.Path.path;
-import reka.api.Path;
+import static reka.util.Path.path;
 import reka.data.memory.MutableMemoryData;
 import reka.flow.Flow;
+import reka.util.Path;
 
 import com.impossibl.postgres.api.jdbc.PGNotificationListener;
 

@@ -7,7 +7,7 @@ import io.netty.util.AttributeKey;
 import java.util.Set;
 import java.util.function.Predicate;
 
-import reka.util.Identity;
+import reka.identity.Identity;
 
 public class ChannelAttrs {
 

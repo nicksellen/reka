@@ -1,19 +1,19 @@
 package reka.modules.admin;
 
-import static reka.api.Path.dots;
+import static reka.util.Path.dots;
 
 import java.util.function.Function;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.api.Path;
 import reka.app.manager.ApplicationManager;
 import reka.data.Data;
 import reka.data.MutableData;
 import reka.data.memory.MutableMemoryData;
 import reka.flow.ops.Operation;
 import reka.flow.ops.OperationContext;
+import reka.util.Path;
 import reka.util.dirs.AppDirs;
 import reka.util.dirs.BaseDirs;
 

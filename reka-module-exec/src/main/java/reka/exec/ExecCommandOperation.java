@@ -11,10 +11,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import reka.Reka;
-import reka.api.Path;
 import reka.data.MutableData;
 import reka.flow.ops.AsyncOperation;
 import reka.flow.ops.OperationContext;
+import reka.util.Path;
 
 public class ExecCommandOperation implements AsyncOperation {
 	

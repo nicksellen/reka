@@ -9,10 +9,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import reka.api.Path;
 import reka.data.Data;
 import reka.flow.FlowNode;
 import reka.flow.FlowSegment;
+import reka.util.Path;
 
 public class DefaultFlowVisualizer implements FlowVisualizer {
 

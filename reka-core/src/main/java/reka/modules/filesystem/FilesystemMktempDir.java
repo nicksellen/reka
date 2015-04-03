@@ -5,10 +5,10 @@ import static reka.util.Util.unchecked;
 import java.io.IOException;
 import java.nio.file.Files;
 
-import reka.api.Path;
 import reka.data.MutableData;
 import reka.flow.ops.Operation;
 import reka.flow.ops.OperationContext;
+import reka.util.Path;
 
 public class FilesystemMktempDir implements Operation {
 

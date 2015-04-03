@@ -1,7 +1,7 @@
 package reka.net.http.configurers;
 
-import static reka.api.Path.dots;
 import static reka.config.configurer.Configurer.configure;
+import static reka.util.Path.dots;
 import io.netty.handler.codec.http.HttpMethod;
 
 import java.util.ArrayList;

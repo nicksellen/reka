@@ -2,6 +2,7 @@ package reka.net.http.server;
 
 import static reka.data.content.Contents.integer;
 import static reka.data.content.Contents.utf8;
+import static reka.util.Path.path;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
@@ -12,20 +13,17 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map.Entry;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import reka.api.Path;
-import reka.api.Path.Response;
 import reka.data.MutableData;
 import reka.data.memory.MutableMemoryData;
+import reka.util.Path;
 
 @Sharable
 public class HttpResponseToDatasetDecoder extends MessageToMessageDecoder<FullHttpResponse> {
 
-	@SuppressWarnings("unused")
-	private final Logger logger = LoggerFactory.getLogger(getClass().getSimpleName());
-
+	private static final Path STATUS = path("status");
+	private static final Path CONTENT = path("content");
+	private static final Path HEADERS = path("headers");
+	
 	@Override
 	protected void decode(ChannelHandlerContext ctx, FullHttpResponse response, List<Object> out) throws Exception {
 		
@@ -34,14 +32,12 @@ public class HttpResponseToDatasetDecoder extends MessageToMessageDecoder<FullHt
 		ByteBuf content = response.content();
 		byte[] contentBytes = new byte[content.readableBytes()];
 		content.readBytes(contentBytes);
-		//ByteBuffer bb = ByteBuffer.allocateDirect(content.readableBytes());
-		//content.readBytes(bb);
 		
 		data
-			.put(Response.STATUS, integer(response.getStatus().code()))
-			.put(Response.CONTENT, utf8(new String(contentBytes, StandardCharsets.UTF_8)));
+			.put(STATUS, integer(response.getStatus().code()))
+			.put(CONTENT, utf8(new String(contentBytes, StandardCharsets.UTF_8)));
 		
-		MutableData headers = data.createMapAt(Response.HEADERS);
+		MutableData headers = data.createMapAt(HEADERS);
 
 		// headers
 
@@ -49,11 +45,7 @@ public class HttpResponseToDatasetDecoder extends MessageToMessageDecoder<FullHt
 			headers.put(Path.path(header.getKey()), utf8(header.getValue()));
 		}
 		
-		//logger.info("  decoded response as {}", ContentStores.writeToStringAsPrettyJson(data));
-		
 		out.add(data);
 	}
-
-
 
 }

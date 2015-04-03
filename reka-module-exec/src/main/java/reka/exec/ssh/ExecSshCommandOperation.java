@@ -5,10 +5,10 @@ import static com.google.common.base.Preconditions.checkArgument;
 import java.util.HashMap;
 import java.util.Map;
 
-import reka.api.Path;
 import reka.data.MutableData;
 import reka.flow.ops.AsyncOperation;
 import reka.flow.ops.OperationContext;
+import reka.util.Path;
 
 public class ExecSshCommandOperation implements AsyncOperation {
 

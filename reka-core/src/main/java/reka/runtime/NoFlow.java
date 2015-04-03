@@ -1,16 +1,16 @@
 package reka.runtime;
 
-import static reka.api.Path.empty;
+import static reka.util.Path.empty;
 
 import java.util.concurrent.ExecutorService;
 
-import reka.api.IdentityStoreReader;
-import reka.api.Path;
 import reka.data.MutableData;
 import reka.data.memory.MutableMemoryData;
 import reka.flow.Flow;
 import reka.flow.FlowRun;
 import reka.flow.ops.Subscriber;
+import reka.identity.IdentityStoreReader;
+import reka.util.Path;
 
 public class NoFlow implements Flow {
 

@@ -1,4 +1,4 @@
-package reka.api;
+package reka.util;
 
 import static reka.util.Util.unchecked;
 

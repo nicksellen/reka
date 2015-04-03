@@ -8,11 +8,11 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicLong;
 
-import reka.api.IdentityStoreReader;
 import reka.data.Data;
 import reka.data.MutableData;
 import reka.flow.Flow.FlowStats;
 import reka.flow.ops.Subscriber;
+import reka.identity.IdentityStoreReader;
 import reka.runtime.handlers.ActionHandler;
 import reka.runtime.handlers.ErrorHandler;
 import reka.runtime.handlers.HaltedHandler;
@@ -128,7 +128,9 @@ public class DefaultFlowContext implements FlowContext {
 	public void end(MutableData data) {
 		assert hasCorrectThread() : "wrong thread " + Thread.currentThread().getId() + " vs " + threadId;
 		done = true;
-		subscriber.ok(data);
+		operationExecutor.execute(() -> {
+			subscriber.ok(data);
+		});
 		if (statsEnabled) stats.completed.increment();
 	}
 
@@ -136,7 +138,9 @@ public class DefaultFlowContext implements FlowContext {
 	public void error(Data data, Throwable t) {
 		assert hasCorrectThread() : "wrong thread " + Thread.currentThread().getId() + " vs " + threadId;
 		done = true;
-		subscriber.error(data, t);
+		operationExecutor.execute(() -> {
+			subscriber.error(data, t);
+		});
 		if (statsEnabled) stats.errors.increment();
 	}
 
@@ -144,7 +148,9 @@ public class DefaultFlowContext implements FlowContext {
 	public void halted() {
 		assert hasCorrectThread();
 		done = true;
-		subscriber.halted();
+		operationExecutor.execute(() -> {
+			subscriber.halted();
+		});
 		if (statsEnabled) stats.halts.increment();
 	}
 

@@ -1,4 +1,4 @@
-package reka.api;
+package reka.util;
 
 public interface ObjectBuilder <T> {
 	public T build();

@@ -1,13 +1,13 @@
 package reka.less;
 
 import static java.lang.String.format;
-import static reka.api.Path.path;
-import static reka.api.Path.root;
-import static reka.api.Path.slashes;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
 import static reka.data.content.Contents.binary;
 import static reka.data.content.Contents.integer;
 import static reka.data.content.Contents.utf8;
+import static reka.util.Path.path;
+import static reka.util.Path.root;
+import static reka.util.Path.slashes;
 import static reka.util.Util.deleteRecursively;
 import static reka.util.Util.sha1hex;
 import static reka.util.Util.unchecked;
@@ -26,9 +26,6 @@ import org.lesscss.LessCompiler;
 import org.lesscss.LessException;
 import org.lesscss.Resource;
 
-import reka.api.Path;
-import reka.api.Path.Request;
-import reka.api.Path.Response;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.data.Data;
@@ -41,6 +38,9 @@ import reka.module.setup.AppSetup;
 import reka.module.setup.ModuleConfigurer;
 import reka.module.setup.OperationConfigurer;
 import reka.module.setup.OperationSetup;
+import reka.util.Path;
+import reka.util.Path.Request;
+import reka.util.Path.Response;
 import reka.util.dirs.AppDirs;
 
 public class LessConfigurer extends ModuleConfigurer {

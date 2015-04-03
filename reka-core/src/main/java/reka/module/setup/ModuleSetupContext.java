@@ -2,9 +2,9 @@ package reka.module.setup;
 
 import java.util.Optional;
 
-import reka.api.IdentityKey;
-import reka.api.IdentityStore;
-import reka.api.IdentityStoreReader;
+import reka.identity.IdentityKey;
+import reka.identity.IdentityStore;
+import reka.identity.IdentityStoreReader;
 
 public class ModuleSetupContext implements IdentityStore {
 

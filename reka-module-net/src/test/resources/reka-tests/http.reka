@@ -1,0 +1,30 @@
+name http tests
+
+net/http client
+
+test with a good response {
+	run {
+		client/request http://localhost:8073 {
+			into resp
+		}
+	}
+	expect {
+		resp {
+			status 200
+			content looks good
+		}
+	}
+}
+
+test page not found {
+	run {
+		client/request http://localhost:8073/should/not/exist {
+			into resp
+		}
+	}
+	expect {
+		resp {
+			status 404
+		}
+	}
+}

@@ -13,21 +13,18 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.api.Path;
+import reka.Reka;
 import reka.flow.Flow;
 import reka.flow.FlowNode;
 import reka.flow.FlowSegment;
 import reka.flow.builder.FlowVisualizer.NodeType;
 import reka.runtime.DefaultFlow;
 import reka.runtime.Node;
+import reka.util.Path;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -35,25 +32,6 @@ public class FlowBuilderGroup {
 	
 	@SuppressWarnings("unused")
 	private final Logger log = LoggerFactory.getLogger(getClass());
-	
-	private static class BackgroundThreadFactory implements ThreadFactory {
-		
-        private final AtomicInteger threadNumber = new AtomicInteger(1);
-
-		@Override
-		public Thread newThread(Runnable r) {
-			  Thread t = new Thread(Thread.currentThread().getThreadGroup(), r,
-                      "reka-background-" + threadNumber.getAndIncrement(),
-                      0);
-				if (t.isDaemon()) t.setDaemon(false);
-				if (t.getPriority() != Thread.NORM_PRIORITY) t.setPriority(Thread.NORM_PRIORITY);
-				return t;
-		}
-		
-	}
-	
-	// TODO: this definately shouldn't be in here! it's for tasks to run on in the background
-	private static final ExecutorService BACKGROUND_EXECUTOR = Executors.newCachedThreadPool(new BackgroundThreadFactory());
 	
 	private final Map<Path,FlowInfo> roots = new HashMap<>();
 	
@@ -225,7 +203,7 @@ public class FlowBuilderGroup {
 		
 		for (FlowNode node : connections.nodes()) {
 		    int id = nextId++;
-		    NodeBuilder builder = new NodeBuilder(id, node.label(), node, BACKGROUND_EXECUTOR);
+		    NodeBuilder builder = new NodeBuilder(id, node.label(), node, Reka.SharedExecutors.general);
 			idToNodeBuilder.put(id, builder);
 			nodeToId.put(node, id);
 			idToName.put(id, builder.name());

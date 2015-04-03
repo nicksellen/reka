@@ -2,8 +2,8 @@ package reka.data;
 
 import java.util.function.Supplier;
 
-import reka.api.Path;
 import reka.data.content.Content;
+import reka.util.Path;
 
 public class BasicContentReader implements Supplier<Content> {
 

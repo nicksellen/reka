@@ -4,10 +4,10 @@ import static java.util.Arrays.asList;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
-import static reka.api.Path.dots;
 import static reka.data.content.Contents.utf8;
 import static reka.runtime.handlers.DSL.actionHandlers;
 import static reka.runtime.handlers.DSL.subscribers;
+import static reka.util.Path.dots;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -19,7 +19,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.api.IdentityStore;
 import reka.data.Data;
 import reka.data.memory.MutableMemoryData;
 import reka.flow.Flow.FlowStats;
@@ -27,6 +26,7 @@ import reka.flow.ops.AsyncOperation;
 import reka.flow.ops.Operation;
 import reka.flow.ops.RouteKey;
 import reka.flow.ops.Subscriber;
+import reka.identity.IdentityStore;
 import reka.runtime.DefaultFlowContext;
 import reka.runtime.Node;
 import reka.runtime.NodeChild;

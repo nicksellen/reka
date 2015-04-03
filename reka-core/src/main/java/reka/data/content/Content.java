@@ -16,8 +16,6 @@ import org.codehaus.jackson.JsonGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.api.Hashable;
-import reka.api.JsonProvider;
 import reka.data.ObjBuilder;
 import reka.data.content.types.BinaryContentConverter;
 import reka.data.content.types.BooleanContent;
@@ -26,6 +24,8 @@ import reka.data.content.types.IntegerContent;
 import reka.data.content.types.LongContent;
 import reka.data.content.types.NullContent;
 import reka.data.content.types.UTF8Content;
+import reka.util.Hashable;
+import reka.util.JsonProvider;
 import reka.util.Util;
 
 public interface Content extends Hashable, JsonProvider {

@@ -1,10 +1,10 @@
 package reka.modules.builtins.adder;
 
-import static reka.api.Path.path;
+import static reka.util.Path.path;
 
 import java.util.concurrent.atomic.LongAdder;
 
-import reka.api.IdentityKey;
+import reka.identity.IdentityKey;
 import reka.module.setup.AppSetup;
 import reka.module.setup.ModuleConfigurer;
 

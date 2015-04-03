@@ -3,7 +3,7 @@ package reka.exec.ssh;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
-import reka.api.Hashable;
+import reka.util.Hashable;
 
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;

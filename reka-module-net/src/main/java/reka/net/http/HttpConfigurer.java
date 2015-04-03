@@ -1,8 +1,8 @@
 package reka.net.http;
 
-import static reka.api.Path.path;
 import static reka.config.configurer.Configurer.configure;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
+import static reka.util.Path.path;
 import static reka.util.Util.runtime;
 
 import java.util.ArrayList;

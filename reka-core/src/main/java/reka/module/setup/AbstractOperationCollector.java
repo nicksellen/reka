@@ -14,13 +14,13 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import reka.api.Path;
 import reka.data.MutableData;
 import reka.data.memory.MutableMemoryData;
 import reka.flow.FlowSegment;
 import reka.flow.SimpleFlowOperation;
 import reka.flow.ops.RouteKey;
 import reka.flow.ops.RouterOperation;
+import reka.util.Path;
 
 abstract class AbstractOperationCollector implements OperationSetup {
 	

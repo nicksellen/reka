@@ -1,9 +1,9 @@
 package reka.net.http.server;
 
-import static reka.api.Path.dots;
-import static reka.api.Path.path;
 import static reka.data.content.Contents.binary;
 import static reka.data.content.Contents.utf8;
+import static reka.util.Path.dots;
+import static reka.util.Path.path;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
@@ -31,13 +31,13 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.api.Path;
-import reka.api.Path.PathElements;
-import reka.api.Path.Request;
-import reka.api.Path.Response;
 import reka.data.MutableData;
 import reka.data.content.types.BooleanContent;
 import reka.data.memory.MutableMemoryData;
+import reka.util.Path;
+import reka.util.Path.PathElements;
+import reka.util.Path.Request;
+import reka.util.Path.Response;
 
 import com.google.common.base.Splitter;
 

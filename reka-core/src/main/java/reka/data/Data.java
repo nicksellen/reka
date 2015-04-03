@@ -3,8 +3,6 @@ package reka.data;
 import static com.google.common.base.Preconditions.checkState;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
-import static reka.api.Path.path;
-import static reka.api.Path.root;
 import static reka.data.DataUtils.dataIsEqual;
 import static reka.data.DataUtils.diffContent;
 import static reka.data.DataUtils.diffPath;
@@ -12,6 +10,8 @@ import static reka.data.DataUtils.getFirstContent;
 import static reka.data.DataUtils.visitFirstContent;
 import static reka.data.DataUtils.writeDataToJson;
 import static reka.data.DataUtils.writeDataToPrettyJson;
+import static reka.util.Path.path;
+import static reka.util.Path.root;
 import static reka.util.Util.unsupported;
 
 import java.util.Collection;
@@ -24,12 +24,12 @@ import java.util.OptionalInt;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import reka.api.Hashable;
-import reka.api.JsonProvider;
-import reka.api.Path;
-import reka.api.Path.PathElement;
-import reka.api.Path.PathElements;
 import reka.data.content.Content;
+import reka.util.Hashable;
+import reka.util.JsonProvider;
+import reka.util.Path;
+import reka.util.Path.PathElement;
+import reka.util.Path.PathElements;
 
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;

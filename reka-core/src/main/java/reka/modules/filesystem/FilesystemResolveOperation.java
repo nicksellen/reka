@@ -1,7 +1,7 @@
 package reka.modules.filesystem;
 
-import static reka.api.Path.dots;
 import static reka.modules.filesystem.FilesystemUtils.resolveAndCheck;
+import static reka.util.Path.dots;
 
 import java.util.function.Function;
 

@@ -4,8 +4,8 @@ import static reka.flow.builder.FlowSegments.createParallelSegment;
 
 import java.util.Collection;
 
-import reka.api.Path;
 import reka.flow.FlowSegment;
+import reka.util.Path;
 
 class ParallelCollector extends AbstractOperationCollector {
 

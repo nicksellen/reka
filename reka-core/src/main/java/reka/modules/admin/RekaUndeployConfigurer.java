@@ -2,12 +2,12 @@ package reka.modules.admin;
 
 import java.util.function.Function;
 
-import reka.api.Path;
 import reka.app.manager.ApplicationManager;
 import reka.config.configurer.annotations.Conf;
 import reka.data.Data;
 import reka.module.setup.OperationConfigurer;
 import reka.module.setup.OperationSetup;
+import reka.util.Path;
 import reka.util.StringWithVars;
 import reka.util.dirs.AppDirs;
 

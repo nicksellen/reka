@@ -1,7 +1,7 @@
 package reka.net.http.operations;
 
 import static java.lang.String.format;
-import static reka.api.Path.dots;
+import static reka.util.Path.dots;
 import static reka.util.Util.runtime;
 import static reka.util.Util.unsupported;
 import io.netty.handler.codec.http.HttpMethod;
@@ -21,13 +21,13 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.api.Hashable;
-import reka.api.Path;
-import reka.api.Path.Request;
 import reka.data.MutableData;
 import reka.flow.ops.RouteCollector;
 import reka.flow.ops.RouteKey;
 import reka.flow.ops.RouterOperation;
+import reka.util.Hashable;
+import reka.util.Path;
+import reka.util.Path.Request;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.Hasher;

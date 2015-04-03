@@ -1,12 +1,12 @@
 package reka.nashorn;
 
-import static reka.api.Path.dots;
 import static reka.nashorn.NashornConfigurer.RUNNER;
-import reka.api.Path;
+import static reka.util.Path.dots;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.module.setup.OperationConfigurer;
 import reka.module.setup.OperationSetup;
+import reka.util.Path;
 
 public class NashornRunConfigurer implements OperationConfigurer {
 	

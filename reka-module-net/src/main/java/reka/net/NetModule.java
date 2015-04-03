@@ -1,19 +1,19 @@
 package reka.net;
 
-import static reka.api.Path.path;
-import static reka.api.Path.slashes;
+import static reka.util.Path.path;
+import static reka.util.Path.slashes;
 import io.netty.channel.Channel;
 
 import javax.inject.Singleton;
 
-import reka.api.IdentityKey;
-import reka.api.Path;
+import reka.identity.IdentityKey;
 import reka.module.Module;
 import reka.module.ModuleDefinition;
 import reka.net.http.HttpConfigurer;
 import reka.net.http.HttpSessionsConfigurer;
 import reka.net.socket.SocketConfigurer;
 import reka.net.websockets.WebsocketConfigurer;
+import reka.util.Path;
 
 @Singleton
 public class NetModule implements Module {

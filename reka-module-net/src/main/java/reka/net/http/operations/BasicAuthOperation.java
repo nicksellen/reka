@@ -7,12 +7,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Base64.Decoder;
 
-import reka.api.Path.Request;
-import reka.api.Path.Response;
 import reka.data.MutableData;
 import reka.flow.ops.RouteCollector;
 import reka.flow.ops.RouteKey;
 import reka.flow.ops.RouterOperation;
+import reka.util.Path.Request;
+import reka.util.Path.Response;
 
 public class BasicAuthOperation implements RouterOperation {
 	

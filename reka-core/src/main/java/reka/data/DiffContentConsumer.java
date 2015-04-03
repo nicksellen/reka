@@ -3,8 +3,8 @@ package reka.data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.api.Path;
 import reka.data.content.Content;
+import reka.util.Path;
 
 @FunctionalInterface
 public interface DiffContentConsumer {

@@ -1,6 +1,6 @@
 package reka.module;
 
-import reka.api.Path;
+import reka.util.Path;
 
 public interface Module {
 	

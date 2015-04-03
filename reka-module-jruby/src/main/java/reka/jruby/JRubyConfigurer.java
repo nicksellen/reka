@@ -1,10 +1,10 @@
 package reka.jruby;
 
-import static reka.api.Path.root;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
-import reka.api.IdentityKey;
+import static reka.util.Path.root;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
+import reka.identity.IdentityKey;
 import reka.module.setup.AppSetup;
 import reka.module.setup.ModuleConfigurer;
 

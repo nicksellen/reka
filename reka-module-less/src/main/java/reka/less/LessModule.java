@@ -1,12 +1,12 @@
 package reka.less;
 
-import static reka.api.Path.path;
+import static reka.util.Path.path;
 
 import org.lesscss.LessCompiler;
 
-import reka.api.Path;
 import reka.module.Module;
 import reka.module.ModuleDefinition;
+import reka.util.Path;
 
 public class LessModule implements Module {
 

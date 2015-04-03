@@ -1,13 +1,13 @@
 package reka.irc;
 
-import static reka.api.Path.path;
 import static reka.config.configurer.Configurer.Preconditions.checkConfig;
+import static reka.util.Path.path;
 import static reka.util.Util.runtime;
-import reka.api.IdentityKey;
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
 import reka.flow.Flow;
 import reka.flow.builder.TriggerHelper;
+import reka.identity.IdentityKey;
 import reka.module.setup.AppSetup;
 import reka.module.setup.ModuleConfigurer;
 

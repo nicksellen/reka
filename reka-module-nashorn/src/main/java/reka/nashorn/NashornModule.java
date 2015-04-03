@@ -1,12 +1,12 @@
 package reka.nashorn;
 
-import static reka.api.Path.path;
+import static reka.util.Path.path;
 
 import java.util.List;
 
-import reka.api.Path;
 import reka.module.Module;
 import reka.module.ModuleDefinition;
+import reka.util.Path;
 
 // http://docs.oracle.com/javase/8/docs/technotes/guides/scripting/nashorn/intro.html#sthref14
 

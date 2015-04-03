@@ -1,7 +1,5 @@
 package reka;
 
-import static reka.util.Util.runtime;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,7 +17,6 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reka.api.Path;
 import reka.app.manager.ApplicationManager;
 import reka.app.manager.ApplicationManager.DeploySubscriber;
 import reka.config.ConfigBody;
@@ -28,19 +25,17 @@ import reka.module.ModuleManager;
 import reka.module.ModuleMeta;
 import reka.modules.admin.AdminModule;
 import reka.util.AsyncShutdown;
+import reka.util.DaemonThreadFactory;
+import reka.util.Path;
 import reka.util.dirs.AppDirs;
 import reka.util.dirs.BaseDirs;
 
 public class Reka {
 	
 	public static interface SharedExecutors {
-
-		public static final ExecutorService general = Executors.newCachedThreadPool();
-		public static final ScheduledExecutorService scheduled = Executors.newSingleThreadScheduledExecutor();	
-		
+		public static final ExecutorService general = Executors.newCachedThreadPool(new DaemonThreadFactory());
+		public static final ScheduledExecutorService scheduled = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory());
 	}
-	
-	public static final String REKA_ENV = "REKA_ENV";
 	
 	private static final Logger log = LoggerFactory.getLogger(Reka.class);
 	
@@ -84,17 +79,13 @@ public class Reka {
 		
 		moduleManager.add(new ModuleMeta(Reka.class.getClassLoader(), "core", new AdminModule(manager)));
 		
-		Stream<String> moduleNames = moduleManager.modulesKeys().stream().map(reka.api.Path::slashes);
+		Stream<String> moduleNames = moduleManager.modulesKeys().stream().map(reka.util.Path::slashes);
 		
 		moduleNames.filter(s -> !s.isEmpty()).forEach(m -> {
 			log.info("module available {}", m);
 		});
 		
-		if (!System.getenv().containsKey(REKA_ENV)) {
-			throw runtime("please ensure %s has been set in your environment", REKA_ENV);
-		}
-		
-		log.info("starting reka in {} with apps dirs {}", System.getenv(REKA_ENV), dirs.app().toString());
+		log.info("starting with apps dirs {}", dirs.app().toString());
 
 		for (Entry<Path, ConfigBody> e : configs.entrySet()) {
 			manager.deployConfig(e.getKey(), -1, e.getValue(), null, DeploySubscriber.LOG);
@@ -105,7 +96,6 @@ public class Reka {
 			if (!mainreka.exists()) return;
 			manager.deploySource(pathAndVersion.path(), pathAndVersion.version(), FileSource.from(mainreka), DeploySubscriber.LOG);
 		});
-		
 	}
 	
 }
