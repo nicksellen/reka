@@ -9,6 +9,20 @@ net/http {
 					content looks good
 				}		
 			}
+			GET /with-params {
+				putv response {
+					content your name was :request.params.name
+				}
+			}
+			GET /give-me-json {
+				put response {
+					content {
+						thanks {
+							for that
+						}
+					}
+				}
+			}
 		}
 	}
 }

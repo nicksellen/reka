@@ -385,7 +385,7 @@ public class ApplicationConfigurer implements ErrorReporter {
 
 		ScheduledFuture<?> timeout = Reka.SharedExecutors.scheduled.schedule(() -> {
 			future.completeExceptionally(runtime("failed to deploy [%s] because tests timed out", identity.name()));
-		}, 10, TimeUnit.SECONDS);
+		}, 5, TimeUnit.SECONDS);
 		
 		Runnable testsFinished = () -> {
 			if (future.isDone()) return; // too late

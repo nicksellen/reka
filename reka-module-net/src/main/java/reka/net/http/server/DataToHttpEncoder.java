@@ -32,8 +32,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -42,7 +40,6 @@ import org.slf4j.LoggerFactory;
 import reka.Reka;
 import reka.data.Data;
 import reka.data.content.Content;
-import reka.util.DaemonThreadFactory;
 import reka.util.Path.Request;
 import reka.util.Path.Response;
 

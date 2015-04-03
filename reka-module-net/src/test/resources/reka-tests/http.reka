@@ -1,10 +1,10 @@
 name http tests
 
-net/http client
+net/http
 
-test with a good response {
+test simple index page {
 	run {
-		client/request http://localhost:8073 {
+		http/request http://localhost:8073 {
 			into resp
 		}
 	}
@@ -16,9 +16,44 @@ test with a good response {
 	}
 }
 
+test pass in some params {
+	run {
+		http/request http://localhost:8073/with-params?name=Nick {
+			into resp
+		}
+	}
+	expect {
+		resp {
+			status 200
+			content your name was Nick
+		}
+	}
+}
+
+test return some json {
+	run {
+		http/request http://localhost:8073/give-me-json {
+			into resp
+		}
+	}
+	expect {
+		resp {
+			status 200
+			headers {
+				Content-Type application/json
+			}
+			content {
+				thanks {
+					for that
+				}
+			}
+		}
+	}
+}
+
 test page not found {
 	run {
-		client/request http://localhost:8073/should/not/exist {
+		http/request http://localhost:8073/should/not/exist {
 			into resp
 		}
 	}

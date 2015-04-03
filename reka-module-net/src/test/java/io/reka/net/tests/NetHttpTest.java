@@ -14,7 +14,7 @@ import reka.net.NetModule;
 import reka.util.RekaTest;
 
 @RunWith(AllTests.class)
-public class NetModuleTest extends TestCase {
+public class NetHttpTest extends TestCase {
 
 	public static TestSuite suite() throws IOException, InterruptedException, ExecutionException {
 		NetModule module = new NetModule();

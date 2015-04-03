@@ -363,12 +363,29 @@ public class Path implements Iterable<Path.PathElement>, Comparable<Path>, Hasha
 	public static final Path REQUEST 	= Path.path("request");
 	public static final Path RESPONSE 	= Path.path("response");
 	
+	public static final Path METHOD 	= Path.path("method");
+	public static final Path PATH 		= Path.path("path");
+	public static final Path PATH_BASE	= Path.path("path-base");
+	public static final Path PARAMS 	= Path.path("params");
+	public static final Path CONTENT 	= Path.path("content");
+	public static final Path HEADERS 	= Path.path("headers");
+	public static final Path COOKIES 	= Path.path("cookies");
+	public static final Path HOST 		= Path.path("host");
+	public static final Path STATUS 	= Path.path("status");
+	
+	public static final class Headers {
+		public static final Path CONTENT_TYPE 	= HEADERS.add("Content-Type");
+		public static final Path CONTENT_LENGTH = HEADERS.add("Content-Length");
+		public static final Path IF_NONE_MATCH 	= HEADERS.add("If-None-Match");
+		public static final Path AUTHORIZATION 	= HEADERS.add("Authorization");
+		public static final Path ACCEPT 		= HEADERS.add("Accept");
+	}
+	
 	public static final class Request {
 		public static final Path METHOD 	= REQUEST.add("method");
 		public static final Path PATH 		= REQUEST.add("path");
 		public static final Path PATH_BASE	= REQUEST.add("path-base");
 		public static final Path PARAMS 	= REQUEST.add("params");
-		public static final Path DATA 		= REQUEST.add("data");
 		public static final Path CONTENT 	= REQUEST.add("content");
 		public static final Path HEADERS 	= REQUEST.add("headers");
 		public static final Path COOKIES 	= REQUEST.add("cookies");

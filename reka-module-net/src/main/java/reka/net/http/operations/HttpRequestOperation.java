@@ -12,14 +12,7 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.channel.epoll.Epoll;
-import io.netty.channel.epoll.EpollEventLoopGroup;
-import io.netty.channel.epoll.EpollServerSocketChannel;
-import io.netty.channel.epoll.EpollSocketChannel;
-import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.DefaultHttpRequest;
 import io.netty.handler.codec.http.HttpClientCodec;
 import io.netty.handler.codec.http.HttpHeaders;
@@ -36,24 +29,29 @@ import org.apache.http.client.utils.URIBuilder;
 import reka.data.MutableData;
 import reka.flow.ops.AsyncOperation;
 import reka.flow.ops.OperationContext;
-import reka.net.http.server.HttpResponseToDatasetDecoder;
+import reka.net.http.server.HttpResponseToDataDecoder;
 import reka.util.Path;
 
 public class HttpRequestOperation implements AsyncOperation {
 
 	private final Bootstrap bootstrap;
 
-	private final int port;
-	private final URI uri;
 	private final String host;
+	private final int port;
+	private final String path;
 	private final Path into;
 
 	public HttpRequestOperation(EventLoopGroup group, Class<? extends Channel> channelType, String url, Path into) {
-		uri = makeURI(url);
+		URI uri = makeURI(url);
+		this.port = uri.getPort();
+		this.host = uri.getHost();
+		if (uri.getRawQuery() != null) {
+			this.path = uri.getRawPath() + "?" + uri.getRawQuery();
+		} else {
+			this.path = uri.getRawPath();
+		}
 		this.into = into;
-		port = uri.getPort();
-		host = uri.getHost();
-		final ChannelHandler decoder = new HttpResponseToDatasetDecoder();
+		final ChannelHandler decoder = new HttpResponseToDataDecoder();
 		
 		bootstrap = new Bootstrap()
 				.group(group)
@@ -89,7 +87,7 @@ public class HttpRequestOperation implements AsyncOperation {
 					
 				});
 
-				HttpRequest request = new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, uri.getRawPath());
+				HttpRequest request = new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, path);
 				request.headers().set(HttpHeaders.Names.HOST, host);
 				request.headers().set(HttpHeaders.Names.CONNECTION, HttpHeaders.Values.CLOSE);
 
