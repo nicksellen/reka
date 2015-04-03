@@ -22,7 +22,7 @@ import reka.module.setup.OperationConfigurer;
 import reka.net.NetManager;
 import reka.net.NetManager.HttpFlows;
 import reka.net.NetSettings;
-import reka.net.NetSettings.SslSettings;
+import reka.net.NetSettings.TlsSettings;
 import reka.net.NetSettings.Type;
 import reka.net.common.sockets.NetStatusProvider;
 import reka.net.http.configurers.HttpContentConfigurer;
@@ -43,7 +43,7 @@ public class HttpConfigurer extends ModuleConfigurer {
 	private final Pattern listenPortOnly = Pattern.compile("^[0-9]+$");
 	private final Pattern listenHostAndPort = Pattern.compile("^(.+):([0-9]+)$");
 	
-	private SslSettings tls;
+	private TlsSettings tls;
 	
 	private final NetManager net;
 	

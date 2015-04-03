@@ -1,6 +1,7 @@
 package reka.net;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static reka.util.Util.createEntry;
 import static reka.util.Util.runtime;
 import static reka.util.Util.unchecked;
 import static reka.util.Util.unsupported;
@@ -25,11 +26,14 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.AttributeKey;
+import io.netty.util.concurrent.DefaultThreadFactory;
 import io.netty.util.concurrent.GlobalEventExecutor;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -42,7 +46,7 @@ import reka.flow.Flow;
 import reka.identity.Identity;
 import reka.module.PortChecker;
 import reka.net.ChannelAttrs.AttributeMatcher;
-import reka.net.NetSettings.SslSettings;
+import reka.net.NetSettings.TlsSettings;
 import reka.net.NetSettings.Type;
 import reka.net.http.HostAndPort;
 import reka.net.http.server.HttpChannelSetup;
@@ -62,7 +66,7 @@ public class NetManager {
 	private final EventLoopGroup nettyEventGroup;
 	
 	private final Map<Integer,PortHandler> handlers = new HashMap<>();
-	private final Map<Identity,Map<NetSettings,Integer>> deployed = new HashMap<>();
+	private final Map<Identity,Map<String,Entry<NetSettings,Integer>>> deployed = new HashMap<>();
 	
 	private final boolean epoll;
 	
@@ -76,11 +80,11 @@ public class NetManager {
 		if (epoll) {
 			nettyServerChannelType = EpollServerSocketChannel.class;
 			nettyClientChannelType = EpollSocketChannel.class;
-			nettyEventGroup = new EpollEventLoopGroup();
+			nettyEventGroup = new EpollEventLoopGroup(0, new DefaultThreadFactory("reka-net", true));
 		} else {
 			nettyServerChannelType = NioServerSocketChannel.class;
 			nettyClientChannelType = NioSocketChannel.class;
-			nettyEventGroup = new NioEventLoopGroup();
+			nettyEventGroup = new NioEventLoopGroup(0, new DefaultThreadFactory("reka-net", true));
 		}
 	}
 	
@@ -91,7 +95,7 @@ public class NetManager {
 		return new NetApplicationComponent(identity, settings, version, handler.httpAdd(identity, settings.host().get(), flows));
 	}
 	
-	public ApplicationComponent deployHttps(Identity identity, HostAndPort listen, SslSettings ssl, HttpFlows flows) {
+	public ApplicationComponent deployHttps(Identity identity, HostAndPort listen, TlsSettings ssl, HttpFlows flows) {
 		checkNotNull(ssl, "must pass in ssl settings for https");
 		NetSettings settings = NetSettings.https(listen.port(), listen.host(), ssl);
 		PortHandler handler = ensurePortHandler(settings);
@@ -106,7 +110,7 @@ public class NetManager {
 		return new NetApplicationComponent(identity, settings, version, handler.websocketAdd(identity, settings.host().get(), flows));
 	}
 	
-	public ApplicationComponent deployWebsocketSsl(Identity identity, HostAndPort listen, SslSettings ssl, SocketFlows flows) {
+	public ApplicationComponent deployWebsocketSsl(Identity identity, HostAndPort listen, TlsSettings ssl, SocketFlows flows) {
 		NetSettings settings = NetSettings.wss(listen.port(), listen.host(), ssl);
 		PortHandler handler = ensurePortHandler(settings);
 		int version = saveSettingsAndIncrementVersion(identity, settings);
@@ -120,7 +124,7 @@ public class NetManager {
 		return new NetApplicationComponent(identity, settings, version, handler.socketSet(identity, flows));
 	}
 	
-	public ApplicationComponent deploySocketSsl(Identity identity, int port, SslSettings ssl, SocketFlows flows) {
+	public ApplicationComponent deploySocketSsl(Identity identity, int port, TlsSettings ssl, SocketFlows flows) {
 		NetSettings settings = NetSettings.socketSsl(port, ssl);
 		PortHandler handler = ensurePortHandler(settings);
 		int version = saveSettingsAndIncrementVersion(identity, settings);
@@ -145,10 +149,12 @@ public class NetManager {
 		public void undeploy() {
 			PortHandler handler = handlers.get(settings.port());
 			if (handler == null) return;
-			Map<NetSettings, Integer> m = deployed.get(identity);
+			Map<String, Entry<NetSettings,Integer>> m = deployed.get(identity);
 			if (m == null) return;
-			if (!m.containsKey(settings)) return;
-			int currentVersion = m.get(settings);
+			String k = settings.sha1hex();
+			if (!m.containsKey(k)) return;
+			Entry<NetSettings, Integer> e = m.get(k);
+			int currentVersion = e.getValue();
 			if (version != currentVersion) {
 				log.info("not undeploying as the version has incremented {} -> {}", version, currentVersion);
 				return;
@@ -158,7 +164,7 @@ public class NetManager {
 				handlers.remove(settings.port());
 				handler.shutdownAndWait();
 			}
-			m.remove(settings);
+			m.remove(k);
 			if (m.isEmpty()) {
 				deployed.remove(identity);
 			}
@@ -201,11 +207,11 @@ public class NetManager {
 		private final HttpChannelSetup http;
 		private final WebsocketChannelSetup websocket;
 		
-		HttpPortHandler(int port, SslSettings sslSettings) {
-			super(port, sslSettings);
-			http = new HttpChannelSetup(channels, port, sslSettings != null);
+		HttpPortHandler(int port, TlsSettings tlsSettings) {
+			super(port, tlsSettings);
+			http = new HttpChannelSetup(channels, port, tlsSettings != null);
 			websocket = new WebsocketChannelSetup(channels, port);
-			initializer = new HttpInitializer(new HttpOrWebsocket(http, websocket), sslSettings);
+			initializer = new HttpInitializer(new HttpOrWebsocket(http, websocket), tlsSettings);
 		}
 
 		@Override
@@ -266,7 +272,7 @@ public class NetManager {
 		
 		private volatile boolean isSet = false;
 		
-		SocketPortHandler(int port, SslSettings sslSettings) {
+		SocketPortHandler(int port, TlsSettings sslSettings) {
 			super(port, sslSettings);
 			socketHandler = new SocketFlowHandler();
 			if (sslSettings != null) {
@@ -336,13 +342,13 @@ public class NetManager {
 	private abstract class PortHandler implements AsyncShutdown {
 		
 		private final int port;
-		private final SslSettings sslSettings;
+		private final TlsSettings tlsSettings;
 				
 		protected volatile Channel channel;
 		
-		protected PortHandler(int port, SslSettings sslSettings) {
+		protected PortHandler(int port, TlsSettings tlsSettings) {
 			this.port = port;
-			this.sslSettings = sslSettings;
+			this.tlsSettings = tlsSettings;
 		}
 		
 		protected abstract ChannelInitializer<SocketChannel> initializer();
@@ -358,8 +364,8 @@ public class NetManager {
 		public abstract Runnable websocketPause(String host);
 		public abstract Runnable socketPause();
 		
-		public SslSettings sslSettings() {
-			return sslSettings;
+		public TlsSettings tlsSettings() {
+			return tlsSettings;
 		}
 		
 		public void shutdown(Result res) {
@@ -421,7 +427,7 @@ public class NetManager {
 		
 	}
 	
-	public Map<Identity,Map<NetSettings,Integer>> deployed() {
+	public Map<Identity,Map<String,Entry<NetSettings,Integer>>> deployed() {
 		return ImmutableMap.copyOf(deployed);
 	}
 	
@@ -437,8 +443,10 @@ public class NetManager {
 		return deployed.entrySet().stream().allMatch(e -> {
 			Identity deployedIdentity = e.getKey();
 			if (deployedIdentity.equals(identity)) return true;
-			Set<NetSettings> s = e.getValue().keySet();
-			return s.stream().allMatch(settings -> {
+			Collection<Entry<NetSettings, Integer>> s = e.getValue().values();
+			return s.stream().allMatch(entry -> {
+				
+				NetSettings settings = entry.getKey();
 				
 				if (listen.port() != settings.port()) {
 					// different port, doesn't matter
@@ -461,8 +469,8 @@ public class NetManager {
 		return deployed.entrySet().stream().allMatch(e -> {
 			Identity deployedIdentity = e.getKey();
 			if (deployedIdentity.equals(identity)) return true;
-			Set<NetSettings> s = e.getValue().keySet();
-			return s.stream().allMatch(settings -> settings.port() != port);
+			Collection<Entry<NetSettings, Integer>> s = e.getValue().values();
+			return s.stream().allMatch(entry -> entry.getKey().port() != port);
 		});
 	}
 
@@ -484,10 +492,12 @@ public class NetManager {
 		public void run() {
 			PortHandler handler = handlers.get(settings.port());
 			if (handler == null) return;
-			Map<NetSettings, Integer> m = deployed.get(identity);
+			Map<String, Entry<NetSettings,Integer>> m = deployed.get(identity);
 			if (m == null) return;
-			if (!m.containsKey(settings)) return;
-			int currentVersion = m.get(settings);
+			String k = settings.sha1hex();
+			if (!m.containsKey(k)) return;
+			Entry<NetSettings, Integer> e = m.get(k);
+			int currentVersion = e.getValue();
 			if (version != currentVersion) {
 				log.info("not undeploying as the version has incremented {} -> {}", version, currentVersion);
 				return;
@@ -502,28 +512,41 @@ public class NetManager {
 	}
 	
 	private PortHandler ensurePortHandler(NetSettings settings) {
-		PortHandler portHandler = handlers.get(settings.port());
+		int port = settings.port();
+		PortHandler portHandler = handlers.get(port);
 		if (portHandler != null) {
+			
 			if (!portHandler.supports(settings.type())) {
-				throw runtime("cannot deploy %s to %s", settings.type(), portHandler.getClass());
+				throw runtime("cannot deploy %s to %s on %d", settings.type(), portHandler.getClass(), port);
 			}
-			if (!Objects.equals(portHandler.sslSettings(), settings.sslSettings())) {
+			
+			String existing = portHandler.tlsSettings() != null ? portHandler.tlsSettings().sha1hex() : "";
+			String incoming = settings.tlsSettings() != null ? settings.tlsSettings().sha1hex() : "";
+			
+			if (!existing.equals(incoming)) {
 				throw runtime("must have identical ssl settings on same port (SNI is not supported yet)");
 			}
  		} else {
  			if (settings.type() == Type.SOCKET) {
-				portHandler = new SocketPortHandler(settings.port(), settings.sslSettings());
+				portHandler = new SocketPortHandler(port, settings.tlsSettings());
 			} else {
-				portHandler = new HttpPortHandler(settings.port(), settings.sslSettings());
+				portHandler = new HttpPortHandler(port, settings.tlsSettings());
 			}
- 			handlers.put(settings.port(), portHandler);
+ 			handlers.put(port, portHandler);
  		}
 		return portHandler;
 	}
 
 	private int saveSettingsAndIncrementVersion(Identity identity, NetSettings settings) {
 		deployed.computeIfAbsent(identity, unused -> new HashMap<>());
-		return deployed.get(identity).compute(settings, (unused, v) -> v != null ? v + 1 : 1);
+		String k = settings.sha1hex();
+		return deployed.get(identity).compute(k, (unused, entry) ->  {
+			if (entry == null) {
+				return createEntry(settings, 1);
+			} else {
+				return createEntry(entry.getKey(), entry.getValue() + 1);
+			}
+		}).getValue();
 	}
 
 	public void shutdown(AsyncShutdown.Result res) {

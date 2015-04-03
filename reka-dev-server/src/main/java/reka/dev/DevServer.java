@@ -3,6 +3,7 @@ package reka.dev;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static reka.config.configurer.Configurer.configure;
+import static reka.util.Util.startKeepAliveThread;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -24,6 +25,7 @@ import reka.jade.JadeModule;
 import reka.jsx.JsxModule;
 import reka.less.LessModule;
 import reka.lib.bouncycastle.BouncyCastleLoader;
+import reka.markdown.MarkdownModule;
 import reka.module.Module;
 import reka.module.ModuleManager;
 import reka.module.ModuleMeta;
@@ -78,6 +80,7 @@ public class DevServer {
 			PostgresModule.class,
 			JsxModule.class,
 			LessModule.class,
+			MarkdownModule.class,
 			IrcModule.class,
 			JadeModule.class,
 			SmtpModule.class,
@@ -90,6 +93,8 @@ public class DevServer {
 		ClassLoader classLoader = BouncyCastleLoader.createClassLoader(Reka.class.getClassLoader());
 		NavigableConfig conf = new ModuleManager(defaultModules).processor().process(ConfigParser.fromFile(file));
 		configure(new RekaConfigurer(file.getParentFile().toPath(), defaultModules, classLoader), conf).build().run();
+		
+		startKeepAliveThread();
 		
 	}
 

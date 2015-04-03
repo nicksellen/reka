@@ -31,7 +31,7 @@ public class SocketFlowHandler extends SimpleChannelInboundHandler<String> {
 	
 	public boolean unsetFlows(SocketFlows flows) {
 		if (!this.flows.equals(flows)) return false;
-		flows = SocketFlows.NO_FLOWS;
+		this.flows = SocketFlows.NO_FLOWS;
 		return true;
 	}
 	 

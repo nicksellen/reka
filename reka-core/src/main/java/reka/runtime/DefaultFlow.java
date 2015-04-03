@@ -19,8 +19,8 @@ public class DefaultFlow implements Flow {
 	private final FlowStats stats = new FlowStats();
 	private final static AtomicLong ids = new AtomicLong();
 
-	private static final ExecutorService DEFAULT_OPERATION_EXECUTOR = Executors.newCachedThreadPool(new DaemonThreadFactory("flow-ops"));
-	private static final ExecutorService DEFAULT_COORDINATOR_EXECUTOR = Executors.newSingleThreadExecutor(new DaemonThreadFactory("flow-coord"));
+	private static final ExecutorService DEFAULT_OPERATION_EXECUTOR = Executors.newCachedThreadPool(new DaemonThreadFactory("reka-rt-ops"));
+	private static final ExecutorService DEFAULT_COORDINATOR_EXECUTOR = Executors.newSingleThreadExecutor(new DaemonThreadFactory("reka-rt-coord"));
 	
 	private final long id;
 	private final Path name;

@@ -100,7 +100,7 @@ public class ApplicationManager implements Iterable<Entry<Identity,Application>>
 		void error(Identity identity, Throwable t);
 	}
 	
-	private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory());
+	private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory("reka-manager"));
 	
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	private final EventLogger eventLogger = new EventLogger("/tmp/rekalog");

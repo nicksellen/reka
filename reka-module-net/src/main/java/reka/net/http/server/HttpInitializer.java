@@ -14,14 +14,14 @@ import io.netty.handler.stream.ChunkedWriteHandler;
 
 import javax.net.ssl.SSLException;
 
-import reka.net.NetSettings.SslSettings;
+import reka.net.NetSettings.TlsSettings;
 
 public class HttpInitializer extends ChannelInitializer<SocketChannel> {
 
 	private final ChannelHandler handler;
 	private final SslContext ssl;
 	
-	public HttpInitializer(ChannelHandler handler, SslSettings sslSettings) {
+	public HttpInitializer(ChannelHandler handler, TlsSettings sslSettings) {
 		this.handler = handler;
 		if (sslSettings != null) {
 			try {

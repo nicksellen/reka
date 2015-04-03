@@ -33,8 +33,8 @@ import reka.util.dirs.BaseDirs;
 public class Reka {
 	
 	public static interface SharedExecutors {
-		public static final ExecutorService general = Executors.newCachedThreadPool(new DaemonThreadFactory());
-		public static final ScheduledExecutorService scheduled = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory());
+		public static final ExecutorService general = Executors.newCachedThreadPool(new DaemonThreadFactory("reka-general"));
+		public static final ScheduledExecutorService scheduled = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory("reka-scheduled"));
 	}
 	
 	private static final Logger log = LoggerFactory.getLogger(Reka.class);

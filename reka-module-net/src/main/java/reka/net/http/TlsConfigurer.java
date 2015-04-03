@@ -10,7 +10,7 @@ import java.nio.file.attribute.PosixFilePermissions;
 
 import reka.config.Config;
 import reka.config.configurer.annotations.Conf;
-import reka.net.NetSettings.SslSettings;
+import reka.net.NetSettings.TlsSettings;
 
 public class TlsConfigurer {
 	
@@ -29,8 +29,8 @@ public class TlsConfigurer {
 		key = val.documentContent();
 	}
 
-	public SslSettings build() {
-		return new SslSettings(byteToFile(crt), byteToFile(key));
+	public TlsSettings build() {
+		return new TlsSettings(byteToFile(crt), byteToFile(key));
 	}
 
 	private static File byteToFile(byte[] bytes) {

@@ -10,12 +10,9 @@ import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import reka.data.Data;
-import reka.util.DaemonThreadFactory;
 
 public class EventLogger {
 
@@ -24,12 +21,11 @@ public class EventLogger {
 
 	private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd-HH:mm:ss.SSSZ");
 	private static final Runnable setdate = () -> date = sdf.format(new Date()).toString().getBytes(StandardCharsets.UTF_8);
-	private static final ScheduledExecutorService e = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory());
 	private static volatile byte[] date;
 
 	static {
 		setdate.run();
-		e.scheduleWithFixedDelay(setdate, 1, 1, TimeUnit.SECONDS);
+		Reka.SharedExecutors.scheduled.scheduleWithFixedDelay(setdate, 1, 1, TimeUnit.SECONDS);
 	}
 	
 	private final Object lock = new Object();

@@ -355,4 +355,27 @@ public class Util {
 		return result;
 	}
 	
+	private static volatile Thread keepAliveThread;
+	
+	public static void startKeepAliveThread() {
+		if (keepAliveThread != null) return;
+		
+		keepAliveThread = new Thread() {
+			@Override
+			public void run() {
+				for (;;) {
+					try {
+						Thread.sleep(Long.MAX_VALUE);
+					} catch (InterruptedException e) {
+						break;
+					}
+				}
+			}
+		};
+		keepAliveThread.setDaemon(false);
+		keepAliveThread.setName("reka-keep-alive");
+		keepAliveThread.setPriority(Thread.MIN_PRIORITY);
+		keepAliveThread.start();
+	}
+	
 }

@@ -39,6 +39,7 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import reka.Reka;
 import reka.data.Data;
 import reka.data.content.Content;
 import reka.util.DaemonThreadFactory;
@@ -64,11 +65,10 @@ public class DataToHttpEncoder extends MessageToMessageEncoder<Data> {
 	private static volatile CharSequence date;
 	private static final SimpleDateFormat sdf = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss z");
 	private static final Runnable setdate = () -> date = HttpHeaders.newEntity(sdf.format(new Date()));
-	private static final ScheduledExecutorService e = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory());
 
 	static {
 		setdate.run();
-		e.scheduleWithFixedDelay(setdate, 1, 1, TimeUnit.SECONDS);
+		Reka.SharedExecutors.scheduled.scheduleWithFixedDelay(setdate, 1, 1, TimeUnit.SECONDS);
 	}
 
 	private DataToHttpEncoder(boolean ssl) {

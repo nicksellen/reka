@@ -359,7 +359,6 @@ public class SmtpServerConfigurer extends ModuleConfigurer {
 						oldServer.shutdown();
 					}
 					
-					//RekaSmtpServer server = servers.computeIfAbsent(port, p -> new RekaSmtpServer(port));
 					SslSettings tls = null;
 					if (crt != null && key != null) {
 						tls = new SslSettings(byteToFile(crt), byteToFile(key));
@@ -373,13 +372,15 @@ public class SmtpServerConfigurer extends ModuleConfigurer {
 					server.start();
 					ctx.put(SERVER, server);
 					servers.put(port, server);
+					
+					app.registerNetwork(port, "smtp");
+					
 				});
 			});
 			
 			app.buildFlow("on email", emailHandler, flow -> {
 				RekaSmtpServer server = ctx.require(SERVER);
 				server.add(flow);
-				app.registerNetwork(port, "smtp");
 				app.onUndeploy("undeploy smtp", () -> {
 					server.remove(flow);
 				});

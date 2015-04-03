@@ -2,6 +2,7 @@ package reka.server;
 
 import static java.util.Arrays.asList;
 import static reka.config.configurer.Configurer.configure;
+import static reka.util.Util.startKeepAliveThread;
 
 import java.io.File;
 import java.util.List;
@@ -42,23 +43,8 @@ public class RekaServer {
 		NavigableConfig conf = new ModuleManager(defaultModules).processor().process(ConfigParser.fromFile(file));
 		configure(new RekaConfigurer(file.getParentFile().toPath(), defaultModules, classLoader), conf).build().run();
 
-		// keeps the app alive
+		startKeepAliveThread();
 		
-		Thread t = new Thread() {
-			@Override
-			public void run() {
-				for (;;) {
-					try {
-						Thread.sleep(Long.MAX_VALUE);
-					} catch (InterruptedException e) {
-						break;
-					}
-				}
-			}
-		};
-		t.setDaemon(false);
-		t.setName("reka application");
-		t.start();
 	}
 
 }

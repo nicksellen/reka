@@ -1,6 +1,6 @@
 package reka.markdown;
 
-import static reka.util.Path.root;
+import static reka.util.Path.path;
 import reka.module.Module;
 import reka.module.ModuleDefinition;
 import reka.util.Path;
@@ -9,7 +9,7 @@ public class MarkdownModule implements Module {
 
 	@Override
 	public Path base() {
-		return root();
+		return path("markdown");
 	}
 	
 	@Override

@@ -21,6 +21,11 @@
 		</dependency>
 		<dependency>
 			<groupId>io.reka</groupId>
+			<artifactId>reka-module-markdown</artifactId>
+			<version>0.1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>io.reka</groupId>
 			<artifactId>reka-module-twilio</artifactId>
 			<version>0.1.0</version>
 		</dependency>

@@ -22,7 +22,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -64,7 +63,6 @@ import reka.module.setup.ApplicationSetup;
 import reka.module.setup.ModuleConfigurer;
 import reka.module.setup.Trigger;
 import reka.module.setup.TriggerFlows;
-import reka.util.DaemonThreadFactory;
 import reka.util.Path;
 import reka.util.dirs.AppDirs;
 
@@ -72,7 +70,7 @@ import com.google.common.collect.Sets;
 
 public class ApplicationConfigurer implements ErrorReporter {
 	
-	private static final ExecutorService executor = Executors.newCachedThreadPool(new DaemonThreadFactory("appconfigurer")); // just used for app configure/deployments
+	private static final ExecutorService executor = Reka.SharedExecutors.general;
 	
 	private static final Logger log = LoggerFactory.getLogger(ApplicationConfigurer.class);
     private Path applicationName;

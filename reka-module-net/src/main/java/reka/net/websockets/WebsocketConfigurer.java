@@ -21,7 +21,7 @@ import reka.module.setup.ModuleConfigurer;
 import reka.net.NetManager;
 import reka.net.NetManager.SocketFlows;
 import reka.net.NetSettings;
-import reka.net.NetSettings.SslSettings;
+import reka.net.NetSettings.TlsSettings;
 import reka.net.NetSettings.Type;
 import reka.net.common.sockets.NetStatusProvider;
 import reka.net.common.sockets.SocketBroadcastConfigurer;
@@ -43,7 +43,7 @@ public class WebsocketConfigurer extends ModuleConfigurer {
 	
 	private final List<HostAndPort> listens = new ArrayList<>();
 	
-	private SslSettings ssl;
+	private TlsSettings ssl;
 	
 	private final NetManager net;
 	
