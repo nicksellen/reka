@@ -11,7 +11,7 @@ import org.junit.runners.AllTests;
 import reka.util.RekaTest;
 
 @RunWith(AllTests.class)
-public class CoreRekaTests extends TestCase {
+public class RekaCoreTest extends TestCase {
 
 	public static TestSuite suite() {
 		return RekaTest.createTestSuiteFrom(null,
