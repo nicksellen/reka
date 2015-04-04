@@ -18,7 +18,7 @@ public class NetHttpTest extends TestCase {
 
 	public static TestSuite suite() throws IOException, InterruptedException, ExecutionException {
 		NetModule module = new NetModule();
-		RekaTest.runApp(module, new File("src/test/resources/reka-tests/http-server.reka"));
+		RekaTest.runApp(module, new File("src/test/resources/reka-tests/http-test-server.reka"));
 		return RekaTest.createTestSuiteFrom(module, new File("src/test/resources/reka-tests/http.reka"));
 	}
 

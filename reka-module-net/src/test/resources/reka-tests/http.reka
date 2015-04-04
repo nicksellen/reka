@@ -4,12 +4,10 @@ net/http
 
 test simple index page {
 	run {
-		http/request http://localhost:8073 {
-			into resp
-		}
+		http/request http://localhost:8073
 	}
 	expect {
-		resp {
+		response {
 			status 200
 			content looks good
 		}
@@ -18,12 +16,10 @@ test simple index page {
 
 test pass in some params {
 	run {
-		http/request http://localhost:8073/with-params?name=Nick {
-			into resp
-		}
+		http/request http://localhost:8073/with-params?name=Nick
 	}
 	expect {
-		resp {
+		response {
 			status 200
 			content your name was Nick
 		}
@@ -32,12 +28,10 @@ test pass in some params {
 
 test return some json {
 	run {
-		http/request http://localhost:8073/give-me-json {
-			into resp
-		}
+		http/request http://localhost:8073/give-me-json
 	}
 	expect {
-		resp {
+		response {
 			status 200
 			headers {
 				Content-Type application/json
@@ -51,14 +45,56 @@ test return some json {
 	}
 }
 
-test page not found {
+test a post request {
 	run {
-		http/request http://localhost:8073/should/not/exist {
-			into resp
+		http/request http://localhost:8073/post/something/to/me {
+			method POST
 		}
 	}
 	expect {
-		resp {
+		response {
+			status 200
+			content post was accepted :)
+		}
+	}
+}
+
+test a post request with body content {
+	run {
+		put the-content {
+			this {
+				should {
+					be sent
+				}
+			}
+		}
+		http/request http://localhost:8073/post/with/content {
+			method POST
+			content the-content
+		}
+	}
+	expect {
+		response {
+			status 200
+			content {
+				back { 
+					this {
+						should {
+							be sent
+						}
+					}
+				}
+			} 
+		}
+	}
+}
+
+test page not found {
+	run {
+		http/request http://localhost:8073/should/not/exist
+	}
+	expect {
+		response {
 			status 404
 		}
 	}

@@ -23,6 +23,16 @@ net/http {
 					}
 				}
 			}
+			POST /post/something/to/me {
+				put response {
+					content post was accepted :)
+				}
+			}
+			POST /post/with/content {
+				copy {
+					request.content response.content.back
+				}
+			}
 		}
 	}
 }
