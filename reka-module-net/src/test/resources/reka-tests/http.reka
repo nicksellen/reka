@@ -70,7 +70,7 @@ test a post request with body content {
 		}
 		http/request http://localhost:8073/post/with/content {
 			method POST
-			content the-content
+			content-from the-content
 		}
 	}
 	expect {

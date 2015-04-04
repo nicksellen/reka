@@ -49,7 +49,7 @@ public class HttpRequestConfigurer implements OperationConfigurer {
 		into = dots(val);
 	}
 	
-	@Conf.At("content")
+	@Conf.At("content-from")
 	public void content(String val) {
 		Path path = dots(val);
 		Function<Data,Data> fn = data -> data.at(path);
