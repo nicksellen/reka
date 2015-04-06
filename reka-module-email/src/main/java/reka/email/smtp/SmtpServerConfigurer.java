@@ -1,4 +1,4 @@
-package reka.smtp;
+package reka.email.smtp;
 
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;

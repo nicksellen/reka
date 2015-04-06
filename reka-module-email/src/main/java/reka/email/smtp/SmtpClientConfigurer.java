@@ -1,4 +1,4 @@
-package reka.smtp;
+package reka.email.smtp;
 
 import static reka.util.Path.path;
 import reka.config.configurer.annotations.Conf;

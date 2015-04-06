@@ -1,5 +1,6 @@
-package reka.smtp;
+package reka.email.util;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static reka.data.content.Contents.binary;
 import static reka.data.content.Contents.utf8;
 import static reka.util.Path.path;
@@ -7,74 +8,51 @@ import static reka.util.Path.PathElements.name;
 import static reka.util.Path.PathElements.nextIndex;
 import static reka.util.Util.unchecked;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Enumeration;
 import java.util.HashSet;
-import java.util.Properties;
 import java.util.Set;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
 
 import javax.activation.DataSource;
 import javax.mail.Address;
 import javax.mail.Header;
+import javax.mail.Message;
 import javax.mail.Multipart;
-import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.mail.util.MimeMessageParser;
-import org.subethamail.smtp.TooMuchDataException;
-import org.subethamail.smtp.helper.SimpleMessageListener;
 
 import reka.data.Data;
 import reka.data.MutableData;
 import reka.data.memory.MutableMemoryData;
 import reka.util.Path;
 
-public class EmailListener implements SimpleMessageListener {
-	
+public class EmailToDataConverter {
+
 	private static final Set<String> ignoreHeaders = new HashSet<>();
 	
 	static {
+		// these get pulled out as top-level values, not left in the headers bit
 		ignoreHeaders.add("To");
 		ignoreHeaders.add("From");
 		ignoreHeaders.add("Subject");
 	}
-
-	private final Consumer<Data> consumer;
-
-	private volatile BiFunction<String,String,Boolean> acceptor = (from, to) -> true;
 	
-	public void setAcceptor(BiFunction<String,String,Boolean> acceptor) {
-		this.acceptor = acceptor;
-	}
-	
-	public EmailListener(Consumer<Data> consumer) {
-		this.consumer = consumer;
-	}
+	private EmailToDataConverter() { }
 
-	@Override
-	public boolean accept(String from, String to) {
-		return acceptor.apply(from, to);
-	}
-
-	@Override
-	public void deliver(String from, String to, InputStream stream) throws TooMuchDataException, IOException {
+	public static Data convert(Message msg) {
+		checkArgument(msg instanceof MimeMessage, "must be a %s", MimeMessage.class.getName());
 		
-		Properties props = new Properties();
-		Session session = Session.getInstance(props);
-
+		MimeMessage message = (MimeMessage) msg;
+		
 		try {
-
+			InputStream stream = msg.getInputStream();
 		    
 			MutableData emailData = MutableMemoryData.create();
 			
 			ClassLoader originalClassloader = Thread.currentThread().getContextClassLoader();
 			try {
 			    Thread.currentThread().setContextClassLoader(Multipart.class.getClassLoader());
-				
-				MimeMessage message = new MimeMessage(session, stream);
 				
 				MimeMessageParser email = new MimeMessageParser(message);
 				
@@ -141,7 +119,7 @@ public class EmailListener implements SimpleMessageListener {
 			    Thread.currentThread().setContextClassLoader(originalClassloader);
 			}
 			
-			consumer.accept(emailData);
+			return emailData.immutable();
 			
 		} catch (Exception e) {
 			throw unchecked(e);

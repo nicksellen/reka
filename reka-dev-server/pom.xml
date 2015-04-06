@@ -81,7 +81,7 @@
 		</dependency>
 		<dependency>
 			<groupId>io.reka</groupId>
-			<artifactId>reka-module-smtp</artifactId>
+			<artifactId>reka-module-email</artifactId>
 			<version>0.1.0</version>
 		</dependency>
 		<dependency>

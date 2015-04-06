@@ -28,7 +28,7 @@
     <module>reka-module-jade</module>
     <module>reka-module-jruby</module>
     <module>reka-module-mustache</module>
-    <module>reka-module-smtp</module>
+    <module>reka-module-email</module>
     <module>reka-module-twilio</module>
     <module>reka-module-less</module>
     <module>reka-module-jsx</module>
