@@ -18,6 +18,7 @@ import reka.Reka;
 import reka.RekaConfigurer;
 import reka.config.NavigableConfig;
 import reka.config.parser.ConfigParser;
+import reka.email.EmailModule;
 import reka.exec.ExecModule;
 import reka.h2.H2Module;
 import reka.irc.IrcModule;
@@ -38,7 +39,6 @@ import reka.nashorn.NashornModule;
 import reka.net.NetModule;
 import reka.postgres.PostgresModule;
 import reka.process.ProcessModule;
-import reka.smtp.SmtpModule;
 import reka.twilio.TwilioModule;
 
 import com.google.inject.Guice;
@@ -83,7 +83,7 @@ public class DevServer {
 			MarkdownModule.class,
 			IrcModule.class,
 			JadeModule.class,
-			SmtpModule.class,
+			EmailModule.class,
 			JsonModule.class,
 			NetModule.class
 		));
