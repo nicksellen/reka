@@ -45,6 +45,9 @@ test:
 run: $(dist_dir)
 	@$(dist_dir)/bin/reka-server
 
+run-nolog: $(dist_dir)
+	@JAVA_OPTS=-Dlog4j.configurationFile=log4j2-errors-only.xml $(dist_dir)/bin/reka-server
+
 upload-s3: $(packaged)
 	@aws s3 \
 		cp $(packaged) s3://reka/reka-server.tar.gz	\
