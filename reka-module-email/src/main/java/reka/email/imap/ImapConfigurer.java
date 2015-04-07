@@ -91,9 +91,11 @@ public class ImapConfigurer extends ModuleConfigurer {
 		
 		if (emailHandler != null) {
 			module.buildFlow("on email", emailHandler, flow -> {
+				/*
 				ctx.lookup(CONNECTION).ifPresent(connection -> {
 					connection.stop();
 				});
+				*/
 				ImapIdleConnection connection = new ImapIdleConnection(hostname, port, tls, username, password, folderName, data -> {
 					flow.prepare().data(data).run();
 				});
@@ -143,6 +145,7 @@ public class ImapConfigurer extends ModuleConfigurer {
 			} catch (MessagingException t) {
 				log.warn("error processing email", t);
 			}
+		    
 		}
 
 		@Override
@@ -184,7 +187,6 @@ public class ImapConfigurer extends ModuleConfigurer {
 		public void start() {
 			synchronized (lock) {
 				if (active) return;
-				active = true;
 				
 				Properties props = new Properties();
 				props.put("mail.imap.connectiontimeout", "3000");
@@ -210,6 +212,8 @@ public class ImapConfigurer extends ModuleConfigurer {
 					
 					keepAlive = startKeepAlive();
 					
+					active = true;
+					
 				} catch (Exception e) {
 					log.warn("oops", e);
 				}
@@ -220,7 +224,8 @@ public class ImapConfigurer extends ModuleConfigurer {
 		public void stop() {
 			synchronized (lock) {
 				if (!active) return;
-				active = false;
+				
+				log.info("disconnecting from {}:{}", hostname, port);
 				
 				imapIdleThread.interrupt();
 				
@@ -241,6 +246,8 @@ public class ImapConfigurer extends ModuleConfigurer {
 				store = null;
 				keepAlive = null;
 				imapIdleThread = null;
+
+				active = false;
 			}
 		}
 
@@ -250,7 +257,7 @@ public class ImapConfigurer extends ModuleConfigurer {
 					try {
 						synchronized (lock) {
 							if (active) {
-								log.info("executing imap NOOP");
+								log.debug("executing imap NOOP");
 								folder.doCommand(cmd -> {
 									cmd.simpleCommand("NOOP", null);
 									return null;
@@ -277,7 +284,7 @@ public class ImapConfigurer extends ModuleConfigurer {
 		@Override
 		public void run() {
 			while (!Thread.interrupted()) {
-				log.info("issuing IMAP IDLE");
+				log.debug("issuing IMAP IDLE");
 				try {
 					if (!folder.isOpen()) {
 						break;
