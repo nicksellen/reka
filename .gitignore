@@ -10,3 +10,4 @@ dist
 env.make
 **/reka-data
 reka-server.tar.gz
+.mvn-build
