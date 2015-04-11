@@ -32,6 +32,7 @@ import reka.util.dirs.BaseDirs;
 
 public class RekaTest {
 	
+	@SuppressWarnings("unused")
 	private static final Logger log = LoggerFactory.getLogger(RekaTest.class);
 	
 	public static Application runApp(Module module, File file) throws IOException, InterruptedException, ExecutionException {

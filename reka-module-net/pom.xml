@@ -19,6 +19,7 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
+			<!--  only used for URIBuilder, should try and remove it -->
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpclient</artifactId>
 			<version>4.2.5</version>

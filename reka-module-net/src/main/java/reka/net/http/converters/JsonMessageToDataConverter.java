@@ -1,6 +1,6 @@
 package reka.net.http.converters;
 
-import static reka.util.Path.*;
+import static reka.util.Path.CONTENT;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.handler.codec.http.FullHttpMessage;
 

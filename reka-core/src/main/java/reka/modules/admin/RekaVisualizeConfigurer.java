@@ -10,8 +10,8 @@ import reka.data.Data;
 import reka.module.setup.OperationConfigurer;
 import reka.module.setup.OperationSetup;
 import reka.util.Path;
-import reka.util.StringWithVars;
 import reka.util.Path.Response;
+import reka.util.StringWithVars;
 
 public class RekaVisualizeConfigurer implements OperationConfigurer {
 

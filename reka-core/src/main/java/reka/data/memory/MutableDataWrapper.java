@@ -16,9 +16,9 @@ import reka.data.MapMutation;
 import reka.data.MutableData;
 import reka.data.content.Content;
 import reka.util.Path;
-import reka.util.ThrowingConsumer;
 import reka.util.Path.PathElement;
 import reka.util.Path.PathElements;
+import reka.util.ThrowingConsumer;
 
 public class MutableDataWrapper<T> extends DataWrapper<T> implements Data, MutableData {
 

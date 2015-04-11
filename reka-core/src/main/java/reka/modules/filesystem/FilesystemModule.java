@@ -18,8 +18,8 @@ import reka.module.Module;
 import reka.module.ModuleDefinition;
 import reka.module.setup.OperationConfigurer;
 import reka.module.setup.OperationSetup;
-import reka.util.StringWithVars;
 import reka.util.Path.Response;
+import reka.util.StringWithVars;
 
 public class FilesystemModule implements Module {
 

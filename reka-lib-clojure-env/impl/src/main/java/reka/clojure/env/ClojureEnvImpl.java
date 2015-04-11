@@ -5,7 +5,6 @@ import static clojure.java.api.Clojure.var;
 import java.io.StringReader;
 import java.net.URLClassLoader;
 
-import reka.clojure.env.ClojureEnv;
 import clojure.lang.Compiler;
 import clojure.lang.RT;
 

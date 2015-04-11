@@ -303,7 +303,6 @@ public class ApplicationManager implements Iterable<Entry<Identity,Application>>
 				
 				checkArgument(constrainTo.isDirectory(), "constraint dir %s is not a dir", constrainTo.getAbsolutePath());
 				
-				IdentityAndVersion idv = IdentityAndVersion.create(identity, version);
 				log.info("deploying {} v{}", identity, version);
 				
 				NavigableConfig config = moduleManager.processor().process(originalConfig);

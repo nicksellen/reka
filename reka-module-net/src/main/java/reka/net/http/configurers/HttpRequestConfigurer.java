@@ -14,7 +14,6 @@ import reka.module.setup.OperationConfigurer;
 import reka.module.setup.OperationSetup;
 import reka.net.http.operations.HttpRequestOperation;
 import reka.util.Path;
-import reka.util.StringWithVars;
 
 public class HttpRequestConfigurer implements OperationConfigurer {
 	

@@ -28,10 +28,10 @@ import reka.flow.ops.OperationContext;
 import reka.util.Hashable;
 import reka.util.JsonProvider;
 import reka.util.Path;
-import reka.util.ReadObservedMap;
 import reka.util.Path.PathElement;
 import reka.util.Path.Request;
 import reka.util.Path.Response;
+import reka.util.ReadObservedMap;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
