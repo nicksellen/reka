@@ -1,6 +1,6 @@
 # reka
 
-Welcome to reka.
+Welcome to reka. You can find out a little more at [reka.io](https://reka.io). It's not suitable for use in production right now.
 
 ## First things first
 
