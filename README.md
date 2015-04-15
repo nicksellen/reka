@@ -20,24 +20,6 @@ Welcome to reka. You can find out a little more at [reka.io](https://reka.io).
 
 I'm looking for feedback, inspiration, use cases, thoughts, insults, and cake.
 
-In the future it might do things like:
-
-* more modules: message queues, more databases, elasticsearch
-* modules written in non-JVM languages
-* live module reloading via OSGi
-* transparent distributed deployment - fundemental architecture totally supports this
-* "multi execution" graph architectures - currently each operation is executed once or not at all for a given trigger
-* include browser javascript implemention to seamless execute in browser or on backend
-* allow provisioning/configuring of kubernetes/docker instances
-
-Current limitations:
-
-* only single server deployment
-* no type verification of data flowing through execution graph
-* not good enough solution for error handling yet
-* somewhat verbose/complicated to write simple modules in Java
-* need documentation on available modules/operations/configuration
-
 ## How to use
 
 There is a [Getting Started](https://reka.io/getting-started) guide that will, well, get you started.
@@ -67,3 +49,24 @@ make
 ````
 make run
 ````
+
+## Roadmap and limitations
+
+In the future it might do things like:
+
+* more modules: message queues, more databases, elasticsearch
+* modules written in non-JVM languages
+* live module reloading via OSGi
+* transparent distributed deployment - fundemental architecture totally supports this
+* "multi execution" graph architectures - currently each operation is executed once or not at all for a given trigger
+* include browser javascript implemention to seamless execute in browser or on backend
+* "intellisense"-like service for editors/IDEs
+* allow provisioning/configuring of kubernetes/docker instances
+
+Current limitations:
+
+* only single server deployment
+* no type verification of data flowing through execution graph
+* not good enough solution for error handling yet
+* somewhat verbose/complicated to write simple modules in Java
+* need documentation on available modules/operations/configuration
