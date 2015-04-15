@@ -1,8 +1,48 @@
 # reka
 
-Welcome to reka. You can find out a little more at [reka.io](https://reka.io). It's not suitable for use in production right now.
+Welcome to reka. You can find out a little more at [reka.io](https://reka.io).
 
-## First things first
+* runs on JVM, written in Java 8
+* build applications as a DAG of operations
+* simple DSL for constructing DAG
+* client/server architecture, so can deploy to remote server - [client](https://github.com/nicksellen/reka-cli) part written in golang
+* tiny core (519kb jar), everything else implemented in external modules
+* fully dogfood'ed - provisioning API and admin UI implemented with reka
+* no downtime redeploys for network protocols - [web]socket connections can even be kept open
+* available modules in various states of completeness for:
+  * network: http, websockets, tcp sockets, ssl
+  * email: smtp client/server, imap
+  * databases: h2, postgres
+  * languages: clojure, ruby (jruby), javascript (nashorn)
+  * templating: markdown, mustache, jade
+  * other: ssh, child process, irc, jsx
+* not suitable for use in production right now.
+
+I'm looking for feedback, inspiration, use cases, thoughts, insults, and cake.
+
+In the future it might do things like:
+
+* more modules: message queues, more databases, elasticsearch
+* modules written in non-JVM languages
+* live module reloading via OSGi
+* transparent distributed deployment - fundemental architecture totally supports this
+* "multi execution" graph architectures - currently each operation is executed once or not at all for a given trigger
+* include browser javascript implemention to seamless execute in browser or on backend
+* allow provisioning/configuring of kubernetes/docker instances
+
+Current limitations:
+
+* only single server deployment
+* no type verification of data flowing through execution graph
+* not good enough solution for error handling yet
+* somewhat verbose/complicated to write simple modules in Java
+* need documentation on available modules/operations/configuration
+
+## How to use
+
+There is a [Getting Started](https://reka.io/getting-started) guide that will, well, get you started.
+
+## How to build
 
 Prequisites:
 
@@ -25,5 +65,5 @@ make
 ## Run locally
 
 ````
-make clean run
+make run
 ````
