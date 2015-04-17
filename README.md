@@ -1,5 +1,7 @@
 # reka
 
+[![Join the chat at https://gitter.im/nicksellen/reka](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/nicksellen/reka?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Welcome to reka. You can find out a little more at [reka.io](https://reka.io).
 
 * runs on JVM, written in Java 8
