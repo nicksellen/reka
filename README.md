@@ -1,8 +1,6 @@
 # reka
 
-[![Join the chat at https://gitter.im/nicksellen/reka](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/nicksellen/reka?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
-Welcome to reka. You can find out a little more at [reka.io](https://reka.io).
+Welcome to reka. You can find out a little more at [http://nicksellen.github.io/reka](nicksellen.github.io/reka).
 
 * runs on JVM, written in Java 8
 * build applications as a DAG of operations
@@ -21,10 +19,6 @@ Welcome to reka. You can find out a little more at [reka.io](https://reka.io).
 * not suitable for use in production right now.
 
 I'm looking for feedback, inspiration, use cases, thoughts, insults, and cake.
-
-## How to use
-
-There is a [Getting Started](https://reka.io/getting-started) guide that will, well, get you started.
 
 ## How to build
 
