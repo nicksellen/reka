@@ -1,6 +1,6 @@
 # reka
 
-Welcome to reka. You can find out a little more at [http://nicksellen.github.io/reka](nicksellen.github.io/reka).
+Welcome to reka. You can find out a little more at [nicksellen.github.io/reka/](https://nicksellen.github.io/reka/).
 
 * runs on JVM, written in Java 8
 * build applications as a DAG of operations
