@@ -87,7 +87,7 @@
 		<dependency>
 			<artifactId>bcprov-jdk15on</artifactId>
 			<groupId>org.bouncycastle</groupId>
-			<version>1.51</version>
+			<version>1.67</version>
 		</dependency>
 		<dependency>
 			<artifactId>bcpkix-jdk15on</artifactId>
