@@ -6,6 +6,7 @@ import static reka.util.Util.unchecked;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.function.Function;
@@ -45,6 +46,9 @@ public class UnzipOperation implements Operation {
 			ZipEntry e;
 			while ((e = zip.getNextEntry()) != null) {
 				java.nio.file.Path filepath = outputDir.resolve(e.getName());
+				if (!filepath.normalize().startsWith(outputDir.normalize())) {
+					throw new IOException("Bad zip entry");
+				}
 				Files.createDirectories(filepath.getParent());
 				FileOutputStream out = new FileOutputStream(filepath.toFile());
 				try {

@@ -256,6 +256,9 @@ public class Util {
 			ZipEntry e;
 			while ((e = zip.getNextEntry()) != null) {
 				java.nio.file.Path filepath = dest.resolve(e.getName());
+				if (!filepath.normalize().startsWith(dest.normalize())) {
+					throw new IOException("Bad zip entry");
+				}
 				Files.createDirectories(filepath.getParent());
 				FileOutputStream out = new FileOutputStream(filepath.toFile());
 				try {
